@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CUIDAPP.Views.Registro.RegistroPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#FFFFFF">
+
+    <Grid>
+        <Grid RowDefinitions="Auto, *">
+            
+            <!-- Top Bar Fija -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Padding="20,15,20,10">
+                <ContentView x:Name="BtnBack" VerticalOptions="Center">
+                    <ContentView.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackTapped" />
+                    </ContentView.GestureRecognizers>
+                    <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#4024A2" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
+                </ContentView>
+                
+                <Label x:Name="TopTitle" Grid.Column="1" Text="Registro" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#4024A2" HorizontalOptions="Center" VerticalOptions="Center" IsVisible="False"/>
+                <Label x:Name="StepIndicator" Grid.Column="2" Text="1 de X" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#6B7280" VerticalOptions="Center"/>
+            </Grid>
+
+            <ScrollView Grid.Row="1">
+                <Grid Padding="20,10,20,20">
+                    
+                    <!-- PASO 1: Bienvenida -->
+                    <VerticalStackLayout x:Name="PasoBienvenida" Spacing="20" IsVisible="True">
+                        <HorizontalStackLayout HorizontalOptions="Center" Spacing="10" Margin="0,30,0,0">
+                            <Label Text="¡Hola!" FontSize="32" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                        </HorizontalStackLayout>
+                        <Label Text="Vamos a crear tu perfil en minutos" FontSize="16" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" Margin="0,-10,0,30"/>
+                        
+                        <Border Stroke="Transparent" StrokeShape="RoundRectangle 120" WidthRequest="220" HeightRequest="220" HorizontalOptions="Center" BackgroundColor="#F3F4F6"/>
+
+                        <Button Text="Comenzar" Clicked="OnNextTapped" BackgroundColor="#4024A2" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" Margin="0, 40, 0, 10"/>
+                        <Label Text="Al continuar, aceptas nuestros Términos y&#10;Condiciones" HorizontalTextAlignment="Center" FontSize="12" FontFamily="OpenSansRegular" TextColor="#9CA3AF"/>
+                    </VerticalStackLayout>
+
+                    <!-- PASO 2: Rol -->
+                    <VerticalStackLayout x:Name="PasoRol" Spacing="20" IsVisible="False">
+                        <Label Text="¿Qué buscas hoy?" FontSize="24" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" Margin="0,20,0,0"/>
+                        <Label Text="Selecciona el motivo principal para usar CuidApp" FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" HorizontalTextAlignment="Center" Margin="0,-10,0,20"/>
+
+                        <Border x:Name="RoleOptionCliente" Stroke="#E5E7EB" StrokeThickness="2" StrokeShape="RoundRectangle 12" Padding="20" BackgroundColor="White">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnRoleOptionTapped" CommandParameter="Cliente" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto, *">
+                                <Path x:Name="RoleIconCliente" Grid.Column="0" Data="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" Fill="#374151" Aspect="Uniform" WidthRequest="30" HeightRequest="30" VerticalOptions="Center" Margin="0,0,15,0"/>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                    <Label x:Name="RoleTextCliente" Text="Busco ayuda en casa" FontFamily="OpenSansSemibold" FontSize="16" TextColor="#374151"/>
+                                    <Label Text="Necesito contratar servicios" FontFamily="OpenSansRegular" FontSize="13" TextColor="#6B7280"/>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+
+                        <Border x:Name="RoleOptionCuidador" Stroke="#E5E7EB" StrokeThickness="2" StrokeShape="RoundRectangle 12" Padding="20" BackgroundColor="White" Margin="0,10,0,0">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnRoleOptionTapped" CommandParameter="Cuidador" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto, *">
+                                <Path x:Name="RoleIconCuidador" Grid.Column="0" Data="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 4C13.66 4 15 5.34 15 7C15 8.66 13.66 10 12 10C10.34 10 9 8.66 9 7C9 5.34 10.34 4 12 4ZM16 18H8V16C8 13.34 13.33 12 16 12C16 12 16 12.01 16 12.01V18Z" Fill="#374151" Aspect="Uniform" WidthRequest="30" HeightRequest="30" VerticalOptions="Center" Margin="0,0,15,0"/>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                    <Label x:Name="RoleTextCuidador" Text="Quiero trabajar" FontFamily="OpenSansSemibold" FontSize="16" TextColor="#374151"/>
+                                    <Label Text="Ofrecer mis servicios como profesional" FontFamily="OpenSansRegular" FontSize="13" TextColor="#6B7280"/>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+
+                        <Button Text="Siguiente ➔" Clicked="OnNextTapped" BackgroundColor="#4024A2" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" VerticalOptions="End" Margin="0,40,0,0"/>
+                    </VerticalStackLayout>
+
+                    <!-- PASO CREDENCIALES -->
+                    <VerticalStackLayout x:Name="PasoCredenciales" Spacing="20" IsVisible="False">
+                        <Label Text="Crea tu cuenta" FontSize="24" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" Margin="0,20,0,0"/>
+                        <Label Text="Usa tu correo para registrarte." FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" Margin="0,-10,0,20"/>
+                        
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Correo electrónico" FontFamily="OpenSansSemibold" FontSize="13" TextColor="#374151" />
+                            <Border Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 12" BackgroundColor="White" Padding="15,2">
+                                <Entry x:Name="EntryEmail" Keyboard="Email" Placeholder="ejemplo@correo.com" FontFamily="OpenSansRegular" PlaceholderColor="#9CA3AF" TextColor="#111827" FontSize="15" BackgroundColor="Transparent" HeightRequest="45" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Contraseña" FontFamily="OpenSansSemibold" FontSize="13" TextColor="#374151" />
+                            <Border Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 12" BackgroundColor="White" Padding="15,2">
+                                <Entry x:Name="EntryPassword" IsPassword="True" Placeholder="Crea una contraseña segura" FontFamily="OpenSansRegular" PlaceholderColor="#9CA3AF" TextColor="#111827" FontSize="15" BackgroundColor="Transparent" HeightRequest="45" />
+                            </Border>
+                        </VerticalStackLayout>
+                        
+                        <Button Text="Siguiente ➔" Clicked="OnNextTapped" BackgroundColor="#4024A2" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" VerticalOptions="End" Margin="0,20,0,0"/>
+                    </VerticalStackLayout>
+
+                    <!-- PASO NOMBRE Y BIO -->
+                    <VerticalStackLayout x:Name="PasoNombre" Spacing="20" IsVisible="False">
+                        <Label Text="¿Cómo te llamas?" FontSize="24" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
+                        <Label Text="Ingresa tus datos personales." FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" Margin="0,-10,0,10"/>
+                        
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Nombre Completo" FontFamily="OpenSansSemibold" FontSize="13" TextColor="#374151" />
+                            <Border Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 12" BackgroundColor="White" Padding="15,2">
+                                <Entry x:Name="EntryNombre" Placeholder="Escribe tu nombre" FontFamily="OpenSansRegular" PlaceholderColor="#9CA3AF" TextColor="#111827" FontSize="15" BackgroundColor="Transparent" HeightRequest="45" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout x:Name="BioContainer" Spacing="6">
+                            <Label Text="Sobre ti (Breve biografía)" FontFamily="OpenSansSemibold" FontSize="13" TextColor="#374151" />
+                            <Border Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 12" BackgroundColor="White" Padding="15,5">
+                                <Editor x:Name="EntryBio" Placeholder="Cuéntanos un poco sobre tu experiencia..." FontFamily="OpenSansRegular" PlaceholderColor="#9CA3AF" TextColor="#111827" FontSize="15" BackgroundColor="Transparent" HeightRequest="80" />
+                            </Border>
+                        </VerticalStackLayout>
+                        
+                        <Button Text="Siguiente ➔" Clicked="OnNextTapped" BackgroundColor="#4024A2" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" VerticalOptions="End" Margin="0,20,0,0"/>
+                    </VerticalStackLayout>
+
+                    <!-- PASO FOTO -->
+                    <VerticalStackLayout x:Name="PasoFoto" Spacing="20" IsVisible="False">
+                        <Label Text="Sube una foto tuya" FontSize="24" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" Margin="0,20,0,0"/>
+                        <Label Text="Tomaremos una foto para tu perfil" FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" Margin="0,-10,0,20"/>
+                        
+                        <Border Stroke="#EAEAEA" StrokeThickness="2" StrokeShape="RoundRectangle 90" WidthRequest="180" HeightRequest="180" HorizontalOptions="Center" BackgroundColor="#F3F4F6">
+                            <Path Data="M4 4H7L9 2H15L17 4H20C21.1 4 22 4.9 22 6V20C22 21.1 21.1 22 20 22H4C2.9 22 2 21.1 2 20V6C2 4.9 2.9 4 4 4ZM12 19C15.31 19 18 16.31 18 13C18 9.69 15.31 7 12 7C8.69 7 6 9.69 6 13C6 16.31 8.69 19 12 19ZM12 9C14.21 9 16 10.79 16 13C16 15.21 14.21 17 12 17C9.79 17 8 15.21 8 13C8 10.79 9.79 9 12 9Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="40" HeightRequest="40" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
+                        
+                        <Border Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 8" BackgroundColor="White" HorizontalOptions="Center" Padding="20,10">
+                            <HorizontalStackLayout Spacing="8">
+                                <Path Data="M4 4H7L9 2H15L17 4H20C21.1 4 22 4.9 22 6V20C22 21.1 21.1 22 20 22H4C2.9 22 2 21.1 2 20V6C2 4.9 2.9 4 4 4ZM12 19C15.31 19 18 16.31 18 13C18 9.69 15.31 7 12 7C8.69 7 6 9.69 6 13C6 16.31 8.69 19 12 19ZM12 9C14.21 9 16 10.79 16 13C16 15.21 14.21 17 12 17C9.79 17 8 15.21 8 13C8 10.79 9.79 9 12 9Z" Fill="#4024A2" Aspect="Uniform" WidthRequest="18" HeightRequest="18"/>
+                                <Label Text="Tomar foto" FontFamily="OpenSansSemibold" TextColor="#374151" VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                        </Border>
+
+                        <Button x:Name="BtnNextFoto" Text="Siguiente ➔" Clicked="OnNextTapped" BackgroundColor="#4024A2" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" VerticalOptions="End" Margin="0,20,0,0"/>
+                    </VerticalStackLayout>
+
+                    <!-- PASO TRABAJO Y TARIFA (SOLO CUIDADOR) -->
+                    <VerticalStackLayout x:Name="PasoTrabajo" Spacing="20" IsVisible="False">
+                        <Label Text="¿Qué trabajo haces?" FontSize="24" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" Margin="0,20,0,0"/>
+                        <Label Text="Selecciona tu experiencia y tarifa." HorizontalTextAlignment="Center" FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" Margin="0,-10,0,20"/>
+                        
+                        <Border x:Name="JobOption1" Stroke="#E5E7EB" StrokeThickness="2" StrokeShape="RoundRectangle 12" Padding="15" BackgroundColor="White">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnJobOptionTapped" CommandParameter="1" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto, *, Auto">
+                                <Path x:Name="JobIcon1" Grid.Column="0" Data="M19.36 2.72L20.78 4.14L15.06 9.85C16.13 11.39 16.28 13.24 15.38 14.44L9.06 8.12C10.26 7.22 12.11 7.37 13.65 8.44L19.36 2.72ZM5.93 17.57C3.92 15.56 2.69 13.16 2.35 10.92L7.23 8.34L15.16 16.27L12.58 21.15C10.34 20.81 7.94 19.58 5.93 17.57ZM3.17 18.5C4.7 20.03 6.7 21.05 8.65 21.43L2 22L2.57 15.35C2.95 17.3 3.97 19.3 5.5 20.83L3.17 18.5Z" Fill="#374151" Aspect="Uniform" WidthRequest="22" HeightRequest="22" VerticalOptions="Center" Margin="0,0,15,0"/>
+                                <Label x:Name="JobText1" Grid.Column="1" Text="Limpieza del hogar" FontFamily="OpenSansSemibold" TextColor="#374151" VerticalOptions="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border x:Name="JobOption2" Stroke="#4024A2" StrokeThickness="2" StrokeShape="RoundRectangle 12" Padding="15" BackgroundColor="#F3E8FF">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnJobOptionTapped" CommandParameter="2" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto, *, Auto">
+                                <Path x:Name="JobIcon2" Grid.Column="0" Data="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 4C13.66 4 15 5.34 15 7C15 8.66 13.66 10 12 10C10.34 10 9 8.66 9 7C9 5.34 10.34 4 12 4ZM16 18H8V16C8 13.34 13.33 12 16 12C16 12 16 12.01 16 12.01V18Z" Fill="#4024A2" Aspect="Uniform" WidthRequest="22" HeightRequest="22" VerticalOptions="Center" Margin="0,0,15,0"/>
+                                <Label x:Name="JobText2" Grid.Column="1" Text="Niñera / Cuidadora" FontFamily="OpenSansSemibold" TextColor="#4024A2" VerticalOptions="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <Border x:Name="JobOption3" Stroke="#E5E7EB" StrokeThickness="2" StrokeShape="RoundRectangle 12" Padding="15" BackgroundColor="White">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnJobOptionTapped" CommandParameter="3" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto, *, Auto">
+                                <Path x:Name="JobIcon3" Grid.Column="0" Data="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 4C13.66 4 15 5.34 15 7C15 8.66 13.66 10 12 10C10.34 10 9 8.66 9 7C9 5.34 10.34 4 12 4ZM16 18H8V16C8 13.34 13.33 12 16 12C16 12 16 12.01 16 12.01V18Z" Fill="#374151" Aspect="Uniform" WidthRequest="22" HeightRequest="22" VerticalOptions="Center" Margin="0,0,15,0"/>
+                                <Label x:Name="JobText3" Grid.Column="1" Text="Cuidadora de adultos" FontFamily="OpenSansSemibold" TextColor="#374151" VerticalOptions="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <VerticalStackLayout Spacing="6" Margin="0,15,0,0">
+                            <Label Text="Tarifa por hora ($)" FontFamily="OpenSansSemibold" FontSize="13" TextColor="#374151" />
+                            <Border Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 12" BackgroundColor="White" Padding="15,2">
+                                <Entry x:Name="EntryTarifa" Keyboard="Numeric" Placeholder="Ej. 15.00" FontFamily="OpenSansRegular" PlaceholderColor="#9CA3AF" TextColor="#111827" FontSize="15" BackgroundColor="Transparent" HeightRequest="45" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <Button Text="Siguiente ➔" Clicked="OnNextTapped" BackgroundColor="#4024A2" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" VerticalOptions="End" Margin="0,20,0,0"/>
+                    </VerticalStackLayout>
+
+                    <!-- PASO DOCUMENTOS (SOLO CUIDADOR) -->
+                    <VerticalStackLayout x:Name="PasoDocumentos" Spacing="20" IsVisible="False">
+                        <Label Text="Documentos Legales" FontSize="24" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" Margin="0,20,0,0"/>
+                        <Label Text="Sube fotos claras de estos documentos." FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" Margin="0,-10,0,20"/>
+                        
+                        <Label Text="Cédula de Identidad (Ambos lados)" FontFamily="OpenSansSemibold" FontSize="13" TextColor="#374151" />
+                        <Border Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 8" BackgroundColor="White" HorizontalOptions="Fill" Padding="20,15">
+                            <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                                <Path Data="M4 4H7L9 2H15L17 4H20C21.1 4 22 4.9 22 6V20C22 21.1 21.1 22 20 22H4C2.9 22 2 21.1 2 20V6C2 4.9 2.9 4 4 4ZM12 19C15.31 19 18 16.31 18 13C18 9.69 15.31 7 12 7C8.69 7 6 9.69 6 13C6 16.31 8.69 19 12 19ZM12 9C14.21 9 16 10.79 16 13C16 15.21 14.21 17 12 17C9.79 17 8 15.21 8 13C8 10.79 9.79 9 12 9Z" Fill="#4024A2" Aspect="Uniform" WidthRequest="18" HeightRequest="18"/>
+                                <Label Text="Tomar foto a la Cédula" FontFamily="OpenSansSemibold" TextColor="#4024A2" VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                        </Border>
+
+                        <Label Text="Carta de No Antecedentes Penales" FontFamily="OpenSansSemibold" FontSize="13" TextColor="#374151" Margin="0,10,0,0" />
+                        <Border Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 8" BackgroundColor="White" HorizontalOptions="Fill" Padding="20,15">
+                            <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                                <Path Data="M4 4H7L9 2H15L17 4H20C21.1 4 22 4.9 22 6V20C22 21.1 21.1 22 20 22H4C2.9 22 2 21.1 2 20V6C2 4.9 2.9 4 4 4ZM12 19C15.31 19 18 16.31 18 13C18 9.69 15.31 7 12 7C8.69 7 6 9.69 6 13C6 16.31 8.69 19 12 19ZM12 9C14.21 9 16 10.79 16 13C16 15.21 14.21 17 12 17C9.79 17 8 15.21 8 13C8 10.79 9.79 9 12 9Z" Fill="#4024A2" Aspect="Uniform" WidthRequest="18" HeightRequest="18"/>
+                                <Label Text="Subir Documento" FontFamily="OpenSansSemibold" TextColor="#4024A2" VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                        </Border>
+
+                        <Button Text="Siguiente ➔" Clicked="OnNextTapped" BackgroundColor="#4024A2" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" VerticalOptions="End" Margin="0,20,0,0"/>
+                    </VerticalStackLayout>
+
+                    <!-- PASO DIRECCION (SOLO CLIENTE) -->
+                    <VerticalStackLayout x:Name="PasoDireccion" Spacing="20" IsVisible="False">
+                        <Label Text="Datos de Contacto" FontSize="24" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" Margin="0,20,0,0"/>
+                        <Label Text="Para enviar a los cuidadores" FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" Margin="0,-10,0,10"/>
+                        
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Dirección Principal" FontFamily="OpenSansSemibold" FontSize="13" TextColor="#374151" />
+                            <Border Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 12" BackgroundColor="White" Padding="15,2">
+                                <Entry x:Name="EntryDireccion" Placeholder="Ej. Calle Principal 123" FontFamily="OpenSansRegular" PlaceholderColor="#9CA3AF" TextColor="#111827" FontSize="15" BackgroundColor="Transparent" HeightRequest="45" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <Label Text="Contacto de Emergencia" FontFamily="OpenSansSemibold" FontSize="13" TextColor="#374151" Margin="0,5,0,0"/>
+                        
+                        <VerticalStackLayout Spacing="6">
+                            <Border Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 12" BackgroundColor="White" Padding="15,2">
+                                <Entry x:Name="EntryEmergenciaNombre" Placeholder="Nombre del contacto" FontFamily="OpenSansRegular" PlaceholderColor="#9CA3AF" TextColor="#111827" FontSize="15" BackgroundColor="Transparent" HeightRequest="45" />
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="6">
+                            <Border Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 12" BackgroundColor="White" Padding="15,2">
+                                <Entry x:Name="EntryEmergenciaTelefono" Keyboard="Telephone" Placeholder="Número de teléfono" FontFamily="OpenSansRegular" PlaceholderColor="#9CA3AF" TextColor="#111827" FontSize="15" BackgroundColor="Transparent" HeightRequest="45" />
+                            </Border>
+                        </VerticalStackLayout>
+                        
+                        <Button Text="Finalizar ✔" Clicked="OnNextTapped" BackgroundColor="#4024A2" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" VerticalOptions="End" Margin="0,20,0,0"/>
+                    </VerticalStackLayout>
+
+                    <!-- PASO 8: Cobro (SOLO CUIDADOR) -->
+                    <VerticalStackLayout x:Name="PasoCobro" Spacing="20" IsVisible="False">
+                        <Label Text="¿Cómo quieres cobrar?" FontSize="24" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" Margin="0,20,0,0"/>
+                        <Label Text="Puedes cambiarlo después" FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" Margin="0,-10,0,20"/>
+                        
+                        <Border x:Name="PayOption1" Stroke="#E5E7EB" StrokeThickness="2" StrokeShape="RoundRectangle 12" Padding="15" BackgroundColor="White">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPayOptionTapped" CommandParameter="1" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto, *, Auto">
+                                <Path x:Name="PayIcon1" Grid.Column="0" Data="M12 3L1 9H23L12 3ZM4 11V18H7V11H4ZM10 11V18H13V11H10ZM16 11V18H19V11H16ZM2 20V22H22V20H2Z" Fill="#374151" Aspect="Uniform" WidthRequest="24" HeightRequest="24" VerticalOptions="Center" Margin="0,0,15,0"/>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                    <Label x:Name="PayText1" Text="Cuenta bancaria" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                                    <Label Text="Transfiere a tu cuenta" FontFamily="OpenSansRegular" FontSize="12" TextColor="#6B7280"/>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+
+                        <Border x:Name="PayOption2" Stroke="#4024A2" StrokeThickness="2" StrokeShape="RoundRectangle 12" Padding="15" BackgroundColor="#F3E8FF">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPayOptionTapped" CommandParameter="2" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto, *, Auto">
+                                <Path x:Name="PayIcon2" Grid.Column="0" Data="M21 7.28V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V16.72C21.59 16.37 22 15.74 22 15V9C22 8.26 21.59 7.63 21 7.28ZM20 15H13V9H20V15ZM5 19V5H19V7H13C11.9 7 11 7.9 11 9V15C11 16.1 11.9 17 13 17H19V19H5ZM16 13.5C15.17 13.5 14.5 12.83 14.5 12C14.5 11.17 15.17 10.5 16 10.5C16.83 10.5 17.5 11.17 17.5 12C17.5 12.83 16.83 13.5 16 13.5Z" Fill="#4024A2" Aspect="Uniform" WidthRequest="24" HeightRequest="24" VerticalOptions="Center" Margin="0,0,15,0"/>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                    <Label x:Name="PayText2" Text="Billetera CuidApp" FontFamily="OpenSansSemibold" TextColor="#4024A2"/>
+                                    <Label Text="Retira cuando quieras" FontFamily="OpenSansRegular" FontSize="12" TextColor="#6B7280"/>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+
+                        <Border x:Name="PayOption3" Stroke="#E5E7EB" StrokeThickness="2" StrokeShape="RoundRectangle 12" Padding="15" BackgroundColor="White">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPayOptionTapped" CommandParameter="3" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto, *, Auto">
+                                <Path x:Name="PayIcon3" Grid.Column="0" Data="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM11 19.93C7.05 19.43 4 16.05 4 12C4 7.95 7.05 4.57 11 4.07V19.93ZM13 4.07C16.95 4.57 20 7.95 20 12C20 16.05 16.95 19.43 13 19.93V4.07Z" Fill="#374151" Aspect="Uniform" WidthRequest="24" HeightRequest="24" VerticalOptions="Center" Margin="0,0,15,0"/>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                    <Label x:Name="PayText3" Text="Efectivo" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                                    <Label Text="Punto de retiro físico" FontFamily="OpenSansRegular" FontSize="12" TextColor="#6B7280"/>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+
+                        <Button Text="Finalizar ✔" Clicked="OnNextTapped" BackgroundColor="#4024A2" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" VerticalOptions="End" Margin="0,20,0,0"/>
+                    </VerticalStackLayout>
+
+                </Grid>
+            </ScrollView>
+        </Grid>
+
+        <!-- Overlay Exito -->
+        <ContentView x:Name="OverlayExito" BackgroundColor="#80000000" Opacity="0" IsVisible="False" InputTransparent="False">
+            <Border Stroke="Transparent" StrokeShape="RoundRectangle 20" BackgroundColor="White" Padding="30" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="300">
+                <VerticalStackLayout Spacing="15" HorizontalOptions="Center">
+                    <Path Data="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" Fill="#065F46" Aspect="Uniform" WidthRequest="60" HeightRequest="60" HorizontalOptions="Center"/>
+                    <Label Text="¡Éxito!" FontSize="24" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
+                    <Label Text="Registro completado" FontSize="16" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                </VerticalStackLayout>
+            </Border>
+        </ContentView>
+    </Grid>
+</ContentPage>

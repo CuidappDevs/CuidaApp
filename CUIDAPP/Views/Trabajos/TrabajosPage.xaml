@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CUIDAPP.Views.Trabajos.TrabajosPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#F9FAFB">
+
+    <Grid RowDefinitions="Auto, Auto, *, Auto">
+        
+        <!-- HEADER -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Padding="20,15,20,10" BackgroundColor="White">
+            <ContentView x:Name="BtnBack" VerticalOptions="Center">
+                <ContentView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </ContentView.GestureRecognizers>
+                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
+            </ContentView>
+            
+            <Label Grid.Column="1" Text="Trabajos disponibles" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+            
+            <!-- Icono Filtro -->
+            <Path Grid.Column="2" Data="M3 5H21V7H3V5ZM7 11H17V13H7V11ZM10 17H14V19H10V17Z" Fill="#6B7280" Aspect="Uniform" WidthRequest="22" HeightRequest="22" VerticalOptions="Center"/>
+        </Grid>
+
+        <!-- TABS -->
+        <Grid Grid.Row="1" ColumnDefinitions="*, *, *" Padding="0,10,0,0" BackgroundColor="White">
+            <VerticalStackLayout Grid.Column="0" Spacing="8">
+                <Label Text="Nuevos" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#4024A2" HorizontalOptions="Center"/>
+                <BoxView HeightRequest="2" Color="#4024A2" HorizontalOptions="Fill"/>
+            </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="1" Spacing="8">
+                <Label Text="Aceptados" FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
+                <BoxView HeightRequest="2" Color="Transparent" HorizontalOptions="Fill"/>
+            </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="2" Spacing="8">
+                <Label Text="Historial" FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
+                <BoxView HeightRequest="2" Color="Transparent" HorizontalOptions="Fill"/>
+            </VerticalStackLayout>
+        </Grid>
+
+        <!-- CONTENIDO / LISTA DE TRABAJOS -->
+        <ScrollView Grid.Row="2">
+            <VerticalStackLayout Padding="20,15,20,30" Spacing="15">
+                
+                <!-- Tarjeta de Trabajo 1 (Limpieza) -->
+                <Border Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="20">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnJobTapped" />
+                    </Border.GestureRecognizers>
+                    <Border.Shadow>
+                        <Shadow Brush="#000000" Offset="0,4" Opacity="0.05" Radius="10"/>
+                    </Border.Shadow>
+                    
+                    <VerticalStackLayout Spacing="10">
+                        <Grid ColumnDefinitions="Auto, *">
+                            <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="#FCE7F3" StrokeShape="RoundRectangle 20" Padding="10,4">
+                                <Label Text="Por horas" FontSize="11" FontFamily="OpenSansSemibold" TextColor="#9D174D"/>
+                            </Border>
+                            <Label Grid.Column="1" Text="3 horas" FontSize="12" FontFamily="OpenSansSemibold" TextColor="#374151" HorizontalOptions="End" VerticalOptions="Center"/>
+                        </Grid>
+                        
+                        <Label Text="Limpieza del hogar" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                        
+                        <HorizontalStackLayout Spacing="5" Margin="0,5,0,0">
+                            <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="#6B7280" Aspect="Uniform" WidthRequest="16" HeightRequest="16" VerticalOptions="Center"/>
+                            <Label Text="Bella Vista" FontSize="14" FontFamily="OpenSansRegular" TextColor="#4B5563" VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                        
+                        <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,5,0,10">
+                            <HorizontalStackLayout Grid.Column="0" Spacing="5">
+                                <Path Data="M11.99 2C6.47 2 2 6.48 2 12C2 17.52 6.47 22 11.99 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 11.99 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM12.5 7H11V13L16.25 16.15L17 14.92L12.5 12.25V7Z" Fill="#6B7280" Aspect="Uniform" WidthRequest="16" HeightRequest="16" VerticalOptions="Center"/>
+                                <Label Text="Hoy 10:00 AM" FontSize="14" FontFamily="OpenSansRegular" TextColor="#4B5563" VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                            <Label Grid.Column="2" Text="RD$900" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827" VerticalOptions="Center"/>
+                        </Grid>
+                        
+                        <Grid ColumnDefinitions="*, *" ColumnSpacing="15">
+                            <Button Grid.Column="0" Text="Rechazar" BackgroundColor="#F3F4F6" TextColor="#374151" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="12" HeightRequest="45"/>
+                            <Button Grid.Column="1" Text="Aceptar" BackgroundColor="#5A31F4" TextColor="White" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="12" HeightRequest="45"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Tarjeta de Trabajo 2 (Niñera) -->
+                <Border Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="20">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnJobTapped" />
+                    </Border.GestureRecognizers>
+                    <Border.Shadow>
+                        <Shadow Brush="#000000" Offset="0,4" Opacity="0.05" Radius="10"/>
+                    </Border.Shadow>
+                    
+                    <VerticalStackLayout Spacing="10">
+                        <Grid ColumnDefinitions="Auto, *">
+                            <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="#FCE7F3" StrokeShape="RoundRectangle 20" Padding="10,4">
+                                <Label Text="Por días" FontSize="11" FontFamily="OpenSansSemibold" TextColor="#9D174D"/>
+                            </Border>
+                            <Label Grid.Column="1" Text="Lunes a Viernes" FontSize="12" FontFamily="OpenSansSemibold" TextColor="#374151" HorizontalOptions="End" VerticalOptions="Center"/>
+                        </Grid>
+                        
+                        <Label Text="Niñera" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                        
+                        <HorizontalStackLayout Spacing="5" Margin="0,5,0,0">
+                            <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="#6B7280" Aspect="Uniform" WidthRequest="16" HeightRequest="16" VerticalOptions="Center"/>
+                            <Label Text="Piantini" FontSize="14" FontFamily="OpenSansRegular" TextColor="#4B5563" VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                        
+                        <Grid ColumnDefinitions="Auto, *, Auto" Margin="0,5,0,10">
+                            <HorizontalStackLayout Grid.Column="0" Spacing="5">
+                                <Path Data="M11.99 2C6.47 2 2 6.48 2 12C2 17.52 6.47 22 11.99 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 11.99 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM12.5 7H11V13L16.25 16.15L17 14.92L12.5 12.25V7Z" Fill="#6B7280" Aspect="Uniform" WidthRequest="16" HeightRequest="16" VerticalOptions="Center"/>
+                                <Label Text="2:00 PM - 6:00 PM" FontSize="14" FontFamily="OpenSansRegular" TextColor="#4B5563" VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                            <Label Grid.Column="2" Text="RD$3,200 / sem" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827" VerticalOptions="Center"/>
+                        </Grid>
+                        
+                        <Grid ColumnDefinitions="*, *" ColumnSpacing="15">
+                            <Button Grid.Column="0" Text="Rechazar" BackgroundColor="#F3F4F6" TextColor="#374151" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="12" HeightRequest="45"/>
+                            <Button Grid.Column="1" Text="Aceptar" BackgroundColor="#5A31F4" TextColor="White" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="12" HeightRequest="45"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- BOTTOM TAB BAR (Hardcoded con Trabajos Activo) -->
+        <Border Grid.Row="3" Stroke="#F3F4F6" StrokeThickness="1" BackgroundColor="White" Padding="15,10" StrokeShape="RoundRectangle 0">
+            <Border.Shadow>
+                <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
+            </Border.Shadow>
+            <Grid ColumnDefinitions="*,*,*,*">
+                <!-- Inicio (Inactivo) -->
+                <VerticalStackLayout Grid.Column="0" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center">
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnInicioTapped" />
+                    </VerticalStackLayout.GestureRecognizers>
+                    <Path Data="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
+                    <Label Text="Inicio" FontSize="10" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+
+                <!-- Trabajos (Activo) -->
+                <VerticalStackLayout Grid.Column="1" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Path Data="M20 6H16V4C16 2.9 15.1 2 14 2H10C8.9 2 8 2.9 8 4V6H4C2.9 6 2.01 6.9 2.01 8L2 19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6ZM10 4H14V6H10V4ZM20 19H4V8H20V19Z" Fill="#5A31F4" Aspect="Uniform" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
+                    <Label Text="Trabajos" FontSize="10" FontFamily="OpenSansSemibold" TextColor="#5A31F4" HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+
+                <!-- Dinero (Inactivo) -->
+                <VerticalStackLayout Grid.Column="2" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Path Data="M21 7.28V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V16.72C21.59 16.37 22 15.74 22 15V9C22 8.26 21.59 7.63 21 7.28ZM20 15H13V9H20V15ZM5 19V5H19V7H13C11.9 7 11 7.9 11 9V15C11 16.1 11.9 17 13 17H19V19H5ZM16 13.5C15.17 13.5 14.5 12.83 14.5 12C14.5 11.17 15.17 10.5 16 10.5C16.83 10.5 17.5 11.17 17.5 12C17.5 12.83 16.83 13.5 16 13.5Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
+                    <Label Text="Dinero" FontSize="10" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+
+                <!-- Perfil (Inactivo) -->
+                <VerticalStackLayout Grid.Column="3" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center">
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnPerfilTapped" />
+                    </VerticalStackLayout.GestureRecognizers>
+                    <Path Data="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
+                    <Label Text="Perfil" FontSize="10" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
+
+    </Grid>
+
+</ContentPage>

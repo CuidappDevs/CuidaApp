@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="CUIDAPP/CUIDAPP.csproj" />
+  <Project Path="CUIDAPP_API/CUIDAPP_API.csproj" />
+</Solution>
