@@ -24,5 +24,10 @@ namespace CUIDAPP.Views.Perfil
         {
             await Shell.Current.GoToAsync("TrabajosPage");
         }
+
+        private async void OnDineroTapped(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync("DineroPage");
+        }
     }
 }

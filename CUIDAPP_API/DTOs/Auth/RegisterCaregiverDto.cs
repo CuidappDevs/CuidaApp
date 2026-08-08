@@ -10,5 +10,7 @@ namespace CUIDAPP_API.DTOs.Auth
         public decimal TarifaHora { get; set; }
         public string? Bio { get; set; }
         public string? MetodoCobro { get; set; }
+        public string? CedulaUrl { get; set; }
+        public string? CartaAntecedentesUrl { get; set; }
     }
 }

@@ -124,12 +124,17 @@
                             <Path Data="M4 4H7L9 2H15L17 4H20C21.1 4 22 4.9 22 6V20C22 21.1 21.1 22 20 22H4C2.9 22 2 21.1 2 20V6C2 4.9 2.9 4 4 4ZM12 19C15.31 19 18 16.31 18 13C18 9.69 15.31 7 12 7C8.69 7 6 9.69 6 13C6 16.31 8.69 19 12 19ZM12 9C14.21 9 16 10.79 16 13C16 15.21 14.21 17 12 17C9.79 17 8 15.21 8 13C8 10.79 9.79 9 12 9Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="40" HeightRequest="40" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </Border>
                         
-                        <Border Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 8" BackgroundColor="White" HorizontalOptions="Center" Padding="20,10">
+                        <Border x:Name="BtnPickFoto" Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 8" BackgroundColor="White" HorizontalOptions="Center" Padding="20,10">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPickFotoTapped" />
+                            </Border.GestureRecognizers>
                             <HorizontalStackLayout Spacing="8">
                                 <Path Data="M4 4H7L9 2H15L17 4H20C21.1 4 22 4.9 22 6V20C22 21.1 21.1 22 20 22H4C2.9 22 2 21.1 2 20V6C2 4.9 2.9 4 4 4ZM12 19C15.31 19 18 16.31 18 13C18 9.69 15.31 7 12 7C8.69 7 6 9.69 6 13C6 16.31 8.69 19 12 19ZM12 9C14.21 9 16 10.79 16 13C16 15.21 14.21 17 12 17C9.79 17 8 15.21 8 13C8 10.79 9.79 9 12 9Z" Fill="#4024A2" Aspect="Uniform" WidthRequest="18" HeightRequest="18"/>
-                                <Label Text="Tomar foto" FontFamily="OpenSansSemibold" TextColor="#374151" VerticalOptions="Center"/>
+                                <Label Text="Seleccionar Imagen" FontFamily="OpenSansSemibold" TextColor="#374151" VerticalOptions="Center"/>
                             </HorizontalStackLayout>
                         </Border>
+                        
+                        <Label x:Name="LblFotoFileName" Text="Ningún archivo seleccionado" FontFamily="OpenSansRegular" FontSize="12" TextColor="#9CA3AF" HorizontalOptions="Center" Margin="0,-10,0,0"/>
 
                         <Button x:Name="BtnNextFoto" Text="Siguiente ➔" Clicked="OnNextTapped" BackgroundColor="#4024A2" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" VerticalOptions="End" Margin="0,20,0,0"/>
                     </VerticalStackLayout>
@@ -185,20 +190,28 @@
                         <Label Text="Sube fotos claras de estos documentos." FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" Margin="0,-10,0,20"/>
                         
                         <Label Text="Cédula de Identidad (Ambos lados)" FontFamily="OpenSansSemibold" FontSize="13" TextColor="#374151" />
-                        <Border Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 8" BackgroundColor="White" HorizontalOptions="Fill" Padding="20,15">
+                        <Border x:Name="BtnPickCedula" Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 8" BackgroundColor="White" HorizontalOptions="Fill" Padding="20,15">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPickCedulaTapped" />
+                            </Border.GestureRecognizers>
                             <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
                                 <Path Data="M4 4H7L9 2H15L17 4H20C21.1 4 22 4.9 22 6V20C22 21.1 21.1 22 20 22H4C2.9 22 2 21.1 2 20V6C2 4.9 2.9 4 4 4ZM12 19C15.31 19 18 16.31 18 13C18 9.69 15.31 7 12 7C8.69 7 6 9.69 6 13C6 16.31 8.69 19 12 19ZM12 9C14.21 9 16 10.79 16 13C16 15.21 14.21 17 12 17C9.79 17 8 15.21 8 13C8 10.79 9.79 9 12 9Z" Fill="#4024A2" Aspect="Uniform" WidthRequest="18" HeightRequest="18"/>
-                                <Label Text="Tomar foto a la Cédula" FontFamily="OpenSansSemibold" TextColor="#4024A2" VerticalOptions="Center"/>
+                                <Label Text="Subir Cédula" FontFamily="OpenSansSemibold" TextColor="#4024A2" VerticalOptions="Center"/>
                             </HorizontalStackLayout>
                         </Border>
+                        <Label x:Name="LblCedulaFileName" Text="Ningún archivo seleccionado" FontFamily="OpenSansRegular" FontSize="12" TextColor="#9CA3AF" HorizontalOptions="Center" Margin="0,-10,0,0"/>
 
                         <Label Text="Carta de No Antecedentes Penales" FontFamily="OpenSansSemibold" FontSize="13" TextColor="#374151" Margin="0,10,0,0" />
-                        <Border Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 8" BackgroundColor="White" HorizontalOptions="Fill" Padding="20,15">
+                        <Border x:Name="BtnPickAntecedentes" Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 8" BackgroundColor="White" HorizontalOptions="Fill" Padding="20,15">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPickAntecedentesTapped" />
+                            </Border.GestureRecognizers>
                             <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
                                 <Path Data="M4 4H7L9 2H15L17 4H20C21.1 4 22 4.9 22 6V20C22 21.1 21.1 22 20 22H4C2.9 22 2 21.1 2 20V6C2 4.9 2.9 4 4 4ZM12 19C15.31 19 18 16.31 18 13C18 9.69 15.31 7 12 7C8.69 7 6 9.69 6 13C6 16.31 8.69 19 12 19ZM12 9C14.21 9 16 10.79 16 13C16 15.21 14.21 17 12 17C9.79 17 8 15.21 8 13C8 10.79 9.79 9 12 9Z" Fill="#4024A2" Aspect="Uniform" WidthRequest="18" HeightRequest="18"/>
                                 <Label Text="Subir Documento" FontFamily="OpenSansSemibold" TextColor="#4024A2" VerticalOptions="Center"/>
                             </HorizontalStackLayout>
                         </Border>
+                        <Label x:Name="LblAntecedentesFileName" Text="Ningún archivo seleccionado" FontFamily="OpenSansRegular" FontSize="12" TextColor="#9CA3AF" HorizontalOptions="Center" Margin="0,-10,0,0"/>
 
                         <Button Text="Siguiente ➔" Clicked="OnNextTapped" BackgroundColor="#4024A2" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" VerticalOptions="End" Margin="0,20,0,0"/>
                     </VerticalStackLayout>
@@ -287,9 +300,9 @@
         <ContentView x:Name="OverlayExito" BackgroundColor="#80000000" Opacity="0" IsVisible="False" InputTransparent="False">
             <Border Stroke="Transparent" StrokeShape="RoundRectangle 20" BackgroundColor="White" Padding="30" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="300">
                 <VerticalStackLayout Spacing="15" HorizontalOptions="Center">
-                    <Path Data="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" Fill="#065F46" Aspect="Uniform" WidthRequest="60" HeightRequest="60" HorizontalOptions="Center"/>
-                    <Label Text="¡Éxito!" FontSize="24" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
-                    <Label Text="Registro completado" FontSize="16" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                    <Path x:Name="OverlayIcon" Data="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" Fill="#065F46" Aspect="Uniform" WidthRequest="60" HeightRequest="60" HorizontalOptions="Center"/>
+                    <Label x:Name="OverlayTitle" Text="¡Éxito!" FontSize="24" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
+                    <Label x:Name="OverlayMessage" Text="Registro completado" FontSize="16" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
                 </VerticalStackLayout>
             </Border>
         </ContentView>

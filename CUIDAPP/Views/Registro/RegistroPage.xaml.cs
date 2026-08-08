@@ -1,4 +1,6 @@
 using Microsoft.Maui.Controls;
+using CUIDAPP.Services;
+using CUIDAPP.Models.Auth;
 
 namespace CUIDAPP.Views.Registro
 {
@@ -10,6 +12,12 @@ namespace CUIDAPP.Views.Registro
         private string selectedRole = "Cuidador"; // Default
         private int selectedJob = 2; // Default Niñera
         private int selectedPay = 2; // Default Billetera
+        private readonly ApiService _apiService = new ApiService();
+
+        // Variables para guardar las rutas de los archivos seleccionados
+        private string fotoPath = "";
+        private string cedulaPath = "";
+        private string antecedentesPath = "";
 
         public RegistroPage()
         {
@@ -62,6 +70,9 @@ namespace CUIDAPP.Views.Registro
 
         private async void OnNextTapped(object sender, EventArgs e)
         {
+            if (!await ValidateCurrentStep())
+                return;
+
             if (currentStepIndex < currentFlow.Count - 1)
             {
                 currentStepIndex++;
@@ -74,24 +85,189 @@ namespace CUIDAPP.Views.Registro
             }
         }
 
+        private async Task<bool> ValidateCurrentStep()
+        {
+            var currentView = currentFlow[currentStepIndex];
+
+            if (currentView == PasoCredenciales)
+            {
+                if (string.IsNullOrWhiteSpace(EntryEmail.Text) || !EntryEmail.Text.Contains("@"))
+                {
+                    await DisplayAlert("Error", "Por favor ingresa un correo electrónico válido.", "OK");
+                    return false;
+                }
+                if (string.IsNullOrWhiteSpace(EntryPassword.Text) || EntryPassword.Text.Length < 6)
+                {
+                    await DisplayAlert("Error", "La contraseña debe tener al menos 6 caracteres.", "OK");
+                    return false;
+                }
+            }
+            else if (currentView == PasoNombre)
+            {
+                if (string.IsNullOrWhiteSpace(EntryNombre.Text))
+                {
+                    await DisplayAlert("Error", "El nombre completo es obligatorio.", "OK");
+                    return false;
+                }
+            }
+            else if (currentView == PasoTrabajo)
+            {
+                if (string.IsNullOrWhiteSpace(EntryTarifa.Text) || !decimal.TryParse(EntryTarifa.Text, out decimal tarifa) || tarifa <= 0)
+                {
+                    await DisplayAlert("Error", "Por favor ingresa una tarifa por hora válida (ej. 15.00).", "OK");
+                    return false;
+                }
+            }
+            else if (currentView == PasoDireccion)
+            {
+                if (string.IsNullOrWhiteSpace(EntryDireccion.Text) || 
+                    string.IsNullOrWhiteSpace(EntryEmergenciaNombre.Text) || 
+                    string.IsNullOrWhiteSpace(EntryEmergenciaTelefono.Text))
+                {
+                    await DisplayAlert("Error", "Por favor completa todos los campos de contacto y emergencia.", "OK");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         private async Task FinishRegistration()
         {
+            // Mostrar modal de carga con texto de "Cargando..."
+            OverlayTitle.Text = "Cargando...";
+            OverlayMessage.Text = "Enviando datos al servidor";
+            OverlayIcon.IsVisible = false; // Ocultar el icono de check
             OverlayExito.IsVisible = true;
             await OverlayExito.FadeTo(1, 300);
-            
-            // Simular petición a BD
-            await Task.Delay(2000);
-            
-            await OverlayExito.FadeTo(0, 200);
-            OverlayExito.IsVisible = false;
 
-            if (selectedRole == "Cuidador")
+            bool success = false;
+
+            if (selectedRole == "Cliente")
             {
-                await Shell.Current.GoToAsync("CuidadorDashboardPage");
+                var request = new RegisterClientRequest
+                {
+                    Email = EntryEmail.Text ?? "",
+                    Password = EntryPassword.Text ?? "",
+                    NombreCompleto = EntryNombre.Text ?? "",
+                    DireccionPrincipal = EntryDireccion.Text ?? "",
+                    ContactoEmergenciaNombre = EntryEmergenciaNombre.Text ?? "",
+                    ContactoEmergenciaTelefono = EntryEmergenciaTelefono.Text ?? "",
+                    FotoUrl = ""
+                };
+                success = await _apiService.RegisterClienteAsync(request);
             }
             else
             {
-                await Shell.Current.GoToAsync("..");
+                string especialidad = selectedJob == 1 ? "Limpieza del hogar" : (selectedJob == 2 ? "Niñera / Cuidadora" : "Cuidadora de adultos");
+                string metodoCobro = selectedPay == 1 ? "Cuenta bancaria" : (selectedPay == 2 ? "Billetera CuidApp" : "Efectivo");
+                decimal.TryParse(EntryTarifa.Text, out decimal tarifa);
+
+                var request = new RegisterCaregiverRequest
+                {
+                    Email = EntryEmail.Text ?? "",
+                    Password = EntryPassword.Text ?? "",
+                    NombreCompleto = EntryNombre.Text ?? "",
+                    Bio = EntryBio.Text ?? "",
+                    Especialidad = especialidad,
+                    TarifaHora = tarifa,
+                    MetodoCobro = metodoCobro,
+                    FotoUrl = fotoPath,
+                    CedulaUrl = cedulaPath,
+                    CartaAntecedentesUrl = antecedentesPath
+                };
+                success = await _apiService.RegisterCuidadorAsync(request);
+            }
+            
+            if (success)
+            {
+                // Cambiar el overlay a modo Éxito
+                OverlayTitle.Text = "¡Éxito!";
+                OverlayMessage.Text = "Registro completado";
+                OverlayIcon.IsVisible = true;
+
+                await Task.Delay(1500); // 1.5s para que lo vea
+                
+                await OverlayExito.FadeTo(0, 200);
+                OverlayExito.IsVisible = false;
+
+                if (selectedRole == "Cuidador")
+                    await Shell.Current.GoToAsync("CuidadorDashboardPage");
+                else
+                    await Shell.Current.GoToAsync("..");
+            }
+            else
+            {
+                await OverlayExito.FadeTo(0, 200);
+                OverlayExito.IsVisible = false;
+                await DisplayAlert("Error", "Ocurrió un error al conectar con el servidor. Verifica que la API esté corriendo.", "OK");
+            }
+        }
+
+        private async void OnPickFotoTapped(object sender, TappedEventArgs e)
+        {
+            try
+            {
+                var result = await FilePicker.Default.PickAsync(new PickOptions
+                {
+                    PickerTitle = "Selecciona una imagen de perfil",
+                    FileTypes = FilePickerFileType.Images
+                });
+
+                if (result != null)
+                {
+                    fotoPath = result.FullPath;
+                    LblFotoFileName.Text = result.FileName;
+                    LblFotoFileName.TextColor = Color.FromArgb("#10B981"); // Verde éxito
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error", $"No se pudo seleccionar la imagen: {ex.Message}", "OK");
+            }
+        }
+
+        private async void OnPickCedulaTapped(object sender, TappedEventArgs e)
+        {
+            try
+            {
+                var result = await FilePicker.Default.PickAsync(new PickOptions
+                {
+                    PickerTitle = "Selecciona el documento de Cédula"
+                });
+
+                if (result != null)
+                {
+                    cedulaPath = result.FullPath;
+                    LblCedulaFileName.Text = result.FileName;
+                    LblCedulaFileName.TextColor = Color.FromArgb("#10B981");
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error", $"No se pudo seleccionar el archivo: {ex.Message}", "OK");
+            }
+        }
+
+        private async void OnPickAntecedentesTapped(object sender, TappedEventArgs e)
+        {
+            try
+            {
+                var result = await FilePicker.Default.PickAsync(new PickOptions
+                {
+                    PickerTitle = "Selecciona la Carta de Antecedentes"
+                });
+
+                if (result != null)
+                {
+                    antecedentesPath = result.FullPath;
+                    LblAntecedentesFileName.Text = result.FileName;
+                    LblAntecedentesFileName.TextColor = Color.FromArgb("#10B981");
+                }
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error", $"No se pudo seleccionar el archivo: {ex.Message}", "OK");
             }
         }
 

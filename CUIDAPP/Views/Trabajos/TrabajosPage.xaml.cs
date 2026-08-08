@@ -24,6 +24,11 @@ namespace CUIDAPP.Views.Trabajos
             await Shell.Current.GoToAsync("CuidadorPerfilPage");
         }
 
+        private async void OnDineroTapped(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync("DineroPage");
+        }
+
         private async void OnJobTapped(object sender, EventArgs e)
         {
             // Navegar al detalle del trabajo

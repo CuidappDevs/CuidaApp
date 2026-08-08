@@ -10,6 +10,7 @@ namespace CUIDAPP
             Routing.RegisterRoute("CuidadorPerfilPage", typeof(Views.Perfil.CuidadorPerfilPage));
             Routing.RegisterRoute("TrabajosPage", typeof(Views.Trabajos.TrabajosPage));
             Routing.RegisterRoute("DetalleTrabajoPage", typeof(Views.Trabajos.DetalleTrabajoPage));
+            Routing.RegisterRoute("DineroPage", typeof(Views.Dinero.DineroPage));
         }
     }
 }

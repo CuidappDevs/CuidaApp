@@ -7,6 +7,7 @@ namespace CUIDAPP_API.DTOs.Auth
         public string NombreCompleto { get; set; } = string.Empty;
         public string? FotoUrl { get; set; }
         public string? DireccionPrincipal { get; set; }
-        public string? ContactoEmergencia { get; set; }
+        public string? ContactoEmergenciaNombre { get; set; }
+        public string? ContactoEmergenciaTelefono { get; set; }
     }
 }

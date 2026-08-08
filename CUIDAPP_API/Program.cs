@@ -21,14 +21,12 @@ builder.Services.AddScoped<ICuidadorService, CuidadorService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.MapScalarApiReference();
-}
+// Habilitar documentación interactiva visual (Scalar UI)
+app.MapOpenApi();
+app.MapScalarApiReference();
 
-app.UseHttpsRedirection();
+// Redirigir la raíz (http://192.169.179.217/) directamente a la interfaz visual Scalar
+app.MapGet("/", () => Results.Redirect("/scalar/v1"));
 
 app.UseAuthorization();
 

@@ -15,6 +15,8 @@ namespace CUIDAPP
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
+            builder.Services.AddSingleton<Services.ApiService>();
+
 #if DEBUG
     		builder.Logging.AddDebug();
 #endif

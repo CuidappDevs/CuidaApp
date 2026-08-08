@@ -21,6 +21,15 @@ namespace CUIDAPP_API.Services.Auth
             _connectionString = _config.GetConnectionString("DefaultConnection") ?? "";
         }
 
+        private string HashPassword(string password)
+        {
+            using (var sha256 = System.Security.Cryptography.SHA256.Create())
+            {
+                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return BitConverter.ToString(hashedBytes).Replace("-", "").ToLowerInvariant();
+            }
+        }
+
         public async Task<AuthResponseDto?> LoginAsync(LoginRequestDto loginDto)
         {
             using var connection = new SqlConnection(_connectionString);
@@ -35,8 +44,8 @@ namespace CUIDAPP_API.Services.Auth
             {
                 var storedHash = reader["PasswordHash"].ToString();
                 
-                // IMPORTANTE: En producción usar BCrypt.Verify
-                if (storedHash == loginDto.Password) 
+                // Verificación de contraseña usando el hash
+                if (storedHash == HashPassword(loginDto.Password)) 
                 {
                     var id = Convert.ToInt32(reader["Id"]);
                     var rolId = Convert.ToInt32(reader["RolId"]);
@@ -64,12 +73,12 @@ namespace CUIDAPP_API.Services.Auth
             command.CommandType = CommandType.StoredProcedure;
             
             command.Parameters.AddWithValue("@Email", registerDto.Email);
-            // IMPORTANTE: Hashear contraseña antes de enviar en producción
-            command.Parameters.AddWithValue("@PasswordHash", registerDto.Password);
+            command.Parameters.AddWithValue("@PasswordHash", HashPassword(registerDto.Password));
             command.Parameters.AddWithValue("@NombreCompleto", registerDto.NombreCompleto);
             command.Parameters.AddWithValue("@FotoUrl", (object?)registerDto.FotoUrl ?? DBNull.Value);
             command.Parameters.AddWithValue("@DireccionPrincipal", (object?)registerDto.DireccionPrincipal ?? DBNull.Value);
-            command.Parameters.AddWithValue("@ContactoEmergencia", (object?)registerDto.ContactoEmergencia ?? DBNull.Value);
+            command.Parameters.AddWithValue("@ContactoEmergenciaNombre", (object?)registerDto.ContactoEmergenciaNombre ?? DBNull.Value);
+            command.Parameters.AddWithValue("@ContactoEmergenciaTelefono", (object?)registerDto.ContactoEmergenciaTelefono ?? DBNull.Value);
 
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();
@@ -83,13 +92,15 @@ namespace CUIDAPP_API.Services.Auth
             command.CommandType = CommandType.StoredProcedure;
             
             command.Parameters.AddWithValue("@Email", registerDto.Email);
-            command.Parameters.AddWithValue("@PasswordHash", registerDto.Password);
+            command.Parameters.AddWithValue("@PasswordHash", HashPassword(registerDto.Password));
             command.Parameters.AddWithValue("@NombreCompleto", registerDto.NombreCompleto);
             command.Parameters.AddWithValue("@FotoUrl", (object?)registerDto.FotoUrl ?? DBNull.Value);
             command.Parameters.AddWithValue("@Especialidad", registerDto.Especialidad);
             command.Parameters.AddWithValue("@TarifaHora", registerDto.TarifaHora);
             command.Parameters.AddWithValue("@Bio", (object?)registerDto.Bio ?? DBNull.Value);
             command.Parameters.AddWithValue("@MetodoCobro", (object?)registerDto.MetodoCobro ?? DBNull.Value);
+            command.Parameters.AddWithValue("@CedulaUrl", (object?)registerDto.CedulaUrl ?? DBNull.Value);
+            command.Parameters.AddWithValue("@CartaAntecedentesUrl", (object?)registerDto.CartaAntecedentesUrl ?? DBNull.Value);
 
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();
