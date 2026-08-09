@@ -14,10 +14,13 @@ namespace CUIDAPP.Views.Registro
         private int selectedPay = 2; // Default Billetera
         private readonly ApiService _apiService = new ApiService();
 
-        // Variables para guardar las rutas de los archivos seleccionados
-        private string fotoPath = "";
-        private string cedulaPath = "";
-        private string antecedentesPath = "";
+        // Archivos elegidos localmente (aún no subidos). Se suben todos juntos al finalizar el registro.
+        private FileResult? fotoFile;
+        private FileResult? cedulaFile;
+        private FileResult? antecedentesFile;
+
+        // Carpeta única para este registro (una carpeta por usuario en el servidor con sus documentos).
+        private readonly string carpetaUsuario = Guid.NewGuid().ToString("N");
 
         public RegistroPage()
         {
@@ -120,11 +123,27 @@ namespace CUIDAPP.Views.Registro
             }
             else if (currentView == PasoDireccion)
             {
-                if (string.IsNullOrWhiteSpace(EntryDireccion.Text) || 
-                    string.IsNullOrWhiteSpace(EntryEmergenciaNombre.Text) || 
+                if (string.IsNullOrWhiteSpace(EntryDireccion.Text) ||
+                    string.IsNullOrWhiteSpace(EntryEmergenciaNombre.Text) ||
                     string.IsNullOrWhiteSpace(EntryEmergenciaTelefono.Text))
                 {
                     await DisplayAlert("Error", "Por favor completa todos los campos de contacto y emergencia.", "OK");
+                    return false;
+                }
+            }
+            else if (currentView == PasoFoto)
+            {
+                if (fotoFile == null)
+                {
+                    await DisplayAlert("Error", "Selecciona tu foto de perfil.", "OK");
+                    return false;
+                }
+            }
+            else if (currentView == PasoDocumentos)
+            {
+                if (cedulaFile == null || antecedentesFile == null)
+                {
+                    await DisplayAlert("Error", "Selecciona ambos documentos.", "OK");
                     return false;
                 }
             }
@@ -136,10 +155,50 @@ namespace CUIDAPP.Views.Registro
         {
             // Mostrar modal de carga con texto de "Cargando..."
             OverlayTitle.Text = "Cargando...";
-            OverlayMessage.Text = "Enviando datos al servidor";
+            OverlayMessage.Text = "Subiendo documentos...";
             OverlayIcon.IsVisible = false; // Ocultar el icono de check
             OverlayExito.IsVisible = true;
             await OverlayExito.FadeTo(1, 300);
+
+            // Subir todos los archivos elegidos a la carpeta de este usuario en el servidor.
+            string fotoUrl = "";
+            string cedulaUrl = "";
+            string antecedentesUrl = "";
+
+            if (fotoFile != null)
+            {
+                fotoUrl = await _apiService.UploadFileAsync(fotoFile.FullPath, carpetaUsuario) ?? "";
+                if (fotoUrl == "")
+                {
+                    await MostrarErrorSubida("No se pudo subir tu foto de perfil.");
+                    return;
+                }
+            }
+
+            if (selectedRole == "Cuidador")
+            {
+                if (cedulaFile != null)
+                {
+                    cedulaUrl = await _apiService.UploadFileAsync(cedulaFile.FullPath, carpetaUsuario) ?? "";
+                    if (cedulaUrl == "")
+                    {
+                        await MostrarErrorSubida("No se pudo subir tu cédula.");
+                        return;
+                    }
+                }
+
+                if (antecedentesFile != null)
+                {
+                    antecedentesUrl = await _apiService.UploadFileAsync(antecedentesFile.FullPath, carpetaUsuario) ?? "";
+                    if (antecedentesUrl == "")
+                    {
+                        await MostrarErrorSubida("No se pudo subir tu carta de antecedentes.");
+                        return;
+                    }
+                }
+            }
+
+            OverlayMessage.Text = "Enviando datos al servidor";
 
             bool success = false;
 
@@ -153,7 +212,7 @@ namespace CUIDAPP.Views.Registro
                     DireccionPrincipal = EntryDireccion.Text ?? "",
                     ContactoEmergenciaNombre = EntryEmergenciaNombre.Text ?? "",
                     ContactoEmergenciaTelefono = EntryEmergenciaTelefono.Text ?? "",
-                    FotoUrl = ""
+                    FotoUrl = fotoUrl
                 };
                 success = await _apiService.RegisterClienteAsync(request);
             }
@@ -172,13 +231,13 @@ namespace CUIDAPP.Views.Registro
                     Especialidad = especialidad,
                     TarifaHora = tarifa,
                     MetodoCobro = metodoCobro,
-                    FotoUrl = fotoPath,
-                    CedulaUrl = cedulaPath,
-                    CartaAntecedentesUrl = antecedentesPath
+                    FotoUrl = fotoUrl,
+                    CedulaUrl = cedulaUrl,
+                    CartaAntecedentesUrl = antecedentesUrl
                 };
                 success = await _apiService.RegisterCuidadorAsync(request);
             }
-            
+
             if (success)
             {
                 // Cambiar el overlay a modo Éxito
@@ -204,6 +263,13 @@ namespace CUIDAPP.Views.Registro
             }
         }
 
+        private async Task MostrarErrorSubida(string mensaje)
+        {
+            await OverlayExito.FadeTo(0, 200);
+            OverlayExito.IsVisible = false;
+            await DisplayAlert("Error", $"{mensaje} Verifica tu conexión e intenta de nuevo.", "OK");
+        }
+
         private async void OnPickFotoTapped(object sender, TappedEventArgs e)
         {
             try
@@ -216,9 +282,9 @@ namespace CUIDAPP.Views.Registro
 
                 if (result != null)
                 {
-                    fotoPath = result.FullPath;
+                    fotoFile = result;
                     LblFotoFileName.Text = result.FileName;
-                    LblFotoFileName.TextColor = Color.FromArgb("#10B981"); // Verde éxito
+                    LblFotoFileName.TextColor = Color.FromArgb("#10B981");
                 }
             }
             catch (Exception ex)
@@ -238,7 +304,7 @@ namespace CUIDAPP.Views.Registro
 
                 if (result != null)
                 {
-                    cedulaPath = result.FullPath;
+                    cedulaFile = result;
                     LblCedulaFileName.Text = result.FileName;
                     LblCedulaFileName.TextColor = Color.FromArgb("#10B981");
                 }
@@ -260,7 +326,7 @@ namespace CUIDAPP.Views.Registro
 
                 if (result != null)
                 {
-                    antecedentesPath = result.FullPath;
+                    antecedentesFile = result;
                     LblAntecedentesFileName.Text = result.FileName;
                     LblAntecedentesFileName.TextColor = Color.FromArgb("#10B981");
                 }

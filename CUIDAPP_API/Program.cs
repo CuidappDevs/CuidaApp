@@ -5,6 +5,17 @@ using CUIDAPP_API.Interfaces.Admin;
 using CUIDAPP_API.Services.Admin;
 using CUIDAPP_API.Interfaces.Cuidador;
 using CUIDAPP_API.Services.Cuidador;
+using CUIDAPP_API.Interfaces.Trabajo;
+using CUIDAPP_API.Services.Trabajo;
+using CUIDAPP_API.Interfaces.Busqueda;
+using CUIDAPP_API.Services.Busqueda;
+using CUIDAPP_API.Interfaces.Cliente;
+using CUIDAPP_API.Services.Cliente;
+using Microsoft.Extensions.FileProviders;
+
+// Asegurar que exista la carpeta wwwroot/uploads ANTES de crear el builder,
+// para que ASP.NET Core detecte el WebRootPath correctamente al iniciar.
+Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads"));
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +29,9 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<ICuidadorService, CuidadorService>();
+builder.Services.AddScoped<ITrabajoService, TrabajoService>();
+builder.Services.AddScoped<IBusquedaService, BusquedaService>();
+builder.Services.AddScoped<IClienteService, ClienteService>();
 
 var app = builder.Build();
 
@@ -27,6 +41,13 @@ app.MapScalarApiReference();
 
 // Redirigir la raíz (http://192.169.179.217/) directamente a la interfaz visual Scalar
 app.MapGet("/", () => Results.Redirect("/scalar/v1"));
+
+// Servir explícitamente wwwroot/uploads (fotos, cédulas, documentos subidos)
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(app.Environment.ContentRootPath, "wwwroot")),
+    RequestPath = ""
+});
 
 app.UseAuthorization();
 

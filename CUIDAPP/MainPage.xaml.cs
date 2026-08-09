@@ -46,15 +46,22 @@ namespace CUIDAPP
 
                 Preferences.Default.Set("AuthToken", result.Token);
                 Preferences.Default.Set("UserEmail", result.Email);
+                Preferences.Default.Set("UserNombre", result.NombreCompleto ?? "");
+                Preferences.Default.Set("UserFotoUrl", result.FotoUrl ?? "");
+                Preferences.Default.Set("UserId", result.UserId);
                 Preferences.Default.Set("RolId", result.RolId);
+                Preferences.Default.Set("EstadoAprobacion", result.EstadoAprobacion ?? 0);
 
                 switch (result.RolId)
                 {
                     case 3: // Cuidador
-                        await Shell.Current.GoToAsync("CuidadorDashboardPage");
+                        if (result.EstadoAprobacion == 2)
+                            await Shell.Current.GoToAsync("CuidadorDashboardPage");
+                        else
+                            await Shell.Current.GoToAsync("VerificacionPendientePage");
                         break;
                     case 2: // Cliente
-                        await DisplayAlert("Bienvenido", "Inicio de sesión exitoso.", "OK");
+                        await Shell.Current.GoToAsync("ClienteDashboardPage");
                         break;
                     default: // Admin u otro rol
                         await DisplayAlert("Bienvenido", "Inicio de sesión exitoso.", "OK");

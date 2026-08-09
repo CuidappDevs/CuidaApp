@@ -36,5 +36,7 @@
 	</array>
 	<key>XSAppIconAssets</key>
 	<string>Assets.xcassets/appicon.appiconset</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>CuidApp usa tu ubicación para mostrarte servicios de cuidado disponibles cerca de ti.</string>
 </dict>
 </plist>

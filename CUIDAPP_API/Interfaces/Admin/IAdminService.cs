@@ -7,5 +7,6 @@ namespace CUIDAPP_API.Interfaces.Admin
         Task<IEnumerable<CuidadorPendienteDto>> ObtenerCuidadoresPendientesAsync();
         Task<IEnumerable<DocumentoDto>> ObtenerDocumentosPorCuidadorAsync(int cuidadorId);
         Task<bool> ActualizarEstadoCuidadorAsync(ActualizarEstadoCuidadorDto dto);
+        Task<bool> MarcarPagoComoPagadoAsync(int pagoId);
     }
 }

@@ -77,8 +77,20 @@ namespace CUIDAPP_API.Services.Admin
             command.Parameters.AddWithValue("@Observaciones", (object?)dto.Observaciones ?? DBNull.Value);
 
             await connection.OpenAsync();
-            var rowsAffected = await command.ExecuteNonQueryAsync();
-            return rowsAffected > 0;
+            var filasAfectadas = await command.ExecuteScalarAsync();
+            return Convert.ToInt32(filasAfectadas) > 0;
+        }
+
+        public async Task<bool> MarcarPagoComoPagadoAsync(int pagoId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_MarcarPagoComoPagado", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@PagoId", pagoId);
+
+            await connection.OpenAsync();
+            var filasAfectadas = await command.ExecuteScalarAsync();
+            return Convert.ToInt32(filasAfectadas) > 0;
         }
     }
 }

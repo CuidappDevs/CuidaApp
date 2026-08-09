@@ -50,6 +50,9 @@ namespace CUIDAPP_API.Services.Auth
                     var id = Convert.ToInt32(reader["Id"]);
                     var rolId = Convert.ToInt32(reader["RolId"]);
                     var isActive = Convert.ToBoolean(reader["IsActive"]);
+                    var estadoAprobacion = reader["EstadoAprobacion"] == DBNull.Value
+                        ? (int?)null
+                        : Convert.ToInt32(reader["EstadoAprobacion"]);
 
                     if (!isActive) return null;
 
@@ -59,7 +62,11 @@ namespace CUIDAPP_API.Services.Auth
                     {
                         Token = token,
                         Email = loginDto.Email,
-                        RolId = rolId
+                        NombreCompleto = reader["NombreCompleto"] as string,
+                        FotoUrl = reader["FotoUrl"] as string,
+                        UserId = id,
+                        RolId = rolId,
+                        EstadoAprobacion = estadoAprobacion
                     };
                 }
             }

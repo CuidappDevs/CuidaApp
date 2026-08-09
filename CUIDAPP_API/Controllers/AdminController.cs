@@ -58,5 +58,21 @@ namespace CUIDAPP_API.Controllers
                 return StatusCode(500, $"Error interno: {ex.Message}");
             }
         }
+
+        [HttpPut("marcar-pago-pagado/{pagoId}")]
+        public async Task<IActionResult> MarcarPagoComoPagado(int pagoId)
+        {
+            try
+            {
+                var success = await _adminService.MarcarPagoComoPagadoAsync(pagoId);
+                if (success)
+                    return Ok(new { Message = "Pago marcado como pagado" });
+                return BadRequest("No se pudo actualizar el pago. Verifica el ID.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
     }
 }

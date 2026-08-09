@@ -2,6 +2,8 @@
   "profiles": {
     "http": {
       "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "scalar/v1",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
@@ -10,6 +12,8 @@
     },
     "https": {
       "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "scalar/v1",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
@@ -30,8 +34,8 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:51237/",
-      "sslPort": 44352
+      "applicationUrl": "http://localhost:62810/",
+      "sslPort": 44303
     }
   }
 }

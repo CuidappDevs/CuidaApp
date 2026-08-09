@@ -32,46 +32,30 @@
                         </Border.Shadow>
                         <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
                             <!-- Nombre y Especialidad -->
-                            <Label Text="María González" FontSize="26" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
-                            <Label Text="Especialista en Limpieza" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#5A31F4" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
-                            
-                            <HorizontalStackLayout Spacing="5" HorizontalOptions="Center" Margin="0,5,0,0">
-                                <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="16" HeightRequest="16" VerticalOptions="Center"/>
-                                <Label Text="Ens. Naco, Santo Domingo" FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" VerticalOptions="Center"/>
-                            </HorizontalStackLayout>
-
-                            <!-- Botón Acción Primaria -->
-                            <Button Text="Editar Perfil" BackgroundColor="#5A31F4" TextColor="White" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="12" HeightRequest="45" WidthRequest="180" Margin="0,15,0,0" HorizontalOptions="Center"/>
+                            <Label x:Name="LblNombre" Text="" FontSize="26" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                            <Label x:Name="LblEspecialidad" Text="" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#5A31F4" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
                         </VerticalStackLayout>
                     </Border>
-                    
+
                     <!-- Foto de Perfil Absoluta -->
                     <Border Stroke="White" StrokeThickness="4" StrokeShape="RoundRectangle 60" BackgroundColor="#E5E7EB" WidthRequest="120" HeightRequest="120" HorizontalOptions="Center" VerticalOptions="Start" Margin="0,40,0,0">
                         <Border.Shadow>
                             <Shadow Brush="#000000" Offset="0,4" Opacity="0.1" Radius="10"/>
                         </Border.Shadow>
-                        <Image Source="https://i.pravatar.cc/300?u=maria" Aspect="AspectFill" />
+                        <Image x:Name="ImgFotoPerfilGrande" Aspect="AspectFill" />
                     </Border>
                 </Grid>
 
                 <!-- STATS ROW -->
-                <Grid ColumnDefinitions="*, *, *" Padding="20,25,20,10" ColumnSpacing="15">
+                <Grid ColumnDefinitions="*, *" Padding="20,25,20,10" ColumnSpacing="15">
                     <VerticalStackLayout Grid.Column="0" Spacing="5" HorizontalOptions="Center">
-                        <HorizontalStackLayout Spacing="3" HorizontalOptions="Center">
-                            <Path Data="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z" Fill="#F59E0B" Aspect="Uniform" WidthRequest="16" HeightRequest="16" VerticalOptions="Center"/>
-                            <Label Text="4.9" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" VerticalOptions="Center"/>
-                        </HorizontalStackLayout>
-                        <Label Text="Calificación" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
+                        <Label x:Name="LblTrabajosCompletados" Text="0" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
+                        <Label Text="Trabajos completados" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
                     </VerticalStackLayout>
 
                     <VerticalStackLayout Grid.Column="1" Spacing="5" HorizontalOptions="Center">
-                        <Label Text="120+" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
-                        <Label Text="Trabajos" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
-                    </VerticalStackLayout>
-
-                    <VerticalStackLayout Grid.Column="2" Spacing="5" HorizontalOptions="Center">
-                        <Label Text="5 Años" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
-                        <Label Text="Experiencia" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
+                        <Label x:Name="LblEstadoCuenta" Text="Pendiente" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
+                        <Label Text="Estado de cuenta" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
                     </VerticalStackLayout>
                 </Grid>
 
@@ -92,10 +76,10 @@
                                 <!-- Lado Izquierdo (Foto y Nombre) -->
                                 <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center" VerticalOptions="Center" Spacing="5">
                                     <Border Stroke="#E5E7EB" StrokeThickness="2" StrokeShape="RoundRectangle 40" BackgroundColor="#F3F4F6" WidthRequest="70" HeightRequest="70" HorizontalOptions="Center">
-                                        <Image Source="https://i.pravatar.cc/150?u=maria" Aspect="AspectFill" />
+                                        <Image x:Name="ImgFotoCarnet" Aspect="AspectFill" />
                                     </Border>
-                                    <Label Text="María González" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
-                                    <Label Text="Cuidadora" FontSize="11" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
+                                    <Label x:Name="LblNombreCarnet" Text="" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
+                                    <Label Text="Cuidador/a" FontSize="11" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
                                 </VerticalStackLayout>
                                 
                                 <!-- Lado Derecho (Logo y QR) -->
@@ -112,7 +96,7 @@
 
                             <!-- Banner inferior del carnet -->
                             <Border Stroke="Transparent" BackgroundColor="#4024A2" Padding="10" Margin="0,10,0,0">
-                                <Label Text="ESPECIALISTA EN LIMPIEZA" FontSize="10" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" CharacterSpacing="1"/>
+                                <Label x:Name="LblEspecialidadBanner" Text="" FontSize="10" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" CharacterSpacing="1"/>
                             </Border>
                         </VerticalStackLayout>
                     </Border>
@@ -121,33 +105,14 @@
                     <Border Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="20">
                         <VerticalStackLayout Spacing="15">
                             <Label Text="Verificaciones de Seguridad" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827"/>
-                            
-                            <Grid ColumnDefinitions="Auto, *">
-                                <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="#D1FAE5" StrokeShape="RoundRectangle 16" WidthRequest="32" HeightRequest="32" VerticalOptions="Center" Margin="0,0,12,0">
-                                    <Path Data="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" Fill="#10B981" Aspect="Uniform" WidthRequest="16" HeightRequest="16" HorizontalOptions="Center" VerticalOptions="Center"/>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                                    <Label Text="Identidad verificada" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#111827"/>
-                                    <Label Text="Cédula validada por el sistema" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
-                                </VerticalStackLayout>
-                            </Grid>
-
-                            <Grid ColumnDefinitions="Auto, *">
-                                <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="#D1FAE5" StrokeShape="RoundRectangle 16" WidthRequest="32" HeightRequest="32" VerticalOptions="Center" Margin="0,0,12,0">
-                                    <Path Data="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" Fill="#10B981" Aspect="Uniform" WidthRequest="16" HeightRequest="16" HorizontalOptions="Center" VerticalOptions="Center"/>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                                    <Label Text="Antecedentes penales" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#111827"/>
-                                    <Label Text="Documento limpio y vigente" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
-                                </VerticalStackLayout>
-                            </Grid>
+                            <VerticalStackLayout x:Name="ListaVerificaciones" Spacing="15" />
                         </VerticalStackLayout>
                     </Border>
 
                     <!-- Biografía -->
                     <VerticalStackLayout Spacing="10">
                         <Label Text="Sobre mí" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827"/>
-                        <Label Text="Soy una persona responsable, dedicada y con mucha paciencia. Me encanta mantener los espacios impecables y ordenados. Tengo más de 5 años de experiencia trabajando en casas de familia y oficinas garantizando la mayor calidad y confianza." FontSize="14" FontFamily="OpenSansRegular" TextColor="#4B5563" LineHeight="1.5"/>
+                        <Label x:Name="LblBio" Text="" FontSize="14" FontFamily="OpenSansRegular" TextColor="#4B5563" LineHeight="1.5"/>
                     </VerticalStackLayout>
 
                     <!-- Tarifa por hora -->
@@ -155,9 +120,9 @@
                         <Grid ColumnDefinitions="*, Auto">
                             <VerticalStackLayout Grid.Column="0" VerticalOptions="Center">
                                 <Label Text="Tarifa base" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#111827"/>
-                                <Label Text="Limpieza estándar" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
+                                <Label x:Name="LblEspecialidadTarifa" Text="" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
                             </VerticalStackLayout>
-                            <Label Grid.Column="1" Text="RD$ 400 / hr" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#5A31F4" VerticalOptions="Center"/>
+                            <Label x:Name="LblTarifa" Grid.Column="1" Text="" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#5A31F4" VerticalOptions="Center"/>
                         </Grid>
                     </Border>
 

@@ -22,24 +22,25 @@
                     <!-- Foto perfil -->
                     <Grid Grid.Column="0" WidthRequest="50" HeightRequest="50" Margin="0,0,15,0">
                         <Border Stroke="Transparent" StrokeShape="RoundRectangle 25" BackgroundColor="#E5E7EB" WidthRequest="50" HeightRequest="50">
-                            <Image Source="https://i.pravatar.cc/150?u=maria" Aspect="AspectFill" />
+                            <Image x:Name="ImgFotoPerfil" Aspect="AspectFill" />
                         </Border>
                     </Grid>
-                    
+
                     <!-- Textos Header -->
                     <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
                         <HorizontalStackLayout Spacing="5" VerticalOptions="Center">
-                            <Label Text="Hola, María" FontSize="20" FontFamily="OpenSansSemibold" TextColor="#4024A2"/>
-                            <!-- Icono vectorial (sin emoji) -->
-                            <Path Data="M19.46 9.39C19.26 9.19 18.96 9.15 18.72 9.29L16.5 10.61L14.77 7.6C14.57 7.24 14.12 7.12 13.76 7.32C13.4 7.52 13.28 7.97 13.48 8.33L15.35 11.59L12.39 9.84C12.04 9.63 11.58 9.75 11.37 10.1C11.16 10.45 11.28 10.91 11.63 11.12L15 13.12V14.5C15 16.98 12.98 19 10.5 19C8.02 19 6 16.98 6 14.5V4.5C6 4.22 5.78 4 5.5 4C5.22 4 5 4.22 5 4.5V14.5C5 17.53 7.47 20 10.5 20C13.53 20 16 17.53 16 14.5V13.8L19.24 11.89C19.54 11.71 19.64 11.32 19.46 11.02L19.46 9.39Z" Fill="#F59E0B" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
+                            <Label x:Name="LblSaludo" Text="Hola" FontSize="20" FontFamily="OpenSansSemibold" TextColor="#4024A2"/>
                         </HorizontalStackLayout>
-                        
+
                         <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
-                            <Border Stroke="Transparent" BackgroundColor="#10B981" StrokeShape="RoundRectangle 4" WidthRequest="8" HeightRequest="8" VerticalOptions="Center"/>
-                            <Label Text="Disponible ahora" FontSize="12" FontFamily="OpenSansSemibold" TextColor="#059669"/>
+                            <HorizontalStackLayout.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnDisponibilidadTapped" />
+                            </HorizontalStackLayout.GestureRecognizers>
+                            <Border x:Name="IndicadorDisponible" Stroke="Transparent" BackgroundColor="#9CA3AF" StrokeShape="RoundRectangle 4" WidthRequest="8" HeightRequest="8" VerticalOptions="Center"/>
+                            <Label x:Name="LblDisponible" Text="No disponible" FontSize="12" FontFamily="OpenSansSemibold" TextColor="#6B7280"/>
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
-                    
+
                     <!-- Campana de Notificación -->
                     <Border Grid.Column="2" Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" BackgroundColor="White" VerticalOptions="Center">
                         <Path Data="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 16V11C18 7.93 16.36 5.36 13.5 4.68V4C13.5 3.17 12.83 2.5 12 2.5C11.17 2.5 10.5 3.17 10.5 4V4.68C7.63 5.36 6 7.92 6 11V16L4 18V19H20V18L18 16ZM16 17H8V11C8 8.52 9.51 6.5 12 6.5C14.49 6.5 16 8.52 16 11V17Z" Fill="#4024A2" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
@@ -51,9 +52,12 @@
                     <Border.Shadow>
                         <Shadow Brush="#5A31F4" Offset="0,10" Opacity="0.3" Radius="15"/>
                     </Border.Shadow>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnDineroTapped" />
+                    </Border.GestureRecognizers>
                     <VerticalStackLayout Spacing="5">
                         <Label Text="Ganado hoy" FontSize="14" FontFamily="OpenSansRegular" TextColor="#E0E7FF"/>
-                        <Label Text="RD$1,200" FontSize="36" FontFamily="OpenSansSemibold" TextColor="White"/>
+                        <Label x:Name="LblGanadoHoy" Text="RD$0" FontSize="36" FontFamily="OpenSansSemibold" TextColor="White"/>
                         <Label Text="Ver detalle >" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#E0E7FF" Margin="0,10,0,0"/>
                     </VerticalStackLayout>
                 </Border>
@@ -61,33 +65,38 @@
                 <!-- PROXIMO TRABAJO -->
                 <VerticalStackLayout Grid.Row="2" Spacing="15">
                     <Label Text="Próximo trabajo" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#374151"/>
-                    
-                    <Border Stroke="#F3F4F6" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="15">
+
+                    <Border x:Name="CardProximoTrabajo" Stroke="#F3F4F6" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="15" IsVisible="False">
                         <Border.Shadow>
                             <Shadow Brush="#000000" Offset="0,4" Opacity="0.05" Radius="10"/>
                         </Border.Shadow>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnProximoTrabajoTapped" />
+                        </Border.GestureRecognizers>
                         <Grid ColumnDefinitions="Auto, *, Auto">
                             <!-- Icono Izquierda -->
                             <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="#F3E8FF" StrokeShape="RoundRectangle 12" WidthRequest="50" HeightRequest="50" VerticalOptions="Center" Margin="0,0,15,0">
                                 <Path Data="M19.36 2.72L20.78 4.14L15.06 9.85C16.13 11.39 16.28 13.24 15.38 14.44L9.06 8.12C10.26 7.22 12.11 7.37 13.65 8.44L19.36 2.72ZM5.93 17.57C3.92 15.56 2.69 13.16 2.35 10.92L7.23 8.34L15.16 16.27L12.58 21.15C10.34 20.81 7.94 19.58 5.93 17.57ZM3.17 18.5C4.7 20.03 6.7 21.05 8.65 21.43L2 22L2.57 15.35C2.95 17.3 3.97 19.3 5.5 20.83L3.17 18.5Z" Fill="#5A31F4" Aspect="Uniform" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center" VerticalOptions="Center"/>
                             </Border>
-                            
+
                             <!-- Info central -->
                             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
-                                <Label Text="3:00 PM - 6:00 PM" FontSize="12" FontFamily="OpenSansSemibold" TextColor="#5A31F4"/>
-                                <Label Text="Limpieza del hogar" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                                <Label x:Name="LblProximoHorario" Text="" FontSize="12" FontFamily="OpenSansSemibold" TextColor="#5A31F4"/>
+                                <Label x:Name="LblProximoServicio" Text="" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827"/>
                                 <HorizontalStackLayout Spacing="5" Margin="0,2,0,0">
                                     <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="12" HeightRequest="12" VerticalOptions="Center"/>
-                                    <Label Text="Ens. Naco" FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" VerticalOptions="Center"/>
+                                    <Label x:Name="LblProximoDireccion" Text="" FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" VerticalOptions="Center"/>
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
-                            
+
                             <!-- Icono Calendario Derecha -->
                             <Border Grid.Column="2" Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" BackgroundColor="Transparent" VerticalOptions="Center">
                                 <Path Data="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3.01 4.9 3.01 6L3 20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V10H19V20ZM19 8H5V6H19V8ZM9 14H7V12H9V14ZM13 14H11V12H13V14ZM17 14H15V12H17V14ZM9 18H7V16H9V18ZM13 18H11V16H13V18ZM17 18H15V16H17V18Z" Fill="#6B7280" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
                             </Border>
                         </Grid>
                     </Border>
+
+                    <Label x:Name="LblSinTrabajos" Text="No tienes trabajos próximos por ahora." FontSize="13" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center" IsVisible="False" Margin="0,10,0,0"/>
                 </VerticalStackLayout>
 
                 <!-- CUADRICULA DE ACCIONES 2x2 -->
@@ -98,6 +107,9 @@
                         <Border.Shadow>
                             <Shadow Brush="#000000" Offset="0,4" Opacity="0.03" Radius="8"/>
                         </Border.Shadow>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnTrabajosTapped" />
+                        </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="10">
                             <Border Stroke="Transparent" BackgroundColor="#DBEAFE" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" HorizontalOptions="Start">
                                 <Path Data="M20 6H16V4C16 2.9 15.1 2 14 2H10C8.9 2 8 2.9 8 4V6H4C2.9 6 2.01 6.9 2.01 8L2 19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6ZM10 4H14V6H10V4ZM20 19H4V8H20V19Z" Fill="#3B82F6" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
@@ -114,6 +126,9 @@
                         <Border.Shadow>
                             <Shadow Brush="#000000" Offset="0,4" Opacity="0.03" Radius="8"/>
                         </Border.Shadow>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnDineroTapped" />
+                        </Border.GestureRecognizers>
                         <VerticalStackLayout Spacing="10">
                             <Border Stroke="Transparent" BackgroundColor="#D1FAE5" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" HorizontalOptions="Start">
                                 <Path Data="M21 7.28V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V16.72C21.59 16.37 22 15.74 22 15V9C22 8.26 21.59 7.63 21 7.28ZM20 15H13V9H20V15ZM5 19V5H19V7H13C11.9 7 11 7.9 11 9V15C11 16.1 11.9 17 13 17H19V19H5ZM16 13.5C15.17 13.5 14.5 12.83 14.5 12C14.5 11.17 15.17 10.5 16 10.5C16.83 10.5 17.5 11.17 17.5 12C17.5 12.83 16.83 13.5 16 13.5Z" Fill="#10B981" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
