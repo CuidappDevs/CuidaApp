@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CUIDAPP.Views.Cliente.SolicitarServicioPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#FFFFFF">
+
+    <Grid RowDefinitions="Auto, *, Auto">
+
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" Padding="20,15,20,10" BackgroundColor="White">
+            <ContentView x:Name="BtnBack" VerticalOptions="Center">
+                <ContentView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </ContentView.GestureRecognizers>
+                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
+            </ContentView>
+            <Label Grid.Column="1" Text="Solicitar servicio" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="20,15,20,30" Spacing="18">
+
+                <Border Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="#FAFAFA" StrokeShape="RoundRectangle 16" Padding="15">
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Border Grid.Column="0" Stroke="Transparent" StrokeShape="RoundRectangle 25" BackgroundColor="#E5E7EB" WidthRequest="50" HeightRequest="50" Margin="0,0,15,0">
+                            <Image x:Name="ImgFoto" Aspect="AspectFill" />
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                            <Label x:Name="LblNombre" Text="" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                            <Label x:Name="LblEspecialidad" Text="" FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Fecha" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                    <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
+                        <DatePicker x:Name="PickerFecha" FontFamily="OpenSansRegular" FontSize="14"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
+                    <VerticalStackLayout Grid.Column="0" Spacing="8">
+                        <Label Text="Hora inicio" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                        <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
+                            <TimePicker x:Name="PickerHoraInicio" FontFamily="OpenSansRegular" FontSize="14"/>
+                        </Border>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1" Spacing="8">
+                        <Label Text="Hora fin" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                        <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
+                            <TimePicker x:Name="PickerHoraFin" FontFamily="OpenSansRegular" FontSize="14"/>
+                        </Border>
+                    </VerticalStackLayout>
+                </Grid>
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Dirección del servicio" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                    <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
+                        <Entry x:Name="EntryDireccion" Placeholder="Ej. Calle Principal #12, Sector..." FontFamily="OpenSansRegular" FontSize="14" HeightRequest="45"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <Border Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="20">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <Label Grid.Column="0" Text="Tarifa por hora" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#111827" VerticalOptions="Center"/>
+                        <Label x:Name="LblTarifa" Grid.Column="1" Text="" FontSize="20" FontFamily="OpenSansSemibold" TextColor="#5A31F4" VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <VerticalStackLayout Grid.Row="2" Padding="20,10,20,30" Spacing="10" BackgroundColor="White">
+            <Border.Shadow>
+                <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
+            </Border.Shadow>
+            <Button x:Name="BtnEnviar" Text="Enviar solicitud" Clicked="OnEnviarClicked" BackgroundColor="#5A31F4" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55"/>
+        </VerticalStackLayout>
+
+    </Grid>
+
+</ContentPage>

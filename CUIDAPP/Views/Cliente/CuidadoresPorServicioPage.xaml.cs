@@ -105,8 +105,15 @@ namespace CUIDAPP.Views.Cliente
 
         private async Task AbrirDetalle(CuidadorCercano cuidador)
         {
-            var parametros = new Dictionary<string, object> { { "Cuidador", cuidador } };
-            await Shell.Current.GoToAsync("CuidadorDetallePage", parametros);
+            try
+            {
+                var parametros = new Dictionary<string, object> { { "Cuidador", cuidador } };
+                await Shell.Current.GoToAsync("CuidadorDetallePage", parametros);
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error al abrir el perfil", ex.ToString(), "OK");
+            }
         }
 
         private async void OnBackTapped(object sender, EventArgs e)

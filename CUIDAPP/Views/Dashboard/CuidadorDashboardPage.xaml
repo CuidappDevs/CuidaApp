@@ -18,7 +18,7 @@
                 </Grid.RowDefinitions>
 
                 <!-- HEADER -->
-                <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto">
+                <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto, Auto">
                     <!-- Foto perfil -->
                     <Grid Grid.Column="0" WidthRequest="50" HeightRequest="50" Margin="0,0,15,0">
                         <Border Stroke="Transparent" StrokeShape="RoundRectangle 25" BackgroundColor="#E5E7EB" WidthRequest="50" HeightRequest="50">
@@ -42,8 +42,24 @@
                     </VerticalStackLayout>
 
                     <!-- Campana de Notificación -->
-                    <Border Grid.Column="2" Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" BackgroundColor="White" VerticalOptions="Center">
-                        <Path Data="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 16V11C18 7.93 16.36 5.36 13.5 4.68V4C13.5 3.17 12.83 2.5 12 2.5C11.17 2.5 10.5 3.17 10.5 4V4.68C7.63 5.36 6 7.92 6 11V16L4 18V19H20V18L18 16ZM16 17H8V11C8 8.52 9.51 6.5 12 6.5C14.49 6.5 16 8.52 16 11V17Z" Fill="#4024A2" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                    <Grid Grid.Column="2" WidthRequest="40" HeightRequest="40" Margin="0,0,10,0" VerticalOptions="Center">
+                        <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" BackgroundColor="White">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnNotificacionesTapped" />
+                            </Border.GestureRecognizers>
+                            <Path Data="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 16V11C18 7.93 16.36 5.36 13.5 4.68V4C13.5 3.17 12.83 2.5 12 2.5C11.17 2.5 10.5 3.17 10.5 4V4.68C7.63 5.36 6 7.92 6 11V16L4 18V19H20V18L18 16ZM16 17H8V11C8 8.52 9.51 6.5 12 6.5C14.49 6.5 16 8.52 16 11V17Z" Fill="#4024A2" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
+                        <Border x:Name="BadgeNotificaciones" Stroke="White" StrokeThickness="2" StrokeShape="RoundRectangle 8" BackgroundColor="#EF4444" WidthRequest="16" HeightRequest="16" HorizontalOptions="End" VerticalOptions="Start" IsVisible="False" InputTransparent="True">
+                            <Label x:Name="LblBadgeNotificaciones" Text="0" FontSize="9" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
+                    </Grid>
+
+                    <!-- Cerrar sesión -->
+                    <Border Grid.Column="3" Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" BackgroundColor="White" VerticalOptions="Center">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnCerrarSesionTapped" />
+                        </Border.GestureRecognizers>
+                        <Path Data="M17 7L15.59 8.41L18.17 11H8V13H18.17L15.59 15.59L17 17L22 12L17 7ZM4 5H12V3H4C2.9 3 2 3.9 2 5V19C2 20.1 2.9 21 4 21H12V19H4V5Z" Fill="#EF4444" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
                     </Border>
                 </Grid>
 

@@ -12,6 +12,7 @@ namespace CUIDAPP.Views.Cliente
         private List<ServicioCercano> serviciosCercanos = new();
         private string? categoriaSeleccionada;
         private bool panelExpandido = true;
+        private bool yaCargado = false;
         private const double AlturaPanelExpandido = 460;
         private const double AlturaPanelColapsado = 100;
 
@@ -32,6 +33,17 @@ namespace CUIDAPP.Views.Cliente
             if (!string.IsNullOrWhiteSpace(fotoUrl))
                 ImgFotoPerfil.Source = $"{ApiService.ServerOrigin}{fotoUrl}";
 
+            if (yaCargado)
+            {
+                // Ya tenemos mapa y ubicación cargados de una visita anterior: solo
+                // refrescamos la lista de servicios en segundo plano, sin overlay ni recarga del mapa.
+                await CargarServiciosCercanos();
+                return;
+            }
+
+            OverlayCarga.Opacity = 1;
+            OverlayCarga.IsVisible = true;
+
             var ubicacion = await LocationService.ObtenerUbicacionActualAsync();
             if (ubicacion != null)
             {
@@ -41,6 +53,11 @@ namespace CUIDAPP.Views.Cliente
 
             CargarMapa();
             await CargarServiciosCercanos();
+
+            yaCargado = true;
+
+            await OverlayCarga.FadeTo(0, 250);
+            OverlayCarga.IsVisible = false;
         }
 
         private void CargarMapa()
@@ -55,7 +72,7 @@ namespace CUIDAPP.Views.Cliente
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
     <link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css' />
     <style>
-        html, body, #map {{ height: 100%; margin: 0; padding: 0; }}
+        html, body, #map {{ height: 100%; margin: 0; padding: 0; background: #EAECEF; }}
         .leaflet-control-attribution {{ display: none; }}
     </style>
 </head>
@@ -64,8 +81,8 @@ namespace CUIDAPP.Views.Cliente
     <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
     <script>
         var map = L.map('map', {{ zoomControl: false, attributionControl: false }}).setView([{lat}, {lng}], 14);
-        L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{ maxZoom: 19 }}).addTo(map);
-        L.circleMarker([{lat}, {lng}], {{ radius: 9, color: '#FFFFFF', weight: 3, fillColor: '#5A31F4', fillOpacity: 1 }}).addTo(map);
+        L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{{z}}/{{x}}/{{y}}{{r}}.png', {{ maxZoom: 20, subdomains: 'abcd' }}).addTo(map);
+        L.circleMarker([{lat}, {lng}], {{ radius: 8, color: '#FFFFFF', weight: 3, fillColor: '#5A31F4', fillOpacity: 1 }}).addTo(map);
     </script>
 </body>
 </html>";
@@ -77,11 +94,13 @@ namespace CUIDAPP.Views.Cliente
 
         private async Task CargarServiciosCercanos()
         {
+            ServiciosLoading.IsVisible = true;
             ServiciosLoading.IsRunning = true;
 
             serviciosCercanos = await _apiService.ObtenerServiciosCercanosAsync(latitudActual, longitudActual);
 
             ServiciosLoading.IsRunning = false;
+            ServiciosLoading.IsVisible = false;
 
             RenderizarCategorias();
             AplicarFiltro();
@@ -232,13 +251,20 @@ namespace CUIDAPP.Views.Cliente
 
         private async Task AbrirServicio(string especialidad)
         {
-            var parametros = new Dictionary<string, object>
+            try
             {
-                { "Especialidad", especialidad },
-                { "Latitud", latitudActual },
-                { "Longitud", longitudActual }
-            };
-            await Shell.Current.GoToAsync("CuidadoresPorServicioPage", parametros);
+                var parametros = new Dictionary<string, object>
+                {
+                    { "Especialidad", especialidad },
+                    { "Latitud", latitudActual },
+                    { "Longitud", longitudActual }
+                };
+                await Shell.Current.GoToAsync("CuidadoresPorServicioPage", parametros);
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error al abrir el servicio", ex.ToString(), "OK");
+            }
         }
 
         private async void OnPerfilTapped(object sender, EventArgs e)
@@ -248,12 +274,39 @@ namespace CUIDAPP.Views.Cliente
 
         private void OnTogglePanelTapped(object sender, EventArgs e)
         {
-            panelExpandido = !panelExpandido;
+            AnimarPanel(!panelExpandido);
+        }
+
+        private double alturaAlIniciarArrastre;
+
+        private void OnPanelPanUpdated(object sender, PanUpdatedEventArgs e)
+        {
+            switch (e.StatusType)
+            {
+                case GestureStatus.Started:
+                    alturaAlIniciarArrastre = BottomSheet.Height > 0 ? BottomSheet.Height : AlturaPanelExpandido;
+                    ContenidoExpandible.IsVisible = true;
+                    break;
+
+                case GestureStatus.Running:
+                    var nuevaAltura = alturaAlIniciarArrastre - e.TotalY;
+                    BottomSheet.HeightRequest = Math.Clamp(nuevaAltura, AlturaPanelColapsado, AlturaPanelExpandido);
+                    break;
+
+                case GestureStatus.Completed:
+                case GestureStatus.Canceled:
+                    var puntoMedio = (AlturaPanelExpandido + AlturaPanelColapsado) / 2;
+                    AnimarPanel(BottomSheet.HeightRequest >= puntoMedio);
+                    break;
+            }
+        }
+
+        private void AnimarPanel(bool expandir)
+        {
+            panelExpandido = expandir;
 
             if (panelExpandido)
                 ContenidoExpandible.IsVisible = true;
-
-            LblChevron.Text = panelExpandido ? "⌄" : "⌃";
 
             var alturaActual = BottomSheet.Height > 0 ? BottomSheet.Height : AlturaPanelExpandido;
             var alturaDestino = panelExpandido ? AlturaPanelExpandido : AlturaPanelColapsado;
@@ -269,6 +322,16 @@ namespace CUIDAPP.Views.Cliente
         private async void OnNotificacionesTapped(object sender, EventArgs e)
         {
             await Navigation.PushModalAsync(new NotificacionesPage());
+        }
+
+        private async void OnCerrarSesionTapped(object sender, EventArgs e)
+        {
+            var confirmar = await DisplayAlert("Cerrar sesión", "¿Estás seguro de que deseas cerrar sesión?", "Sí", "Cancelar");
+            if (!confirmar)
+                return;
+
+            Preferences.Default.Clear();
+            await Shell.Current.GoToAsync("//MainPage");
         }
     }
 }

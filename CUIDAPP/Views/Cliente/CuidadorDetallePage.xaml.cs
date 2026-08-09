@@ -3,15 +3,16 @@ using CUIDAPP.Services;
 
 namespace CUIDAPP.Views.Cliente
 {
-    [QueryProperty(nameof(CuidadorParam), "Cuidador")]
-    public partial class CuidadorDetallePage : ContentPage
+    public partial class CuidadorDetallePage : ContentPage, IQueryAttributable
     {
-        public object? CuidadorParam
+        private CuidadorCercano? cuidador;
+
+        public void ApplyQueryAttributes(IDictionary<string, object> query)
         {
-            set
+            if (query.TryGetValue("Cuidador", out var value) && value is CuidadorCercano c)
             {
-                if (value is CuidadorCercano cuidador)
-                    Renderizar(cuidador);
+                cuidador = c;
+                Renderizar(c);
             }
         }
 
@@ -39,7 +40,18 @@ namespace CUIDAPP.Views.Cliente
 
         private async void OnSolicitarTapped(object sender, EventArgs e)
         {
-            await DisplayAlert("Próximamente", "La solicitud de servicio estará disponible en la siguiente actualización.", "OK");
+            if (cuidador == null)
+                return;
+
+            try
+            {
+                var parametros = new Dictionary<string, object> { { "Cuidador", cuidador } };
+                await Shell.Current.GoToAsync("SolicitarServicioPage", parametros);
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error al continuar", ex.ToString(), "OK");
+            }
         }
     }
 }

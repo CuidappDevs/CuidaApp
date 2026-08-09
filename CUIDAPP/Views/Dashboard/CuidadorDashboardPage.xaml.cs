@@ -32,12 +32,17 @@ namespace CUIDAPP.Views.Dashboard
             var perfilTask = _apiService.ObtenerPerfilCuidadorAsync(cuidadorId);
             var gananciasTask = _apiService.ObtenerGananciasAsync(cuidadorId);
             var proximoTrabajoTask = _apiService.ObtenerProximoTrabajoAsync(cuidadorId);
+            var trabajosTask = _apiService.ObtenerTrabajosAsync(cuidadorId);
 
-            await Task.WhenAll(perfilTask, gananciasTask, proximoTrabajoTask);
+            await Task.WhenAll(perfilTask, gananciasTask, proximoTrabajoTask, trabajosTask);
 
             var perfil = perfilTask.Result;
             var ganancias = gananciasTask.Result;
             var proximoTrabajo = proximoTrabajoTask.Result;
+            var pendientes = trabajosTask.Result.Count(t => t.Estado == 1);
+
+            BadgeNotificaciones.IsVisible = pendientes > 0;
+            LblBadgeNotificaciones.Text = pendientes > 9 ? "9+" : pendientes.ToString();
 
             if (perfil != null)
             {
@@ -124,6 +129,21 @@ namespace CUIDAPP.Views.Dashboard
         private async void OnDineroTapped(object sender, EventArgs e)
         {
             await Shell.Current.GoToAsync("DineroPage");
+        }
+
+        private async void OnNotificacionesTapped(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync("TrabajosPage");
+        }
+
+        private async void OnCerrarSesionTapped(object sender, EventArgs e)
+        {
+            var confirmar = await DisplayAlert("Cerrar sesión", "¿Estás seguro de que deseas cerrar sesión?", "Sí", "Cancelar");
+            if (!confirmar)
+                return;
+
+            Preferences.Default.Clear();
+            await Shell.Current.GoToAsync("//MainPage");
         }
     }
 }

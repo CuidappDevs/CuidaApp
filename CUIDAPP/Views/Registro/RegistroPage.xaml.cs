@@ -250,10 +250,7 @@ namespace CUIDAPP.Views.Registro
                 await OverlayExito.FadeTo(0, 200);
                 OverlayExito.IsVisible = false;
 
-                if (selectedRole == "Cuidador")
-                    await Shell.Current.GoToAsync("CuidadorDashboardPage");
-                else
-                    await Shell.Current.GoToAsync("..");
+                await Shell.Current.GoToAsync("..");
             }
             else
             {

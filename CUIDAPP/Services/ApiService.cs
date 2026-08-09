@@ -291,6 +291,20 @@ namespace CUIDAPP.Services
             }
         }
 
+        public async Task<bool> CrearTrabajoAsync(CrearTrabajoRequest request)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("trabajo", request);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creando trabajo: {ex.Message}");
+                return false;
+            }
+        }
+
         public async Task<bool> ActualizarEstadoTrabajoAsync(int trabajoId, int nuevoEstado)
         {
             try

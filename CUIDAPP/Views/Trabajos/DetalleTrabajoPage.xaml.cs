@@ -3,17 +3,16 @@ using CUIDAPP.Services;
 
 namespace CUIDAPP.Views.Trabajos
 {
-    [QueryProperty(nameof(TrabajoParam), "Trabajo")]
-    public partial class DetalleTrabajoPage : ContentPage
+    public partial class DetalleTrabajoPage : ContentPage, IQueryAttributable
     {
         private readonly ApiService _apiService = new ApiService();
         private Trabajo? trabajo;
 
-        public object? TrabajoParam
+        public void ApplyQueryAttributes(IDictionary<string, object> query)
         {
-            set
+            if (query.TryGetValue("Trabajo", out var value) && value is Trabajo t)
             {
-                trabajo = value as Trabajo;
+                trabajo = t;
                 RenderizarTrabajo();
             }
         }
