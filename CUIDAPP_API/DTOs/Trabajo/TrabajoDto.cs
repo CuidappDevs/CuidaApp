@@ -15,5 +15,7 @@ namespace CUIDAPP_API.DTOs.Trabajo
         public decimal Tarifa { get; set; }
         public string? Notas { get; set; }
         public DateTime FechaCreacion { get; set; }
+        public decimal? Latitud { get; set; }
+        public decimal? Longitud { get; set; }
     }
 }

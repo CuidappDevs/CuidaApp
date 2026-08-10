@@ -10,5 +10,7 @@ namespace CUIDAPP_API.DTOs.Trabajo
         public TimeSpan HoraFin { get; set; }
         public string? Direccion { get; set; }
         public decimal Tarifa { get; set; }
+        public decimal? Latitud { get; set; }
+        public decimal? Longitud { get; set; }
     }
 }

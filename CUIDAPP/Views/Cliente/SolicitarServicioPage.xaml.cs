@@ -25,6 +25,9 @@ namespace CUIDAPP.Views.Cliente
             PickerFecha.Date = DateTime.Today;
             PickerHoraInicio.Time = new TimeSpan(9, 0, 0);
             PickerHoraFin.Time = new TimeSpan(11, 0, 0);
+
+            PickerHoraInicio.PropertyChanged += (s, e) => { if (e.PropertyName == nameof(TimePicker.Time)) ActualizarTotal(); };
+            PickerHoraFin.PropertyChanged += (s, e) => { if (e.PropertyName == nameof(TimePicker.Time)) ActualizarTotal(); };
         }
 
         private void Renderizar(CuidadorCercano c)
@@ -35,6 +38,22 @@ namespace CUIDAPP.Views.Cliente
 
             if (!string.IsNullOrWhiteSpace(c.FotoUrl))
                 ImgFoto.Source = $"{ApiService.ServerOrigin}{c.FotoUrl}";
+
+            ActualizarTotal();
+        }
+
+        private void ActualizarTotal()
+        {
+            if (cuidador == null)
+                return;
+
+            var horaInicio = PickerHoraInicio.Time ?? TimeSpan.Zero;
+            var horaFin = PickerHoraFin.Time ?? TimeSpan.Zero;
+            var horas = (decimal)(horaFin - horaInicio).TotalHours;
+
+            LblTotal.Text = horas > 0
+                ? $"RD${(cuidador.TarifaHora * horas):N2}"
+                : "--";
         }
 
         private async void OnBackTapped(object sender, EventArgs e)
@@ -71,19 +90,36 @@ namespace CUIDAPP.Views.Cliente
 
             try
             {
+                var trabajoActivo = await _apiService.ObtenerTrabajoActivoPorClienteAsync(clienteId);
+                if (trabajoActivo != null)
+                {
+                    await DisplayAlert("Ya tienes un servicio activo", "No puedes solicitar otro servicio mientras tengas uno pendiente o en curso.", "OK");
+                    await Shell.Current.GoToAsync("../../..");
+                    return;
+                }
+
+                var horaInicio = PickerHoraInicio.Time ?? TimeSpan.Zero;
+                var horaFin = PickerHoraFin.Time ?? TimeSpan.Zero;
+                var horas = (decimal)(horaFin - horaInicio).TotalHours;
+                var tarifaTotal = cuidador.TarifaHora * horas;
+
+                var ubicacion = await LocationService.ObtenerUbicacionActualAsync();
+
                 var request = new CrearTrabajoRequest
                 {
                     ClienteId = clienteId,
                     CuidadorId = cuidador.Id,
                     TipoServicio = cuidador.Especialidad,
                     Fecha = PickerFecha.Date ?? DateTime.Today,
-                    HoraInicio = PickerHoraInicio.Time ?? TimeSpan.Zero,
-                    HoraFin = PickerHoraFin.Time ?? TimeSpan.Zero,
+                    HoraInicio = horaInicio,
+                    HoraFin = horaFin,
                     Direccion = EntryDireccion.Text.Trim(),
-                    Tarifa = cuidador.TarifaHora
+                    Tarifa = tarifaTotal,
+                    Latitud = ubicacion != null ? (decimal)ubicacion.Latitude : null,
+                    Longitud = ubicacion != null ? (decimal)ubicacion.Longitude : null
                 };
 
-                var success = await _apiService.CrearTrabajoAsync(request);
+                var (success, error) = await _apiService.CrearTrabajoAsync(request);
 
                 if (success)
                 {
@@ -92,7 +128,7 @@ namespace CUIDAPP.Views.Cliente
                 }
                 else
                 {
-                    await DisplayAlert("Error", "No se pudo enviar la solicitud. Intenta de nuevo.", "OK");
+                    await DisplayAlert("Error", $"No se pudo enviar la solicitud.\n\n{error}", "OK");
                 }
             }
             catch (Exception ex)

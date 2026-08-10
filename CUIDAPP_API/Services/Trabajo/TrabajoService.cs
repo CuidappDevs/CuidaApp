@@ -29,6 +29,8 @@ namespace CUIDAPP_API.Services.Trabajo
             command.Parameters.AddWithValue("@HoraFin", dto.HoraFin);
             command.Parameters.AddWithValue("@Direccion", (object?)dto.Direccion ?? DBNull.Value);
             command.Parameters.AddWithValue("@Tarifa", dto.Tarifa);
+            command.Parameters.AddWithValue("@Latitud", (object?)dto.Latitud ?? DBNull.Value);
+            command.Parameters.AddWithValue("@Longitud", (object?)dto.Longitud ?? DBNull.Value);
 
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();
@@ -83,6 +85,54 @@ namespace CUIDAPP_API.Services.Trabajo
             return Convert.ToInt32(filasAfectadas) > 0;
         }
 
+        public async Task<TrabajoClienteDto?> ObtenerTrabajoActivoPorClienteAsync(int clienteId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_ObtenerTrabajoActivoPorCliente", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@ClienteId", clienteId);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return new TrabajoClienteDto
+                {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    ClienteId = Convert.ToInt32(reader["ClienteId"]),
+                    CuidadorId = Convert.ToInt32(reader["CuidadorId"]),
+                    CuidadorNombre = reader["CuidadorNombre"].ToString() ?? "",
+                    CuidadorFotoUrl = reader["CuidadorFotoUrl"] as string,
+                    TipoServicio = reader["TipoServicio"].ToString() ?? "",
+                    Fecha = Convert.ToDateTime(reader["Fecha"]),
+                    HoraInicio = (TimeSpan)reader["HoraInicio"],
+                    HoraFin = (TimeSpan)reader["HoraFin"],
+                    Direccion = reader["Direccion"] as string,
+                    Estado = Convert.ToInt32(reader["Estado"]),
+                    Tarifa = Convert.ToDecimal(reader["Tarifa"]),
+                    Notas = reader["Notas"] as string,
+                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
+                    PinInicio = reader["PinInicio"] as string
+                };
+            }
+
+            return null;
+        }
+
+        public async Task<bool> IniciarTrabajoAsync(IniciarTrabajoDto dto)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_IniciarTrabajo", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@TrabajoId", dto.TrabajoId);
+            command.Parameters.AddWithValue("@Pin", dto.Pin);
+
+            await connection.OpenAsync();
+            var filasAfectadas = await command.ExecuteScalarAsync();
+            return Convert.ToInt32(filasAfectadas) > 0;
+        }
+
         private static TrabajoDto MapearTrabajo(SqlDataReader reader)
         {
             return new TrabajoDto
@@ -99,7 +149,9 @@ namespace CUIDAPP_API.Services.Trabajo
                 Estado = Convert.ToInt32(reader["Estado"]),
                 Tarifa = Convert.ToDecimal(reader["Tarifa"]),
                 Notas = reader["Notas"] as string,
-                FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"])
+                FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
+                Latitud = reader["Latitud"] as decimal?,
+                Longitud = reader["Longitud"] as decimal?
             };
         }
     }

@@ -1,6 +1,11 @@
 using System.Globalization;
 using CUIDAPP.Models.Busqueda;
 using CUIDAPP.Services;
+using Mapsui;
+using Mapsui.Layers;
+using Mapsui.Projections;
+using Mapsui.Tiling;
+using MapsuiColor = Mapsui.Styles.Color;
 
 namespace CUIDAPP.Views.Cliente
 {
@@ -13,8 +18,10 @@ namespace CUIDAPP.Views.Cliente
         private string? categoriaSeleccionada;
         private bool panelExpandido = true;
         private bool yaCargado = false;
+        private bool hayServicioActivo = false;
         private const double AlturaPanelExpandido = 460;
         private const double AlturaPanelColapsado = 100;
+        private MemoryLayer? capaUbicacion;
 
         public ClienteDashboardPage()
         {
@@ -36,22 +43,25 @@ namespace CUIDAPP.Views.Cliente
             if (yaCargado)
             {
                 // Ya tenemos mapa y ubicación cargados de una visita anterior: solo
-                // refrescamos la lista de servicios en segundo plano, sin overlay ni recarga del mapa.
+                // refrescamos servicio activo y servicios cercanos, sin overlay ni recarga del mapa.
+                await VerificarServicioActivo();
                 await CargarServiciosCercanos();
                 return;
             }
 
+            // El mapa se muestra de inmediato con la última ubicación conocida (o la de
+            // por defecto). El overlay solo cubre la carga de datos (servicios/estado),
+            // nunca el mapa, para que no se sienta como un bloqueo gigante.
+            CargarMapa();
+
             OverlayCarga.Opacity = 1;
             OverlayCarga.IsVisible = true;
 
-            var ubicacion = await LocationService.ObtenerUbicacionActualAsync();
-            if (ubicacion != null)
-            {
-                latitudActual = ubicacion.Latitude;
-                longitudActual = ubicacion.Longitude;
-            }
+            // El GPS puede tardar varios segundos: se resuelve en paralelo y, cuando
+            // llega, solo se reposiciona el marcador y se recentra el mapa (sin recargarlo).
+            _ = ActualizarUbicacionRealAsync();
 
-            CargarMapa();
+            await VerificarServicioActivo();
             await CargarServiciosCercanos();
 
             yaCargado = true;
@@ -60,36 +70,122 @@ namespace CUIDAPP.Views.Cliente
             OverlayCarga.IsVisible = false;
         }
 
+        private async Task ActualizarUbicacionRealAsync()
+        {
+            var ubicacion = await LocationService.ObtenerUbicacionActualAsync();
+            if (ubicacion == null)
+                return;
+
+            // Si estaba usando la ubicación por defecto, refina el mapa y la búsqueda
+            // con la posición GPS real, sin mostrar ningún overlay ni bloquear la UI.
+            var eraUbicacionPorDefecto = latitudActual == LocationService.LatitudPorDefecto && longitudActual == LocationService.LongitudPorDefecto;
+
+            latitudActual = ubicacion.Latitude;
+            longitudActual = ubicacion.Longitude;
+
+            ReposicionarMarcador();
+
+            if (eraUbicacionPorDefecto)
+                await CargarServiciosCercanos();
+        }
+
+        private async Task VerificarServicioActivo()
+        {
+            var clienteId = Preferences.Default.Get("UserId", 0);
+            if (clienteId == 0)
+                return;
+
+            var trabajoActivo = await _apiService.ObtenerTrabajoActivoPorClienteAsync(clienteId);
+            hayServicioActivo = trabajoActivo != null;
+
+            BannerServicioActivo.IsVisible = hayServicioActivo;
+            ContenidoExpandible.IsVisible = !hayServicioActivo;
+
+            if (trabajoActivo != null)
+            {
+                var estadoTexto = trabajoActivo.Estado switch
+                {
+                    1 => "Esperando respuesta del cuidador",
+                    2 => "Aceptado, en espera de la fecha programada",
+                    3 => "En progreso",
+                    _ => "En curso"
+                };
+                LblBannerServicioActivo.Text = $"{trabajoActivo.TipoServicio} · {estadoTexto}";
+            }
+        }
+
+        private async void OnVerServicioActivoTapped(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync("MiServicioPage");
+        }
+
         private void CargarMapa()
         {
-            var lat = latitudActual.ToString(CultureInfo.InvariantCulture);
-            var lng = longitudActual.ToString(CultureInfo.InvariantCulture);
+            var map = new Mapsui.Map();
 
-            var html = $@"
-<!DOCTYPE html>
-<html>
-<head>
-    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
-    <link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css' />
-    <style>
-        html, body, #map {{ height: 100%; margin: 0; padding: 0; background: #EAECEF; }}
-        .leaflet-control-attribution {{ display: none; }}
-    </style>
-</head>
-<body>
-    <div id='map'></div>
-    <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
-    <script>
-        var map = L.map('map', {{ zoomControl: false, attributionControl: false }}).setView([{lat}, {lng}], 14);
-        L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{{z}}/{{x}}/{{y}}{{r}}.png', {{ maxZoom: 20, subdomains: 'abcd' }}).addTo(map);
-        L.circleMarker([{lat}, {lng}], {{ radius: 8, color: '#FFFFFF', weight: 3, fillColor: '#5A31F4', fillOpacity: 1 }}).addTo(map);
-    </script>
-</body>
-</html>";
+            var tileSource = new BruTile.Web.HttpTileSource(
+                new BruTile.Predefined.GlobalSphericalMercator(),
+                "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}.png",
+                new[] { "a", "b", "c", "d" });
+            map.Layers.Add(new Mapsui.Tiling.Layers.TileLayer(tileSource) { Name = "CartoDB Voyager" });
 
-            MapaWebView.Source = new HtmlWebViewSource { Html = html };
-            MapaLoading.IsRunning = false;
-            MapaLoading.IsVisible = false;
+            var (mx, my) = SphericalMercator.FromLonLat(longitudActual, latitudActual);
+            var punto = new MPoint(mx, my);
+
+            capaUbicacion = new MemoryLayer
+            {
+                Name = "Mi ubicación",
+                Features = new[]
+                {
+                    new PointFeature(punto)
+                    {
+                        Styles = new List<Mapsui.Styles.IStyle>
+                        {
+                            new Mapsui.Styles.SymbolStyle
+                            {
+                                SymbolType = Mapsui.Styles.SymbolType.Ellipse,
+                                SymbolScale = 0.5,
+                                Fill = new Mapsui.Styles.Brush(MapsuiColor.FromString("#5A31F4")),
+                                Outline = new Mapsui.Styles.Pen(MapsuiColor.White, 3)
+                            }
+                        }
+                    }
+                }
+            };
+            map.Layers.Add(capaUbicacion);
+
+            map.Navigator.CenterOnAndZoomTo(punto, map.Navigator.Resolutions[15]);
+
+            MapaControl.Map = map;
+        }
+
+        private void ReposicionarMarcador()
+        {
+            if (capaUbicacion == null || MapaControl.Map == null)
+                return;
+
+            var (mx, my) = SphericalMercator.FromLonLat(longitudActual, latitudActual);
+            var punto = new MPoint(mx, my);
+
+            capaUbicacion.Features = new[]
+            {
+                new PointFeature(punto)
+                {
+                    Styles = new List<Mapsui.Styles.IStyle>
+                    {
+                        new Mapsui.Styles.SymbolStyle
+                        {
+                            SymbolType = Mapsui.Styles.SymbolType.Ellipse,
+                            SymbolScale = 0.5,
+                            Fill = new Mapsui.Styles.Brush(MapsuiColor.FromString("#5A31F4")),
+                            Outline = new Mapsui.Styles.Pen(MapsuiColor.White, 3)
+                        }
+                    }
+                }
+            };
+            capaUbicacion.DataHasChanged();
+
+            MapaControl.Map.Navigator.CenterOnAndZoomTo(punto, MapaControl.Map.Navigator.Resolutions[15]);
         }
 
         private async Task CargarServiciosCercanos()

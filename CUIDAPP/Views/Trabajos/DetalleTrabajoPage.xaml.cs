@@ -70,7 +70,44 @@ namespace CUIDAPP.Views.Trabajos
 
         private async void OnRechazarClicked(object sender, EventArgs e) => await CambiarEstado(6);
 
-        private async void OnIniciarClicked(object sender, EventArgs e) => await CambiarEstado(3);
+        private const double DistanciaMaximaKm = 0.15; // 150 metros
+
+        private async void OnIniciarClicked(object sender, EventArgs e)
+        {
+            if (trabajo == null)
+                return;
+
+            if (trabajo.Fecha.Date != DateTime.Today)
+            {
+                var mensaje = trabajo.Fecha.Date > DateTime.Today
+                    ? $"Este servicio está programado para el {trabajo.Fecha:d 'de' MMMM}. Todavía no puedes iniciarlo."
+                    : $"Este servicio estaba programado para el {trabajo.Fecha:d 'de' MMMM} y ya pasó la fecha.";
+                await DisplayAlert("No es la fecha del servicio", mensaje, "OK");
+                return;
+            }
+
+            if (trabajo.Latitud != null && trabajo.Longitud != null)
+            {
+                var ubicacionActual = await LocationService.ObtenerUbicacionActualAsync();
+                if (ubicacionActual == null)
+                {
+                    await DisplayAlert("Ubicación no disponible", "No pudimos verificar tu ubicación. Activa el GPS e intenta de nuevo.", "OK");
+                    return;
+                }
+
+                var ubicacionServicio = new Location((double)trabajo.Latitud, (double)trabajo.Longitud);
+                var distanciaKm = Location.CalculateDistance(ubicacionActual, ubicacionServicio, DistanceUnits.Kilometers);
+
+                if (distanciaKm > DistanciaMaximaKm)
+                {
+                    await DisplayAlert("Estás muy lejos", $"Debes estar en la dirección del servicio para iniciar el trabajo. Estás a {distanciaKm * 1000:N0} m de distancia.", "OK");
+                    return;
+                }
+            }
+
+            var parametros = new Dictionary<string, object> { { "Trabajo", trabajo } };
+            await Shell.Current.GoToAsync("IniciarTrabajoPage", parametros);
+        }
 
         private async void OnCompletarClicked(object sender, EventArgs e) => await CambiarEstado(4);
 

@@ -291,17 +291,57 @@ namespace CUIDAPP.Services
             }
         }
 
-        public async Task<bool> CrearTrabajoAsync(CrearTrabajoRequest request)
+        public async Task<(bool Success, string? Error)> CrearTrabajoAsync(CrearTrabajoRequest request)
         {
             try
             {
                 var response = await _httpClient.PostAsJsonAsync("trabajo", request);
-                return response.IsSuccessStatusCode;
+                if (response.IsSuccessStatusCode)
+                    return (true, null);
+
+                var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error creando trabajo ({(int)response.StatusCode}): {error}");
+                return (false, error);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error creando trabajo: {ex.Message}");
-                return false;
+                return (false, ex.Message);
+            }
+        }
+
+        public async Task<TrabajoCliente?> ObtenerTrabajoActivoPorClienteAsync(int clienteId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"trabajo/cliente/{clienteId}/activo");
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                return await response.Content.ReadFromJsonAsync<TrabajoCliente>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo trabajo activo del cliente: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<(bool Success, string? Error)> IniciarTrabajoAsync(int trabajoId, string pin)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync("trabajo/iniciar", new { TrabajoId = trabajoId, Pin = pin });
+                if (response.IsSuccessStatusCode)
+                    return (true, null);
+
+                var error = await response.Content.ReadAsStringAsync();
+                return (false, error);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error iniciando trabajo: {ex.Message}");
+                return (false, ex.Message);
             }
         }
 

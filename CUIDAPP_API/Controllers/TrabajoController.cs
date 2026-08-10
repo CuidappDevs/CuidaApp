@@ -57,6 +57,36 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [HttpGet("cliente/{clienteId}/activo")]
+        public async Task<IActionResult> ObtenerTrabajoActivoPorCliente(int clienteId)
+        {
+            try
+            {
+                var trabajo = await _trabajoService.ObtenerTrabajoActivoPorClienteAsync(clienteId);
+                return Ok(trabajo);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
+        [HttpPut("iniciar")]
+        public async Task<IActionResult> IniciarTrabajo([FromBody] IniciarTrabajoDto dto)
+        {
+            try
+            {
+                var success = await _trabajoService.IniciarTrabajoAsync(dto);
+                if (success)
+                    return Ok(new { Message = "Trabajo iniciado correctamente" });
+                return BadRequest("PIN incorrecto o el trabajo no está en estado Aceptado.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
         [HttpPut("estado")]
         public async Task<IActionResult> ActualizarEstado([FromBody] ActualizarEstadoTrabajoDto dto)
         {

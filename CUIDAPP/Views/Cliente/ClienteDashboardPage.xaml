@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:mapsui="clr-namespace:Mapsui.UI.Maui;assembly=Mapsui.UI.Maui"
              x:Class="CUIDAPP.Views.Cliente.ClienteDashboardPage"
              Shell.NavBarIsVisible="False"
              BackgroundColor="#FFFFFF">
@@ -10,9 +11,7 @@
 
         <!-- MAPA A PANTALLA COMPLETA -->
         <Grid>
-            <WebView x:Name="MapaWebView" />
-            <BoxView Color="#F3F4F6" IsVisible="{Binding Source={x:Reference MapaLoading}, Path=IsRunning}" />
-            <ActivityIndicator x:Name="MapaLoading" IsRunning="True" Color="#5A31F4" />
+            <mapsui:MapControl x:Name="MapaControl" />
         </Grid>
 
         <!-- BARRA SUPERIOR FLOTANTE -->
@@ -71,6 +70,23 @@
                     </VerticalStackLayout>
                 </VerticalStackLayout>
 
+                <!-- Aviso de servicio activo (reemplaza el buscador mientras haya una solicitud en curso) -->
+                <Border x:Name="BannerServicioActivo" Stroke="#DDD6FE" StrokeThickness="1" BackgroundColor="#F5F3FF" StrokeShape="RoundRectangle 14" Padding="15" Margin="0,0,0,10" IsVisible="False">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnVerServicioActivoTapped" />
+                    </Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="Auto, *, Auto">
+                        <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="#5A31F4" StrokeShape="RoundRectangle 18" WidthRequest="36" HeightRequest="36" Margin="0,0,12,0">
+                            <Path Data="M20 6H16V4C16 2.9 15.1 2 14 2H10C8.9 2 8 2.9 8 4V6H4C2.9 6 2.01 6.9 2.01 8L2 19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6ZM10 4H14V6H10V4ZM20 19H4V8H20V19Z" Fill="White" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="1">
+                            <Label Text="Ya tienes un servicio en curso" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                            <Label x:Name="LblBannerServicioActivo" Text="" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="›" FontSize="26" TextColor="#9CA3AF" VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+
                 <!-- Contenido colapsable -->
                 <VerticalStackLayout x:Name="ContenidoExpandible">
 
@@ -101,12 +117,17 @@
             </VerticalStackLayout>
         </Border>
 
-        <!-- OVERLAY DE CARGA -->
-        <Grid x:Name="OverlayCarga" BackgroundColor="White">
-            <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="15">
-                <ActivityIndicator IsRunning="True" Color="#5A31F4" WidthRequest="40" HeightRequest="40"/>
-                <Label Text="Preparando tu mapa..." FontSize="15" FontFamily="OpenSansSemibold" TextColor="#374151" HorizontalOptions="Center"/>
-            </VerticalStackLayout>
+        <!-- OVERLAY DE CARGA (semitransparente, deja ver el mapa detrás) -->
+        <Grid x:Name="OverlayCarga" BackgroundColor="#B3FFFFFF" InputTransparent="False">
+            <Border HorizontalOptions="Center" VerticalOptions="Center" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="25,20">
+                <Border.Shadow>
+                    <Shadow Brush="#000000" Offset="0,4" Opacity="0.12" Radius="12"/>
+                </Border.Shadow>
+                <VerticalStackLayout HorizontalOptions="Center" Spacing="12">
+                    <ActivityIndicator IsRunning="True" Color="#5A31F4" WidthRequest="32" HeightRequest="32"/>
+                    <Label Text="Cargando servicios cercanos..." FontSize="13" FontFamily="OpenSansSemibold" TextColor="#374151" HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </Border>
         </Grid>
 
     </Grid>

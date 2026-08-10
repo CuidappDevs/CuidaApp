@@ -1,11 +1,12 @@
 namespace CUIDAPP.Models.Trabajo
 {
-    public class Trabajo
+    public class TrabajoCliente
     {
         public int Id { get; set; }
         public int ClienteId { get; set; }
-        public string ClienteNombre { get; set; } = string.Empty;
-        public string? ClienteFotoUrl { get; set; }
+        public int CuidadorId { get; set; }
+        public string CuidadorNombre { get; set; } = string.Empty;
+        public string? CuidadorFotoUrl { get; set; }
         public string TipoServicio { get; set; } = string.Empty;
         public DateTime Fecha { get; set; }
         public TimeSpan HoraInicio { get; set; }
@@ -15,7 +16,6 @@ namespace CUIDAPP.Models.Trabajo
         public decimal Tarifa { get; set; }
         public string? Notas { get; set; }
         public DateTime FechaCreacion { get; set; }
-        public decimal? Latitud { get; set; }
-        public decimal? Longitud { get; set; }
+        public string? PinInicio { get; set; }
     }
 }

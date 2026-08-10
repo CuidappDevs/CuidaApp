@@ -8,5 +8,7 @@ namespace CUIDAPP_API.Interfaces.Trabajo
         Task<IEnumerable<TrabajoDto>> ObtenerTrabajosPorCuidadorAsync(int cuidadorId);
         Task<TrabajoDto?> ObtenerProximoTrabajoAsync(int cuidadorId);
         Task<bool> ActualizarEstadoTrabajoAsync(ActualizarEstadoTrabajoDto dto);
+        Task<TrabajoClienteDto?> ObtenerTrabajoActivoPorClienteAsync(int clienteId);
+        Task<bool> IniciarTrabajoAsync(IniciarTrabajoDto dto);
     }
 }
