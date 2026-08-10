@@ -92,6 +92,8 @@
 
                 <Button x:Name="BtnCancelar" Text="Cancelar solicitud" Clicked="OnCancelarClicked" BackgroundColor="Transparent" TextColor="#EF4444" BorderColor="#EF4444" BorderWidth="1" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50" IsVisible="False"/>
 
+                <Button x:Name="BtnCalificar" Text="Calificar a tu cuidador" Clicked="OnCalificarClicked" BackgroundColor="#5A31F4" TextColor="White" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50" IsVisible="False"/>
+
             </VerticalStackLayout>
         </ScrollView>
 

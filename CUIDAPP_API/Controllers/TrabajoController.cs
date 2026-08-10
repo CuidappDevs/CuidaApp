@@ -87,6 +87,36 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [HttpGet("motivos-cancelacion")]
+        public async Task<IActionResult> ObtenerMotivosCancelacion()
+        {
+            try
+            {
+                var motivos = await _trabajoService.ObtenerMotivosCancelacionAsync();
+                return Ok(motivos);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
+        [HttpPut("cancelar-cuidador")]
+        public async Task<IActionResult> CancelarTrabajoCuidador([FromBody] CancelarTrabajoDto dto)
+        {
+            try
+            {
+                var success = await _trabajoService.CancelarTrabajoCuidadorAsync(dto);
+                if (success)
+                    return Ok(new { Message = "Trabajo cancelado correctamente" });
+                return BadRequest("No se pudo cancelar. Verifica que el trabajo esté aceptado o en progreso.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
         [HttpPut("estado")]
         public async Task<IActionResult> ActualizarEstado([FromBody] ActualizarEstadoTrabajoDto dto)
         {

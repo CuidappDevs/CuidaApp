@@ -10,5 +10,7 @@ namespace CUIDAPP_API.Interfaces.Trabajo
         Task<bool> ActualizarEstadoTrabajoAsync(ActualizarEstadoTrabajoDto dto);
         Task<TrabajoClienteDto?> ObtenerTrabajoActivoPorClienteAsync(int clienteId);
         Task<bool> IniciarTrabajoAsync(IniciarTrabajoDto dto);
+        Task<IEnumerable<MotivoCancelacionDto>> ObtenerMotivosCancelacionAsync();
+        Task<bool> CancelarTrabajoCuidadorAsync(CancelarTrabajoDto dto);
     }
 }

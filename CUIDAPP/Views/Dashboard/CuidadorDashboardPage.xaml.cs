@@ -7,6 +7,7 @@ namespace CUIDAPP.Views.Dashboard
         private readonly ApiService _apiService = new ApiService();
         private int cuidadorId;
         private bool disponibleActual;
+        private bool suprimirEventoToggle;
 
         public CuidadorDashboardPage()
         {
@@ -33,13 +34,25 @@ namespace CUIDAPP.Views.Dashboard
             var gananciasTask = _apiService.ObtenerGananciasAsync(cuidadorId);
             var proximoTrabajoTask = _apiService.ObtenerProximoTrabajoAsync(cuidadorId);
             var trabajosTask = _apiService.ObtenerTrabajosAsync(cuidadorId);
+            var ratingTask = _apiService.ObtenerPromedioCalificacionAsync(cuidadorId);
 
-            await Task.WhenAll(perfilTask, gananciasTask, proximoTrabajoTask, trabajosTask);
+            await Task.WhenAll(perfilTask, gananciasTask, proximoTrabajoTask, trabajosTask, ratingTask);
 
             var perfil = perfilTask.Result;
             var ganancias = gananciasTask.Result;
             var proximoTrabajo = proximoTrabajoTask.Result;
             var pendientes = trabajosTask.Result.Count(t => t.Estado == 1);
+            var rating = ratingTask.Result;
+
+            if (rating != null && rating.Total > 0)
+            {
+                LblRating.Text = $"{rating.Promedio:N1} ({rating.Total})";
+                ContenedorRating.IsVisible = true;
+            }
+            else
+            {
+                ContenedorRating.IsVisible = false;
+            }
 
             BadgeNotificaciones.IsVisible = pendientes > 0;
             LblBadgeNotificaciones.Text = pendientes > 9 ? "9+" : pendientes.ToString();
@@ -57,6 +70,7 @@ namespace CUIDAPP.Views.Dashboard
             }
 
             LblGanadoHoy.Text = $"RD${(ganancias?.GanadoHoy ?? 0):N0}";
+            LblPendienteCobrar.Text = $"RD${(ganancias?.PendientePorCobrar ?? 0):N0}";
 
             if (proximoTrabajo != null)
             {
@@ -81,23 +95,42 @@ namespace CUIDAPP.Views.Dashboard
 
         private void ActualizarUiDisponibilidad()
         {
+            suprimirEventoToggle = true;
+            SwitchDisponible.IsToggled = disponibleActual;
+            suprimirEventoToggle = false;
+
             if (disponibleActual)
             {
-                IndicadorDisponible.BackgroundColor = Color.FromArgb("#10B981");
+                CardDisponibilidad.BackgroundColor = Color.FromArgb("#ECFDF5");
+                IconoDisponibleFondo.BackgroundColor = Color.FromArgb("#10B981");
+                IconoDisponible.Fill = Colors.White;
                 LblDisponible.Text = "Disponible ahora";
-                LblDisponible.TextColor = Color.FromArgb("#059669");
+                LblDisponible.TextColor = Color.FromArgb("#065F46");
+                LblDisponibleSubtitulo.Text = "Los clientes pueden verte y solicitarte servicios.";
             }
             else
             {
-                IndicadorDisponible.BackgroundColor = Color.FromArgb("#9CA3AF");
+                CardDisponibilidad.BackgroundColor = Color.FromArgb("#F3F4F6");
+                IconoDisponibleFondo.BackgroundColor = Color.FromArgb("#E5E7EB");
+                IconoDisponible.Fill = Color.FromArgb("#9CA3AF");
                 LblDisponible.Text = "No disponible";
-                LblDisponible.TextColor = Color.FromArgb("#6B7280");
+                LblDisponible.TextColor = Color.FromArgb("#374151");
+                LblDisponibleSubtitulo.Text = "Estás desconectado. Los clientes no pueden verte.";
             }
         }
 
-        private async void OnDisponibilidadTapped(object sender, EventArgs e)
+        private void OnDisponibilidadTapped(object sender, EventArgs e)
         {
-            var nuevoValor = !disponibleActual;
+            // Alterna el Switch; la lógica real corre en OnDisponibilidadToggled.
+            SwitchDisponible.IsToggled = !SwitchDisponible.IsToggled;
+        }
+
+        private async void OnDisponibilidadToggled(object sender, ToggledEventArgs e)
+        {
+            if (suprimirEventoToggle)
+                return;
+
+            var nuevoValor = e.Value;
             var success = await _apiService.ActualizarDisponibilidadAsync(cuidadorId, nuevoValor);
 
             if (success)
@@ -108,6 +141,10 @@ namespace CUIDAPP.Views.Dashboard
             else
             {
                 await DisplayAlert("Error", "No se pudo actualizar tu disponibilidad. Intenta de nuevo.", "OK");
+                // Revertir visualmente sin volver a llamar a la API.
+                suprimirEventoToggle = true;
+                SwitchDisponible.IsToggled = disponibleActual;
+                suprimirEventoToggle = false;
             }
         }
 

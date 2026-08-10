@@ -11,6 +11,8 @@ using CUIDAPP_API.Interfaces.Busqueda;
 using CUIDAPP_API.Services.Busqueda;
 using CUIDAPP_API.Interfaces.Cliente;
 using CUIDAPP_API.Services.Cliente;
+using CUIDAPP_API.Interfaces.Calificacion;
+using CUIDAPP_API.Services.Calificacion;
 using Microsoft.Extensions.FileProviders;
 
 // Asegurar que exista la carpeta wwwroot/uploads ANTES de crear el builder,
@@ -32,6 +34,7 @@ builder.Services.AddScoped<ICuidadorService, CuidadorService>();
 builder.Services.AddScoped<ITrabajoService, TrabajoService>();
 builder.Services.AddScoped<IBusquedaService, BusquedaService>();
 builder.Services.AddScoped<IClienteService, ClienteService>();
+builder.Services.AddScoped<ICalificacionService, CalificacionService>();
 
 var app = builder.Build();
 

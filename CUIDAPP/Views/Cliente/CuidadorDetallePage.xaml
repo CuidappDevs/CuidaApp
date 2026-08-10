@@ -31,6 +31,10 @@
                     <Label x:Name="LblNombre" Text="" FontSize="22" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
                     <Label x:Name="LblEspecialidad" Text="" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#5A31F4" HorizontalOptions="Center"/>
                     <Label x:Name="LblDistancia" Text="" FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
+                    <HorizontalStackLayout x:Name="ContenedorRating" Spacing="5" HorizontalOptions="Center" Margin="0,4,0,0" IsVisible="False">
+                        <Label Text="★" FontSize="15" TextColor="#F59E0B"/>
+                        <Label x:Name="LblRating" Text="" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                    </HorizontalStackLayout>
                 </VerticalStackLayout>
 
                 <Border Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="20">

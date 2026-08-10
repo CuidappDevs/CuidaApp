@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using CUIDAPP.Models.Auth;
 using CUIDAPP.Models.Busqueda;
+using CUIDAPP.Models.Calificacion;
 using CUIDAPP.Models.Cliente;
 using CUIDAPP.Models.Cuidador;
 using CUIDAPP.Models.Trabajo;
@@ -274,6 +275,78 @@ namespace CUIDAPP.Services
             }
         }
 
+        public async Task<List<CuidadorMapa>> ObtenerCuidadoresCercanosMapaAsync(double lat, double lng, double radioKm = 15)
+        {
+            try
+            {
+                var url = $"busqueda/cuidadores-mapa?lat={lat.ToString(System.Globalization.CultureInfo.InvariantCulture)}&lng={lng.ToString(System.Globalization.CultureInfo.InvariantCulture)}&radioKm={radioKm.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+                var response = await _httpClient.GetAsync(url);
+                if (!response.IsSuccessStatusCode)
+                    return new List<CuidadorMapa>();
+
+                return await response.Content.ReadFromJsonAsync<List<CuidadorMapa>>() ?? new List<CuidadorMapa>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo cuidadores cercanos para el mapa: {ex.Message}");
+                return new List<CuidadorMapa>();
+            }
+        }
+
+        public async Task<bool> CrearCalificacionAsync(CrearCalificacionRequest request)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("calificacion", request);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creando calificación: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<CalificacionPromedio?> ObtenerPromedioCalificacionAsync(int usuarioId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"calificacion/usuario/{usuarioId}/promedio");
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                return await response.Content.ReadFromJsonAsync<CalificacionPromedio>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo promedio de calificación: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<bool> ExisteCalificacionAsync(int trabajoId, int calificadorId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"calificacion/trabajo/{trabajoId}/existe?calificadorId={calificadorId}");
+                if (!response.IsSuccessStatusCode)
+                    return false;
+
+                var resultado = await response.Content.ReadFromJsonAsync<ExisteCalificacionResponse>();
+                return resultado?.Existe ?? false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error verificando calificación: {ex.Message}");
+                return false;
+            }
+        }
+
+        private class ExisteCalificacionResponse
+        {
+            public bool Existe { get; set; }
+        }
+
         public async Task<PerfilCliente?> ObtenerPerfilClienteAsync(int clienteId)
         {
             try
@@ -356,6 +429,37 @@ namespace CUIDAPP.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"Error actualizando estado de trabajo: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<List<MotivoCancelacion>> ObtenerMotivosCancelacionAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("trabajo/motivos-cancelacion");
+                if (!response.IsSuccessStatusCode)
+                    return new List<MotivoCancelacion>();
+
+                return await response.Content.ReadFromJsonAsync<List<MotivoCancelacion>>() ?? new List<MotivoCancelacion>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo motivos de cancelación: {ex.Message}");
+                return new List<MotivoCancelacion>();
+            }
+        }
+
+        public async Task<bool> CancelarTrabajoCuidadorAsync(int trabajoId, int motivoId, string? motivoTexto)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync("trabajo/cancelar-cuidador", new { TrabajoId = trabajoId, MotivoId = motivoId, MotivoTexto = motivoTexto });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error cancelando trabajo: {ex.Message}");
                 return false;
             }
         }

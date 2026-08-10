@@ -1,11 +1,7 @@
 using System.Globalization;
+using System.Text.Json;
 using CUIDAPP.Models.Busqueda;
 using CUIDAPP.Services;
-using Mapsui;
-using Mapsui.Layers;
-using Mapsui.Projections;
-using Mapsui.Tiling;
-using MapsuiColor = Mapsui.Styles.Color;
 
 namespace CUIDAPP.Views.Cliente
 {
@@ -21,11 +17,38 @@ namespace CUIDAPP.Views.Cliente
         private bool hayServicioActivo = false;
         private const double AlturaPanelExpandido = 460;
         private const double AlturaPanelColapsado = 100;
-        private MemoryLayer? capaUbicacion;
+        private bool mapaHtmlCargado = false;
+        private List<CuidadorMapa> cuidadoresEnMapa = new();
 
         public ClienteDashboardPage()
         {
             InitializeComponent();
+
+            // Última ubicación conocida (persistida entre sesiones): así el mapa arranca
+            // en el lugar correcto de inmediato, aunque esta sea una instancia nueva de la
+            // página y el GPS todavía no haya respondido.
+            var latGuardada = Preferences.Default.Get("UltimaLatitud", 0.0);
+            var lngGuardada = Preferences.Default.Get("UltimaLongitud", 0.0);
+            if (latGuardada != 0.0 && lngGuardada != 0.0)
+            {
+                latitudActual = latGuardada;
+                longitudActual = lngGuardada;
+            }
+
+            MapaWebView.Navigated += OnMapaNavigated;
+        }
+
+        private void OnMapaNavigated(object? sender, WebNavigatedEventArgs e)
+        {
+            // Android a veces recrea la vista nativa del WebView al volver a esta página
+            // (aunque el HTML no cambió), lo que dispara una recarga fuera de nuestro
+            // control. En vez de pelear contra eso, reaplicamos el estado actual (marcador
+            // + cuidadores) apenas termina de cargar, para que el "reload" sea imperceptible.
+            if (mapaHtmlCargado)
+            {
+                ReposicionarMarcador();
+                ActualizarCuidadoresEnMapa();
+            }
         }
 
         protected override async void OnAppearing()
@@ -43,9 +66,10 @@ namespace CUIDAPP.Views.Cliente
             if (yaCargado)
             {
                 // Ya tenemos mapa y ubicación cargados de una visita anterior: solo
-                // refrescamos servicio activo y servicios cercanos, sin overlay ni recarga del mapa.
+                // refrescamos servicio activo, servicios y cuidadores cercanos, sin overlay ni recarga del mapa.
                 await VerificarServicioActivo();
                 await CargarServiciosCercanos();
+                await CargarCuidadoresEnMapa();
                 return;
             }
 
@@ -63,6 +87,7 @@ namespace CUIDAPP.Views.Cliente
 
             await VerificarServicioActivo();
             await CargarServiciosCercanos();
+            await CargarCuidadoresEnMapa();
 
             yaCargado = true;
 
@@ -83,7 +108,11 @@ namespace CUIDAPP.Views.Cliente
             latitudActual = ubicacion.Latitude;
             longitudActual = ubicacion.Longitude;
 
+            Preferences.Default.Set("UltimaLatitud", latitudActual);
+            Preferences.Default.Set("UltimaLongitud", longitudActual);
+
             ReposicionarMarcador();
+            await CargarCuidadoresEnMapa();
 
             if (eraUbicacionPorDefecto)
                 await CargarServiciosCercanos();
@@ -108,6 +137,7 @@ namespace CUIDAPP.Views.Cliente
                     1 => "Esperando respuesta del cuidador",
                     2 => "Aceptado, en espera de la fecha programada",
                     3 => "En progreso",
+                    4 => "Completado, ¡califica a tu cuidador!",
                     _ => "En curso"
                 };
                 LblBannerServicioActivo.Text = $"{trabajoActivo.TipoServicio} · {estadoTexto}";
@@ -121,71 +151,92 @@ namespace CUIDAPP.Views.Cliente
 
         private void CargarMapa()
         {
-            var map = new Mapsui.Map();
+            var lat = latitudActual.ToString(CultureInfo.InvariantCulture);
+            var lng = longitudActual.ToString(CultureInfo.InvariantCulture);
 
-            var tileSource = new BruTile.Web.HttpTileSource(
-                new BruTile.Predefined.GlobalSphericalMercator(),
-                "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}.png",
-                new[] { "a", "b", "c", "d" });
-            map.Layers.Add(new Mapsui.Tiling.Layers.TileLayer(tileSource) { Name = "CartoDB Voyager" });
+            var html = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+    <link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css' />
+    <style>
+        html, body, #map {{ height: 100%; margin: 0; padding: 0; background: #EAECEF; }}
+        .leaflet-control-attribution {{ display: none; }}
+    </style>
+</head>
+<body>
+    <div id='map'></div>
+    <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
+    <script>
+        var map = L.map('map', {{ zoomControl: false, attributionControl: false }}).setView([{lat}, {lng}], 14);
+        L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{{z}}/{{x}}/{{y}}{{r}}.png', {{ maxZoom: 20, subdomains: 'abcd' }}).addTo(map);
+        var marker = L.circleMarker([{lat}, {lng}], {{ radius: 8, color: '#FFFFFF', weight: 3, fillColor: '#5A31F4', fillOpacity: 1 }}).addTo(map);
+        var capaCuidadores = L.layerGroup().addTo(map);
 
-            var (mx, my) = SphericalMercator.FromLonLat(longitudActual, latitudActual);
-            var punto = new MPoint(mx, my);
+        // Se llama desde C# cuando llega una ubicación GPS más precisa, sin recargar la página.
+        function actualizarUbicacion(lat, lng) {{
+            var latlng = [lat, lng];
+            marker.setLatLng(latlng);
+            map.setView(latlng, map.getZoom());
+        }}
 
-            capaUbicacion = new MemoryLayer
-            {
-                Name = "Mi ubicación",
-                Features = new[]
-                {
-                    new PointFeature(punto)
-                    {
-                        Styles = new List<Mapsui.Styles.IStyle>
-                        {
-                            new Mapsui.Styles.SymbolStyle
-                            {
-                                SymbolType = Mapsui.Styles.SymbolType.Ellipse,
-                                SymbolScale = 0.5,
-                                Fill = new Mapsui.Styles.Brush(MapsuiColor.FromString("#5A31F4")),
-                                Outline = new Mapsui.Styles.Pen(MapsuiColor.White, 3)
-                            }
-                        }
-                    }
-                }
-            };
-            map.Layers.Add(capaUbicacion);
+        // Se llama desde C# con la lista de cuidadores cercanos [[lat,lng], ...],
+        // mostrando un puntito por cada uno (estilo Uber), sin recargar la página.
+        function actualizarCuidadores(puntos) {{
+            capaCuidadores.clearLayers();
+            puntos.forEach(function(p) {{
+                L.circleMarker(p, {{ radius: 6, color: '#FFFFFF', weight: 2, fillColor: '#10B981', fillOpacity: 1 }}).addTo(capaCuidadores);
+            }});
+        }}
+    </script>
+</body>
+</html>";
 
-            map.Navigator.CenterOnAndZoomTo(punto, map.Navigator.Resolutions[15]);
-
-            MapaControl.Map = map;
+            MapaWebView.Source = new HtmlWebViewSource { Html = html };
+            mapaHtmlCargado = true;
         }
 
-        private void ReposicionarMarcador()
+        private async void ReposicionarMarcador()
         {
-            if (capaUbicacion == null || MapaControl.Map == null)
+            if (!mapaHtmlCargado)
                 return;
 
-            var (mx, my) = SphericalMercator.FromLonLat(longitudActual, latitudActual);
-            var punto = new MPoint(mx, my);
+            var lat = latitudActual.ToString(CultureInfo.InvariantCulture);
+            var lng = longitudActual.ToString(CultureInfo.InvariantCulture);
 
-            capaUbicacion.Features = new[]
+            try
             {
-                new PointFeature(punto)
-                {
-                    Styles = new List<Mapsui.Styles.IStyle>
-                    {
-                        new Mapsui.Styles.SymbolStyle
-                        {
-                            SymbolType = Mapsui.Styles.SymbolType.Ellipse,
-                            SymbolScale = 0.5,
-                            Fill = new Mapsui.Styles.Brush(MapsuiColor.FromString("#5A31F4")),
-                            Outline = new Mapsui.Styles.Pen(MapsuiColor.White, 3)
-                        }
-                    }
-                }
-            };
-            capaUbicacion.DataHasChanged();
+                await MapaWebView.EvaluateJavaScriptAsync($"actualizarUbicacion({lat}, {lng})");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error actualizando marcador: {ex.Message}");
+            }
+        }
 
-            MapaControl.Map.Navigator.CenterOnAndZoomTo(punto, MapaControl.Map.Navigator.Resolutions[15]);
+        private async Task CargarCuidadoresEnMapa()
+        {
+            cuidadoresEnMapa = await _apiService.ObtenerCuidadoresCercanosMapaAsync(latitudActual, longitudActual);
+            ActualizarCuidadoresEnMapa();
+        }
+
+        private async void ActualizarCuidadoresEnMapa()
+        {
+            if (!mapaHtmlCargado)
+                return;
+
+            var puntos = cuidadoresEnMapa.Select(c => new[] { (double)c.Latitud, (double)c.Longitud }).ToList();
+            var json = JsonSerializer.Serialize(puntos);
+
+            try
+            {
+                await MapaWebView.EvaluateJavaScriptAsync($"actualizarCuidadores({json})");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error actualizando cuidadores en el mapa: {ex.Message}");
+            }
         }
 
         private async Task CargarServiciosCercanos()
@@ -402,7 +453,11 @@ namespace CUIDAPP.Views.Cliente
             panelExpandido = expandir;
 
             if (panelExpandido)
-                ContenidoExpandible.IsVisible = true;
+            {
+                // Si hay un servicio activo, el panel expandido muestra el banner, no el buscador.
+                ContenidoExpandible.IsVisible = !hayServicioActivo;
+                BannerServicioActivo.IsVisible = hayServicioActivo;
+            }
 
             var alturaActual = BottomSheet.Height > 0 ? BottomSheet.Height : AlturaPanelExpandido;
             var alturaDestino = panelExpandido ? AlturaPanelExpandido : AlturaPanelColapsado;

@@ -60,7 +60,7 @@ namespace CUIDAPP.Views.Cliente
                 1 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), "Esperando respuesta del cuidador"),
                 2 => (Color.FromArgb("#DBEAFE"), Color.FromArgb("#1E40AF"), "Aceptado, tu cuidador asistirá en la fecha programada"),
                 3 => (Color.FromArgb("#EDE9FE"), Color.FromArgb("#5B21B6"), "En progreso"),
-                4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), "Completado"),
+                4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), "Servicio completado"),
                 5 => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "Cancelado"),
                 6 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#991B1B"), "Rechazado por el cuidador"),
                 _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "Desconocido")
@@ -71,6 +71,7 @@ namespace CUIDAPP.Views.Cliente
             LblEstado.Text = texto;
 
             BtnCancelar.IsVisible = t.Estado == 1;
+            BtnCalificar.IsVisible = t.Estado == 4;
 
             CardPin.IsVisible = t.Estado is 2 or 3 && !string.IsNullOrWhiteSpace(t.PinInicio);
             if (CardPin.IsVisible)
@@ -131,6 +132,20 @@ namespace CUIDAPP.Views.Cliente
         private async void OnBackTapped(object sender, EventArgs e)
         {
             await Shell.Current.GoToAsync("..");
+        }
+
+        private async void OnCalificarClicked(object sender, EventArgs e)
+        {
+            if (trabajo == null)
+                return;
+
+            var parametros = new Dictionary<string, object>
+            {
+                { "TrabajoId", trabajo.Id },
+                { "CalificadoId", trabajo.CuidadorId },
+                { "CalificadoNombre", trabajo.CuidadorNombre }
+            };
+            await Shell.Current.GoToAsync("CalificarPage", parametros);
         }
 
         private async void OnCancelarClicked(object sender, EventArgs e)

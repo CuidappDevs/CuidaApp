@@ -5,6 +5,7 @@ namespace CUIDAPP.Views.Cliente
 {
     public partial class CuidadorDetallePage : ContentPage, IQueryAttributable
     {
+        private readonly ApiService _apiService = new ApiService();
         private CuidadorCercano? cuidador;
 
         public void ApplyQueryAttributes(IDictionary<string, object> query)
@@ -13,7 +14,18 @@ namespace CUIDAPP.Views.Cliente
             {
                 cuidador = c;
                 Renderizar(c);
+                _ = CargarRatingAsync(c.Id);
             }
+        }
+
+        private async Task CargarRatingAsync(int cuidadorId)
+        {
+            var promedio = await _apiService.ObtenerPromedioCalificacionAsync(cuidadorId);
+            if (promedio == null || promedio.Total == 0)
+                return;
+
+            LblRating.Text = $"{promedio.Promedio:N1} ({promedio.Total})";
+            ContenedorRating.IsVisible = true;
         }
 
         public CuidadorDetallePage()

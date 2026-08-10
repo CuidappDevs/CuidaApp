@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CUIDAPP.Views.Trabajos.MapaCompletoPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#FFFFFF">
+
+    <Grid>
+        <WebView x:Name="MapaWebView" />
+
+        <Border VerticalOptions="Start" HorizontalOptions="Start" Margin="20,55,0,0" Stroke="Transparent" StrokeShape="RoundRectangle 20" WidthRequest="44" HeightRequest="44" BackgroundColor="White">
+            <Border.Shadow>
+                <Shadow Brush="#000000" Offset="0,3" Opacity="0.15" Radius="8"/>
+            </Border.Shadow>
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnBackTapped" />
+            </Border.GestureRecognizers>
+            <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+        </Border>
+    </Grid>
+
+</ContentPage>

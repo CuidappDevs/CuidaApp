@@ -28,6 +28,20 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [HttpGet("cuidadores-mapa")]
+        public async Task<IActionResult> ObtenerCuidadoresCercanosMapa([FromQuery] decimal lat, [FromQuery] decimal lng, [FromQuery] decimal radioKm = 15)
+        {
+            try
+            {
+                var cuidadores = await _busquedaService.ObtenerCuidadoresCercanosMapaAsync(lat, lng, radioKm);
+                return Ok(cuidadores);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
         [HttpGet("cuidadores")]
         public async Task<IActionResult> ObtenerCuidadoresPorServicio([FromQuery] string especialidad, [FromQuery] decimal lat, [FromQuery] decimal lng, [FromQuery] decimal radioKm = 15)
         {

@@ -12,6 +12,9 @@ namespace CUIDAPP
             Routing.RegisterRoute("TrabajosPage", typeof(Views.Trabajos.TrabajosPage));
             Routing.RegisterRoute("DetalleTrabajoPage", typeof(Views.Trabajos.DetalleTrabajoPage));
             Routing.RegisterRoute("IniciarTrabajoPage", typeof(Views.Trabajos.IniciarTrabajoPage));
+            Routing.RegisterRoute("CancelarServicioPage", typeof(Views.Trabajos.CancelarServicioPage));
+            Routing.RegisterRoute("MapaCompletoPage", typeof(Views.Trabajos.MapaCompletoPage));
+            Routing.RegisterRoute("CalificarPage", typeof(Views.Calificacion.CalificarPage));
             Routing.RegisterRoute("DineroPage", typeof(Views.Dinero.DineroPage));
             Routing.RegisterRoute("ClienteDashboardPage", typeof(Views.Cliente.ClienteDashboardPage));
             Routing.RegisterRoute("ClientePerfilPage", typeof(Views.Cliente.ClientePerfilPage));

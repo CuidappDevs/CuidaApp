@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CUIDAPP.Views.Calificacion.CalificarPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#FFFFFF">
+
+    <Grid RowDefinitions="Auto, *, Auto">
+
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" Padding="20,15,20,10" BackgroundColor="White">
+            <ContentView x:Name="BtnBack" VerticalOptions="Center">
+                <ContentView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </ContentView.GestureRecognizers>
+                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
+            </ContentView>
+            <Label Grid.Column="1" Text="Calificar" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="25,30,25,20" Spacing="25">
+
+                <Border Stroke="Transparent" BackgroundColor="#F3E8FF" StrokeShape="RoundRectangle 40" WidthRequest="80" HeightRequest="80" HorizontalOptions="Center">
+                    <Path Data="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.45 13.97L5.82 21L12 17.27Z" Fill="#A855F7" Aspect="Uniform" WidthRequest="36" HeightRequest="36" HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
+
+                <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                    <Label x:Name="LblTitulo" Text="¿Cómo estuvo tu experiencia?" FontSize="19" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
+                    <Label x:Name="LblSubtitulo" Text="" FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+
+                <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                    <Label x:Name="Estrella1" Text="&#9734;" FontSize="42" TextColor="#D1D5DB">
+                        <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnEstrella1Tapped" /></Label.GestureRecognizers>
+                    </Label>
+                    <Label x:Name="Estrella2" Text="&#9734;" FontSize="42" TextColor="#D1D5DB">
+                        <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnEstrella2Tapped" /></Label.GestureRecognizers>
+                    </Label>
+                    <Label x:Name="Estrella3" Text="&#9734;" FontSize="42" TextColor="#D1D5DB">
+                        <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnEstrella3Tapped" /></Label.GestureRecognizers>
+                    </Label>
+                    <Label x:Name="Estrella4" Text="&#9734;" FontSize="42" TextColor="#D1D5DB">
+                        <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnEstrella4Tapped" /></Label.GestureRecognizers>
+                    </Label>
+                    <Label x:Name="Estrella5" Text="&#9734;" FontSize="42" TextColor="#D1D5DB">
+                        <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnEstrella5Tapped" /></Label.GestureRecognizers>
+                    </Label>
+                </HorizontalStackLayout>
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Comentario (opcional)" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                    <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12">
+                        <Editor x:Name="EditorComentario" Placeholder="Cuéntanos más..." FontFamily="OpenSansRegular" FontSize="14" HeightRequest="90" AutoSize="Disabled"/>
+                    </Border>
+                </VerticalStackLayout>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <VerticalStackLayout Grid.Row="2" Padding="20,10,20,30" Spacing="10" BackgroundColor="White">
+            <Border.Shadow>
+                <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
+            </Border.Shadow>
+            <Button x:Name="BtnEnviar" Text="Enviar calificación" Clicked="OnEnviarClicked" BackgroundColor="#5A31F4" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsEnabled="False"/>
+        </VerticalStackLayout>
+
+    </Grid>
+
+</ContentPage>

@@ -73,5 +73,34 @@ namespace CUIDAPP_API.Services.Busqueda
 
             return cuidadores;
         }
+
+        public async Task<IEnumerable<CuidadorMapaDto>> ObtenerCuidadoresCercanosMapaAsync(decimal latitud, decimal longitud, decimal radioKm)
+        {
+            var cuidadores = new List<CuidadorMapaDto>();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_ObtenerCuidadoresCercanosMapa", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@Latitud", latitud);
+            command.Parameters.AddWithValue("@Longitud", longitud);
+            command.Parameters.AddWithValue("@RadioKm", radioKm);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                cuidadores.Add(new CuidadorMapaDto
+                {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    NombreCompleto = reader["NombreCompleto"].ToString() ?? "",
+                    Especialidad = reader["Especialidad"].ToString() ?? "",
+                    Latitud = Convert.ToDecimal(reader["Latitud"]),
+                    Longitud = Convert.ToDecimal(reader["Longitud"]),
+                    DistanciaKm = Convert.ToDouble(reader["DistanciaKm"])
+                });
+            }
+
+            return cuidadores;
+        }
     }
 }

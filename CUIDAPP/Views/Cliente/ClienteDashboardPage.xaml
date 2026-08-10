@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:mapsui="clr-namespace:Mapsui.UI.Maui;assembly=Mapsui.UI.Maui"
              x:Class="CUIDAPP.Views.Cliente.ClienteDashboardPage"
              Shell.NavBarIsVisible="False"
              BackgroundColor="#FFFFFF">
@@ -11,7 +10,7 @@
 
         <!-- MAPA A PANTALLA COMPLETA -->
         <Grid>
-            <mapsui:MapControl x:Name="MapaControl" />
+            <WebView x:Name="MapaWebView" />
         </Grid>
 
         <!-- BARRA SUPERIOR FLOTANTE -->

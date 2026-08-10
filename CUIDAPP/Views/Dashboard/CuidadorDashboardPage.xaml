@@ -12,6 +12,7 @@
             <Grid Padding="20,20,20,30" RowSpacing="25">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/> <!-- Header -->
+                    <RowDefinition Height="Auto"/> <!-- Disponibilidad -->
                     <RowDefinition Height="Auto"/> <!-- Main Card -->
                     <RowDefinition Height="Auto"/> <!-- Próximo Trabajo -->
                     <RowDefinition Height="Auto"/> <!-- Acciones -->
@@ -27,17 +28,11 @@
                     </Grid>
 
                     <!-- Textos Header -->
-                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
-                        <HorizontalStackLayout Spacing="5" VerticalOptions="Center">
-                            <Label x:Name="LblSaludo" Text="Hola" FontSize="20" FontFamily="OpenSansSemibold" TextColor="#4024A2"/>
-                        </HorizontalStackLayout>
-
-                        <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
-                            <HorizontalStackLayout.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnDisponibilidadTapped" />
-                            </HorizontalStackLayout.GestureRecognizers>
-                            <Border x:Name="IndicadorDisponible" Stroke="Transparent" BackgroundColor="#9CA3AF" StrokeShape="RoundRectangle 4" WidthRequest="8" HeightRequest="8" VerticalOptions="Center"/>
-                            <Label x:Name="LblDisponible" Text="No disponible" FontSize="12" FontFamily="OpenSansSemibold" TextColor="#6B7280"/>
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="3">
+                        <Label x:Name="LblSaludo" Text="Hola" FontSize="20" FontFamily="OpenSansSemibold" TextColor="#4024A2"/>
+                        <HorizontalStackLayout x:Name="ContenedorRating" Spacing="4" IsVisible="False">
+                            <Label Text="★" FontSize="13" TextColor="#F59E0B"/>
+                            <Label x:Name="LblRating" Text="" FontSize="12" FontFamily="OpenSansSemibold" TextColor="#6B7280"/>
                         </HorizontalStackLayout>
                     </VerticalStackLayout>
 
@@ -63,23 +58,54 @@
                     </Border>
                 </Grid>
 
+                <!-- TARJETA DE DISPONIBILIDAD -->
+                <Border x:Name="CardDisponibilidad" Grid.Row="1" Stroke="Transparent" BackgroundColor="#F3F4F6" StrokeShape="RoundRectangle 16" Padding="18">
+                    <Grid ColumnDefinitions="Auto, *, Auto">
+                        <!-- Ícono + texto: tocar aquí alterna el Switch (columna aparte, sin solapar el gesto) -->
+                        <HorizontalStackLayout Grid.Column="0" Grid.ColumnSpan="2" Spacing="14" HorizontalOptions="Start">
+                            <HorizontalStackLayout.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnDisponibilidadTapped" />
+                            </HorizontalStackLayout.GestureRecognizers>
+                            <Border x:Name="IconoDisponibleFondo" Stroke="Transparent" BackgroundColor="#E5E7EB" StrokeShape="RoundRectangle 22" WidthRequest="44" HeightRequest="44">
+                                <Path x:Name="IconoDisponible" Data="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+                            <VerticalStackLayout VerticalOptions="Center" Spacing="2">
+                                <Label x:Name="LblDisponible" Text="No disponible" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                                <Label x:Name="LblDisponibleSubtitulo" Text="Estás desconectado. Los clientes no pueden verte." FontSize="12" FontFamily="OpenSansRegular" TextColor="#9CA3AF"/>
+                            </VerticalStackLayout>
+                        </HorizontalStackLayout>
+                        <Switch x:Name="SwitchDisponible" Grid.Column="2" VerticalOptions="Center" OnColor="#5A31F4" Toggled="OnDisponibilidadToggled"/>
+                    </Grid>
+                </Border>
+
                 <!-- MAIN CARD (Ganado hoy) -->
-                <Border Grid.Row="1" Stroke="Transparent" BackgroundColor="#5A31F4" StrokeShape="RoundRectangle 16" Padding="25">
+                <Border Grid.Row="2" Stroke="Transparent" BackgroundColor="#5A31F4" StrokeShape="RoundRectangle 16" Padding="25">
                     <Border.Shadow>
                         <Shadow Brush="#5A31F4" Offset="0,10" Opacity="0.3" Radius="15"/>
                     </Border.Shadow>
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnDineroTapped" />
                     </Border.GestureRecognizers>
-                    <VerticalStackLayout Spacing="5">
-                        <Label Text="Ganado hoy" FontSize="14" FontFamily="OpenSansRegular" TextColor="#E0E7FF"/>
-                        <Label x:Name="LblGanadoHoy" Text="RD$0" FontSize="36" FontFamily="OpenSansSemibold" TextColor="White"/>
-                        <Label Text="Ver detalle >" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#E0E7FF" Margin="0,10,0,0"/>
+                    <VerticalStackLayout Spacing="15">
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Ganado hoy" FontSize="14" FontFamily="OpenSansRegular" TextColor="#E0E7FF"/>
+                            <Label x:Name="LblGanadoHoy" Text="RD$0" FontSize="36" FontFamily="OpenSansSemibold" TextColor="White"/>
+                        </VerticalStackLayout>
+
+                        <BoxView HeightRequest="1" BackgroundColor="#8B72F7" Opacity="0.5"/>
+
+                        <Grid ColumnDefinitions="*, Auto">
+                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                <Label Text="Pendiente por cobrar" FontSize="12" FontFamily="OpenSansRegular" TextColor="#E0E7FF"/>
+                                <Label x:Name="LblPendienteCobrar" Text="RD$0" FontSize="18" FontFamily="OpenSansSemibold" TextColor="White"/>
+                            </VerticalStackLayout>
+                            <Label Grid.Column="1" Text="Ver detalle >" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#E0E7FF" VerticalOptions="End"/>
+                        </Grid>
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- PROXIMO TRABAJO -->
-                <VerticalStackLayout Grid.Row="2" Spacing="15">
+                <VerticalStackLayout Grid.Row="3" Spacing="15">
                     <Label Text="Próximo trabajo" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#374151"/>
 
                     <Border x:Name="CardProximoTrabajo" Stroke="#F3F4F6" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="15" IsVisible="False">
@@ -116,8 +142,10 @@
                 </VerticalStackLayout>
 
                 <!-- CUADRICULA DE ACCIONES 2x2 -->
-                <Grid Grid.Row="3" ColumnDefinitions="*, *" RowDefinitions="Auto, Auto" ColumnSpacing="15" RowSpacing="15">
-                    
+                <VerticalStackLayout Grid.Row="4" Spacing="15">
+                <Label Text="Accesos rápidos" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto" ColumnSpacing="15" RowSpacing="15">
+
                     <!-- 1. Trabajos -->
                     <Border Grid.Row="0" Grid.Column="0" Stroke="#F3F4F6" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="15">
                         <Border.Shadow>
@@ -188,6 +216,7 @@
                         </VerticalStackLayout>
                     </Border>
                 </Grid>
+                </VerticalStackLayout>
 
             </Grid>
         </ScrollView>

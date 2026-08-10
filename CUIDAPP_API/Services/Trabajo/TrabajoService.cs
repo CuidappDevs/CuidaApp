@@ -133,6 +133,42 @@ namespace CUIDAPP_API.Services.Trabajo
             return Convert.ToInt32(filasAfectadas) > 0;
         }
 
+        public async Task<IEnumerable<MotivoCancelacionDto>> ObtenerMotivosCancelacionAsync()
+        {
+            var motivos = new List<MotivoCancelacionDto>();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_ObtenerMotivosCancelacion", connection);
+            command.CommandType = CommandType.StoredProcedure;
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                motivos.Add(new MotivoCancelacionDto
+                {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    Descripcion = reader["Descripcion"].ToString() ?? ""
+                });
+            }
+
+            return motivos;
+        }
+
+        public async Task<bool> CancelarTrabajoCuidadorAsync(CancelarTrabajoDto dto)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_CancelarTrabajoCuidador", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@TrabajoId", dto.TrabajoId);
+            command.Parameters.AddWithValue("@MotivoId", dto.MotivoId);
+            command.Parameters.AddWithValue("@MotivoTexto", (object?)dto.MotivoTexto ?? DBNull.Value);
+
+            await connection.OpenAsync();
+            var filasAfectadas = await command.ExecuteScalarAsync();
+            return Convert.ToInt32(filasAfectadas) > 0;
+        }
+
         private static TrabajoDto MapearTrabajo(SqlDataReader reader)
         {
             return new TrabajoDto
