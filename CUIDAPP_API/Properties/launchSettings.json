@@ -19,14 +19,6 @@
       },
       "dotnetRunMessages": true,
       "applicationUrl": "https://0.0.0.0:7171;http://0.0.0.0:5258"
-    },
-    "IIS Express": {
-      "commandName": "IISExpress",
-      "launchBrowser": true,
-      "launchUrl": "scalar/v1",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
     }
   },
   "$schema": "https://json.schemastore.org/launchsettings.json",
