@@ -1,6 +1,7 @@
 using Microsoft.Maui.Controls;
 using CUIDAPP.Services;
 using CUIDAPP.Models.Auth;
+using CUIDAPP.Models.Cliente;
 
 namespace CUIDAPP.Views.Registro
 {
@@ -8,7 +9,9 @@ namespace CUIDAPP.Views.Registro
     {
         private int currentStepIndex = 0;
         private List<View> currentFlow = new List<View>();
-        
+        private decimal? direccionLatitud;
+        private decimal? direccionLongitud;
+
         private string selectedRole = "Cuidador"; // Default
         private int selectedJob = 2; // Default Niñera
         private int selectedPay = 2; // Default Billetera
@@ -123,8 +126,12 @@ namespace CUIDAPP.Views.Registro
             }
             else if (currentView == PasoDireccion)
             {
-                if (string.IsNullOrWhiteSpace(EntryDireccion.Text) ||
-                    string.IsNullOrWhiteSpace(EntryEmergenciaNombre.Text) ||
+                if (string.IsNullOrWhiteSpace(EntryDireccion.Text))
+                {
+                    await DisplayAlert("Error", "Selecciona tu dirección en el mapa.", "OK");
+                    return false;
+                }
+                if (string.IsNullOrWhiteSpace(EntryEmergenciaNombre.Text) ||
                     string.IsNullOrWhiteSpace(EntryEmergenciaTelefono.Text))
                 {
                     await DisplayAlert("Error", "Por favor completa todos los campos de contacto y emergencia.", "OK");
@@ -214,7 +221,15 @@ namespace CUIDAPP.Views.Registro
                     ContactoEmergenciaTelefono = EntryEmergenciaTelefono.Text ?? "",
                     FotoUrl = fotoUrl
                 };
-                success = await _apiService.RegisterClienteAsync(request);
+                int nuevoUserId;
+                (success, nuevoUserId) = await _apiService.RegisterClienteAsync(request);
+
+                // Si eligió la dirección en el mapa, esa se convierte en su primera ubicación
+                // guardada ("Casa"), lista para usar al reservar servicios.
+                if (success && nuevoUserId > 0 && direccionLatitud.HasValue && direccionLongitud.HasValue)
+                {
+                    await _apiService.CrearUbicacionClienteAsync(nuevoUserId, "Casa", EntryDireccion.Text ?? "", direccionLatitud.Value, direccionLongitud.Value, true);
+                }
             }
             else
             {
@@ -265,6 +280,24 @@ namespace CUIDAPP.Views.Registro
             await OverlayExito.FadeTo(0, 200);
             OverlayExito.IsVisible = false;
             await DisplayAlert("Error", $"{mensaje} Verifica tu conexión e intenta de nuevo.", "OK");
+        }
+
+        private async void OnElegirDireccionMapaTapped(object sender, EventArgs e)
+        {
+            var tcs = new TaskCompletionSource<UbicacionCliente?>();
+            SeleccionUbicacionBroker.PendientePunto = tcs;
+
+            await Shell.Current.GoToAsync("SeleccionarPuntoMapaPage", new Dictionary<string, object> { { "SoloSeleccionar", true } });
+
+            var seleccionado = await tcs.Task;
+            SeleccionUbicacionBroker.PendientePunto = null;
+
+            if (seleccionado == null)
+                return;
+
+            EntryDireccion.Text = seleccionado.Direccion;
+            direccionLatitud = seleccionado.Latitud;
+            direccionLongitud = seleccionado.Longitud;
         }
 
         private async void OnPickFotoTapped(object sender, TappedEventArgs e)

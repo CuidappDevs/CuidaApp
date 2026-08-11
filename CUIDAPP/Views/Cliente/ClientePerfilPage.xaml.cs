@@ -40,9 +40,15 @@ namespace CUIDAPP.Views.Cliente
             await Shell.Current.GoToAsync("..");
         }
 
+        private async void OnMisUbicacionesTapped(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync("MisUbicacionesPage");
+        }
+
         private async void OnCerrarSesionTapped(object sender, EventArgs e)
         {
             Preferences.Default.Clear();
+            await RealtimeService.DesconectarAsync();
             await Shell.Current.GoToAsync("//MainPage");
         }
     }

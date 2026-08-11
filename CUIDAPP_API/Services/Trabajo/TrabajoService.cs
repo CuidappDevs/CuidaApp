@@ -3,16 +3,19 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using CUIDAPP_API.DTOs.Trabajo;
 using CUIDAPP_API.Interfaces.Trabajo;
+using CUIDAPP_API.Services.Realtime;
 
 namespace CUIDAPP_API.Services.Trabajo
 {
     public class TrabajoService : ITrabajoService
     {
         private readonly string _connectionString;
+        private readonly ITrabajoNotifier _notifier;
 
-        public TrabajoService(IConfiguration config)
+        public TrabajoService(IConfiguration config, ITrabajoNotifier notifier)
         {
             _connectionString = config.GetConnectionString("DefaultConnection") ?? "";
+            _notifier = notifier;
         }
 
         public async Task<int> CrearTrabajoAsync(CrearTrabajoDto dto)
@@ -34,7 +37,25 @@ namespace CUIDAPP_API.Services.Trabajo
 
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(result);
+            var trabajoId = Convert.ToInt32(result);
+
+            await _notifier.NotificarAsync(dto.CuidadorId, "NuevaSolicitud", new { TrabajoId = trabajoId, dto.ClienteId });
+
+            return trabajoId;
+        }
+
+        private async Task<(int ClienteId, int CuidadorId)?> ObtenerParticipantesAsync(int trabajoId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("SELECT ClienteId, CuidadorId FROM Trabajos WHERE Id = @TrabajoId", connection);
+            command.Parameters.AddWithValue("@TrabajoId", trabajoId);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+                return (Convert.ToInt32(reader["ClienteId"]), Convert.ToInt32(reader["CuidadorId"]));
+
+            return null;
         }
 
         public async Task<IEnumerable<TrabajoDto>> ObtenerTrabajosPorCuidadorAsync(int cuidadorId)
@@ -74,6 +95,8 @@ namespace CUIDAPP_API.Services.Trabajo
 
         public async Task<bool> ActualizarEstadoTrabajoAsync(ActualizarEstadoTrabajoDto dto)
         {
+            var participantes = await ObtenerParticipantesAsync(dto.TrabajoId);
+
             using var connection = new SqlConnection(_connectionString);
             using var command = new SqlCommand("sp_ActualizarEstadoTrabajo", connection);
             command.CommandType = CommandType.StoredProcedure;
@@ -82,7 +105,15 @@ namespace CUIDAPP_API.Services.Trabajo
 
             await connection.OpenAsync();
             var filasAfectadas = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(filasAfectadas) > 0;
+            var success = Convert.ToInt32(filasAfectadas) > 0;
+
+            if (success && participantes.HasValue)
+            {
+                await _notifier.NotificarAsync(participantes.Value.ClienteId, "TrabajoActualizado", new { dto.TrabajoId, Estado = dto.NuevoEstado });
+                await _notifier.NotificarAsync(participantes.Value.CuidadorId, "TrabajoActualizado", new { dto.TrabajoId, Estado = dto.NuevoEstado });
+            }
+
+            return success;
         }
 
         public async Task<TrabajoClienteDto?> ObtenerTrabajoActivoPorClienteAsync(int clienteId)
@@ -120,7 +151,7 @@ namespace CUIDAPP_API.Services.Trabajo
             return null;
         }
 
-        public async Task<bool> IniciarTrabajoAsync(IniciarTrabajoDto dto)
+        public async Task<(bool Success, string Motivo)> IniciarTrabajoAsync(IniciarTrabajoDto dto)
         {
             using var connection = new SqlConnection(_connectionString);
             using var command = new SqlCommand("sp_IniciarTrabajo", connection);
@@ -129,8 +160,24 @@ namespace CUIDAPP_API.Services.Trabajo
             command.Parameters.AddWithValue("@Pin", dto.Pin);
 
             await connection.OpenAsync();
-            var filasAfectadas = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(filasAfectadas) > 0;
+            using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                var filasAfectadas = Convert.ToInt32(reader["FilasAfectadas"]);
+                var motivo = reader["Motivo"].ToString() ?? "ERROR_DESCONOCIDO";
+                var success = filasAfectadas > 0;
+
+                if (success)
+                {
+                    reader.Close();
+                    var participantes = await ObtenerParticipantesAsync(dto.TrabajoId);
+                    if (participantes.HasValue)
+                        await _notifier.NotificarAsync(participantes.Value.ClienteId, "TrabajoActualizado", new { dto.TrabajoId, Estado = 3 });
+                }
+
+                return (success, motivo);
+            }
+            return (false, "ERROR_DESCONOCIDO");
         }
 
         public async Task<IEnumerable<MotivoCancelacionDto>> ObtenerMotivosCancelacionAsync()
@@ -157,6 +204,8 @@ namespace CUIDAPP_API.Services.Trabajo
 
         public async Task<bool> CancelarTrabajoCuidadorAsync(CancelarTrabajoDto dto)
         {
+            var participantes = await ObtenerParticipantesAsync(dto.TrabajoId);
+
             using var connection = new SqlConnection(_connectionString);
             using var command = new SqlCommand("sp_CancelarTrabajoCuidador", connection);
             command.CommandType = CommandType.StoredProcedure;
@@ -166,7 +215,12 @@ namespace CUIDAPP_API.Services.Trabajo
 
             await connection.OpenAsync();
             var filasAfectadas = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(filasAfectadas) > 0;
+            var success = Convert.ToInt32(filasAfectadas) > 0;
+
+            if (success && participantes.HasValue)
+                await _notifier.NotificarAsync(participantes.Value.ClienteId, "TrabajoActualizado", new { dto.TrabajoId, Estado = 4 });
+
+            return success;
         }
 
         private static TrabajoDto MapearTrabajo(SqlDataReader reader)

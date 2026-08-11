@@ -52,6 +52,8 @@ namespace CUIDAPP
                 Preferences.Default.Set("RolId", result.RolId);
                 Preferences.Default.Set("EstadoAprobacion", result.EstadoAprobacion ?? 0);
 
+                _ = RealtimeService.ConectarAsync(result.UserId);
+
                 switch (result.RolId)
                 {
                     case 3: // Cuidador

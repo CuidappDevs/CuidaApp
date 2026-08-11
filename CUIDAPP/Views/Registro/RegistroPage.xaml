@@ -224,8 +224,18 @@
                         <VerticalStackLayout Spacing="6">
                             <Label Text="Dirección Principal" FontFamily="OpenSansSemibold" FontSize="13" TextColor="#374151" />
                             <Border Stroke="#D1D5DB" StrokeThickness="1" StrokeShape="RoundRectangle 12" BackgroundColor="White" Padding="15,2">
-                                <Entry x:Name="EntryDireccion" Placeholder="Ej. Calle Principal 123" FontFamily="OpenSansRegular" PlaceholderColor="#9CA3AF" TextColor="#111827" FontSize="15" BackgroundColor="Transparent" HeightRequest="45" />
+                                <Entry x:Name="EntryDireccion" IsReadOnly="True" Placeholder="Toca para elegir en el mapa" FontFamily="OpenSansRegular" PlaceholderColor="#9CA3AF" TextColor="#111827" FontSize="15" BackgroundColor="Transparent" HeightRequest="45">
+                                    <Entry.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnElegirDireccionMapaTapped"/>
+                                    </Entry.GestureRecognizers>
+                                </Entry>
                             </Border>
+                            <ContentView HorizontalOptions="Start">
+                                <ContentView.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnElegirDireccionMapaTapped"/>
+                                </ContentView.GestureRecognizers>
+                                <Label Text="📍 Elegir en el mapa" FontFamily="OpenSansSemibold" FontSize="13" TextColor="#5A31F4"/>
+                            </ContentView>
                         </VerticalStackLayout>
 
                         <Label Text="Contacto de Emergencia" FontFamily="OpenSansSemibold" FontSize="13" TextColor="#374151" Margin="0,5,0,0"/>

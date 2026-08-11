@@ -19,6 +19,20 @@ namespace CUIDAPP.Views.Trabajos
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            RealtimeService.NuevaSolicitud += OnCambioTiempoReal;
+            RealtimeService.TrabajoActualizado += OnCambioTiempoReal;
+            await CargarTrabajos();
+        }
+
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            RealtimeService.NuevaSolicitud -= OnCambioTiempoReal;
+            RealtimeService.TrabajoActualizado -= OnCambioTiempoReal;
+        }
+
+        private async void OnCambioTiempoReal(int a, int b)
+        {
             await CargarTrabajos();
         }
 

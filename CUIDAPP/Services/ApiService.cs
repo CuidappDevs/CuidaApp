@@ -94,17 +94,22 @@ namespace CUIDAPP.Services
             }
         }
 
-        public async Task<bool> RegisterClienteAsync(RegisterClientRequest request)
+        public async Task<(bool Success, int UserId)> RegisterClienteAsync(RegisterClientRequest request)
         {
             try
             {
                 var response = await _httpClient.PostAsJsonAsync("auth/register/cliente", request);
-                return response.IsSuccessStatusCode;
+                if (!response.IsSuccessStatusCode)
+                    return (false, 0);
+
+                var result = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+                var userId = result != null && result.TryGetValue("userId", out var idObj) ? Convert.ToInt32(idObj.ToString()) : 0;
+                return (true, userId);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error registrando cliente: {ex.Message}");
-                return false;
+                return (false, 0);
             }
         }
 
@@ -166,6 +171,83 @@ namespace CUIDAPP.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"Error actualizando disponibilidad: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<List<UbicacionCliente>> ObtenerUbicacionesClienteAsync(int clienteId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"ubicacioncliente/cliente/{clienteId}");
+                if (!response.IsSuccessStatusCode)
+                    return new List<UbicacionCliente>();
+
+                return await response.Content.ReadFromJsonAsync<List<UbicacionCliente>>() ?? new List<UbicacionCliente>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo ubicaciones del cliente: {ex.Message}");
+                return new List<UbicacionCliente>();
+            }
+        }
+
+        public async Task<(bool Success, int Id)> CrearUbicacionClienteAsync(int clienteId, string nombre, string direccion, decimal latitud, decimal longitud, bool esPredeterminada)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("ubicacioncliente", new { ClienteId = clienteId, Nombre = nombre, Direccion = direccion, Latitud = latitud, Longitud = longitud, EsPredeterminada = esPredeterminada });
+                if (!response.IsSuccessStatusCode)
+                    return (false, 0);
+
+                var result = await response.Content.ReadFromJsonAsync<Dictionary<string, int>>();
+                return (true, result != null && result.TryGetValue("id", out var id) ? id : 0);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creando ubicación: {ex.Message}");
+                return (false, 0);
+            }
+        }
+
+        public async Task<bool> ActualizarUbicacionClienteAsync(int id, int clienteId, string nombre, string direccion, decimal latitud, decimal longitud, bool esPredeterminada)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync("ubicacioncliente", new { Id = id, ClienteId = clienteId, Nombre = nombre, Direccion = direccion, Latitud = latitud, Longitud = longitud, EsPredeterminada = esPredeterminada });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error actualizando ubicación: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> EliminarUbicacionClienteAsync(int id, int clienteId)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync($"ubicacioncliente/{id}/cliente/{clienteId}");
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error eliminando ubicación: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> ActualizarUbicacionCuidadorAsync(int cuidadorId, double latitud, double longitud)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync("cuidador/ubicacion", new { CuidadorId = cuidadorId, Latitud = latitud, Longitud = longitud });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error actualizando ubicación del cuidador: {ex.Message}");
                 return false;
             }
         }
@@ -408,8 +490,16 @@ namespace CUIDAPP.Services
                 if (response.IsSuccessStatusCode)
                     return (true, null);
 
-                var error = await response.Content.ReadAsStringAsync();
-                return (false, error);
+                try
+                {
+                    var errorDto = await response.Content.ReadFromJsonAsync<IniciarTrabajoErrorDto>();
+                    return (false, errorDto?.Message ?? "No se pudo iniciar el trabajo.");
+                }
+                catch
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    return (false, string.IsNullOrWhiteSpace(error) ? "No se pudo iniciar el trabajo." : error);
+                }
             }
             catch (Exception ex)
             {

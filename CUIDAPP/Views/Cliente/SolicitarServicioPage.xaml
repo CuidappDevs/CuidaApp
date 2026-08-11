@@ -55,9 +55,19 @@
                 </Grid>
 
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="Dirección del servicio" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
-                    <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
-                        <Entry x:Name="EntryDireccion" Placeholder="Ej. Calle Principal #12, Sector..." FontFamily="OpenSansRegular" FontSize="14" HeightRequest="45"/>
+                    <Label Text="¿A dónde va el cuidador?" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                    <Border Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="#FAFAFA" StrokeShape="RoundRectangle 12" Padding="14">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnElegirUbicacionTapped"/>
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="12">
+                            <Path Grid.Column="0" Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="#5A31F4" Aspect="Uniform" WidthRequest="20" HeightRequest="20" VerticalOptions="Center"/>
+                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                                <Label x:Name="LblUbicacionNombre" Text="Selecciona una ubicación" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                                <Label x:Name="LblUbicacionDireccion" Text="Toca para elegir" FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" LineBreakMode="TailTruncation"/>
+                            </VerticalStackLayout>
+                            <Path Grid.Column="2" Data="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
+                        </Grid>
                     </Border>
                 </VerticalStackLayout>
 

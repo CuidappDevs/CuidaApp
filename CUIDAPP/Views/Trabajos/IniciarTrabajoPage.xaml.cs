@@ -88,7 +88,9 @@ namespace CUIDAPP.Views.Trabajos
             }
             else
             {
-                LblError.Text = "El código no es correcto. Verifícalo con el cliente e intenta de nuevo.";
+                LblError.Text = string.IsNullOrWhiteSpace(error)
+                    ? "El código no es correcto. Verifícalo con el cliente e intenta de nuevo."
+                    : error;
                 LblError.IsVisible = true;
                 EntryPin1.Text = EntryPin2.Text = EntryPin3.Text = EntryPin4.Text = "";
                 EntryPin1.Focus();

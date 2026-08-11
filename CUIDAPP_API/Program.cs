@@ -13,6 +13,10 @@ using CUIDAPP_API.Interfaces.Cliente;
 using CUIDAPP_API.Services.Cliente;
 using CUIDAPP_API.Interfaces.Calificacion;
 using CUIDAPP_API.Services.Calificacion;
+using CUIDAPP_API.Interfaces.UbicacionCliente;
+using CUIDAPP_API.Services.UbicacionCliente;
+using CUIDAPP_API.Services.Realtime;
+using CUIDAPP_API.Hubs;
 using Microsoft.Extensions.FileProviders;
 
 // Asegurar que exista la carpeta wwwroot/uploads ANTES de crear el builder,
@@ -26,8 +30,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddSignalR();
 
 // Inyección de dependencias
+builder.Services.AddSingleton<ITrabajoNotifier, TrabajoNotifier>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<ICuidadorService, CuidadorService>();
@@ -35,6 +41,7 @@ builder.Services.AddScoped<ITrabajoService, TrabajoService>();
 builder.Services.AddScoped<IBusquedaService, BusquedaService>();
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<ICalificacionService, CalificacionService>();
+builder.Services.AddScoped<IUbicacionClienteService, UbicacionClienteService>();
 
 var app = builder.Build();
 
@@ -55,5 +62,6 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<TrabajoHub>("/hubs/trabajo");
 
 app.Run();

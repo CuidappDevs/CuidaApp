@@ -1,4 +1,5 @@
 using CUIDAPP.Models.Busqueda;
+using CUIDAPP.Models.Cliente;
 using CUIDAPP.Models.Trabajo;
 using CUIDAPP.Services;
 
@@ -8,6 +9,7 @@ namespace CUIDAPP.Views.Cliente
     {
         private readonly ApiService _apiService = new ApiService();
         private CuidadorCercano? cuidador;
+        private UbicacionCliente? ubicacionElegida;
 
         public void ApplyQueryAttributes(IDictionary<string, object> query)
         {
@@ -61,14 +63,32 @@ namespace CUIDAPP.Views.Cliente
             await Shell.Current.GoToAsync("..");
         }
 
+        private async void OnElegirUbicacionTapped(object sender, EventArgs e)
+        {
+            var tcs = new TaskCompletionSource<UbicacionCliente?>();
+            SeleccionUbicacionBroker.Pendiente = tcs;
+
+            await Shell.Current.GoToAsync("MisUbicacionesPage", new Dictionary<string, object> { { "ModoSeleccion", true } });
+
+            var seleccionada = await tcs.Task;
+            SeleccionUbicacionBroker.Pendiente = null;
+
+            if (seleccionada == null)
+                return;
+
+            ubicacionElegida = seleccionada;
+            LblUbicacionNombre.Text = seleccionada.Nombre;
+            LblUbicacionDireccion.Text = seleccionada.Direccion;
+        }
+
         private async void OnEnviarClicked(object sender, EventArgs e)
         {
             if (cuidador == null)
                 return;
 
-            if (string.IsNullOrWhiteSpace(EntryDireccion.Text))
+            if (ubicacionElegida == null)
             {
-                await DisplayAlert("Error", "Ingresa la dirección donde se realizará el servicio.", "OK");
+                await DisplayAlert("Error", "Selecciona a dónde debe ir el cuidador.", "OK");
                 return;
             }
 
@@ -103,8 +123,6 @@ namespace CUIDAPP.Views.Cliente
                 var horas = (decimal)(horaFin - horaInicio).TotalHours;
                 var tarifaTotal = cuidador.TarifaHora * horas;
 
-                var ubicacion = await LocationService.ObtenerUbicacionActualAsync();
-
                 var request = new CrearTrabajoRequest
                 {
                     ClienteId = clienteId,
@@ -113,10 +131,10 @@ namespace CUIDAPP.Views.Cliente
                     Fecha = PickerFecha.Date ?? DateTime.Today,
                     HoraInicio = horaInicio,
                     HoraFin = horaFin,
-                    Direccion = EntryDireccion.Text.Trim(),
+                    Direccion = ubicacionElegida.Direccion,
                     Tarifa = tarifaTotal,
-                    Latitud = ubicacion != null ? (decimal)ubicacion.Latitude : null,
-                    Longitud = ubicacion != null ? (decimal)ubicacion.Longitude : null
+                    Latitud = ubicacionElegida.Latitud,
+                    Longitud = ubicacionElegida.Longitud
                 };
 
                 var (success, error) = await _apiService.CrearTrabajoAsync(request);

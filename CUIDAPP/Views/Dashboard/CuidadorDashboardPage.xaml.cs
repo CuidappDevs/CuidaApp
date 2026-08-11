@@ -8,6 +8,8 @@ namespace CUIDAPP.Views.Dashboard
         private int cuidadorId;
         private bool disponibleActual;
         private bool suprimirEventoToggle;
+        private bool estaVisible;
+        private bool pollingUbicacionIniciado;
 
         public CuidadorDashboardPage()
         {
@@ -17,6 +19,7 @@ namespace CUIDAPP.Views.Dashboard
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            estaVisible = true;
             cuidadorId = Preferences.Default.Get("UserId", 0);
 
             if (cuidadorId == 0)
@@ -25,7 +28,64 @@ namespace CUIDAPP.Views.Dashboard
                 return;
             }
 
+            _ = RealtimeService.ConectarAsync(cuidadorId);
+            RealtimeService.NuevaSolicitud += OnNuevaSolicitudTiempoReal;
+            RealtimeService.TrabajoActualizado += OnTrabajoActualizadoTiempoReal;
+
             await CargarDashboard();
+            _ = ActualizarUbicacionActualAsync();
+            IniciarPollingUbicacionSiHaceFalta();
+        }
+
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            estaVisible = false;
+            RealtimeService.NuevaSolicitud -= OnNuevaSolicitudTiempoReal;
+            RealtimeService.TrabajoActualizado -= OnTrabajoActualizadoTiempoReal;
+        }
+
+        private async void OnNuevaSolicitudTiempoReal(int trabajoId, int clienteId)
+        {
+            await CargarDashboard();
+        }
+
+        private async void OnTrabajoActualizadoTiempoReal(int trabajoId, int estado)
+        {
+            await CargarDashboard();
+        }
+
+        private void IniciarPollingUbicacionSiHaceFalta()
+        {
+            if (pollingUbicacionIniciado)
+                return;
+            pollingUbicacionIniciado = true;
+
+            // Mientras el cuidador esté "Disponible" y con esta pantalla abierta, subimos su
+            // GPS periódicamente para que el punto verde en el mapa del cliente refleje su
+            // posición real en vez de quedar congelado en la dirección de registro.
+            Dispatcher.StartTimer(TimeSpan.FromSeconds(30), () =>
+            {
+                if (!estaVisible)
+                    return false;
+
+                if (disponibleActual)
+                    _ = ActualizarUbicacionActualAsync();
+
+                return true;
+            });
+        }
+
+        private async Task ActualizarUbicacionActualAsync()
+        {
+            if (!disponibleActual)
+                return;
+
+            var ubicacion = await LocationService.ObtenerUbicacionActualAsync();
+            if (ubicacion == null)
+                return;
+
+            await _apiService.ActualizarUbicacionCuidadorAsync(cuidadorId, ubicacion.Latitude, ubicacion.Longitude);
         }
 
         private async Task CargarDashboard()
@@ -137,6 +197,9 @@ namespace CUIDAPP.Views.Dashboard
             {
                 disponibleActual = nuevoValor;
                 ActualizarUiDisponibilidad();
+
+                if (disponibleActual)
+                    _ = ActualizarUbicacionActualAsync();
             }
             else
             {
@@ -180,6 +243,7 @@ namespace CUIDAPP.Views.Dashboard
                 return;
 
             Preferences.Default.Clear();
+            await RealtimeService.DesconectarAsync();
             await Shell.Current.GoToAsync("//MainPage");
         }
     }

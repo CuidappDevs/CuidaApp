@@ -76,10 +76,19 @@ namespace CUIDAPP_API.Controllers
         {
             try
             {
-                var success = await _trabajoService.IniciarTrabajoAsync(dto);
+                var (success, motivo) = await _trabajoService.IniciarTrabajoAsync(dto);
                 if (success)
                     return Ok(new { Message = "Trabajo iniciado correctamente" });
-                return BadRequest("PIN incorrecto o el trabajo no está en estado Aceptado.");
+
+                var mensaje = motivo switch
+                {
+                    "TRABAJO_NO_ENCONTRADO" => "El trabajo no existe.",
+                    "ESTADO_INVALIDO" => "Este trabajo ya no está en estado Aceptado.",
+                    "FECHA_FUTURA" => "Aún no es la fecha programada para este trabajo.",
+                    "PIN_INCORRECTO" => "El código PIN es incorrecto.",
+                    _ => "No se pudo iniciar el trabajo."
+                };
+                return BadRequest(new { Motivo = motivo, Message = mensaje });
             }
             catch (Exception ex)
             {

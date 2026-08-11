@@ -236,7 +236,7 @@ namespace CUIDAPP.Views.Trabajos
     <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
     <script>
         var map = L.map('map', {{ zoomControl: false, attributionControl: false }});
-        L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{{z}}/{{x}}/{{y}}{{r}}.png', {{ maxZoom: 20, subdomains: 'abcd' }}).addTo(map);
+        L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager/{{z}}/{{x}}/{{y}}{{r}}.png', {{ maxZoom: 20, subdomains: 'abcd' }}).addTo(map);
 
         {lineaRutaJs}
         {marcadorCuidadorJs}

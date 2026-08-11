@@ -3,16 +3,19 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using CUIDAPP_API.DTOs.Cuidador;
 using CUIDAPP_API.Interfaces.Cuidador;
+using CUIDAPP_API.Services.Realtime;
 
 namespace CUIDAPP_API.Services.Cuidador
 {
     public class CuidadorService : ICuidadorService
     {
         private readonly string _connectionString;
+        private readonly ITrabajoNotifier _notifier;
 
-        public CuidadorService(IConfiguration config)
+        public CuidadorService(IConfiguration config, ITrabajoNotifier notifier)
         {
             _connectionString = config.GetConnectionString("DefaultConnection") ?? "";
+            _notifier = notifier;
         }
 
         public async Task<int> SubirDocumentoAsync(SubirDocumentoDto dto)
@@ -103,7 +106,12 @@ namespace CUIDAPP_API.Services.Cuidador
 
             await connection.OpenAsync();
             var filasAfectadas = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(filasAfectadas) > 0;
+            var success = Convert.ToInt32(filasAfectadas) > 0;
+
+            if (success)
+                await _notifier.NotificarGlobalAsync("DisponibilidadCambio", new { dto.CuidadorId, dto.Disponible });
+
+            return success;
         }
 
         public async Task<bool> ActualizarUbicacionAsync(ActualizarUbicacionDto dto)
@@ -117,7 +125,12 @@ namespace CUIDAPP_API.Services.Cuidador
 
             await connection.OpenAsync();
             var filasAfectadas = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(filasAfectadas) > 0;
+            var success = Convert.ToInt32(filasAfectadas) > 0;
+
+            if (success)
+                await _notifier.NotificarGlobalAsync("UbicacionCuidadorCambio", new { dto.CuidadorId, dto.Latitud, dto.Longitud });
+
+            return success;
         }
 
         public async Task<GananciasDto> ObtenerGananciasAsync(int cuidadorId)

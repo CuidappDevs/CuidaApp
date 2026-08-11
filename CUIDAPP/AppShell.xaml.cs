@@ -22,6 +22,8 @@ namespace CUIDAPP
             Routing.RegisterRoute("CuidadorDetallePage", typeof(Views.Cliente.CuidadorDetallePage));
             Routing.RegisterRoute("SolicitarServicioPage", typeof(Views.Cliente.SolicitarServicioPage));
             Routing.RegisterRoute("MiServicioPage", typeof(Views.Cliente.MiServicioPage));
+            Routing.RegisterRoute("MisUbicacionesPage", typeof(Views.Cliente.MisUbicacionesPage));
+            Routing.RegisterRoute("SeleccionarPuntoMapaPage", typeof(Views.Cliente.SeleccionarPuntoMapaPage));
         }
     }
 }

@@ -57,6 +57,13 @@ namespace CUIDAPP.Views.Cliente
         {
             base.OnAppearing();
             estaVisible = true;
+
+            var clienteIdActual = Preferences.Default.Get("UserId", 0);
+            _ = RealtimeService.ConectarAsync(clienteIdActual);
+            RealtimeService.DisponibilidadCambio += OnDisponibilidadCambioTiempoReal;
+            RealtimeService.UbicacionCuidadorCambio += OnUbicacionCuidadorCambioTiempoReal;
+            RealtimeService.TrabajoActualizado += OnTrabajoActualizadoTiempoReal;
+
             IniciarPollingSiHaceFalta();
 
             var nombre = Preferences.Default.Get("UserNombre", "");
@@ -103,6 +110,32 @@ namespace CUIDAPP.Views.Cliente
         {
             base.OnDisappearing();
             estaVisible = false;
+            RealtimeService.DisponibilidadCambio -= OnDisponibilidadCambioTiempoReal;
+            RealtimeService.UbicacionCuidadorCambio -= OnUbicacionCuidadorCambioTiempoReal;
+            RealtimeService.TrabajoActualizado -= OnTrabajoActualizadoTiempoReal;
+        }
+
+        private async void OnDisponibilidadCambioTiempoReal(int cuidadorId, bool disponible)
+        {
+            if (!hayServicioActivo)
+                await CargarServiciosCercanos();
+            await CargarCuidadoresEnMapa();
+        }
+
+        private void OnUbicacionCuidadorCambioTiempoReal(int cuidadorId, double lat, double lng)
+        {
+            var punto = cuidadoresEnMapa.FirstOrDefault(c => c.Id == cuidadorId);
+            if (punto != null)
+            {
+                punto.Latitud = (decimal)lat;
+                punto.Longitud = (decimal)lng;
+                ActualizarCuidadoresEnMapa();
+            }
+        }
+
+        private async void OnTrabajoActualizadoTiempoReal(int trabajoId, int estado)
+        {
+            await VerificarServicioActivo();
         }
 
         private void IniciarPollingSiHaceFalta()
@@ -202,7 +235,7 @@ namespace CUIDAPP.Views.Cliente
     <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
     <script>
         var map = L.map('map', {{ zoomControl: false, attributionControl: false }}).setView([{lat}, {lng}], 14);
-        L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{{z}}/{{x}}/{{y}}{{r}}.png', {{ maxZoom: 20, subdomains: 'abcd' }}).addTo(map);
+        L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager/{{z}}/{{x}}/{{y}}{{r}}.png', {{ maxZoom: 20, subdomains: 'abcd' }}).addTo(map);
         var marker = L.circleMarker([{lat}, {lng}], {{ radius: 8, color: '#FFFFFF', weight: 3, fillColor: '#5A31F4', fillOpacity: 1 }}).addTo(map);
         var capaCuidadores = L.layerGroup().addTo(map);
 
