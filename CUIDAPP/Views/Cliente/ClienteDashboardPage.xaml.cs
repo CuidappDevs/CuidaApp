@@ -19,6 +19,8 @@ namespace CUIDAPP.Views.Cliente
         private const double AlturaPanelColapsado = 100;
         private bool mapaHtmlCargado = false;
         private List<CuidadorMapa> cuidadoresEnMapa = new();
+        private bool estaVisible;
+        private bool pollingIniciado;
 
         public ClienteDashboardPage()
         {
@@ -54,6 +56,8 @@ namespace CUIDAPP.Views.Cliente
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            estaVisible = true;
+            IniciarPollingSiHaceFalta();
 
             var nombre = Preferences.Default.Get("UserNombre", "");
             var primerNombre = string.IsNullOrWhiteSpace(nombre) ? "" : nombre.Split(' ').First();
@@ -93,6 +97,34 @@ namespace CUIDAPP.Views.Cliente
 
             await OverlayCarga.FadeTo(0, 250);
             OverlayCarga.IsVisible = false;
+        }
+
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            estaVisible = false;
+        }
+
+        private void IniciarPollingSiHaceFalta()
+        {
+            if (pollingIniciado)
+                return;
+            pollingIniciado = true;
+
+            // Mientras el cliente esté viendo el dashboard, refrescamos periódicamente los
+            // servicios y cuidadores cercanos, para reflejar en "tiempo real" cuando un
+            // cuidador se conecta/desconecta (sin esperar a que el cliente navegue y vuelva).
+            Dispatcher.StartTimer(TimeSpan.FromSeconds(8), () =>
+            {
+                if (!estaVisible)
+                    return false;
+
+                if (!hayServicioActivo)
+                    _ = CargarServiciosCercanos();
+
+                _ = CargarCuidadoresEnMapa();
+                return true;
+            });
         }
 
         private async Task ActualizarUbicacionRealAsync()
@@ -239,12 +271,20 @@ namespace CUIDAPP.Views.Cliente
             }
         }
 
+        private bool serviciosCargadosAlMenosUnaVez;
+
         private async Task CargarServiciosCercanos()
         {
-            ServiciosLoading.IsVisible = true;
-            ServiciosLoading.IsRunning = true;
+            // El spinner grande solo se muestra la primera vez; los refrescos automáticos
+            // posteriores (polling) actualizan la lista en silencio, sin parpadeos.
+            if (!serviciosCargadosAlMenosUnaVez)
+            {
+                ServiciosLoading.IsVisible = true;
+                ServiciosLoading.IsRunning = true;
+            }
 
             serviciosCercanos = await _apiService.ObtenerServiciosCercanosAsync(latitudActual, longitudActual);
+            serviciosCargadosAlMenosUnaVez = true;
 
             ServiciosLoading.IsRunning = false;
             ServiciosLoading.IsVisible = false;

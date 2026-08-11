@@ -9,6 +9,8 @@ namespace CUIDAPP.Views.Cliente
     public partial class CuidadoresPorServicioPage : ContentPage
     {
         private readonly ApiService _apiService = new ApiService();
+        private bool estaVisible;
+        private bool primeraCarga = true;
 
         public string Especialidad { get; set; } = string.Empty;
         public double Latitud { get; set; }
@@ -23,17 +25,42 @@ namespace CUIDAPP.Views.Cliente
         {
             base.OnAppearing();
             LblTituloServicio.Text = Especialidad;
+            estaVisible = true;
+
             await CargarCuidadores();
+
+            // Mientras el cliente esté viendo esta lista, la refrescamos periódicamente
+            // para reflejar en "tiempo real" cuando un cuidador se conecta/desconecta.
+            Dispatcher.StartTimer(TimeSpan.FromSeconds(8), () =>
+            {
+                if (!estaVisible)
+                    return false;
+
+                _ = CargarCuidadores();
+                return true;
+            });
+        }
+
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            estaVisible = false;
         }
 
         private async Task CargarCuidadores()
         {
-            LoadingIndicator.IsRunning = true;
-            ListaCuidadores.Clear();
+            // Solo mostramos el spinner grande en la primera carga; los refrescos
+            // automáticos posteriores actualizan la lista en silencio, sin parpadeos.
+            if (primeraCarga)
+            {
+                LoadingIndicator.IsRunning = true;
+                primeraCarga = false;
+            }
 
             var cuidadores = await _apiService.ObtenerCuidadoresPorServicioAsync(Especialidad, Latitud, Longitud);
 
             LoadingIndicator.IsRunning = false;
+            ListaCuidadores.Clear();
             LblSinCuidadores.IsVisible = cuidadores.Count == 0;
 
             foreach (var cuidador in cuidadores)
