@@ -10,7 +10,7 @@
         <ScrollView Grid.Row="0">
             <VerticalStackLayout Spacing="0">
                 
-                <!-- PORTADA Y HEADER INMERSIVO -->
+                <!-- PORTADA Y HEADER INMERSIVO FIX -->
                 <Grid>
                     <!-- Fondo degradado/portada -->
                     <Border Stroke="Transparent" BackgroundColor="#5A31F4" HeightRequest="160" VerticalOptions="Start" StrokeShape="Rectangle">
