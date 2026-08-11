@@ -53,15 +53,29 @@ namespace CUIDAPP.Views.Verificacion
                 return;
             }
 
-            // Si ya fue aprobado, pasar directo al dashboard.
+            // Si ya fue aprobado, mostrar la felicitación y pasar al dashboard.
             if (estado.EstadoAprobacion == 2)
             {
                 Preferences.Default.Set("EstadoAprobacion", 2);
-                await Shell.Current.GoToAsync("CuidadorDashboardPage");
+                await MostrarExitoYContinuar();
                 return;
             }
 
             RenderizarEstado(estado);
+        }
+
+        private async Task MostrarExitoYContinuar()
+        {
+            OverlayExito.IsVisible = true;
+            await OverlayExito.FadeTo(1, 250);
+
+            CirculoExito.Scale = 0.5;
+            await CirculoExito.ScaleTo(1.1, 300, Easing.SpringOut);
+            await CirculoExito.ScaleTo(1.0, 120);
+
+            await Task.Delay(1400);
+
+            await Shell.Current.GoToAsync("CuidadorDashboardPage");
         }
 
         private void RenderizarEstado(EstadoVerificacion estado)

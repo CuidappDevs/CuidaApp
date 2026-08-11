@@ -31,5 +31,15 @@
             <Button x:Name="BtnCerrarSesion" Text="Cerrar sesión" Clicked="OnCerrarSesionTapped" BackgroundColor="Transparent" TextColor="#6B7280" FontFamily="OpenSansSemibold" FontSize="14" BorderColor="Transparent" HeightRequest="40" />
         </VerticalStackLayout>
 
+        <Grid x:Name="OverlayExito" Grid.RowSpan="2" IsVisible="False" Opacity="0" BackgroundColor="#4024A2">
+            <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="18" Padding="40,0">
+                <Border x:Name="CirculoExito" Stroke="Transparent" StrokeShape="RoundRectangle 60" WidthRequest="120" HeightRequest="120" BackgroundColor="#FFFFFF" HorizontalOptions="Center" Scale="0.5">
+                    <Path Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="#16A34A" Aspect="Uniform" WidthRequest="60" HeightRequest="60" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Label Text="¡Felicidades!" FontSize="26" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                <Label Text="Todos tus documentos fueron validados. Ya puedes empezar a recibir solicitudes." FontSize="15" FontFamily="OpenSansRegular" TextColor="#E0D9FA" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+        </Grid>
+
     </Grid>
 </ContentPage>
