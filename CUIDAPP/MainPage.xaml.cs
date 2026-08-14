@@ -17,6 +17,11 @@ namespace CUIDAPP
             await Shell.Current.GoToAsync("RegistroPage");
         }
 
+        private async void OnForgotPasswordTapped(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync("ForgotPasswordPage");
+        }
+
         private async void OnLoginClicked(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(EntryEmail.Text) || string.IsNullOrWhiteSpace(EntryPassword.Text))

@@ -553,5 +553,36 @@ namespace CUIDAPP.Services
                 return false;
             }
         }
+
+        public async Task<ForgotPasswordResponse?> ForgotPasswordAsync(string email)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("auth/forgot-password", new { Email = email });
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                return await response.Content.ReadFromJsonAsync<ForgotPasswordResponse>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error olvidando contraseña: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<bool> ResetPasswordAsync(string email, string code, string newPassword)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("auth/reset-password", new { Email = email, Code = code, NewPassword = newPassword });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reseteando contraseña: {ex.Message}");
+                return false;
+            }
+        }
     }
 }
