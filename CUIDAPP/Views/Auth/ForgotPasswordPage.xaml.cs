@@ -7,10 +7,57 @@ namespace CUIDAPP.Views.Auth
         private readonly ApiService _apiService = new ApiService();
         private string _userEmail = "";
         private string _resetCode = "";
+        private Entry[] _pins;
+        private CancellationTokenSource _timerCts;
 
         public ForgotPasswordPage()
         {
             InitializeComponent();
+            _pins = new[] { Pin1, Pin2, Pin3, Pin4, Pin5, Pin6 };
+            SetupPinHandlers();
+        }
+
+        private void SetupPinHandlers()
+        {
+            Pin1.TextChanged += (s, e) => OnPinChanged(s, e, 0);
+            Pin2.TextChanged += (s, e) => OnPinChanged(s, e, 1);
+            Pin3.TextChanged += (s, e) => OnPinChanged(s, e, 2);
+            Pin4.TextChanged += (s, e) => OnPinChanged(s, e, 3);
+            Pin5.TextChanged += (s, e) => OnPinChanged(s, e, 4);
+            Pin6.TextChanged += (s, e) => OnPinChanged(s, e, 5);
+        }
+
+        private void OnPinChanged(object sender, TextChangedEventArgs e, int currentIndex)
+        {
+            var entry = (Entry)sender;
+            
+            // Only allow digits
+            if (!string.IsNullOrEmpty(e.NewTextValue) && !char.IsDigit(e.NewTextValue[0]))
+            {
+                entry.Text = "";
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(e.NewTextValue) && currentIndex < 5)
+            {
+                _pins[currentIndex + 1].Focus();
+            }
+            else if (string.IsNullOrEmpty(e.NewTextValue) && currentIndex > 0)
+            {
+                _pins[currentIndex - 1].Focus();
+            }
+        }
+
+        private string GetCode()
+        {
+            return $"{Pin1.Text}{Pin2.Text}{Pin3.Text}{Pin4.Text}{Pin5.Text}{Pin6.Text}";
+        }
+
+        private void ClearPins()
+        {
+            foreach (var pin in _pins)
+                pin.Text = "";
+            _pins[0].Focus();
         }
 
         private async void OnBackTapped(object sender, EventArgs e)
@@ -45,7 +92,11 @@ namespace CUIDAPP.Views.Auth
 
                 Step1.IsVisible = false;
                 Step2.IsVisible = true;
+                TopTitle.Text = "Verificar código";
                 LblEmail.Text = $"Se envió un código a {_userEmail}";
+                
+                StartTimer();
+                _pins[0].Focus();
             }
             finally
             {
@@ -54,45 +105,93 @@ namespace CUIDAPP.Views.Auth
             }
         }
 
-        private async void OnRestablecerClicked(object sender, EventArgs e)
+        private void StartTimer()
         {
-            if (string.IsNullOrWhiteSpace(EntryCode.Text) || EntryCode.Text.Length != 6)
+            _timerCts?.Cancel();
+            _timerCts = new CancellationTokenSource();
+            var token = _timerCts.Token;
+            
+            Task.Run(async () =>
             {
-                await DisplayAlert("Error", "Ingresa un código de 6 dígitos.", "OK");
-                return;
-            }
-            if (string.IsNullOrWhiteSpace(EntryNewPass.Text) || EntryNewPass.Text.Length < 6)
-            {
-                await DisplayAlert("Error", "La contraseña debe tener al menos 6 caracteres.", "OK");
-                return;
-            }
-            if (EntryNewPass.Text != EntryConfirmPass.Text)
-            {
-                await DisplayAlert("Error", "Las contraseñas no coinciden.", "OK");
-                return;
-            }
+                for (int i = 60; i > 0; i--)
+                {
+                    if (token.IsCancellationRequested) break;
+                    
+                    MainThread.BeginInvokeOnMainThread(() =>
+                    {
+                        LblTimer.Text = $"Reenviar código en {i}s";
+                        LblReenviar.Opacity = 0.5;
+                        LblReenviar.GestureRecognizers.Clear();
+                    });
+                    
+                    await Task.Delay(1000, token);
+                }
+                
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    LblTimer.Text = "";
+                    LblReenviar.Opacity = 1;
+                    LblReenviar.GestureRecognizers.Clear();
+                    LblReenviar.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => OnReenviarTapped(null, null)) });
+                });
+            }, token);
+        }
 
-            BtnRestablecer.IsEnabled = false;
-            BtnRestablecer.Text = "Restableciendo...";
+        private async void OnReenviarTapped(object sender, EventArgs e)
+        {
+            ClearPins();
+            
+            if (string.IsNullOrWhiteSpace(EntryEmail.Text))
+                return;
+
+            BtnEnviar.IsEnabled = false;
+            BtnEnviar.Text = "Enviando...";
 
             try
             {
-                var success = await _apiService.ResetPasswordAsync(_userEmail, EntryCode.Text, EntryNewPass.Text);
+                _userEmail = EntryEmail.Text.Trim();
+                var result = await _apiService.ForgotPasswordAsync(_userEmail);
 
-                if (success)
+                if (result == null)
                 {
-                    await DisplayAlert("Éxito", "Tu contraseña ha sido actualizada.", "OK");
-                    await Shell.Current.GoToAsync("..");
+                    await DisplayAlert("Error", "No se pudo conectar con el servidor.", "OK");
+                    return;
                 }
-                else
-                {
-                    await DisplayAlert("Error", "Código inválido o expirado.", "OK");
-                }
+
+                _resetCode = result.Code;
+                await DisplayAlert("Código de recuperación", $"Tu código es: {_resetCode}\n\n(En producción esto se enviaría por email)", "OK");
+
+                StartTimer();
+                _pins[0].Focus();
             }
             finally
             {
-                BtnRestablecer.IsEnabled = true;
-                BtnRestablecer.Text = "Restablecer contraseña";
+                BtnEnviar.IsEnabled = true;
+                BtnEnviar.Text = "Enviar código";
+            }
+        }
+
+        private async void OnVerificarClicked(object sender, EventArgs e)
+        {
+            var code = GetCode();
+            if (code.Length != 6)
+            {
+                await DisplayAlert("Error", "Ingresa el código de 6 dígitos.", "OK");
+                return;
+            }
+
+            BtnVerificar.IsEnabled = false;
+            BtnVerificar.Text = "Verificando...";
+
+            try
+            {
+                // Navigate to ResetPasswordPage with email and code
+                await Shell.Current.GoToAsync($"ResetPasswordPage?email={Uri.EscapeDataString(_userEmail)}&code={code}");
+            }
+            finally
+            {
+                BtnVerificar.IsEnabled = true;
+                BtnVerificar.Text = "Verificar código";
             }
         }
     }
