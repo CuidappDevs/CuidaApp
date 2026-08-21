@@ -70,32 +70,47 @@ namespace CUIDAPP.Views.Trabajos
         private async void OnConfirmarClicked(object sender, EventArgs e)
         {
             if (trabajo == null)
+            {
+                await DisplayAlert("Error", "No se encontró la información del trabajo. Vuelve a intentarlo.", "OK");
                 return;
+            }
 
             var pin = ObtenerPin();
             if (pin.Length != 4)
+            {
+                await DisplayAlert("Código incompleto", "Ingresa los 4 dígitos del PIN.", "OK");
                 return;
+            }
 
             BtnConfirmar.IsEnabled = false;
             BtnConfirmar.Text = "Verificando...";
             LblError.IsVisible = false;
 
-            var (success, error) = await _apiService.IniciarTrabajoAsync(trabajo.Id, pin);
+            try
+            {
+                var (success, error) = await _apiService.IniciarTrabajoAsync(trabajo.Id, pin);
 
-            if (success)
-            {
-                await Shell.Current.GoToAsync("../..");
-            }
-            else
-            {
+                if (success)
+                {
+                    await Shell.Current.GoToAsync("../..");
+                    return;
+                }
+
                 LblError.Text = string.IsNullOrWhiteSpace(error)
                     ? "El código no es correcto. Verifícalo con el cliente e intenta de nuevo."
                     : error;
                 LblError.IsVisible = true;
                 EntryPin1.Text = EntryPin2.Text = EntryPin3.Text = EntryPin4.Text = "";
                 EntryPin1.Focus();
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error inesperado", $"No se pudo verificar el código. Intenta de nuevo.\n\n{ex.Message}", "OK");
+            }
+            finally
+            {
                 BtnConfirmar.Text = "Confirmar inicio";
-                BtnConfirmar.IsEnabled = false;
+                ActualizarEstadoBoton();
             }
         }
     }

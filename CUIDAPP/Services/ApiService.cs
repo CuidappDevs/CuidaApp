@@ -49,7 +49,8 @@ namespace CUIDAPP.Services
             
             _httpClient = new HttpClient(handler)
             {
-                BaseAddress = new Uri(BaseUrl)
+                BaseAddress = new Uri(BaseUrl),
+                Timeout = TimeSpan.FromSeconds(20)
             };
         }
 
