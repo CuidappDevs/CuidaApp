@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.SignalR.Client;
+using CUIDAPP.Models.Chat;
 
 namespace CUIDAPP.Services
 {
@@ -13,6 +14,9 @@ namespace CUIDAPP.Services
         public static event Action<int, int>? TrabajoActualizado;      // TrabajoId, Estado
         public static event Action<int, bool>? DisponibilidadCambio;   // CuidadorId, Disponible
         public static event Action<int, double, double>? UbicacionCuidadorCambio; // CuidadorId, Lat, Lng
+        public static event Action<int, string, DateTime>? ActividadAgregada; // TrabajoId, Descripcion, FechaHora
+        public static event Action<Mensaje>? MensajeNuevo;
+        public static event Action<int, double>? AlertaGeocerca; // TrabajoId, DistanciaMetros
 
         public static bool EstaConectado => _connection?.State == HubConnectionState.Connected;
 
@@ -38,6 +42,9 @@ namespace CUIDAPP.Services
             _connection.On<object>("TrabajoActualizado", payload => DispatchTrabajoActualizado(payload));
             _connection.On<object>("DisponibilidadCambio", payload => DispatchDisponibilidadCambio(payload));
             _connection.On<object>("UbicacionCuidadorCambio", payload => DispatchUbicacionCambio(payload));
+            _connection.On<object>("ActividadAgregada", payload => DispatchActividadAgregada(payload));
+            _connection.On<Mensaje>("MensajeNuevo", mensaje => MainThread.BeginInvokeOnMainThread(() => MensajeNuevo?.Invoke(mensaje)));
+            _connection.On<object>("AlertaGeocerca", payload => DispatchAlertaGeocerca(payload));
 
             _connection.Reconnected += async _ => await _connection.InvokeAsync("Unirse", usuarioId);
 
@@ -89,6 +96,23 @@ namespace CUIDAPP.Services
             var lat = json.GetProperty("latitud").GetDouble();
             var lng = json.GetProperty("longitud").GetDouble();
             MainThread.BeginInvokeOnMainThread(() => UbicacionCuidadorCambio?.Invoke(cuidadorId, lat, lng));
+        }
+
+        private static void DispatchActividadAgregada(object payload)
+        {
+            var json = (System.Text.Json.JsonElement)payload;
+            var trabajoId = json.GetProperty("trabajoId").GetInt32();
+            var descripcion = json.GetProperty("descripcion").GetString() ?? "";
+            var fechaHora = json.GetProperty("fechaHora").GetDateTime();
+            MainThread.BeginInvokeOnMainThread(() => ActividadAgregada?.Invoke(trabajoId, descripcion, fechaHora));
+        }
+
+        private static void DispatchAlertaGeocerca(object payload)
+        {
+            var json = (System.Text.Json.JsonElement)payload;
+            var trabajoId = json.GetProperty("trabajoId").GetInt32();
+            var distancia = json.GetProperty("distanciaMetros").GetDouble();
+            MainThread.BeginInvokeOnMainThread(() => AlertaGeocerca?.Invoke(trabajoId, distancia));
         }
 
         private static (int, int) LeerDosEnteros(object payload, string campo1, string campo2)

@@ -12,6 +12,7 @@ namespace CUIDAPP
             Routing.RegisterRoute("TrabajosPage", typeof(Views.Trabajos.TrabajosPage));
             Routing.RegisterRoute("DetalleTrabajoPage", typeof(Views.Trabajos.DetalleTrabajoPage));
             Routing.RegisterRoute("IniciarTrabajoPage", typeof(Views.Trabajos.IniciarTrabajoPage));
+            Routing.RegisterRoute("FinalizarTrabajoPage", typeof(Views.Trabajos.FinalizarTrabajoPage));
             Routing.RegisterRoute("CancelarServicioPage", typeof(Views.Trabajos.CancelarServicioPage));
             Routing.RegisterRoute("MapaCompletoPage", typeof(Views.Trabajos.MapaCompletoPage));
             Routing.RegisterRoute("CalificarPage", typeof(Views.Calificacion.CalificarPage));
@@ -22,6 +23,8 @@ namespace CUIDAPP
             Routing.RegisterRoute("CuidadorDetallePage", typeof(Views.Cliente.CuidadorDetallePage));
             Routing.RegisterRoute("SolicitarServicioPage", typeof(Views.Cliente.SolicitarServicioPage));
             Routing.RegisterRoute("MiServicioPage", typeof(Views.Cliente.MiServicioPage));
+            Routing.RegisterRoute("DetalleServicioClientePage", typeof(Views.Cliente.DetalleServicioClientePage));
+            Routing.RegisterRoute("ChatPage", typeof(Views.Chat.ChatPage));
             Routing.RegisterRoute("MisUbicacionesPage", typeof(Views.Cliente.MisUbicacionesPage));
             Routing.RegisterRoute("SeleccionarPuntoMapaPage", typeof(Views.Cliente.SeleccionarPuntoMapaPage));
         }

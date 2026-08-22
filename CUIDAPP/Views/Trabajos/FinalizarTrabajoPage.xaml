@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CUIDAPP.Views.Trabajos.FinalizarTrabajoPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#FFFFFF">
+
+    <Grid RowDefinitions="Auto, *, Auto">
+
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" Padding="20,15,20,10" BackgroundColor="White">
+            <ContentView x:Name="BtnBack" VerticalOptions="Center">
+                <ContentView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </ContentView.GestureRecognizers>
+                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
+            </ContentView>
+            <Label Grid.Column="1" Text="Finalizar trabajo" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="25,30,25,20" Spacing="25">
+
+                <Border Stroke="Transparent" BackgroundColor="#DCFCE7" StrokeShape="RoundRectangle 40" WidthRequest="80" HeightRequest="80" HorizontalOptions="Center">
+                    <Path Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="#16A34A" Aspect="Uniform" WidthRequest="34" HeightRequest="34" HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
+
+                <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                    <Label Text="Ingresa el código de salida" FontSize="19" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
+                    <Label Text="Pídele a tu cliente el código de 4 dígitos para confirmar que el servicio ha terminado." FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" HorizontalTextAlignment="Center" Margin="20,0,20,0"/>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="14">
+                    <Label x:Name="LblCliente" Text="" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#16A34A" HorizontalOptions="Center"/>
+
+                    <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
+                        <Border Stroke="#E5E7EB" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="#F9FAFB" WidthRequest="60" HeightRequest="70">
+                            <Entry x:Name="EntryPin1" MaxLength="1" Keyboard="Numeric" FontSize="28" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Fill" BackgroundColor="Transparent" TextChanged="OnPin1Changed"/>
+                        </Border>
+                        <Border Stroke="#E5E7EB" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="#F9FAFB" WidthRequest="60" HeightRequest="70">
+                            <Entry x:Name="EntryPin2" MaxLength="1" Keyboard="Numeric" FontSize="28" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Fill" BackgroundColor="Transparent" TextChanged="OnPin2Changed"/>
+                        </Border>
+                        <Border Stroke="#E5E7EB" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="#F9FAFB" WidthRequest="60" HeightRequest="70">
+                            <Entry x:Name="EntryPin3" MaxLength="1" Keyboard="Numeric" FontSize="28" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Fill" BackgroundColor="Transparent" TextChanged="OnPin3Changed"/>
+                        </Border>
+                        <Border Stroke="#E5E7EB" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="#F9FAFB" WidthRequest="60" HeightRequest="70">
+                            <Entry x:Name="EntryPin4" MaxLength="1" Keyboard="Numeric" FontSize="28" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Fill" BackgroundColor="Transparent" TextChanged="OnPin4Changed"/>
+                        </Border>
+                    </HorizontalStackLayout>
+
+                    <Label x:Name="LblError" Text="" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#EF4444" HorizontalOptions="Center" IsVisible="False"/>
+                </VerticalStackLayout>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <VerticalStackLayout Grid.Row="2" Padding="20,10,20,30" Spacing="10" BackgroundColor="White">
+            <Border.Shadow>
+                <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
+            </Border.Shadow>
+            <Button x:Name="BtnConfirmar" Text="Confirmar finalización" Clicked="OnConfirmarClicked" BackgroundColor="#16A34A" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsEnabled="False"/>
+        </VerticalStackLayout>
+
+    </Grid>
+
+</ContentPage>

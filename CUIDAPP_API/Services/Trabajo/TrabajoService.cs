@@ -116,6 +116,30 @@ namespace CUIDAPP_API.Services.Trabajo
             return success;
         }
 
+        private static TrabajoClienteDto MapearTrabajoCliente(SqlDataReader reader)
+        {
+            return new TrabajoClienteDto
+            {
+                Id = Convert.ToInt32(reader["Id"]),
+                ClienteId = Convert.ToInt32(reader["ClienteId"]),
+                CuidadorId = Convert.ToInt32(reader["CuidadorId"]),
+                CuidadorNombre = reader["CuidadorNombre"].ToString() ?? "",
+                CuidadorFotoUrl = reader["CuidadorFotoUrl"] as string,
+                TipoServicio = reader["TipoServicio"].ToString() ?? "",
+                Fecha = Convert.ToDateTime(reader["Fecha"]),
+                HoraInicio = (TimeSpan)reader["HoraInicio"],
+                HoraFin = (TimeSpan)reader["HoraFin"],
+                Direccion = reader["Direccion"] as string,
+                Estado = Convert.ToInt32(reader["Estado"]),
+                Tarifa = Convert.ToDecimal(reader["Tarifa"]),
+                Notas = reader["Notas"] as string,
+                FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
+                PinInicio = reader["PinInicio"] as string,
+                PinFin = reader["PinFin"] as string,
+                FechaInicioReal = reader["FechaInicioReal"] as DateTime?
+            };
+        }
+
         public async Task<TrabajoClienteDto?> ObtenerTrabajoActivoPorClienteAsync(int clienteId)
         {
             using var connection = new SqlConnection(_connectionString);
@@ -127,26 +151,39 @@ namespace CUIDAPP_API.Services.Trabajo
             using var reader = await command.ExecuteReaderAsync();
 
             if (await reader.ReadAsync())
-            {
-                return new TrabajoClienteDto
-                {
-                    Id = Convert.ToInt32(reader["Id"]),
-                    ClienteId = Convert.ToInt32(reader["ClienteId"]),
-                    CuidadorId = Convert.ToInt32(reader["CuidadorId"]),
-                    CuidadorNombre = reader["CuidadorNombre"].ToString() ?? "",
-                    CuidadorFotoUrl = reader["CuidadorFotoUrl"] as string,
-                    TipoServicio = reader["TipoServicio"].ToString() ?? "",
-                    Fecha = Convert.ToDateTime(reader["Fecha"]),
-                    HoraInicio = (TimeSpan)reader["HoraInicio"],
-                    HoraFin = (TimeSpan)reader["HoraFin"],
-                    Direccion = reader["Direccion"] as string,
-                    Estado = Convert.ToInt32(reader["Estado"]),
-                    Tarifa = Convert.ToDecimal(reader["Tarifa"]),
-                    Notas = reader["Notas"] as string,
-                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
-                    PinInicio = reader["PinInicio"] as string
-                };
-            }
+                return MapearTrabajoCliente(reader);
+
+            return null;
+        }
+
+        public async Task<IEnumerable<TrabajoClienteDto>> ObtenerTrabajosActivosPorClienteAsync(int clienteId)
+        {
+            var trabajos = new List<TrabajoClienteDto>();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_ObtenerTrabajosActivosPorCliente", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@ClienteId", clienteId);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+                trabajos.Add(MapearTrabajoCliente(reader));
+
+            return trabajos;
+        }
+
+        public async Task<TrabajoClienteDto?> ObtenerTrabajoPorIdAsync(int trabajoId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_ObtenerTrabajoPorId", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@TrabajoId", trabajoId);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+                return MapearTrabajoCliente(reader);
 
             return null;
         }
@@ -178,6 +215,101 @@ namespace CUIDAPP_API.Services.Trabajo
                 return (success, motivo);
             }
             return (false, "ERROR_DESCONOCIDO");
+        }
+
+        public async Task<(bool Success, string Motivo)> FinalizarTrabajoAsync(FinalizarTrabajoDto dto)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_FinalizarTrabajo", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@TrabajoId", dto.TrabajoId);
+            command.Parameters.AddWithValue("@Pin", dto.Pin);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                var filasAfectadas = Convert.ToInt32(reader["FilasAfectadas"]);
+                var motivo = reader["Motivo"].ToString() ?? "ERROR_DESCONOCIDO";
+                var success = filasAfectadas > 0;
+
+                if (success)
+                {
+                    reader.Close();
+                    var participantes = await ObtenerParticipantesAsync(dto.TrabajoId);
+                    if (participantes.HasValue)
+                    {
+                        await _notifier.NotificarAsync(participantes.Value.ClienteId, "TrabajoActualizado", new { dto.TrabajoId, Estado = 4 });
+                        await _notifier.NotificarAsync(participantes.Value.CuidadorId, "TrabajoActualizado", new { dto.TrabajoId, Estado = 4 });
+                    }
+                }
+
+                return (success, motivo);
+            }
+            return (false, "ERROR_DESCONOCIDO");
+        }
+
+        public async Task<IEnumerable<ActividadTrabajoDto>> ObtenerActividadesAsync(int trabajoId)
+        {
+            var actividades = new List<ActividadTrabajoDto>();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_ObtenerActividadesTrabajo", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@TrabajoId", trabajoId);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                actividades.Add(new ActividadTrabajoDto
+                {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    TrabajoId = Convert.ToInt32(reader["TrabajoId"]),
+                    Descripcion = reader["Descripcion"].ToString() ?? "",
+                    FechaHora = Convert.ToDateTime(reader["FechaHora"])
+                });
+            }
+
+            return actividades;
+        }
+
+        public async Task<ActividadTrabajoDto> AgregarActividadAsync(AgregarActividadTrabajoDto dto)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_AgregarActividadTrabajo", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@TrabajoId", dto.TrabajoId);
+            command.Parameters.AddWithValue("@Descripcion", dto.Descripcion);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            await reader.ReadAsync();
+
+            var actividad = new ActividadTrabajoDto
+            {
+                Id = Convert.ToInt32(reader["Id"]),
+                TrabajoId = dto.TrabajoId,
+                Descripcion = dto.Descripcion,
+                FechaHora = Convert.ToDateTime(reader["FechaHora"])
+            };
+
+            reader.Close();
+            var participantes = await ObtenerParticipantesAsync(dto.TrabajoId);
+            if (participantes.HasValue)
+            {
+                await _notifier.NotificarAsync(participantes.Value.ClienteId, "ActividadAgregada", actividad);
+            }
+
+            return actividad;
+        }
+
+        public async Task AlertarGeocercaAsync(int trabajoId, double distanciaMetros)
+        {
+            var participantes = await ObtenerParticipantesAsync(trabajoId);
+            if (!participantes.HasValue)
+                return;
+
+            await _notifier.NotificarAsync(participantes.Value.ClienteId, "AlertaGeocerca", new { TrabajoId = trabajoId, DistanciaMetros = distanciaMetros });
         }
 
         public async Task<IEnumerable<MotivoCancelacionDto>> ObtenerMotivosCancelacionAsync()

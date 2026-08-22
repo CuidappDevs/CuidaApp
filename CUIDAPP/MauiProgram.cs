@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Plugin.Maui.Audio;
 
 namespace CUIDAPP
 {
@@ -9,6 +10,7 @@ namespace CUIDAPP
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .AddAudio()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

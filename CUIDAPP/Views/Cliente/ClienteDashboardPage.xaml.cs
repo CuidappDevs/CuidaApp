@@ -189,15 +189,17 @@ namespace CUIDAPP.Views.Cliente
             if (clienteId == 0)
                 return;
 
-            var trabajoActivo = await _apiService.ObtenerTrabajoActivoPorClienteAsync(clienteId);
-            hayServicioActivo = trabajoActivo != null;
+            var serviciosActivos = await _apiService.ObtenerTrabajosActivosPorClienteAsync(clienteId);
+            hayServicioActivo = serviciosActivos.Count > 0;
 
+            // El cliente ahora puede tener varios servicios a la vez, así que el buscador
+            // se mantiene siempre disponible; el banner es solo un atajo a "Mis servicios".
             BannerServicioActivo.IsVisible = hayServicioActivo;
-            ContenidoExpandible.IsVisible = !hayServicioActivo;
 
-            if (trabajoActivo != null)
+            if (serviciosActivos.Count == 1)
             {
-                var estadoTexto = trabajoActivo.Estado switch
+                var t = serviciosActivos[0];
+                var estadoTexto = t.Estado switch
                 {
                     1 => "Esperando respuesta del cuidador",
                     2 => "Aceptado, en espera de la fecha programada",
@@ -205,7 +207,11 @@ namespace CUIDAPP.Views.Cliente
                     4 => "Completado, ¡califica a tu cuidador!",
                     _ => "En curso"
                 };
-                LblBannerServicioActivo.Text = $"{trabajoActivo.TipoServicio} · {estadoTexto}";
+                LblBannerServicioActivo.Text = $"{t.TipoServicio} · {estadoTexto}";
+            }
+            else if (serviciosActivos.Count > 1)
+            {
+                LblBannerServicioActivo.Text = $"Tienes {serviciosActivos.Count} servicios activos";
             }
         }
 
@@ -527,8 +533,9 @@ namespace CUIDAPP.Views.Cliente
 
             if (panelExpandido)
             {
-                // Si hay un servicio activo, el panel expandido muestra el banner, no el buscador.
-                ContenidoExpandible.IsVisible = !hayServicioActivo;
+                // El cliente puede tener servicios activos y seguir buscando otros a la vez:
+                // el banner (si hay alguno activo) y el buscador conviven en el panel.
+                ContenidoExpandible.IsVisible = true;
                 BannerServicioActivo.IsVisible = hayServicioActivo;
             }
 
