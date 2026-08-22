@@ -15,6 +15,8 @@ using CUIDAPP_API.Interfaces.Calificacion;
 using CUIDAPP_API.Services.Calificacion;
 using CUIDAPP_API.Interfaces.UbicacionCliente;
 using CUIDAPP_API.Services.UbicacionCliente;
+using CUIDAPP_API.Interfaces.Chat;
+using CUIDAPP_API.Services.Chat;
 using CUIDAPP_API.Services.Realtime;
 using CUIDAPP_API.Hubs;
 using Microsoft.Extensions.FileProviders;
@@ -42,6 +44,7 @@ builder.Services.AddScoped<IBusquedaService, BusquedaService>();
 builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<ICalificacionService, CalificacionService>();
 builder.Services.AddScoped<IUbicacionClienteService, UbicacionClienteService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 
 var app = builder.Build();
 

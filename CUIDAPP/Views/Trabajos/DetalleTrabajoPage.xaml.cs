@@ -13,6 +13,10 @@ namespace CUIDAPP.Views.Trabajos
         private static readonly HttpClient _httpClient = new HttpClient();
         private Trabajo? trabajo;
         private string? mapaRutaHtml;
+        private bool estaVisible;
+        private bool geocercaMonitorIniciado;
+        private bool fueraDeGeocerca;
+        private const double RadioGeocercaKm = 0.3; // 300 metros
 
         public void ApplyQueryAttributes(IDictionary<string, object> query)
         {
@@ -31,8 +35,130 @@ namespace CUIDAPP.Views.Trabajos
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            estaVisible = true;
             await CargarMapaRutaAsync();
             await ActualizarBotonCalificarAsync();
+            await CargarActividadesAsync();
+            IniciarMonitorGeocercaSiHaceFalta();
+        }
+
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            estaVisible = false;
+        }
+
+        private void IniciarMonitorGeocercaSiHaceFalta()
+        {
+            if (geocercaMonitorIniciado)
+                return;
+            geocercaMonitorIniciado = true;
+
+            // Mientras el trabajo esté En Progreso y esta pantalla abierta, verificamos
+            // periódicamente la distancia del cuidador al sitio del servicio (sin polling
+            // al servidor: es solo GPS local + una notificación puntual si se aleja).
+            Dispatcher.StartTimer(TimeSpan.FromSeconds(20), () =>
+            {
+                if (!estaVisible)
+                    return false;
+
+                if (trabajo?.Estado == 3)
+                    _ = VerificarGeocercaAsync();
+
+                return true;
+            });
+        }
+
+        private async Task VerificarGeocercaAsync()
+        {
+            if (trabajo?.Latitud == null || trabajo.Longitud == null)
+                return;
+
+            var ubicacionActual = await LocationService.ObtenerUbicacionActualAsync();
+            if (ubicacionActual == null)
+                return;
+
+            var ubicacionServicio = new Location((double)trabajo.Latitud, (double)trabajo.Longitud);
+            var distanciaKm = Location.CalculateDistance(ubicacionActual, ubicacionServicio, DistanceUnits.Kilometers);
+
+            if (distanciaKm > RadioGeocercaKm)
+            {
+                if (!fueraDeGeocerca)
+                {
+                    fueraDeGeocerca = true;
+                    await _apiService.AlertarGeocercaAsync(trabajo.Id, distanciaKm * 1000);
+                    await DisplayAlert("Estás lejos del sitio del servicio", $"Te alejaste {distanciaKm * 1000:N0} m del domicilio. Le avisamos al cliente.", "OK");
+                }
+            }
+            else
+            {
+                fueraDeGeocerca = false;
+            }
+        }
+
+        private async Task CargarActividadesAsync()
+        {
+            if (trabajo == null || trabajo.Estado != 3)
+                return;
+
+            var actividades = await _apiService.ObtenerActividadesAsync(trabajo.Id);
+            RenderizarActividades(actividades);
+        }
+
+        private void RenderizarActividades(List<ActividadTrabajo> actividades)
+        {
+            ListaActividades.Clear();
+            LblSinActividades.IsVisible = actividades.Count == 0;
+
+            foreach (var actividad in actividades)
+            {
+                ListaActividades.Add(new Border
+                {
+                    Stroke = Colors.Transparent,
+                    BackgroundColor = Color.FromArgb("#F8FAFC"),
+                    StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
+                    Padding = new Thickness(12, 10),
+                    Content = new VerticalStackLayout
+                    {
+                        Spacing = 2,
+                        Children =
+                        {
+                            new Label { Text = actividad.Descripcion, FontSize = 14, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#111827") },
+                            new Label { Text = actividad.FechaHora.ToLocalTime().ToString("h:mm tt"), FontSize = 11, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#9CA3AF") }
+                        }
+                    }
+                });
+            }
+        }
+
+        private async void OnAgregarActividadClicked(object sender, EventArgs e)
+        {
+            if (trabajo == null || string.IsNullOrWhiteSpace(EntryActividad.Text))
+                return;
+
+            var descripcion = EntryActividad.Text.Trim();
+
+            BtnAgregarActividad.IsEnabled = false;
+            BtnAgregarActividad.Text = "...";
+
+            try
+            {
+                var success = await _apiService.AgregarActividadAsync(trabajo.Id, descripcion);
+                if (success)
+                {
+                    EntryActividad.Text = "";
+                    await CargarActividadesAsync();
+                }
+                else
+                {
+                    await DisplayAlert("Error", "No se pudo enviar el reporte. Intenta de nuevo.", "OK");
+                }
+            }
+            finally
+            {
+                BtnAgregarActividad.IsEnabled = true;
+                BtnAgregarActividad.Text = "Enviar";
+            }
         }
 
         private async Task ActualizarBotonCalificarAsync()
@@ -95,6 +221,22 @@ namespace CUIDAPP.Views.Trabajos
             BtnIniciar.IsVisible = trabajo.Estado == 2;
             BtnCompletar.IsVisible = trabajo.Estado == 3;
             BtnCancelar.IsVisible = trabajo.Estado == 2 || trabajo.Estado == 3;
+            CardActividades.IsVisible = trabajo.Estado == 3;
+            BtnChat.IsVisible = trabajo.Estado is 2 or 3;
+        }
+
+        private async void OnChatClicked(object sender, EventArgs e)
+        {
+            if (trabajo == null)
+                return;
+
+            var parametros = new Dictionary<string, object>
+            {
+                { "TrabajoId", trabajo.Id },
+                { "OtroNombre", trabajo.ClienteNombre },
+                { "OtroFotoUrl", trabajo.ClienteFotoUrl ?? "" }
+            };
+            await Shell.Current.GoToAsync("ChatPage", parametros);
         }
 
         private static string FormatearHora(TimeSpan hora)
@@ -107,9 +249,23 @@ namespace CUIDAPP.Views.Trabajos
             await Shell.Current.GoToAsync("..");
         }
 
-        private async void OnAceptarClicked(object sender, EventArgs e) => await CambiarEstado(2);
+        private async void OnAceptarClicked(object sender, EventArgs e)
+        {
+            BtnAceptar.IsEnabled = BtnRechazar.IsEnabled = false;
+            BtnAceptar.Text = "Aceptando...";
+            await CambiarEstado(2);
+            BtnAceptar.IsEnabled = BtnRechazar.IsEnabled = true;
+            BtnAceptar.Text = "Aceptar";
+        }
 
-        private async void OnRechazarClicked(object sender, EventArgs e) => await CambiarEstado(6);
+        private async void OnRechazarClicked(object sender, EventArgs e)
+        {
+            BtnAceptar.IsEnabled = BtnRechazar.IsEnabled = false;
+            BtnRechazar.Text = "Rechazando...";
+            await CambiarEstado(6);
+            BtnAceptar.IsEnabled = BtnRechazar.IsEnabled = true;
+            BtnRechazar.Text = "Rechazar";
+        }
 
         private const double DistanciaMaximaKm = 0.15; // 150 metros
 
@@ -150,7 +306,14 @@ namespace CUIDAPP.Views.Trabajos
             await Shell.Current.GoToAsync("IniciarTrabajoPage", parametros);
         }
 
-        private async void OnCompletarClicked(object sender, EventArgs e) => await CambiarEstado(4);
+        private async void OnCompletarClicked(object sender, EventArgs e)
+        {
+            if (trabajo == null)
+                return;
+
+            var parametros = new Dictionary<string, object> { { "Trabajo", trabajo } };
+            await Shell.Current.GoToAsync("FinalizarTrabajoPage", parametros);
+        }
 
         private async void OnCancelarClicked(object sender, EventArgs e)
         {

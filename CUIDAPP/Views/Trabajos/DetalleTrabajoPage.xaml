@@ -121,6 +121,24 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <!-- Bitácora de actividades (solo visible mientras el trabajo está En Progreso) -->
+                <Border x:Name="CardActividades" Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="20" IsVisible="False">
+                    <VerticalStackLayout Spacing="14">
+                        <Label Text="Reporta lo que vas haciendo" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+
+                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                            <Border Grid.Column="0" Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
+                                <Entry x:Name="EntryActividad" Placeholder="Ej. Empecé a limpiar la cocina" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="45" Completed="OnAgregarActividadClicked"/>
+                            </Border>
+                            <Button Grid.Column="1" x:Name="BtnAgregarActividad" Text="Enviar" Clicked="OnAgregarActividadClicked" BackgroundColor="#5A31F4" TextColor="White" FontFamily="OpenSansSemibold" FontSize="13" CornerRadius="10" WidthRequest="80" HeightRequest="45"/>
+                        </Grid>
+
+                        <VerticalStackLayout x:Name="ListaActividades" Spacing="10"/>
+
+                        <Label x:Name="LblSinActividades" Text="Aún no has reportado ninguna actividad." FontSize="13" FontFamily="OpenSansRegular" TextColor="#9CA3AF"/>
+                    </VerticalStackLayout>
+                </Border>
+
             </VerticalStackLayout>
         </ScrollView>
 
@@ -132,9 +150,12 @@
 
             <!-- Estado Pendiente: Aceptar / Rechazar -->
             <Grid x:Name="PanelPendiente" ColumnDefinitions="*, *" ColumnSpacing="15" IsVisible="False">
-                <Button Grid.Column="0" Text="Rechazar" Clicked="OnRechazarClicked" BackgroundColor="#F3F4F6" TextColor="#374151" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="12" HeightRequest="55"/>
-                <Button Grid.Column="1" Text="Aceptar" Clicked="OnAceptarClicked" BackgroundColor="#5A31F4" TextColor="White" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="12" HeightRequest="55"/>
+                <Button x:Name="BtnRechazar" Grid.Column="0" Text="Rechazar" Clicked="OnRechazarClicked" BackgroundColor="#F3F4F6" TextColor="#374151" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="12" HeightRequest="55"/>
+                <Button x:Name="BtnAceptar" Grid.Column="1" Text="Aceptar" Clicked="OnAceptarClicked" BackgroundColor="#5A31F4" TextColor="White" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="12" HeightRequest="55"/>
             </Grid>
+
+            <!-- Chat con el cliente (visible mientras Aceptado o En Progreso) -->
+            <Button x:Name="BtnChat" Text="💬 Chatear con el cliente" Clicked="OnChatClicked" BackgroundColor="#F3F4F6" TextColor="#374151" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="12" HeightRequest="48" IsVisible="False"/>
 
             <!-- Estado Aceptado: Iniciar -->
             <Button x:Name="BtnIniciar" Text="Iniciar trabajo" Clicked="OnIniciarClicked" BackgroundColor="#5A31F4" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsVisible="False"/>

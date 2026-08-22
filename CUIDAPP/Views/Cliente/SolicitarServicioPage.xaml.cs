@@ -110,11 +110,13 @@ namespace CUIDAPP.Views.Cliente
 
             try
             {
-                var trabajoActivo = await _apiService.ObtenerTrabajoActivoPorClienteAsync(clienteId);
-                if (trabajoActivo != null)
+                // El cliente puede tener varios servicios activos a la vez (con distintos
+                // cuidadores o lugares); solo evitamos duplicar una solicitud al mismo
+                // cuidador mientras ya tenga una pendiente o en curso con él.
+                var serviciosActivos = await _apiService.ObtenerTrabajosActivosPorClienteAsync(clienteId);
+                if (serviciosActivos.Any(t => t.CuidadorId == cuidador.Id && t.Estado is 1 or 2 or 3))
                 {
-                    await DisplayAlert("Ya tienes un servicio activo", "No puedes solicitar otro servicio mientras tengas uno pendiente o en curso.", "OK");
-                    await Shell.Current.GoToAsync("../../..");
+                    await DisplayAlert("Ya tienes una solicitud con este cuidador", "Ya tienes un servicio pendiente o en curso con este mismo cuidador.", "OK");
                     return;
                 }
 

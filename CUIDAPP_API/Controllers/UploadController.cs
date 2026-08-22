@@ -8,7 +8,7 @@ namespace CUIDAPP_API.Controllers
     public class UploadController : ControllerBase
     {
         private readonly IWebHostEnvironment _env;
-        private static readonly string[] ExtensionesPermitidas = { ".jpg", ".jpeg", ".png", ".pdf" };
+        private static readonly string[] ExtensionesPermitidas = { ".jpg", ".jpeg", ".png", ".pdf", ".m4a", ".mp3", ".wav", ".aac" };
         private const long TamanoMaximoBytes = 10 * 1024 * 1024; // 10 MB
         private static readonly Regex CarpetaValida = new(@"^[a-zA-Z0-9\-_]{1,80}$", RegexOptions.Compiled);
 
@@ -30,7 +30,7 @@ namespace CUIDAPP_API.Controllers
 
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (!ExtensionesPermitidas.Contains(extension))
-                return BadRequest("Tipo de archivo no permitido. Usa JPG, PNG o PDF.");
+                return BadRequest("Tipo de archivo no permitido. Usa JPG, PNG, PDF o un formato de audio soportado (M4A, MP3, WAV, AAC).");
 
             var nombreCarpeta = !string.IsNullOrWhiteSpace(carpeta) && CarpetaValida.IsMatch(carpeta)
                 ? carpeta

@@ -17,5 +17,7 @@ namespace CUIDAPP_API.DTOs.Trabajo
         public string? Notas { get; set; }
         public DateTime FechaCreacion { get; set; }
         public string? PinInicio { get; set; }
+        public string? PinFin { get; set; }
+        public DateTime? FechaInicioReal { get; set; }
     }
 }

@@ -191,7 +191,11 @@ namespace CUIDAPP.Views.Dashboard
                 return;
 
             var nuevoValor = e.Value;
+            SwitchDisponible.IsEnabled = false;
+            LblDisponibleSubtitulo.Text = "Actualizando...";
+
             var success = await _apiService.ActualizarDisponibilidadAsync(cuidadorId, nuevoValor);
+            SwitchDisponible.IsEnabled = true;
 
             if (success)
             {

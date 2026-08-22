@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CUIDAPP.Views.Chat.ChatPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#F9FAFB">
+
+    <Grid RowDefinitions="Auto, *, Auto">
+
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" Padding="20,15,20,10" BackgroundColor="White">
+            <ContentView Grid.Column="0" VerticalOptions="Center">
+                <ContentView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </ContentView.GestureRecognizers>
+                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
+            </ContentView>
+            <Border Grid.Column="1" Stroke="Transparent" StrokeShape="RoundRectangle 18" BackgroundColor="#E5E7EB" WidthRequest="36" HeightRequest="36" Margin="14,0,10,0">
+                <Image x:Name="ImgOtro" Aspect="AspectFill" />
+            </Border>
+            <Label x:Name="LblOtroNombre" Grid.Column="2" Text="Chat" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827" VerticalOptions="Center"/>
+        </Grid>
+
+        <ScrollView x:Name="ScrollMensajes" Grid.Row="1">
+            <VerticalStackLayout x:Name="ListaMensajes" Padding="15,15,15,15" Spacing="8" />
+        </ScrollView>
+
+        <Grid x:Name="GridEnvio" Grid.Row="2" ColumnDefinitions="Auto, Auto, *, Auto" Padding="12,10,15,15" ColumnSpacing="8" BackgroundColor="White">
+            <Border.Shadow>
+                <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
+            </Border.Shadow>
+
+            <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="#F3F4F6" StrokeShape="RoundRectangle 20" WidthRequest="42" HeightRequest="42">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnAdjuntarImagenTapped"/>
+                </Border.GestureRecognizers>
+                <Path Data="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19ZM8.5 13.5L11 16.51L14.5 12L19 18H5L8.5 13.5Z" Fill="#5A31F4" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+            </Border>
+
+            <Border x:Name="BtnMicrofono" Grid.Column="1" Stroke="Transparent" BackgroundColor="#F3F4F6" StrokeShape="RoundRectangle 20" WidthRequest="42" HeightRequest="42">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnMicrofonoTapped"/>
+                </Border.GestureRecognizers>
+                <Path x:Name="IconoMicrofono" Data="M12 14C13.66 14 15 12.66 15 11V5C15 3.34 13.66 2 12 2C10.34 2 9 3.34 9 5V11C9 12.66 10.34 14 12 14ZM17.3 11C17.3 14 14.76 16.1 12 16.1C9.24 16.1 6.7 14 6.7 11H5C5 14.41 7.72 17.23 11 17.72V21H13V17.72C16.28 17.23 19 14.41 19 11H17.3Z" Fill="#5A31F4" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+            </Border>
+
+            <Border x:Name="ContenedorEntry" Grid.Column="2" Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 20" Padding="16,0">
+                <Entry x:Name="EntryMensaje" Placeholder="Escribe un mensaje..." FontFamily="OpenSansRegular" FontSize="14" HeightRequest="46" Completed="OnEnviarClicked"/>
+            </Border>
+
+            <Label x:Name="LblGrabando" Grid.Column="2" Text="🔴 Grabando... toca el micrófono para enviar" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#DC2626" VerticalOptions="Center" HorizontalOptions="Center" IsVisible="False"/>
+
+            <Border Grid.Column="3" Stroke="Transparent" BackgroundColor="#5A31F4" StrokeShape="RoundRectangle 23" WidthRequest="46" HeightRequest="46">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnEnviarClicked"/>
+                </Border.GestureRecognizers>
+                <Path Data="M2 21L23 12L2 3V10L17 12L2 14V21Z" Fill="White" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+            </Border>
+        </Grid>
+
+    </Grid>
+
+</ContentPage>
