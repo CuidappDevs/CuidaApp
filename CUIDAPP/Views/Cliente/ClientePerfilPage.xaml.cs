@@ -33,6 +33,33 @@ namespace CUIDAPP.Views.Cliente
 
             if (!string.IsNullOrWhiteSpace(perfil.FotoUrl))
                 ImgFoto.Source = $"{ApiService.ServerOrigin}{perfil.FotoUrl}";
+
+            await ProponerCalificacionPendienteAsync(clienteId);
+        }
+
+        private async Task ProponerCalificacionPendienteAsync(int clienteId)
+        {
+            var servicios = await _apiService.ObtenerTrabajosActivosPorClienteAsync(clienteId);
+            var pendiente = servicios.FirstOrDefault(t => t.Estado == 4);
+            if (pendiente == null)
+                return;
+
+            var calificar = await DisplayAlert(
+                "¡Servicio completado!",
+                $"{pendiente.CuidadorNombre} terminó tu servicio y necesita tu calificación.",
+                "Calificar ahora", "Después");
+
+            if (!calificar)
+                return;
+
+            var parametros = new Dictionary<string, object>
+            {
+                { "TrabajoId", pendiente.Id },
+                { "CalificadoId", pendiente.CuidadorId },
+                { "CalificadoNombre", pendiente.CuidadorNombre },
+                { "RutaSalida", "//ClienteDashboardPage" }
+            };
+            await Shell.Current.GoToAsync("CalificarPage", parametros);
         }
 
         private async void OnBackTapped(object sender, EventArgs e)

@@ -36,6 +36,7 @@ namespace CUIDAPP.Views.Trabajos
         {
             base.OnAppearing();
             estaVisible = true;
+            RealtimeService.TrabajoActualizado += OnTrabajoActualizadoTiempoReal;
             await CargarMapaRutaAsync();
             await ActualizarBotonCalificarAsync();
             await CargarActividadesAsync();
@@ -46,6 +47,34 @@ namespace CUIDAPP.Views.Trabajos
         {
             base.OnDisappearing();
             estaVisible = false;
+            RealtimeService.TrabajoActualizado -= OnTrabajoActualizadoTiempoReal;
+        }
+
+        private async void OnTrabajoActualizadoTiempoReal(int trabajoId, int estado)
+        {
+            if (trabajo == null || trabajo.Id != trabajoId)
+                return;
+
+            // Re-consultamos el trabajo completo (no solo el Estado del evento) para traer
+            // también RechazadoPorCliente/PagoDisputado actualizados.
+            var cuidadorId = Preferences.Default.Get("UserId", 0);
+            var trabajos = await _apiService.ObtenerTrabajosAsync(cuidadorId);
+            var actualizado = trabajos.FirstOrDefault(t => t.Id == trabajoId);
+            if (actualizado == null)
+                return;
+
+            var estadoAnterior = trabajo.Estado;
+            trabajo = actualizado;
+            RenderizarTrabajo();
+            await ActualizarBotonCalificarAsync();
+            await CargarActividadesAsync();
+            await CargarMapaRutaAsync();
+
+            if (estadoAnterior == 7 && trabajo.Estado == 3 && trabajo.RechazadoPorCliente)
+            {
+                await DisplayAlert("El cliente indicó que el trabajo no ha terminado",
+                    "Puedes volver a intentar finalizarlo con el PIN, o si estás seguro de que ya terminaste, puedes insistir (en ese caso el trabajo no generará pago).", "Entendido");
+            }
         }
 
         private void IniciarMonitorGeocercaSiHaceFalta()
@@ -124,7 +153,7 @@ namespace CUIDAPP.Views.Trabajos
                         Children =
                         {
                             new Label { Text = actividad.Descripcion, FontSize = 14, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#111827") },
-                            new Label { Text = actividad.FechaHora.ToLocalTime().ToString("h:mm tt"), FontSize = 11, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#9CA3AF") }
+                            new Label { Text = actividad.FechaHora.ToString("h:mm tt"), FontSize = 11, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#9CA3AF") }
                         }
                     }
                 });
@@ -164,14 +193,23 @@ namespace CUIDAPP.Views.Trabajos
         private async Task ActualizarBotonCalificarAsync()
         {
             if (trabajo == null || trabajo.Estado != 4)
+            {
+                BtnCalificarCliente.IsVisible = false;
+                CardYaCalifico.IsVisible = false;
                 return;
+            }
 
             var cuidadorId = Preferences.Default.Get("UserId", 0);
             if (cuidadorId == 0)
                 return;
 
-            var yaCalifico = await _apiService.ExisteCalificacionAsync(trabajo.Id, cuidadorId);
-            BtnCalificarCliente.IsVisible = !yaCalifico;
+            var calificacion = await _apiService.ObtenerCalificacionDeTrabajoAsync(trabajo.Id, cuidadorId);
+
+            BtnCalificarCliente.IsVisible = calificacion == null;
+            CardYaCalifico.IsVisible = calificacion != null;
+
+            if (calificacion != null)
+                LblEstrellasDadas.Text = new string('★', calificacion.Puntuacion) + new string('☆', 5 - calificacion.Puntuacion);
         }
 
         private async void OnCalificarClienteClicked(object sender, EventArgs e)
@@ -183,7 +221,8 @@ namespace CUIDAPP.Views.Trabajos
             {
                 { "TrabajoId", trabajo.Id },
                 { "CalificadoId", trabajo.ClienteId },
-                { "CalificadoNombre", trabajo.ClienteNombre }
+                { "CalificadoNombre", trabajo.ClienteNombre },
+                { "RutaSalida", "//CuidadorDashboardPage" }
             };
             await Shell.Current.GoToAsync("CalificarPage", parametros);
         }
@@ -211,6 +250,7 @@ namespace CUIDAPP.Views.Trabajos
                 4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), "Completado"),
                 5 => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "Cancelado"),
                 6 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#991B1B"), "Rechazado"),
+                7 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), "Esperando confirmación del cliente"),
                 _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "Desconocido")
             };
             BadgeEstado.BackgroundColor = colorFondo;
@@ -222,7 +262,31 @@ namespace CUIDAPP.Views.Trabajos
             BtnCompletar.IsVisible = trabajo.Estado == 3;
             BtnCancelar.IsVisible = trabajo.Estado == 2 || trabajo.Estado == 3;
             CardActividades.IsVisible = trabajo.Estado == 3;
-            BtnChat.IsVisible = trabajo.Estado is 2 or 3;
+            BtnChat.IsVisible = trabajo.Estado is 2 or 3 or 7;
+
+            CardRechazado.IsVisible = trabajo.Estado == 3 && trabajo.RechazadoPorCliente;
+            CardEsperandoConfirmacion.IsVisible = trabajo.Estado == 7;
+        }
+
+        private async void OnInsistirSinCobroClicked(object sender, EventArgs e)
+        {
+            if (trabajo == null)
+                return;
+
+            var confirmar = await DisplayAlert(
+                "¿Insistir sin cobro?",
+                "El trabajo se marcará como completado, pero no se generará el pago porque el cliente indicó que no había terminado. ¿Continuar?",
+                "Sí, insistir", "Cancelar");
+            if (!confirmar)
+                return;
+
+            var cuidadorId = Preferences.Default.Get("UserId", 0);
+            var (success, error) = await _apiService.ForzarFinalizacionAsync(trabajo.Id, cuidadorId);
+
+            if (success)
+                await Shell.Current.GoToAsync("..");
+            else
+                await DisplayAlert("Error", error ?? "No se pudo forzar la finalización.", "OK");
         }
 
         private async void OnChatClicked(object sender, EventArgs e)
@@ -274,13 +338,23 @@ namespace CUIDAPP.Views.Trabajos
             if (trabajo == null)
                 return;
 
-            if (trabajo.Fecha.Date != DateTime.Today)
+            if (trabajo.Fecha.Date != ServerClock.Today)
             {
-                var mensaje = trabajo.Fecha.Date > DateTime.Today
+                var mensaje = trabajo.Fecha.Date > ServerClock.Today
                     ? $"Este servicio está programado para el {trabajo.Fecha:d 'de' MMMM}. Todavía no puedes iniciarlo."
                     : $"Este servicio estaba programado para el {trabajo.Fecha:d 'de' MMMM} y ya pasó la fecha.";
                 await DisplayAlert("No es la fecha del servicio", mensaje, "OK");
                 return;
+            }
+
+            if (ServerClock.Now.TimeOfDay > trabajo.HoraFin)
+            {
+                var continuar = await DisplayAlert(
+                    "El horario programado ya pasó",
+                    $"Este servicio estaba programado de {FormatearHora(trabajo.HoraInicio)} a {FormatearHora(trabajo.HoraFin)} y ya es más tarde. ¿Aun así quieres iniciarlo ahora?",
+                    "Sí, iniciar", "Cancelar");
+                if (!continuar)
+                    return;
             }
 
             if (trabajo.Latitud != null && trabajo.Longitud != null)

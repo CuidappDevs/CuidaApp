@@ -55,6 +55,24 @@ namespace CUIDAPP.Services
             };
         }
 
+        public async Task<DateTime?> ObtenerHoraServidorAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("sistema/hora");
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                var resultado = await response.Content.ReadFromJsonAsync<Dictionary<string, DateTime>>();
+                return resultado != null && resultado.TryGetValue("horaServidor", out var hora) ? hora : null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo hora del servidor: {ex.Message}");
+                return null;
+            }
+        }
+
         public async Task<AuthResponse?> LoginAsync(LoginRequest request)
         {
             try
@@ -607,11 +625,11 @@ namespace CUIDAPP.Services
             }
         }
 
-        public async Task<(bool Success, string? Error)> FinalizarTrabajoAsync(int trabajoId, string pin)
+        public async Task<(bool Success, string? Error)> FinalizarTrabajoAsync(int trabajoId, string pin, string? justificacion = null)
         {
             try
             {
-                var response = await _httpClient.PutAsJsonAsync("trabajo/finalizar", new { TrabajoId = trabajoId, Pin = pin });
+                var response = await _httpClient.PutAsJsonAsync("trabajo/finalizar", new { TrabajoId = trabajoId, Pin = pin, Justificacion = justificacion });
                 if (response.IsSuccessStatusCode)
                     return (true, null);
 
@@ -630,6 +648,59 @@ namespace CUIDAPP.Services
             {
                 Console.WriteLine($"Error finalizando trabajo: {ex.Message}");
                 return (false, ex.Message);
+            }
+        }
+
+        public async Task<(bool Success, string? Error)> ConfirmarFinalizacionAsync(int trabajoId, int clienteId, bool confirmado)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync("trabajo/confirmar-finalizacion", new { TrabajoId = trabajoId, ClienteId = clienteId, Confirmado = confirmado });
+                if (response.IsSuccessStatusCode)
+                    return (true, null);
+
+                var errorDto = await response.Content.ReadFromJsonAsync<IniciarTrabajoErrorDto>();
+                return (false, errorDto?.Message ?? "No se pudo registrar tu respuesta.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error confirmando finalización: {ex.Message}");
+                return (false, ex.Message);
+            }
+        }
+
+        public async Task<(bool Success, string? Error)> ForzarFinalizacionAsync(int trabajoId, int cuidadorId)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync("trabajo/forzar-finalizacion", new { TrabajoId = trabajoId, CuidadorId = cuidadorId });
+                if (response.IsSuccessStatusCode)
+                    return (true, null);
+
+                var errorDto = await response.Content.ReadFromJsonAsync<IniciarTrabajoErrorDto>();
+                return (false, errorDto?.Message ?? "No se pudo forzar la finalización.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error forzando finalización: {ex.Message}");
+                return (false, ex.Message);
+            }
+        }
+
+        public async Task<Calificacion?> ObtenerCalificacionDeTrabajoAsync(int trabajoId, int calificadorId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"calificacion/trabajo/{trabajoId}?calificadorId={calificadorId}");
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                return await response.Content.ReadFromJsonAsync<Calificacion>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo calificación: {ex.Message}");
+                return null;
             }
         }
 

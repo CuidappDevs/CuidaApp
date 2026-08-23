@@ -270,7 +270,10 @@ namespace CUIDAPP.Views.Chat
         {
             return new Label
             {
-                Text = mensaje.FechaEnvio.ToLocalTime().ToString("h:mm tt"),
+                // FechaEnvio ya viene en hora local del servidor (SYSDATETIME, no UTC);
+                // llamar a ToLocalTime() aquí la interpretaría como UTC y la desplazaría
+                // de nuevo, duplicando el desfase horario. Se muestra tal cual llega.
+                Text = mensaje.FechaEnvio.ToString("h:mm tt"),
                 FontSize = 10,
                 FontFamily = "OpenSansRegular",
                 TextColor = esMio ? Color.FromArgb("#D6D0FB") : Color.FromArgb("#9CA3AF"),
@@ -306,7 +309,7 @@ namespace CUIDAPP.Views.Chat
                 }
 
                 var url = $"{ApiService.ServerOrigin}{mensaje.UrlArchivo}";
-                var rutaLocal = Path.Combine(FileSystem.CacheDirectory, $"audio_{Math.Abs(url.GetHashCode())}.m4a");
+                var rutaLocal = Path.Combine(FileSystem.CacheDirectory, $"audio_{Math.Abs(url.GetHashCode())}.wav");
 
                 if (!File.Exists(rutaLocal))
                 {
@@ -359,7 +362,7 @@ namespace CUIDAPP.Views.Chat
                 if (foto == null)
                     return;
 
-                var url = await _apiService.UploadFileAsync(foto.FullPath, "chat");
+                var url = await _apiService.UploadFileAsync(foto.FullPath, $"chat/{miUsuarioId}");
                 if (url == null)
                 {
                     await DisplayAlert("Error", "No se pudo subir la imagen. Intenta de nuevo.", "OK");
@@ -391,7 +394,7 @@ namespace CUIDAPP.Views.Chat
                 }
 
                 _grabador = _audioManager.CreateRecorder();
-                _rutaGrabacionActual = Path.Combine(FileSystem.CacheDirectory, $"nota_{Guid.NewGuid():N}.m4a");
+                _rutaGrabacionActual = Path.Combine(FileSystem.CacheDirectory, $"nota_{Guid.NewGuid():N}.wav");
                 await _grabador.StartAsync(_rutaGrabacionActual);
                 _cronometroGrabacion = System.Diagnostics.Stopwatch.StartNew();
 
@@ -423,7 +426,7 @@ namespace CUIDAPP.Views.Chat
                     return;
                 }
 
-                var url = await _apiService.UploadFileAsync(_rutaGrabacionActual, "chat");
+                var url = await _apiService.UploadFileAsync(_rutaGrabacionActual, $"chat/{miUsuarioId}");
                 if (url == null)
                 {
                     await DisplayAlert("Error", "No se pudo subir la nota de voz. Intenta de nuevo.", "OK");

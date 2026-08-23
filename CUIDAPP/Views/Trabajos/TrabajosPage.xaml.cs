@@ -86,7 +86,7 @@ namespace CUIDAPP.Views.Trabajos
             var filtrados = tabActual switch
             {
                 Tab.Nuevos => todosLosTrabajos.Where(t => t.Estado == 1),
-                Tab.Aceptados => todosLosTrabajos.Where(t => t.Estado == 2 || t.Estado == 3),
+                Tab.Aceptados => todosLosTrabajos.Where(t => t.Estado == 2 || t.Estado == 3 || t.Estado == 7),
                 Tab.Historial => todosLosTrabajos.Where(t => t.Estado == 4 || t.Estado == 5 || t.Estado == 6),
                 _ => Enumerable.Empty<Trabajo>()
             };
@@ -111,6 +111,7 @@ namespace CUIDAPP.Views.Trabajos
                 4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), "Completado"),
                 5 => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "Cancelado"),
                 6 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#991B1B"), "Rechazado"),
+                7 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), "Esperando confirmación"),
                 _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "Desconocido")
             };
 

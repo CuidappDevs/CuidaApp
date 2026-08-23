@@ -10,7 +10,9 @@ namespace CUIDAPP_API.Controllers
         private readonly IWebHostEnvironment _env;
         private static readonly string[] ExtensionesPermitidas = { ".jpg", ".jpeg", ".png", ".pdf", ".m4a", ".mp3", ".wav", ".aac" };
         private const long TamanoMaximoBytes = 10 * 1024 * 1024; // 10 MB
-        private static readonly Regex CarpetaValida = new(@"^[a-zA-Z0-9\-_]{1,80}$", RegexOptions.Compiled);
+        // Permite subcarpetas de un solo nivel (ej. "chat/42") para organizar por usuario,
+        // sin abrir la puerta a "..", rutas absolutas, ni traversal fuera de uploads/usuarios.
+        private static readonly Regex CarpetaValida = new(@"^[a-zA-Z0-9\-_]{1,40}(\/[a-zA-Z0-9\-_]{1,40})?$", RegexOptions.Compiled);
 
         public UploadController(IWebHostEnvironment env)
         {
