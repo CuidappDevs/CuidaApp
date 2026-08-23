@@ -58,5 +58,21 @@ namespace CUIDAPP_API.Controllers
                 return StatusCode(500, $"Error interno: {ex.Message}");
             }
         }
+
+        [HttpGet("trabajo/{trabajoId}")]
+        public async Task<IActionResult> ObtenerCalificacionDeTrabajo(int trabajoId, [FromQuery] int calificadorId)
+        {
+            try
+            {
+                var calificacion = await _calificacionService.ObtenerCalificacionDeTrabajoAsync(trabajoId, calificadorId);
+                if (calificacion == null)
+                    return NotFound();
+                return Ok(calificacion);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
     }
 }

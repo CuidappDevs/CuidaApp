@@ -53,6 +53,7 @@ namespace CUIDAPP
                 Preferences.Default.Set("EstadoAprobacion", result.EstadoAprobacion ?? 0);
 
                 _ = RealtimeService.ConectarAsync(result.UserId);
+                _ = ServerClock.SincronizarAsync();
 
                 switch (result.RolId)
                 {

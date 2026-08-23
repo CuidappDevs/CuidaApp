@@ -13,6 +13,8 @@ namespace CUIDAPP_API.Interfaces.Trabajo
         Task<TrabajoClienteDto?> ObtenerTrabajoPorIdAsync(int trabajoId);
         Task<(bool Success, string Motivo)> IniciarTrabajoAsync(IniciarTrabajoDto dto);
         Task<(bool Success, string Motivo)> FinalizarTrabajoAsync(FinalizarTrabajoDto dto);
+        Task<(bool Success, string Motivo)> ConfirmarFinalizacionAsync(int trabajoId, int clienteId, bool confirmado);
+        Task<(bool Success, string Motivo)> ForzarFinalizacionAsync(int trabajoId, int cuidadorId);
         Task<IEnumerable<MotivoCancelacionDto>> ObtenerMotivosCancelacionAsync();
         Task<bool> CancelarTrabajoCuidadorAsync(CancelarTrabajoDto dto);
         Task<IEnumerable<ActividadTrabajoDto>> ObtenerActividadesAsync(int trabajoId);

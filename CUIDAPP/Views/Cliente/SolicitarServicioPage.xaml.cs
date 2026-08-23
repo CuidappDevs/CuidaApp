@@ -23,8 +23,8 @@ namespace CUIDAPP.Views.Cliente
         public SolicitarServicioPage()
         {
             InitializeComponent();
-            PickerFecha.MinimumDate = DateTime.Today;
-            PickerFecha.Date = DateTime.Today;
+            PickerFecha.MinimumDate = ServerClock.Today;
+            PickerFecha.Date = ServerClock.Today;
             PickerHoraInicio.Time = new TimeSpan(9, 0, 0);
             PickerHoraFin.Time = new TimeSpan(11, 0, 0);
 
@@ -95,6 +95,13 @@ namespace CUIDAPP.Views.Cliente
             if (PickerHoraFin.Time <= PickerHoraInicio.Time)
             {
                 await DisplayAlert("Error", "La hora de fin debe ser posterior a la hora de inicio.", "OK");
+                return;
+            }
+
+            var fechaSeleccionada = (PickerFecha.Date ?? ServerClock.Today).Date;
+            if (fechaSeleccionada == ServerClock.Today && PickerHoraInicio.Time <= ServerClock.Now.TimeOfDay)
+            {
+                await DisplayAlert("Horario inválido", $"Ya son las {ServerClock.Now:h:mm tt}. Elige una hora de inicio más adelante hoy, o programa el servicio para otro día.", "OK");
                 return;
             }
 

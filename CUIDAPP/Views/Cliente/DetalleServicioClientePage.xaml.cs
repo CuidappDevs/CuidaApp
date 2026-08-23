@@ -9,6 +9,7 @@ namespace CUIDAPP.Views.Cliente
         private TrabajoCliente? trabajo;
         private bool relojIniciado;
         private int trabajoId;
+        private int estadoAnterior;
 
         public void ApplyQueryAttributes(IDictionary<string, object> query)
         {
@@ -76,7 +77,10 @@ namespace CUIDAPP.Views.Cliente
             {
                 if (trabajo?.Estado == 3 && trabajo.FechaInicioReal.HasValue)
                 {
-                    var transcurrido = DateTime.Now - trabajo.FechaInicioReal.Value;
+                    // FechaInicioReal viene de GETDATE() del servidor; comparar contra el
+                    // reloj del dispositivo puede desfasarse (visto en producción: mostraba
+                    // 7 horas al iniciar). Se usa ServerClock, sincronizado con el servidor.
+                    var transcurrido = ServerClock.Now - trabajo.FechaInicioReal.Value;
                     if (transcurrido < TimeSpan.Zero)
                         transcurrido = TimeSpan.Zero;
                     LblTiempoTranscurrido.Text = transcurrido.ToString(@"hh\:mm\:ss");
@@ -124,6 +128,7 @@ namespace CUIDAPP.Views.Cliente
                 4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), "Servicio completado"),
                 5 => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "Cancelado"),
                 6 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#991B1B"), "Rechazado por el cuidador"),
+                7 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), "Esperando tu confirmación"),
                 _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "Desconocido")
             };
             BadgeEstado.BackgroundColor = colorFondo;
@@ -133,6 +138,20 @@ namespace CUIDAPP.Views.Cliente
 
             BtnCancelar.IsVisible = t.Estado == 1;
             BtnCalificar.IsVisible = t.Estado == 4;
+
+            CardConfirmarFinalizacion.IsVisible = t.Estado == 7;
+            if (CardConfirmarFinalizacion.IsVisible)
+            {
+                LblJustificacionFinalizacion.IsVisible = !string.IsNullOrWhiteSpace(t.JustificacionFinalizacion);
+                LblJustificacionFinalizacion.Text = string.IsNullOrWhiteSpace(t.JustificacionFinalizacion)
+                    ? ""
+                    : $"Motivo: {t.JustificacionFinalizacion}";
+            }
+
+            if (estadoAnterior == 7 && t.Estado == 4)
+                _ = MostrarAnuncioTerminadoAsync();
+
+            estadoAnterior = t.Estado;
 
             CardPin.IsVisible = t.Estado == 2 && !string.IsNullOrWhiteSpace(t.PinInicio);
             if (CardPin.IsVisible)
@@ -146,7 +165,7 @@ namespace CUIDAPP.Views.Cliente
             if (CardActividadesCliente.IsVisible)
                 _ = CargarActividadesAsync();
 
-            BtnChat.IsVisible = t.Estado is 2 or 3;
+            BtnChat.IsVisible = t.Estado is 2 or 3 or 7;
 
             RenderizarPasos(t.Estado);
         }
@@ -265,6 +284,57 @@ namespace CUIDAPP.Views.Cliente
                 { "CalificadoNombre", trabajo.CuidadorNombre }
             };
             await Shell.Current.GoToAsync("CalificarPage", parametros);
+        }
+
+        private async Task MostrarAnuncioTerminadoAsync()
+        {
+            OverlayTerminado.IsVisible = true;
+            await OverlayTerminado.FadeTo(1, 250);
+            await Task.Delay(2200);
+            await OverlayTerminado.FadeTo(0, 250);
+            OverlayTerminado.IsVisible = false;
+        }
+
+        private async void OnConfirmarFinalizacionClicked(object sender, EventArgs e)
+        {
+            if (trabajo == null)
+                return;
+
+            var clienteId = Preferences.Default.Get("UserId", 0);
+
+            BtnConfirmarFinalizacion.IsEnabled = false;
+            BtnConfirmarFinalizacion.Text = "Confirmando...";
+
+            var (success, error) = await _apiService.ConfirmarFinalizacionAsync(trabajo.Id, clienteId, true);
+
+            if (success)
+            {
+                await CargarTrabajo();
+            }
+            else
+            {
+                await DisplayAlert("Error", error ?? "No se pudo confirmar. Intenta de nuevo.", "OK");
+                BtnConfirmarFinalizacion.IsEnabled = true;
+                BtnConfirmarFinalizacion.Text = "Sí, terminó";
+            }
+        }
+
+        private async void OnRechazarFinalizacionClicked(object sender, EventArgs e)
+        {
+            if (trabajo == null)
+                return;
+
+            var confirmar = await DisplayAlert("¿El trabajo no ha terminado?", "Le avisaremos a tu cuidador que aún falta trabajo por hacer.", "Sí, avisar", "Cancelar");
+            if (!confirmar)
+                return;
+
+            var clienteId = Preferences.Default.Get("UserId", 0);
+            var (success, error) = await _apiService.ConfirmarFinalizacionAsync(trabajo.Id, clienteId, false);
+
+            if (success)
+                await CargarTrabajo();
+            else
+                await DisplayAlert("Error", error ?? "No se pudo registrar tu respuesta. Intenta de nuevo.", "OK");
         }
 
         private async void OnCancelarClicked(object sender, EventArgs e)

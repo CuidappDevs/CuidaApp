@@ -14,6 +14,7 @@ namespace CUIDAPP.Views.Trabajos
             {
                 trabajo = t;
                 LblCliente.Text = $"Servicio para {t.ClienteNombre}";
+                CardJustificacion.IsVisible = ServerClock.Now.TimeOfDay < t.HoraFin;
             }
         }
 
@@ -78,16 +79,24 @@ namespace CUIDAPP.Views.Trabajos
                 return;
             }
 
+            if (CardJustificacion.IsVisible && string.IsNullOrWhiteSpace(EditorJustificacion.Text))
+            {
+                await DisplayAlert("Falta la justificación", "Explícale al cliente por qué terminas antes de lo acordado.", "OK");
+                return;
+            }
+
             BtnConfirmar.IsEnabled = false;
             BtnConfirmar.Text = "Verificando...";
             LblError.IsVisible = false;
 
             try
             {
-                var (success, error) = await _apiService.FinalizarTrabajoAsync(trabajo.Id, pin);
+                var justificacion = CardJustificacion.IsVisible ? EditorJustificacion.Text?.Trim() : null;
+                var (success, error) = await _apiService.FinalizarTrabajoAsync(trabajo.Id, pin, justificacion);
 
                 if (success)
                 {
+                    await DisplayAlert("Enviado", "Le avisamos al cliente para que confirme que el trabajo terminó.", "OK");
                     await Shell.Current.GoToAsync("../..");
                     return;
                 }

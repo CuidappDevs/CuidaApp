@@ -205,6 +205,7 @@ namespace CUIDAPP.Views.Cliente
                     2 => "Aceptado, en espera de la fecha programada",
                     3 => "En progreso",
                     4 => "Completado, ¡califica a tu cuidador!",
+                    7 => "Tu cuidador dice que terminó, confírmalo",
                     _ => "En curso"
                 };
                 LblBannerServicioActivo.Text = $"{t.TipoServicio} · {estadoTexto}";

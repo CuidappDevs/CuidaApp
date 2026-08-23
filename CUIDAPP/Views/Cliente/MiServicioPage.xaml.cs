@@ -73,6 +73,7 @@ namespace CUIDAPP.Views.Cliente
                 2 => (Color.FromArgb("#DBEAFE"), Color.FromArgb("#1E40AF"), "Aceptado"),
                 3 => (Color.FromArgb("#EDE9FE"), Color.FromArgb("#5B21B6"), "En progreso"),
                 4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), "Completado, ¡califica!"),
+                7 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), "Requiere tu confirmación"),
                 _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "En curso")
             };
 

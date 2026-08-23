@@ -150,6 +150,52 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [HttpPut("confirmar-finalizacion")]
+        public async Task<IActionResult> ConfirmarFinalizacion([FromBody] ConfirmarFinalizacionDto dto)
+        {
+            try
+            {
+                var (success, motivo) = await _trabajoService.ConfirmarFinalizacionAsync(dto.TrabajoId, dto.ClienteId, dto.Confirmado);
+                if (success)
+                    return Ok(new { Message = "Confirmación registrada" });
+
+                var mensaje = motivo switch
+                {
+                    "TRABAJO_NO_ENCONTRADO" => "El trabajo no existe o no te pertenece.",
+                    "ESTADO_INVALIDO" => "Este trabajo no está esperando confirmación.",
+                    _ => "No se pudo registrar la confirmación."
+                };
+                return BadRequest(new { Motivo = motivo, Message = mensaje });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
+        [HttpPut("forzar-finalizacion")]
+        public async Task<IActionResult> ForzarFinalizacion([FromBody] ForzarFinalizacionDto dto)
+        {
+            try
+            {
+                var (success, motivo) = await _trabajoService.ForzarFinalizacionAsync(dto.TrabajoId, dto.CuidadorId);
+                if (success)
+                    return Ok(new { Message = "Trabajo marcado como completado sin pago" });
+
+                var mensaje = motivo switch
+                {
+                    "TRABAJO_NO_ENCONTRADO" => "El trabajo no existe o no te pertenece.",
+                    "ESTADO_INVALIDO" => "Este trabajo no fue rechazado previamente por el cliente.",
+                    _ => "No se pudo forzar la finalización."
+                };
+                return BadRequest(new { Motivo = motivo, Message = mensaje });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
         [HttpGet("{trabajoId}/actividades")]
         public async Task<IActionResult> ObtenerActividades(int trabajoId)
         {

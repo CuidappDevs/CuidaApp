@@ -139,6 +139,31 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <!-- Esperando confirmación del cliente (Estado 7) -->
+                <Border x:Name="CardEsperandoConfirmacion" Stroke="#FDE68A" StrokeThickness="1" BackgroundColor="#FFFBEB" StrokeShape="RoundRectangle 16" Padding="18" IsVisible="False">
+                    <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                        <Label Text="⏳ Esperando que el cliente confirme la finalización" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#92400E" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                        <Label Text="El pago se generará cuando el cliente confirme que el trabajo terminó." FontSize="12" FontFamily="OpenSansRegular" TextColor="#B45309" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- El cliente rechazó la finalización -->
+                <Border x:Name="CardRechazado" Stroke="#FECACA" StrokeThickness="1" BackgroundColor="#FEF2F2" StrokeShape="RoundRectangle 16" Padding="18" IsVisible="False">
+                    <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                        <Label Text="⚠️ El cliente indicó que el trabajo no ha terminado" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#991B1B" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                        <Label Text="Puedes seguir trabajando y volver a marcar como completado, o insistir sin cobro." FontSize="12" FontFamily="OpenSansRegular" TextColor="#B91C1C" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                        <Button Text="Insistir en que terminé (sin cobro)" Clicked="OnInsistirSinCobroClicked" BackgroundColor="Transparent" TextColor="#991B1B" BorderColor="#991B1B" BorderWidth="1" FontFamily="OpenSansSemibold" FontSize="13" CornerRadius="10" HeightRequest="42" Margin="0,8,0,0"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Ya calificaste a este cliente -->
+                <Border x:Name="CardYaCalifico" Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="18" IsVisible="False">
+                    <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                        <Label Text="Ya calificaste a este cliente" FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
+                        <Label x:Name="LblEstrellasDadas" Text="" FontSize="22" TextColor="#F59E0B" HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+                </Border>
+
             </VerticalStackLayout>
         </ScrollView>
 

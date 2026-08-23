@@ -136,7 +136,9 @@ namespace CUIDAPP_API.Services.Trabajo
                 FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
                 PinInicio = reader["PinInicio"] as string,
                 PinFin = reader["PinFin"] as string,
-                FechaInicioReal = reader["FechaInicioReal"] as DateTime?
+                FechaInicioReal = reader["FechaInicioReal"] as DateTime?,
+                JustificacionFinalizacion = reader["JustificacionFinalizacion"] as string,
+                RechazadoPorCliente = Convert.ToBoolean(reader["RechazadoPorCliente"])
             };
         }
 
@@ -224,6 +226,42 @@ namespace CUIDAPP_API.Services.Trabajo
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.AddWithValue("@TrabajoId", dto.TrabajoId);
             command.Parameters.AddWithValue("@Pin", dto.Pin);
+            command.Parameters.AddWithValue("@Justificacion", (object?)dto.Justificacion ?? DBNull.Value);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                var filasAfectadas = Convert.ToInt32(reader["FilasAfectadas"]);
+                var motivo = reader["Motivo"].ToString() ?? "ERROR_DESCONOCIDO";
+                var success = filasAfectadas > 0;
+
+                if (success)
+                {
+                    // Pasa a Estado 7 (esperando confirmación del cliente): el pago y el
+                    // Estado 4 (Completado) solo se generan cuando el cliente confirma.
+                    reader.Close();
+                    var participantes = await ObtenerParticipantesAsync(dto.TrabajoId);
+                    if (participantes.HasValue)
+                    {
+                        await _notifier.NotificarAsync(participantes.Value.ClienteId, "TrabajoActualizado", new { dto.TrabajoId, Estado = 7 });
+                        await _notifier.NotificarAsync(participantes.Value.CuidadorId, "TrabajoActualizado", new { dto.TrabajoId, Estado = 7 });
+                    }
+                }
+
+                return (success, motivo);
+            }
+            return (false, "ERROR_DESCONOCIDO");
+        }
+
+        public async Task<(bool Success, string Motivo)> ConfirmarFinalizacionAsync(int trabajoId, int clienteId, bool confirmado)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_ConfirmarFinalizacionTrabajo", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@TrabajoId", trabajoId);
+            command.Parameters.AddWithValue("@ClienteId", clienteId);
+            command.Parameters.AddWithValue("@Confirmado", confirmado);
 
             await connection.OpenAsync();
             using var reader = await command.ExecuteReaderAsync();
@@ -236,12 +274,42 @@ namespace CUIDAPP_API.Services.Trabajo
                 if (success)
                 {
                     reader.Close();
-                    var participantes = await ObtenerParticipantesAsync(dto.TrabajoId);
+                    var participantes = await ObtenerParticipantesAsync(trabajoId);
                     if (participantes.HasValue)
                     {
-                        await _notifier.NotificarAsync(participantes.Value.ClienteId, "TrabajoActualizado", new { dto.TrabajoId, Estado = 4 });
-                        await _notifier.NotificarAsync(participantes.Value.CuidadorId, "TrabajoActualizado", new { dto.TrabajoId, Estado = 4 });
+                        var nuevoEstado = confirmado ? 4 : 3;
+                        await _notifier.NotificarAsync(participantes.Value.ClienteId, "TrabajoActualizado", new { TrabajoId = trabajoId, Estado = nuevoEstado });
+                        await _notifier.NotificarAsync(participantes.Value.CuidadorId, "TrabajoActualizado", new { TrabajoId = trabajoId, Estado = nuevoEstado });
                     }
+                }
+
+                return (success, motivo);
+            }
+            return (false, "ERROR_DESCONOCIDO");
+        }
+
+        public async Task<(bool Success, string Motivo)> ForzarFinalizacionAsync(int trabajoId, int cuidadorId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_ForzarFinalizacionSinPago", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@TrabajoId", trabajoId);
+            command.Parameters.AddWithValue("@CuidadorId", cuidadorId);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                var filasAfectadas = Convert.ToInt32(reader["FilasAfectadas"]);
+                var motivo = reader["Motivo"].ToString() ?? "ERROR_DESCONOCIDO";
+                var success = filasAfectadas > 0;
+
+                if (success)
+                {
+                    reader.Close();
+                    var participantes = await ObtenerParticipantesAsync(trabajoId);
+                    if (participantes.HasValue)
+                        await _notifier.NotificarAsync(participantes.Value.ClienteId, "TrabajoActualizado", new { TrabajoId = trabajoId, Estado = 4 });
                 }
 
                 return (success, motivo);
@@ -350,7 +418,7 @@ namespace CUIDAPP_API.Services.Trabajo
             var success = Convert.ToInt32(filasAfectadas) > 0;
 
             if (success && participantes.HasValue)
-                await _notifier.NotificarAsync(participantes.Value.ClienteId, "TrabajoActualizado", new { dto.TrabajoId, Estado = 4 });
+                await _notifier.NotificarAsync(participantes.Value.ClienteId, "TrabajoActualizado", new { dto.TrabajoId, Estado = 5 });
 
             return success;
         }
@@ -373,7 +441,9 @@ namespace CUIDAPP_API.Services.Trabajo
                 Notas = reader["Notas"] as string,
                 FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
                 Latitud = reader["Latitud"] as decimal?,
-                Longitud = reader["Longitud"] as decimal?
+                Longitud = reader["Longitud"] as decimal?,
+                RechazadoPorCliente = Convert.ToBoolean(reader["RechazadoPorCliente"]),
+                PagoDisputado = Convert.ToBoolean(reader["PagoDisputado"])
             };
         }
     }

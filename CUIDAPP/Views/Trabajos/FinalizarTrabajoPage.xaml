@@ -50,6 +50,14 @@
                     <Label x:Name="LblError" Text="" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#EF4444" HorizontalOptions="Center" IsVisible="False"/>
                 </VerticalStackLayout>
 
+                <!-- Solo visible si se está terminando antes de la hora acordada -->
+                <VerticalStackLayout x:Name="CardJustificacion" Spacing="8" IsVisible="False">
+                    <Label Text="Estás terminando antes de lo acordado. Explícale al cliente por qué:" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#92400E"/>
+                    <Border Stroke="#FDE68A" StrokeThickness="1" BackgroundColor="#FFFBEB" StrokeShape="RoundRectangle 12" Padding="12,8">
+                        <Editor x:Name="EditorJustificacion" Placeholder="Ej. El cliente me pidió terminar antes, ya no había más tareas pendientes..." FontFamily="OpenSansRegular" FontSize="14" HeightRequest="80" AutoSize="TextChanges"/>
+                    </Border>
+                </VerticalStackLayout>
+
             </VerticalStackLayout>
         </ScrollView>
 
