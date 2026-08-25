@@ -1,0 +1,56 @@
+@page "/clientes"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@using CUIDAPP_ADMINISTRATIVO.Services
+
+<PageTitle>Clientes · Cuidapp Admin</PageTitle>
+
+<div class="d-flex flex-column gap-3">
+
+    @* Filtros *@
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex flex-wrap" style="gap:8px;">
+            <button type="button" class="adm-filter active">Todos</button>
+            <button type="button" class="adm-filter">Activos</button>
+            <button type="button" class="adm-filter">Suspendidos</button>
+        </div>
+        <span class="adm-card-sub">1,206 clientes registrados</span>
+    </div>
+
+    @* Tabla *@
+    <div class="adm-card overflow-hidden">
+        <div class="adm-thead">
+            <span class="adm-th">Nombre</span>
+            <span class="adm-th">Cédula</span>
+            <span class="adm-th">Teléfono</span>
+            <span class="adm-th">Estado de cuenta</span>
+            <span></span>
+        </div>
+
+        @for (var i = 0; i < AdminMockData.Clients.Count; i++)
+        {
+            var c = AdminMockData.Clients[i];
+            var pill = AdminMockData.Pill(c.Key);
+            var idx = i;
+            <div class="adm-trow">
+                <div class="d-flex flex-column" style="gap:2px; min-width:0;">
+                    <span class="adm-cell-strong">@c.Name</span>
+                    <span style="font-size:12.5px; color:var(--adm-muted);">@c.Mail</span>
+                </div>
+                <span class="adm-cell">@c.Cedula</span>
+                <span class="adm-cell">@c.Tel</span>
+                <span class="adm-pill" style="justify-self:start; background:@pill.Bg; color:@pill.Fg;">
+                    <span class="adm-pill-dot" style="background:@pill.Fg;"></span>@c.Status
+                </span>
+                <a href="@($"clientes/{idx}")" class="adm-btn adm-btn-ghost-line" style="justify-self:end;">Ver ficha</a>
+            </div>
+        }
+
+        <div class="adm-pager">
+            <span class="adm-card-sub">Mostrando 7 de 1,206</span>
+            <div class="d-flex" style="gap:8px;">
+                <button type="button" class="adm-pager-btn" style="color:var(--adm-muted-2);">Anterior</button>
+                <button type="button" class="adm-pager-btn" style="color:var(--adm-ink);">Siguiente</button>
+            </div>
+        </div>
+    </div>
+</div>

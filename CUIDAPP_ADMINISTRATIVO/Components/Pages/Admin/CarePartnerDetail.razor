@@ -1,0 +1,151 @@
+@page "/care-partners/{Id:int}"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@using CUIDAPP_ADMINISTRATIVO.Services
+
+<PageTitle>Ficha de Care Partner · Cuidapp Admin</PageTitle>
+
+@if (_partner is null)
+{
+    <div class="adm-card adm-card-pad">
+        <p class="mb-2">No se encontró la Care Partner solicitada.</p>
+        <a href="care-partners" class="adm-btn adm-btn-outline">Volver a Care Partners</a>
+    </div>
+}
+else
+{
+    var p = _partner;
+    <div class="d-flex flex-column gap-4">
+        <a href="care-partners" class="adm-back">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m15 18-6-6 6-6"></path>
+            </svg>
+            Volver a Care Partners
+        </a>
+
+        <div class="d-grid gap-4 adm-two-col" style="grid-template-columns: 1.4fr 1fr; align-items: start;">
+
+            @* ----- Columna izquierda ----- *@
+            <div class="d-flex flex-column gap-4">
+
+                @* Perfil *@
+                <div class="adm-card d-flex" style="padding:28px; gap:22px;">
+                    <div class="adm-photo-ph">
+                        <span style="font-size:18px; font-weight:600; color:var(--adm-muted-2);">@AdminMockData.Initials(p.Name)</span>
+                        <span style="font-size:10px; color:var(--adm-muted-2);">Foto</span>
+                    </div>
+                    <div class="d-flex flex-column" style="flex:1; gap:16px;">
+                        <div class="d-flex align-items-start justify-content-between gap-3">
+                            <div class="d-flex flex-column" style="gap:5px;">
+                                <span style="font-size:24px; font-weight:600; letter-spacing:-0.01em;">@p.Name</span>
+                                <span style="font-size:14px; color:var(--adm-muted);">@p.Category &middot; Solicitud recibida el @p.Date</span>
+                            </div>
+                            <span class="adm-pill flex-shrink-0" style="padding:6px 13px; background:#FEF3C7; color:#B45309;">
+                                <span class="adm-pill-dot" style="background:#B45309;"></span>Pendiente de revisión
+                            </span>
+                        </div>
+                        <div class="d-grid" style="grid-template-columns:repeat(3,1fr); gap:18px 24px; padding-top:4px; border-top:1px solid var(--adm-line-soft);">
+                            @foreach (var f in AdminMockData.PartnerFields(p))
+                            {
+                                <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
+                                    <span class="adm-field-k">@f.Key</span>
+                                    <span class="adm-field-v">@f.Value</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                @* Documentos *@
+                <div class="adm-card" style="padding:28px;">
+                    <div class="d-flex flex-column mb-4" style="gap:4px;">
+                        <span class="adm-card-title">Documentos aportados</span>
+                        <span class="adm-card-sub">Verifica que sean legibles, vigentes y correspondan a la misma persona.</span>
+                    </div>
+                    <div class="d-grid" style="grid-template-columns:1fr 1fr; gap:20px;">
+                        @foreach (var doc in AdminMockData.PartnerDocs(p))
+                        {
+                            <div class="d-flex flex-column" style="gap:12px;">
+                                <div class="adm-doc-preview">
+                                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 3v5h5"></path>
+                                        <path d="M6 2h8l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"></path>
+                                    </svg>
+                                    <span style="font-size:13px; font-weight:600; color:var(--adm-muted);">@doc.File</span>
+                                    <span style="font-size:12px; color:var(--adm-muted-2);">Vista previa del documento</span>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex flex-column" style="gap:2px;">
+                                        <span style="font-size:14px; font-weight:600;">@doc.Title</span>
+                                        <span style="font-size:12.5px; color:var(--adm-muted);">@doc.Meta</span>
+                                    </div>
+                                    <button type="button" class="adm-btn adm-btn-ghost-line">Ampliar</button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            @* ----- Columna derecha ----- *@
+            <div class="d-flex flex-column gap-4">
+
+                @* Decisión *@
+                <div class="adm-card d-flex flex-column" style="padding:26px; gap:20px;">
+                    <div class="d-flex flex-column" style="gap:4px;">
+                        <span class="adm-card-title">Decisión de acceso</span>
+                        <span class="adm-card-sub" style="line-height:1.55;">Queda registrada con tu nombre y la fecha.</span>
+                    </div>
+                    <div class="d-flex flex-column" style="gap:12px;">
+                        @foreach (var ch in AdminMockData.PartnerChecks)
+                        {
+                            <label class="adm-check">
+                                <span class="adm-check-box @(ch.On ? "on" : "")">
+                                    @if (ch.On)
+                                    {
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M20 6 9 17l-5-5"></path>
+                                        </svg>
+                                    }
+                                </span>
+                                @ch.Label
+                            </label>
+                        }
+                    </div>
+                    <textarea class="adm-textarea" placeholder="Nota interna (opcional)"></textarea>
+                    <div class="d-flex flex-column" style="gap:10px;">
+                        <button type="button" class="adm-btn adm-btn-lg adm-btn-approve">Aprobar acceso</button>
+                        <button type="button" class="adm-btn adm-btn-lg adm-btn-danger">Rechazar solicitud</button>
+                    </div>
+                </div>
+
+                @* Historial *@
+                <div class="adm-card d-flex flex-column" style="padding:26px; gap:18px;">
+                    <span class="adm-card-title">Historial de la solicitud</span>
+                    <div class="d-flex flex-column" style="gap:16px;">
+                        @foreach (var h in AdminMockData.PartnerHistory(p))
+                        {
+                            <div class="d-flex" style="gap:12px;">
+                                <span class="adm-timeline-dot" style="background:@h.Dot;"></span>
+                                <div class="d-flex flex-column" style="gap:2px;">
+                                    <span class="adm-timeline-text">@h.Text</span>
+                                    <span class="adm-timeline-when">@h.When</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Partner? _partner;
+
+    protected override void OnParametersSet()
+    {
+        _partner = Id >= 0 && Id < AdminMockData.Partners.Count ? AdminMockData.Partners[Id] : null;
+    }
+}
