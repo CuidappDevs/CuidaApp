@@ -144,7 +144,7 @@ namespace CUIDAPP.Views.Chat
             var burbuja = new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = esMio ? Color.FromArgb("#5A31F4") : Colors.White,
+                BackgroundColor = esMio ? Color.FromArgb("#2563EB") : Colors.White,
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 },
                 Padding = mensaje.Tipo == "imagen" ? new Thickness(6) : new Thickness(14, 10),
                 MaximumWidthRequest = 260,
@@ -198,13 +198,13 @@ namespace CUIDAPP.Views.Chat
 
         private View CrearContenidoAudio(Mensaje mensaje, bool esMio)
         {
-            var colorAcento = esMio ? Colors.White : Color.FromArgb("#5A31F4");
+            var colorAcento = esMio ? Colors.White : Color.FromArgb("#2563EB");
 
             var iconoPlay = new Label
             {
                 Text = "▶",
                 FontSize = 13,
-                TextColor = esMio ? Color.FromArgb("#5A31F4") : Colors.White,
+                TextColor = esMio ? Color.FromArgb("#2563EB") : Colors.White,
                 HorizontalOptions = LayoutOptions.Center,
                 VerticalOptions = LayoutOptions.Center,
                 HorizontalTextAlignment = TextAlignment.Center,
@@ -215,7 +215,7 @@ namespace CUIDAPP.Views.Chat
             var botonPlay = new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = esMio ? Colors.White : Color.FromArgb("#5A31F4"),
+                BackgroundColor = esMio ? Colors.White : Color.FromArgb("#2563EB"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 18 },
                 WidthRequest = 36,
                 HeightRequest = 36,
@@ -255,7 +255,7 @@ namespace CUIDAPP.Views.Chat
                 {
                     botonPlay,
                     espectro,
-                    new Label { Text = duracionTexto, FontSize = 12, FontFamily = "OpenSansRegular", TextColor = esMio ? Color.FromArgb("#D6D0FB") : Color.FromArgb("#6B7280"), VerticalOptions = LayoutOptions.Center }
+                    new Label { Text = duracionTexto, FontSize = 12, FontFamily = "OpenSansRegular", TextColor = esMio ? Color.FromArgb("#C7D2FE") : Color.FromArgb("#6B7280"), VerticalOptions = LayoutOptions.Center }
                 }
             };
 
@@ -276,7 +276,7 @@ namespace CUIDAPP.Views.Chat
                 Text = mensaje.FechaEnvio.ToString("h:mm tt"),
                 FontSize = 10,
                 FontFamily = "OpenSansRegular",
-                TextColor = esMio ? Color.FromArgb("#D6D0FB") : Color.FromArgb("#9CA3AF"),
+                TextColor = esMio ? Color.FromArgb("#C7D2FE") : Color.FromArgb("#9CA3AF"),
                 HorizontalOptions = LayoutOptions.End,
                 Margin = margenExtra ? new Thickness(0, 0, 6, 4) : new Thickness(0)
             };
@@ -408,7 +408,7 @@ namespace CUIDAPP.Views.Chat
                 grabando = false;
                 ContenedorEntry.IsVisible = true;
                 LblGrabando.IsVisible = false;
-                IconoMicrofono.Fill = Color.FromArgb("#5A31F4");
+                IconoMicrofono.Fill = Color.FromArgb("#2563EB");
 
                 if (_grabador == null || _rutaGrabacionActual == null)
                     return;

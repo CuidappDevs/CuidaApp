@@ -243,7 +243,7 @@ namespace CUIDAPP.Views.Cliente
     <script>
         var map = L.map('map', {{ zoomControl: false, attributionControl: false }}).setView([{lat}, {lng}], 14);
         L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager/{{z}}/{{x}}/{{y}}{{r}}.png', {{ maxZoom: 20, subdomains: 'abcd' }}).addTo(map);
-        var marker = L.circleMarker([{lat}, {lng}], {{ radius: 8, color: '#FFFFFF', weight: 3, fillColor: '#5A31F4', fillOpacity: 1 }}).addTo(map);
+        var marker = L.circleMarker([{lat}, {lng}], {{ radius: 8, color: '#FFFFFF', weight: 3, fillColor: '#2563EB', fillOpacity: 1 }}).addTo(map);
         var capaCuidadores = L.layerGroup().addTo(map);
 
         // Se llama desde C# cuando llega una ubicación GPS más precisa, sin recargar la página.
@@ -354,7 +354,7 @@ namespace CUIDAPP.Views.Cliente
             {
                 Stroke = esSeleccionado ? Colors.Transparent : Color.FromArgb("#E5E7EB"),
                 StrokeThickness = 1,
-                BackgroundColor = esSeleccionado ? Color.FromArgb("#5A31F4") : Colors.White,
+                BackgroundColor = esSeleccionado ? Color.FromArgb("#2563EB") : Colors.White,
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 20 },
                 Padding = new Thickness(16, 8),
                 Content = new Label
@@ -438,7 +438,7 @@ namespace CUIDAPP.Views.Cliente
                 Text = $"Desde\nRD${servicio.TarifaDesde:N0}",
                 FontSize = 12,
                 FontFamily = "OpenSansSemibold",
-                TextColor = Color.FromArgb("#5A31F4"),
+                TextColor = Color.FromArgb("#2563EB"),
                 HorizontalTextAlignment = TextAlignment.End,
                 VerticalOptions = LayoutOptions.Center
             };
@@ -472,7 +472,7 @@ namespace CUIDAPP.Views.Cliente
                 "Limpieza del hogar" => ("🧹", Color.FromArgb("#DBEAFE"), Color.FromArgb("#3B82F6")),
                 "Niñera / Cuidadora" => ("👶", Color.FromArgb("#FCE7F3"), Color.FromArgb("#DB2777")),
                 "Cuidadora de adultos" => ("🧑‍⚕️", Color.FromArgb("#D1FAE5"), Color.FromArgb("#10B981")),
-                _ => ("🏠", Color.FromArgb("#F3E8FF"), Color.FromArgb("#A855F7"))
+                _ => ("🏠", Color.FromArgb("#EFF6FF"), Color.FromArgb("#3B82F6"))
             };
         }
 

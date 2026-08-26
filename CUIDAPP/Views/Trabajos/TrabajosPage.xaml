@@ -28,8 +28,8 @@
                 <VerticalStackLayout.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnTabNuevosTapped" />
                 </VerticalStackLayout.GestureRecognizers>
-                <Label x:Name="LblTabNuevos" Text="Nuevos" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#4024A2" HorizontalOptions="Center"/>
-                <BoxView x:Name="IndicadorTabNuevos" HeightRequest="2" Color="#4024A2" HorizontalOptions="Fill"/>
+                <Label x:Name="LblTabNuevos" Text="Nuevos" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#1D4ED8" HorizontalOptions="Center"/>
+                <BoxView x:Name="IndicadorTabNuevos" HeightRequest="2" Color="#1D4ED8" HorizontalOptions="Fill"/>
             </VerticalStackLayout>
             <VerticalStackLayout Grid.Column="1" Spacing="8">
                 <VerticalStackLayout.GestureRecognizers>
@@ -52,7 +52,7 @@
             <VerticalStackLayout Padding="20,15,20,30" Spacing="15">
                 <VerticalStackLayout x:Name="ListaTrabajos" Spacing="15" />
                 <Label x:Name="LblSinTrabajosTab" Text="No hay trabajos en esta categoría." FontSize="14" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center" IsVisible="False" Margin="0,30,0,0" />
-                <ActivityIndicator x:Name="LoadingIndicator" IsRunning="False" Color="#5A31F4" />
+                <ActivityIndicator x:Name="LoadingIndicator" IsRunning="False" Color="#2563EB" />
             </VerticalStackLayout>
         </ScrollView>
 
@@ -73,8 +73,8 @@
 
                 <!-- Trabajos (Activo) -->
                 <VerticalStackLayout Grid.Column="1" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center">
-                    <Path Data="M20 6H16V4C16 2.9 15.1 2 14 2H10C8.9 2 8 2.9 8 4V6H4C2.9 6 2.01 6.9 2.01 8L2 19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6ZM10 4H14V6H10V4ZM20 19H4V8H20V19Z" Fill="#5A31F4" Aspect="Uniform" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
-                    <Label Text="Trabajos" FontSize="10" FontFamily="OpenSansSemibold" TextColor="#5A31F4" HorizontalOptions="Center"/>
+                    <Path Data="M20 6H16V4C16 2.9 15.1 2 14 2H10C8.9 2 8 2.9 8 4V6H4C2.9 6 2.01 6.9 2.01 8L2 19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6ZM10 4H14V6H10V4ZM20 19H4V8H20V19Z" Fill="#2563EB" Aspect="Uniform" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
+                    <Label Text="Trabajos" FontSize="10" FontFamily="OpenSansSemibold" TextColor="#2563EB" HorizontalOptions="Center"/>
                 </VerticalStackLayout>
 
                 <!-- Dinero (Inactivo) -->

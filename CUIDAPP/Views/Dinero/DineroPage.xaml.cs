@@ -60,7 +60,7 @@ namespace CUIDAPP.Views.Dinero
             var icono = new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = Color.FromArgb("#F3E8FF"),
+                BackgroundColor = Color.FromArgb("#EFF6FF"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 12 },
                 WidthRequest = 45,
                 HeightRequest = 45,
@@ -71,7 +71,7 @@ namespace CUIDAPP.Views.Dinero
                     Text = esPagado ? "$" : "…",
                     FontSize = 18,
                     FontFamily = "OpenSansSemibold",
-                    TextColor = Color.FromArgb("#5A31F4"),
+                    TextColor = Color.FromArgb("#2563EB"),
                     HorizontalOptions = LayoutOptions.Center,
                     VerticalOptions = LayoutOptions.Center
                 }

@@ -21,7 +21,7 @@
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="20,15,20,30" Spacing="15">
-                <ActivityIndicator x:Name="LoadingIndicator" IsRunning="True" Color="#5A31F4" />
+                <ActivityIndicator x:Name="LoadingIndicator" IsRunning="True" Color="#2563EB" />
                 <Label x:Name="LblSinCuidadores" Text="No hay cuidadores disponibles para este servicio en tu zona." FontSize="14" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center" IsVisible="False" Margin="0,30,0,0" />
                 <VerticalStackLayout x:Name="ListaCuidadores" Spacing="15" />
             </VerticalStackLayout>

@@ -61,7 +61,7 @@
                             <TapGestureRecognizer Tapped="OnElegirUbicacionTapped"/>
                         </Border.GestureRecognizers>
                         <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="12">
-                            <Path Grid.Column="0" Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="#5A31F4" Aspect="Uniform" WidthRequest="20" HeightRequest="20" VerticalOptions="Center"/>
+                            <Path Grid.Column="0" Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="#2563EB" Aspect="Uniform" WidthRequest="20" HeightRequest="20" VerticalOptions="Center"/>
                             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
                                 <Label x:Name="LblUbicacionNombre" Text="Selecciona una ubicación" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
                                 <Label x:Name="LblUbicacionDireccion" Text="Toca para elegir" FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" LineBreakMode="TailTruncation"/>
@@ -80,7 +80,7 @@
                         <BoxView HeightRequest="1" BackgroundColor="#F3F4F6"/>
                         <Grid ColumnDefinitions="*, Auto">
                             <Label Grid.Column="0" Text="Total a pagar" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827" VerticalOptions="Center"/>
-                            <Label x:Name="LblTotal" Grid.Column="1" Text="" FontSize="22" FontFamily="OpenSansSemibold" TextColor="#5A31F4" VerticalOptions="Center"/>
+                            <Label x:Name="LblTotal" Grid.Column="1" Text="" FontSize="22" FontFamily="OpenSansSemibold" TextColor="#2563EB" VerticalOptions="Center"/>
                         </Grid>
                     </VerticalStackLayout>
                 </Border>
@@ -92,7 +92,7 @@
             <Border.Shadow>
                 <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
             </Border.Shadow>
-            <Button x:Name="BtnEnviar" Text="Enviar solicitud" Clicked="OnEnviarClicked" BackgroundColor="#5A31F4" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55"/>
+            <Button x:Name="BtnEnviar" Text="Enviar solicitud" Clicked="OnEnviarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55"/>
         </VerticalStackLayout>
 
     </Grid>

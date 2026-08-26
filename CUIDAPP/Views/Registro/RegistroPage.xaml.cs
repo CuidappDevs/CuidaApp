@@ -404,8 +404,8 @@ namespace CUIDAPP.Views.Registro
             RoleIconCliente.Fill = RoleIconCuidador.Fill = Color.FromArgb("#374151");
             RoleTextCliente.TextColor = RoleTextCuidador.TextColor = Color.FromArgb("#374151");
 
-            var activeStroke = Color.FromArgb("#4024A2");
-            var activeBg = Color.FromArgb("#F3E8FF");
+            var activeStroke = Color.FromArgb("#1D4ED8");
+            var activeBg = Color.FromArgb("#EFF6FF");
 
             if (selectedRole == "Cliente")
             {
@@ -429,8 +429,8 @@ namespace CUIDAPP.Views.Registro
             JobOption2.BackgroundColor = Colors.White;
             JobIcon2.Fill = JobText2.TextColor = Color.FromArgb("#374151");
 
-            var activeStroke = Color.FromArgb("#4024A2");
-            var activeBg = Color.FromArgb("#F3E8FF");
+            var activeStroke = Color.FromArgb("#1D4ED8");
+            var activeBg = Color.FromArgb("#EFF6FF");
 
             switch (selectedJob)
             {
@@ -459,8 +459,8 @@ namespace CUIDAPP.Views.Registro
             PayOption2.BackgroundColor = Colors.White;
             PayIcon2.Fill = PayText2.TextColor = Color.FromArgb("#374151");
 
-            var activeStroke = Color.FromArgb("#4024A2");
-            var activeBg = Color.FromArgb("#F3E8FF");
+            var activeStroke = Color.FromArgb("#1D4ED8");
+            var activeBg = Color.FromArgb("#EFF6FF");
 
             switch (selectedPay)
             {

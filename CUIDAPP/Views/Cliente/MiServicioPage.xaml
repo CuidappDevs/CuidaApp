@@ -17,15 +17,15 @@
             <Label Grid.Column="1" Text="Mis servicios" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
         </Grid>
 
-        <ActivityIndicator x:Name="LoadingIndicator" Grid.Row="1" IsRunning="False" Color="#5A31F4" VerticalOptions="Center"/>
+        <ActivityIndicator x:Name="LoadingIndicator" Grid.Row="1" IsRunning="False" Color="#2563EB" VerticalOptions="Center"/>
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout x:Name="ListaServicios" Padding="20,15,20,30" Spacing="12" />
         </ScrollView>
 
         <VerticalStackLayout x:Name="ContenedorVacio" Grid.Row="1" VerticalOptions="Center" HorizontalOptions="Center" Spacing="15" Padding="40" IsVisible="False">
-            <Border Stroke="Transparent" BackgroundColor="#F3E8FF" StrokeShape="RoundRectangle 40" WidthRequest="80" HeightRequest="80">
-                <Path Data="M20 6H16V4C16 2.9 15.1 2 14 2H10C8.9 2 8 2.9 8 4V6H4C2.9 6 2.01 6.9 2.01 8L2 19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6ZM10 4H14V6H10V4ZM20 19H4V8H20V19Z" Fill="#A855F7" Aspect="Uniform" WidthRequest="32" HeightRequest="32" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <Border Stroke="Transparent" BackgroundColor="#EFF6FF" StrokeShape="RoundRectangle 40" WidthRequest="80" HeightRequest="80">
+                <Path Data="M20 6H16V4C16 2.9 15.1 2 14 2H10C8.9 2 8 2.9 8 4V6H4C2.9 6 2.01 6.9 2.01 8L2 19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6ZM10 4H14V6H10V4ZM20 19H4V8H20V19Z" Fill="#3B82F6" Aspect="Uniform" WidthRequest="32" HeightRequest="32" HorizontalOptions="Center" VerticalOptions="Center"/>
             </Border>
             <Label Text="No tienes servicios activos" FontSize="17" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
             <Label Text="Cuando solicites un servicio, aquí podrás seguir su estado en tiempo real." FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>

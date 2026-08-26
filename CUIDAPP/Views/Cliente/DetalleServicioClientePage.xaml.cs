@@ -241,7 +241,7 @@ namespace CUIDAPP.Views.Cliente
                 {
                     Stroke = Colors.Transparent,
                     StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 6 },
-                    BackgroundColor = completado ? Color.FromArgb("#5A31F4") : Color.FromArgb("#E5E7EB"),
+                    BackgroundColor = completado ? Color.FromArgb("#2563EB") : Color.FromArgb("#E5E7EB"),
                     WidthRequest = 12,
                     HeightRequest = 12,
                     VerticalOptions = LayoutOptions.Center,

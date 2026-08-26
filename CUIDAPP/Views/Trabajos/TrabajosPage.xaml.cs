@@ -61,7 +61,7 @@ namespace CUIDAPP.Views.Trabajos
         {
             tabActual = nuevaTab;
 
-            var activo = Color.FromArgb("#4024A2");
+            var activo = Color.FromArgb("#1D4ED8");
             var inactivo = Color.FromArgb("#6B7280");
 
             LblTabNuevos.TextColor = nuevaTab == Tab.Nuevos ? activo : inactivo;

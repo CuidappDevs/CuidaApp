@@ -77,7 +77,7 @@ namespace CUIDAPP_API.Services.Chat
             command.Parameters.AddWithValue("@Tipo", dto.Tipo);
             command.Parameters.AddWithValue("@UrlArchivo", (object?)dto.UrlArchivo ?? DBNull.Value);
             command.Parameters.AddWithValue("@DuracionSegundos", (object?)dto.DuracionSegundos ?? DBNull.Value);
-            command.Parameters.AddWithValue("@FechaEnvio", DateTime.Now);
+            command.Parameters.AddWithValue("@FechaEnvio", HoraLocalRD.Ahora);
 
             await connection.OpenAsync();
             using var reader = await command.ExecuteReaderAsync();

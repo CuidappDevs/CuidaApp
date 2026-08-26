@@ -11,6 +11,12 @@ namespace CUIDAPP
         {
             InitializeComponent();
 
+            // La app está diseñada solo para tema claro (fondos blancos, textos oscuros
+            // explícitos). Sin esto, en un dispositivo con modo oscuro activado, controles
+            // nativos como Entry/Editor usan su color de texto por defecto del sistema
+            // (blanco), que sobre nuestros fondos blancos se vuelve invisible.
+            UserAppTheme = AppTheme.Light;
+
             // Red de seguridad: si algo revienta sin try/catch en un handler async void,
             // lo dejamos registrado en el Output de Visual Studio en vez de que la app crashee
             // silenciosamente sin dejar rastro del motivo real.

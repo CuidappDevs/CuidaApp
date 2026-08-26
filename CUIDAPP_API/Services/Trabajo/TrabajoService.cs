@@ -34,7 +34,7 @@ namespace CUIDAPP_API.Services.Trabajo
             command.Parameters.AddWithValue("@Tarifa", dto.Tarifa);
             command.Parameters.AddWithValue("@Latitud", (object?)dto.Latitud ?? DBNull.Value);
             command.Parameters.AddWithValue("@Longitud", (object?)dto.Longitud ?? DBNull.Value);
-            command.Parameters.AddWithValue("@FechaCreacion", DateTime.Now);
+            command.Parameters.AddWithValue("@FechaCreacion", HoraLocalRD.Ahora);
 
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();
@@ -198,7 +198,7 @@ namespace CUIDAPP_API.Services.Trabajo
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.AddWithValue("@TrabajoId", dto.TrabajoId);
             command.Parameters.AddWithValue("@Pin", dto.Pin);
-            command.Parameters.AddWithValue("@FechaHora", DateTime.Now);
+            command.Parameters.AddWithValue("@FechaHora", HoraLocalRD.Ahora);
 
             await connection.OpenAsync();
             using var reader = await command.ExecuteReaderAsync();
@@ -264,7 +264,7 @@ namespace CUIDAPP_API.Services.Trabajo
             command.Parameters.AddWithValue("@TrabajoId", trabajoId);
             command.Parameters.AddWithValue("@ClienteId", clienteId);
             command.Parameters.AddWithValue("@Confirmado", confirmado);
-            command.Parameters.AddWithValue("@FechaHora", DateTime.Now);
+            command.Parameters.AddWithValue("@FechaHora", HoraLocalRD.Ahora);
 
             await connection.OpenAsync();
             using var reader = await command.ExecuteReaderAsync();
@@ -298,7 +298,7 @@ namespace CUIDAPP_API.Services.Trabajo
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.AddWithValue("@TrabajoId", trabajoId);
             command.Parameters.AddWithValue("@CuidadorId", cuidadorId);
-            command.Parameters.AddWithValue("@FechaHora", DateTime.Now);
+            command.Parameters.AddWithValue("@FechaHora", HoraLocalRD.Ahora);
 
             await connection.OpenAsync();
             using var reader = await command.ExecuteReaderAsync();
@@ -352,7 +352,7 @@ namespace CUIDAPP_API.Services.Trabajo
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.AddWithValue("@TrabajoId", dto.TrabajoId);
             command.Parameters.AddWithValue("@Descripcion", dto.Descripcion);
-            command.Parameters.AddWithValue("@FechaHora", DateTime.Now);
+            command.Parameters.AddWithValue("@FechaHora", HoraLocalRD.Ahora);
 
             await connection.OpenAsync();
             using var reader = await command.ExecuteReaderAsync();

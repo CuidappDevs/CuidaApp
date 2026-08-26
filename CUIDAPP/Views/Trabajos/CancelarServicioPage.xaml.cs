@@ -38,9 +38,9 @@ namespace CUIDAPP.Views.Trabajos
 
                 var card = new Border
                 {
-                    Stroke = esSeleccionado ? Color.FromArgb("#5A31F4") : Color.FromArgb("#E5E7EB"),
+                    Stroke = esSeleccionado ? Color.FromArgb("#2563EB") : Color.FromArgb("#E5E7EB"),
                     StrokeThickness = esSeleccionado ? 2 : 1,
-                    BackgroundColor = esSeleccionado ? Color.FromArgb("#F3E8FF") : Colors.White,
+                    BackgroundColor = esSeleccionado ? Color.FromArgb("#EFF6FF") : Colors.White,
                     StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 12 },
                     Padding = new Thickness(15, 13),
                     Content = new Label
@@ -48,7 +48,7 @@ namespace CUIDAPP.Views.Trabajos
                         Text = motivo.Descripcion,
                         FontSize = 14,
                         FontFamily = esSeleccionado ? "OpenSansSemibold" : "OpenSansRegular",
-                        TextColor = esSeleccionado ? Color.FromArgb("#4024A2") : Color.FromArgb("#374151")
+                        TextColor = esSeleccionado ? Color.FromArgb("#1D4ED8") : Color.FromArgb("#374151")
                     }
                 };
 

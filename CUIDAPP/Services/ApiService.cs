@@ -14,28 +14,32 @@ namespace CUIDAPP.Services
     {
         private readonly HttpClient _httpClient;
 
-        // La URL cambia sola según la configuración de compilación: en Debug apunta a la
-        // API local de desarrollo, en Release al servidor de producción. Así no hay que
-        // tocar este archivo al publicar — solo compilar en modo Release.
-        //
+        // TEMPORAL: apuntando el build Debug directo a producción para probar ahí en vez
+        // de la API local, mientras se diagnostica el tiempo real / hora del servidor.
+        // Para volver a apuntar a la API local de desarrollo, descomenta el bloque de
+        // abajo y comenta esta línea (o viceversa).
+        private static readonly string BaseUrl = "http://192.169.179.217/api/";
+
+        // --- Configuración original (Debug = API local, Release = producción) ---
         // En Debug: el emulador de Android tiene su propia red virtual donde "localhost"
         // apunta al propio emulador, no a la PC. 10.0.2.2 es el alias especial que el
         // emulador usa para llegar a la máquina host. En Windows/iOS/dispositivo físico
         // se usa la IP real de la PC.
         //
         // IMPORTANTE (local): la API debe correr con el perfil "http" (puerto 5258), no
-        // "IIS Express" (puerto 44352) — en Visual Studio, cambia el perfil en el
-        // desplegable junto al botón de Iniciar.
-        private static readonly string BaseUrl =
-#if DEBUG
-#if ANDROID
-            "http://10.0.2.2:5258/api/";
-#else
-            "http://localhost:5258/api/";
-#endif
-#else
-            "http://192.169.179.217/api/";
-#endif
+        // "IIS Express" — en Visual Studio, cambia el perfil en el desplegable junto al
+        // botón de Iniciar, o mejor, corre `dotnet run --launch-profile http` en terminal.
+        //
+        // private static readonly string BaseUrl =
+        //#if DEBUG
+        //#if ANDROID
+        //    "http://10.0.2.2:5258/api/";
+        //#else
+        //    "http://localhost:5258/api/";
+        //#endif
+        //#else
+        //    "http://192.169.179.217/api/";
+        //#endif
 
         // Origen del servidor (sin /api/) para resolver rutas relativas de archivos, ej. "/uploads/...".
         public static string ServerOrigin => BaseUrl.Substring(0, BaseUrl.IndexOf("/api/", StringComparison.Ordinal));

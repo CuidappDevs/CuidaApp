@@ -20,8 +20,8 @@
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="25,30,25,20" Spacing="25">
 
-                <Border Stroke="Transparent" BackgroundColor="#F3E8FF" StrokeShape="RoundRectangle 40" WidthRequest="80" HeightRequest="80" HorizontalOptions="Center">
-                    <Path Data="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.45 13.97L5.82 21L12 17.27Z" Fill="#A855F7" Aspect="Uniform" WidthRequest="36" HeightRequest="36" HorizontalOptions="Center" VerticalOptions="Center"/>
+                <Border Stroke="Transparent" BackgroundColor="#EFF6FF" StrokeShape="RoundRectangle 40" WidthRequest="80" HeightRequest="80" HorizontalOptions="Center">
+                    <Path Data="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.45 13.97L5.82 21L12 17.27Z" Fill="#3B82F6" Aspect="Uniform" WidthRequest="36" HeightRequest="36" HorizontalOptions="Center" VerticalOptions="Center"/>
                 </Border>
 
                 <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
@@ -61,7 +61,7 @@
             <Border.Shadow>
                 <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
             </Border.Shadow>
-            <Button x:Name="BtnEnviar" Text="Enviar calificación" Clicked="OnEnviarClicked" BackgroundColor="#5A31F4" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsEnabled="False"/>
+            <Button x:Name="BtnEnviar" Text="Enviar calificación" Clicked="OnEnviarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsEnabled="False"/>
         </VerticalStackLayout>
 
     </Grid>

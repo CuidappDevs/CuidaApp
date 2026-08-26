@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using CUIDAPP_API.Services;
 
 namespace CUIDAPP_API.Controllers
 {
@@ -16,7 +17,7 @@ namespace CUIDAPP_API.Controllers
         [HttpGet("hora")]
         public IActionResult ObtenerHoraServidor()
         {
-            return Ok(new { horaServidor = DateTime.Now });
+            return Ok(new { horaServidor = HoraLocalRD.Ahora });
         }
     }
 }

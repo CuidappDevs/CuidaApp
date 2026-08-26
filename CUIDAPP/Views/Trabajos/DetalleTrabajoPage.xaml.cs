@@ -448,11 +448,11 @@ namespace CUIDAPP.Views.Trabajos
                 var origLat = origenLat.ToString(ci);
                 var origLon = origenLon.ToString(ci);
 
-                marcadorCuidadorJs = $"L.circleMarker([{origLat}, {origLon}], {{ radius: 8, color: '#FFFFFF', weight: 3, fillColor: '#5A31F4', fillOpacity: 1 }}).addTo(map);";
+                marcadorCuidadorJs = $"L.circleMarker([{origLat}, {origLon}], {{ radius: 8, color: '#FFFFFF', weight: 3, fillColor: '#2563EB', fillOpacity: 1 }}).addTo(map);";
 
                 var coordsJson = JsonSerializer.Serialize((puntosRuta ?? new List<(double Lat, double Lon)>())
                     .Select(p => new[] { p.Lat, p.Lon }));
-                lineaRutaJs = $"var rutaCoords = {coordsJson}; L.polyline(rutaCoords, {{ color: '#5A31F4', weight: 5 }}).addTo(map);";
+                lineaRutaJs = $"var rutaCoords = {coordsJson}; L.polyline(rutaCoords, {{ color: '#2563EB', weight: 5 }}).addTo(map);";
 
                 encuadreJs = $"map.fitBounds([[{origLat}, {origLon}], [{destLat}, {destLon}]], {{ padding: [40, 40] }});";
             }
