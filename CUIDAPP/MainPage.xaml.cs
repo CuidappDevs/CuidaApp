@@ -54,6 +54,7 @@ namespace CUIDAPP
 
                 _ = RealtimeService.ConectarAsync(result.UserId);
                 _ = ServerClock.SincronizarAsync();
+                ConexionServiceManager.Iniciar();
 
                 switch (result.RolId)
                 {

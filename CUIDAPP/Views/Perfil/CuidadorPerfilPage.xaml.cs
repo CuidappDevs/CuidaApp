@@ -153,5 +153,10 @@ namespace CUIDAPP.Views.Perfil
         {
             await Shell.Current.GoToAsync("DineroPage");
         }
+
+        private async void OnMisCalificacionesTapped(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync("MisCalificacionesPage");
+        }
     }
 }

@@ -96,8 +96,17 @@ namespace CUIDAPP.Services
 
         public async Task<string?> UploadFileAsync(string localFilePath, string carpeta)
         {
+            var (url, _) = await UploadFileConDiagnosticoAsync(localFilePath, carpeta);
+            return url;
+        }
+
+        public async Task<(string? Url, string? Error)> UploadFileConDiagnosticoAsync(string localFilePath, string carpeta)
+        {
             try
             {
+                if (!File.Exists(localFilePath))
+                    return (null, $"El archivo no existe en el dispositivo: {localFilePath}");
+
                 using var content = new MultipartFormDataContent();
                 var bytes = await File.ReadAllBytesAsync(localFilePath);
                 var fileContent = new ByteArrayContent(bytes);
@@ -106,15 +115,21 @@ namespace CUIDAPP.Services
 
                 var response = await _httpClient.PostAsync("upload", content);
                 if (!response.IsSuccessStatusCode)
-                    return null;
+                {
+                    var cuerpo = await response.Content.ReadAsStringAsync();
+                    return (null, $"HTTP {(int)response.StatusCode}: {cuerpo}");
+                }
 
                 var result = await response.Content.ReadFromJsonAsync<UploadResponse>();
-                return result?.Url;
+                if (string.IsNullOrWhiteSpace(result?.Url))
+                    return (null, "El servidor no devolvió una URL de archivo.");
+
+                return (result.Url, null);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error subiendo archivo: {ex.Message}");
-                return null;
+                Console.WriteLine($"Error subiendo archivo: {ex}");
+                return (null, $"{ex.GetType().Name}: {ex.Message}");
             }
         }
 
@@ -451,6 +466,23 @@ namespace CUIDAPP.Services
         private class ExisteCalificacionResponse
         {
             public bool Existe { get; set; }
+        }
+
+        public async Task<List<CalificacionRecibida>> ObtenerCalificacionesDeUsuarioAsync(int usuarioId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"calificacion/usuario/{usuarioId}");
+                if (!response.IsSuccessStatusCode)
+                    return new List<CalificacionRecibida>();
+
+                return await response.Content.ReadFromJsonAsync<List<CalificacionRecibida>>() ?? new List<CalificacionRecibida>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo calificaciones del usuario: {ex.Message}");
+                return new List<CalificacionRecibida>();
+            }
         }
 
         public async Task<PerfilCliente?> ObtenerPerfilClienteAsync(int clienteId)

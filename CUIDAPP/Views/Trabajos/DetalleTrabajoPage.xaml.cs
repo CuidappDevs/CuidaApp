@@ -17,6 +17,7 @@ namespace CUIDAPP.Views.Trabajos
         private bool geocercaMonitorIniciado;
         private bool fueraDeGeocerca;
         private const double RadioGeocercaKm = 0.3; // 300 metros
+        private const string MapboxAccessToken = "pk.eyJ1IjoiZm9yemU5ZGFyayIsImEiOiJjbXNtbmtvb2oxcHV6Mnpwd2s5bTc1YXViIn0.Zm3kXe_m7Ic04GFCjA40DA";
 
         public void ApplyQueryAttributes(IDictionary<string, object> query)
         {
@@ -222,7 +223,7 @@ namespace CUIDAPP.Views.Trabajos
                 { "TrabajoId", trabajo.Id },
                 { "CalificadoId", trabajo.ClienteId },
                 { "CalificadoNombre", trabajo.ClienteNombre },
-                { "RutaSalida", "//CuidadorDashboardPage" }
+                { "RutaSalida", "///CuidadorDashboardPage" }
             };
             await Shell.Current.GoToAsync("CalificarPage", parametros);
         }
@@ -473,7 +474,7 @@ namespace CUIDAPP.Views.Trabajos
     <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
     <script>
         var map = L.map('map', {{ zoomControl: false, attributionControl: false }});
-        L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager/{{z}}/{{x}}/{{y}}{{r}}.png', {{ maxZoom: 20, subdomains: 'abcd' }}).addTo(map);
+        L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{{z}}/{{x}}/{{y}}{{r}}?access_token={MapboxAccessToken}', {{ maxZoom: 20, tileSize: 512, zoomOffset: -1 }}).addTo(map);
 
         {lineaRutaJs}
         {marcadorCuidadorJs}
@@ -498,7 +499,7 @@ namespace CUIDAPP.Views.Trabajos
         {
             try
             {
-                var url = $"https://router.project-osrm.org/route/v1/driving/{origenLon.ToString(System.Globalization.CultureInfo.InvariantCulture)},{origenLat.ToString(System.Globalization.CultureInfo.InvariantCulture)};{destinoLon.ToString(System.Globalization.CultureInfo.InvariantCulture)},{destinoLat.ToString(System.Globalization.CultureInfo.InvariantCulture)}?overview=full&geometries=geojson";
+                var url = $"https://api.mapbox.com/directions/v5/mapbox/driving/{origenLon.ToString(System.Globalization.CultureInfo.InvariantCulture)},{origenLat.ToString(System.Globalization.CultureInfo.InvariantCulture)};{destinoLon.ToString(System.Globalization.CultureInfo.InvariantCulture)},{destinoLat.ToString(System.Globalization.CultureInfo.InvariantCulture)}?overview=full&geometries=geojson&access_token={MapboxAccessToken}";
 
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
                 var respuesta = await _httpClient.GetFromJsonAsync<OsrmResponse>(url, cts.Token);

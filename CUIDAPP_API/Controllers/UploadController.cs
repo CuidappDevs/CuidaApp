@@ -38,21 +38,32 @@ namespace CUIDAPP_API.Controllers
                 ? carpeta
                 : DateTime.UtcNow.ToString("yyyyMM");
 
+            // Reemplaza "/" por Path.DirectorySeparatorChar explícitamente para evitar
+            // cualquier ambigüedad de Path.Combine con subcarpetas tipo "chat/42" entre
+            // distintos sistemas operativos de hosting.
+            var segmentosCarpeta = nombreCarpeta.Split('/');
             var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
-            var directorioDestino = Path.Combine(webRoot, "uploads", "usuarios", nombreCarpeta);
-            Directory.CreateDirectory(directorioDestino);
+            var directorioDestino = Path.Combine(new[] { webRoot, "uploads", "usuarios" }.Concat(segmentosCarpeta).ToArray());
 
-            var nombreArchivo = $"{Guid.NewGuid()}{extension}";
-            var rutaCompleta = Path.Combine(directorioDestino, nombreArchivo);
-
-            using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+            try
             {
-                await file.CopyToAsync(stream);
+                Directory.CreateDirectory(directorioDestino);
+
+                var nombreArchivo = $"{Guid.NewGuid()}{extension}";
+                var rutaCompleta = Path.Combine(directorioDestino, nombreArchivo);
+
+                using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var urlRelativa = $"/uploads/usuarios/{nombreCarpeta}/{nombreArchivo}";
+                return Ok(new { url = urlRelativa });
             }
-
-            var urlRelativa = $"/uploads/usuarios/{nombreCarpeta}/{nombreArchivo}";
-
-            return Ok(new { url = urlRelativa });
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"No se pudo guardar el archivo en el servidor ({ex.GetType().Name}): {ex.Message}. Ruta destino: {directorioDestino}");
+            }
         }
     }
 }

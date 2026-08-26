@@ -126,6 +126,17 @@
                         </Grid>
                     </Border>
 
+                    <!-- Mis calificaciones -->
+                    <Border Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="20">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnMisCalificacionesTapped" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="*, Auto">
+                            <Label Grid.Column="0" Text="Mis calificaciones" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#111827" VerticalOptions="Center"/>
+                            <Path Grid.Column="1" Data="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
+                        </Grid>
+                    </Border>
+
                 </VerticalStackLayout>
             </VerticalStackLayout>
         </ScrollView>

@@ -13,6 +13,7 @@ namespace CUIDAPP.Views.Cliente
         private double lngSeleccionada;
         private bool mapaListo;
         private bool soloSeleccionar;
+        private const string MapboxAccessToken = "pk.eyJ1IjoiZm9yemU5ZGFyayIsImEiOiJjbXNtbmtvb2oxcHV6Mnpwd2s5bTc1YXViIn0.Zm3kXe_m7Ic04GFCjA40DA";
 
         public void ApplyQueryAttributes(IDictionary<string, object> query)
         {
@@ -78,7 +79,7 @@ namespace CUIDAPP.Views.Cliente
     <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
     <script>
         var map = L.map('map', {{ zoomControl: true }}).setView([{lat}, {lng}], 16);
-        L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager/{{z}}/{{x}}/{{y}}{{r}}.png', {{ maxZoom: 20, subdomains: 'abcd' }}).addTo(map);
+        L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{{z}}/{{x}}/{{y}}{{r}}?access_token={MapboxAccessToken}', {{ maxZoom: 20, tileSize: 512, zoomOffset: -1 }}).addTo(map);
         var marker = L.marker([{lat}, {lng}], {{ draggable: true }}).addTo(map);
 
         function avisarPunto(lat, lng) {{

@@ -22,6 +22,16 @@ namespace CUIDAPP
                 if (controller != null)
                     controller.AppearanceLightStatusBars = true;
             }
+
+            // Android 13+ exige permiso explícito en tiempo de ejecución para mostrar
+            // cualquier notificación del sistema, aunque ya esté declarado en el manifest.
+            if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.Tiramisu)
+            {
+                if (AndroidX.Core.Content.ContextCompat.CheckSelfPermission(this, Android.Manifest.Permission.PostNotifications) != Android.Content.PM.Permission.Granted)
+                {
+                    AndroidX.Core.App.ActivityCompat.RequestPermissions(this, new[] { Android.Manifest.Permission.PostNotifications }, 100);
+                }
+            }
         }
     }
 }

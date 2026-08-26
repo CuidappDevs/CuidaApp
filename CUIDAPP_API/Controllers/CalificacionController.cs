@@ -59,6 +59,20 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [HttpGet("usuario/{usuarioId}")]
+        public async Task<IActionResult> ObtenerCalificacionesDeUsuario(int usuarioId)
+        {
+            try
+            {
+                var calificaciones = await _calificacionService.ObtenerCalificacionesDeUsuarioAsync(usuarioId);
+                return Ok(calificaciones);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
         [HttpGet("trabajo/{trabajoId}")]
         public async Task<IActionResult> ObtenerCalificacionDeTrabajo(int trabajoId, [FromQuery] int calificadorId)
         {

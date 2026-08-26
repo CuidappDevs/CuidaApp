@@ -29,6 +29,11 @@ namespace CUIDAPP.Views.Dashboard
             }
 
             _ = RealtimeService.ConectarAsync(cuidadorId);
+
+            // Evita suscripciones duplicadas si OnAppearing se dispara más de una vez
+            // sin un OnDisappearing intermedio (puede pasar con navegación "//").
+            RealtimeService.NuevaSolicitud -= OnNuevaSolicitudTiempoReal;
+            RealtimeService.TrabajoActualizado -= OnTrabajoActualizadoTiempoReal;
             RealtimeService.NuevaSolicitud += OnNuevaSolicitudTiempoReal;
             RealtimeService.TrabajoActualizado += OnTrabajoActualizadoTiempoReal;
 
@@ -89,6 +94,22 @@ namespace CUIDAPP.Views.Dashboard
         }
 
         private async Task CargarDashboard()
+        {
+            try
+            {
+                await CargarDashboardInterno();
+            }
+            catch (Exception ex)
+            {
+                // Nunca dejar que una excepción no atrapada aquí reviente la app: esto
+                // corre dentro de un OnAppearing "async void", donde una excepción sin
+                // capturar mata el proceso en Android en vez de solo mostrar un error.
+                Console.WriteLine($"[CuidadorDashboardPage] Error cargando dashboard: {ex}");
+                await DisplayAlert("Error", "No se pudo cargar tu panel. Desliza para reintentar o revisa tu conexión.", "OK");
+            }
+        }
+
+        private async Task CargarDashboardInterno()
         {
             var perfilTask = _apiService.ObtenerPerfilCuidadorAsync(cuidadorId);
             var gananciasTask = _apiService.ObtenerGananciasAsync(cuidadorId);
@@ -237,7 +258,7 @@ namespace CUIDAPP.Views.Dashboard
 
         private async void OnNotificacionesTapped(object sender, EventArgs e)
         {
-            await Shell.Current.GoToAsync("TrabajosPage");
+            await Navigation.PushModalAsync(new Views.Cliente.NotificacionesPage());
         }
 
         private async void OnCerrarSesionTapped(object sender, EventArgs e)
@@ -248,6 +269,7 @@ namespace CUIDAPP.Views.Dashboard
 
             Preferences.Default.Clear();
             await RealtimeService.DesconectarAsync();
+            ConexionServiceManager.Detener();
             await Shell.Current.GoToAsync("//MainPage");
         }
     }

@@ -362,10 +362,10 @@ namespace CUIDAPP.Views.Chat
                 if (foto == null)
                     return;
 
-                var url = await _apiService.UploadFileAsync(foto.FullPath, $"chat/{miUsuarioId}");
+                var (url, error) = await _apiService.UploadFileConDiagnosticoAsync(foto.FullPath, $"chat/{miUsuarioId}");
                 if (url == null)
                 {
-                    await DisplayAlert("Error", "No se pudo subir la imagen. Intenta de nuevo.", "OK");
+                    await DisplayAlert("No se pudo subir la imagen", error ?? "Error desconocido.", "OK");
                     return;
                 }
 
@@ -426,10 +426,10 @@ namespace CUIDAPP.Views.Chat
                     return;
                 }
 
-                var url = await _apiService.UploadFileAsync(_rutaGrabacionActual, $"chat/{miUsuarioId}");
+                var (url, error) = await _apiService.UploadFileConDiagnosticoAsync(_rutaGrabacionActual, $"chat/{miUsuarioId}");
                 if (url == null)
                 {
-                    await DisplayAlert("Error", "No se pudo subir la nota de voz. Intenta de nuevo.", "OK");
+                    await DisplayAlert("No se pudo subir la nota de voz", error ?? "Error desconocido.", "OK");
                     return;
                 }
 

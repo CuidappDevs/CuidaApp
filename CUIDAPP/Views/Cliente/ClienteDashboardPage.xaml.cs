@@ -21,6 +21,7 @@ namespace CUIDAPP.Views.Cliente
         private List<CuidadorMapa> cuidadoresEnMapa = new();
         private bool estaVisible;
         private bool pollingIniciado;
+        private const string MapboxAccessToken = "pk.eyJ1IjoiZm9yemU5ZGFyayIsImEiOiJjbXNtbmtvb2oxcHV6Mnpwd2s5bTc1YXViIn0.Zm3kXe_m7Ic04GFCjA40DA";
 
         public ClienteDashboardPage()
         {
@@ -60,10 +61,32 @@ namespace CUIDAPP.Views.Cliente
 
             var clienteIdActual = Preferences.Default.Get("UserId", 0);
             _ = RealtimeService.ConectarAsync(clienteIdActual);
+
+            // Evita suscripciones duplicadas si OnAppearing se dispara más de una vez sin
+            // un OnDisappearing intermedio (puede pasar con navegación "//").
+            RealtimeService.DisponibilidadCambio -= OnDisponibilidadCambioTiempoReal;
+            RealtimeService.UbicacionCuidadorCambio -= OnUbicacionCuidadorCambioTiempoReal;
+            RealtimeService.TrabajoActualizado -= OnTrabajoActualizadoTiempoReal;
             RealtimeService.DisponibilidadCambio += OnDisponibilidadCambioTiempoReal;
             RealtimeService.UbicacionCuidadorCambio += OnUbicacionCuidadorCambioTiempoReal;
             RealtimeService.TrabajoActualizado += OnTrabajoActualizadoTiempoReal;
 
+            try
+            {
+                await CargarPantallaAsync();
+            }
+            catch (Exception ex)
+            {
+                // Una excepción sin atrapar aquí (OnAppearing es "async void") mata la
+                // app en Android en vez de solo mostrar un error.
+                Console.WriteLine($"[ClienteDashboardPage] Error cargando dashboard: {ex}");
+                OverlayCarga.IsVisible = false;
+                await DisplayAlert("Error", "No se pudo cargar tu panel. Desliza para reintentar o revisa tu conexión.", "OK");
+            }
+        }
+
+        private async Task CargarPantallaAsync()
+        {
             IniciarPollingSiHaceFalta();
 
             var nombre = Preferences.Default.Get("UserNombre", "");
@@ -242,7 +265,7 @@ namespace CUIDAPP.Views.Cliente
     <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
     <script>
         var map = L.map('map', {{ zoomControl: false, attributionControl: false }}).setView([{lat}, {lng}], 14);
-        L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager/{{z}}/{{x}}/{{y}}{{r}}.png', {{ maxZoom: 20, subdomains: 'abcd' }}).addTo(map);
+        L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{{z}}/{{x}}/{{y}}{{r}}?access_token={MapboxAccessToken}', {{ maxZoom: 20, tileSize: 512, zoomOffset: -1 }}).addTo(map);
         var marker = L.circleMarker([{lat}, {lng}], {{ radius: 8, color: '#FFFFFF', weight: 3, fillColor: '#2563EB', fillOpacity: 1 }}).addTo(map);
         var capaCuidadores = L.layerGroup().addTo(map);
 

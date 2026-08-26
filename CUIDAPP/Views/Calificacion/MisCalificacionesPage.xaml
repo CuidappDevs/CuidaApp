@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:CUIDAPP.Models.Calificacion"
+             x:Class="CUIDAPP.Views.Calificacion.MisCalificacionesPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#F9FAFB">
+
+    <Grid RowDefinitions="Auto, *">
+
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" Padding="20,15,20,10" BackgroundColor="White">
+            <ContentView x:Name="BtnBack" VerticalOptions="Center">
+                <ContentView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </ContentView.GestureRecognizers>
+                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
+            </ContentView>
+            <Label Grid.Column="1" Text="Mis calificaciones" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+        </Grid>
+
+        <Grid Grid.Row="1">
+
+            <VerticalStackLayout x:Name="PanelResumen" Padding="25,20,25,10" Spacing="4" BackgroundColor="White" IsVisible="False" VerticalOptions="Start">
+                <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                    <Label x:Name="LblPromedio" Text="0.0" FontSize="30" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                    <Label Text="&#9733;" FontSize="26" TextColor="#F59E0B" VerticalOptions="Center"/>
+                </HorizontalStackLayout>
+                <Label x:Name="LblTotal" Text="" FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+
+            <ActivityIndicator x:Name="LoadingIndicator" IsRunning="True" IsVisible="True" Color="#2563EB" VerticalOptions="Center" HorizontalOptions="Center"/>
+
+            <VerticalStackLayout x:Name="PanelVacio" IsVisible="False" VerticalOptions="Center" HorizontalOptions="Center" Spacing="10" Padding="40">
+                <Path Data="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.45 13.97L5.82 21L12 17.27Z" Fill="#D1D5DB" Aspect="Uniform" WidthRequest="48" HeightRequest="48" HorizontalOptions="Center"/>
+                <Label Text="Todavía no tienes calificaciones" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#6B7280" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+            </VerticalStackLayout>
+
+            <CollectionView x:Name="ListaCalificaciones" IsVisible="False" Margin="0,90,0,0">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:CalificacionRecibida">
+                        <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 14" Margin="20,0,20,0" Padding="16">
+                            <VerticalStackLayout Spacing="8">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                        <Label Text="{Binding CalificadorNombre}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                                        <Label Text="{Binding TipoServicio}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="1" Text="{Binding EstrellasTexto}" FontSize="15" TextColor="#F59E0B" VerticalOptions="Start"/>
+                                </Grid>
+                                <Label Text="{Binding Comentario}" FontSize="14" FontFamily="OpenSansRegular" TextColor="#374151" IsVisible="{Binding TieneComentario}"/>
+                                <Label Text="{Binding FechaTexto}" FontSize="11" FontFamily="OpenSansRegular" TextColor="#9CA3AF"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </Grid>
+
+    </Grid>
+
+</ContentPage>

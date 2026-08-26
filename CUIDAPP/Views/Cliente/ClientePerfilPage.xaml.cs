@@ -57,7 +57,7 @@ namespace CUIDAPP.Views.Cliente
                 { "TrabajoId", pendiente.Id },
                 { "CalificadoId", pendiente.CuidadorId },
                 { "CalificadoNombre", pendiente.CuidadorNombre },
-                { "RutaSalida", "//ClienteDashboardPage" }
+                { "RutaSalida", "///ClienteDashboardPage" }
             };
             await Shell.Current.GoToAsync("CalificarPage", parametros);
         }
@@ -72,10 +72,16 @@ namespace CUIDAPP.Views.Cliente
             await Shell.Current.GoToAsync("MisUbicacionesPage");
         }
 
+        private async void OnMisCalificacionesTapped(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync("MisCalificacionesPage");
+        }
+
         private async void OnCerrarSesionTapped(object sender, EventArgs e)
         {
             Preferences.Default.Clear();
             await RealtimeService.DesconectarAsync();
+            ConexionServiceManager.Detener();
             await Shell.Current.GoToAsync("//MainPage");
         }
     }

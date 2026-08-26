@@ -8,5 +8,6 @@ namespace CUIDAPP_API.Interfaces.Calificacion
         Task<CalificacionPromedioDto> ObtenerPromedioAsync(int usuarioId);
         Task<bool> ExisteCalificacionAsync(int trabajoId, int calificadorId);
         Task<CalificacionDto?> ObtenerCalificacionDeTrabajoAsync(int trabajoId, int calificadorId);
+        Task<List<CalificacionRecibidaDto>> ObtenerCalificacionesDeUsuarioAsync(int usuarioId);
     }
 }
