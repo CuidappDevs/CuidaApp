@@ -50,7 +50,20 @@ namespace CUIDAPP
 
         protected override Window CreateWindow(IActivationState? activationState)
         {
-            return new Window(new AppShell());
+            var window = new Window(new AppShell());
+
+            // Si el sistema operativo suspendió la app (pantalla apagada, cambio de app,
+            // etc.), el socket de SignalR puede haber muerto sin que ConectarAsync se
+            // vuelva a llamar desde ninguna pantalla. Al volver al primer plano, forzamos
+            // una reconexión (ConectarAsync ya es un no-op si sigue viva).
+            window.Resumed += (s, e) =>
+            {
+                var usuarioId = Preferences.Default.Get("UserId", 0);
+                if (usuarioId != 0)
+                    _ = RealtimeService.ConectarAsync(usuarioId);
+            };
+
+            return window;
         }
     }
 }

@@ -38,15 +38,29 @@ namespace CUIDAPP.Services
                 .WithAutomaticReconnect()
                 .Build();
 
-            _connection.On<object>("NuevaSolicitud", payload => DispatchNuevaSolicitud(payload));
-            _connection.On<object>("TrabajoActualizado", payload => DispatchTrabajoActualizado(payload));
-            _connection.On<object>("DisponibilidadCambio", payload => DispatchDisponibilidadCambio(payload));
+            _connection.On<object>("NuevaSolicitud", payload => { Console.WriteLine("[Realtime] Evento recibido: NuevaSolicitud"); DispatchNuevaSolicitud(payload); });
+            _connection.On<object>("TrabajoActualizado", payload => { Console.WriteLine("[Realtime] Evento recibido: TrabajoActualizado"); DispatchTrabajoActualizado(payload); });
+            _connection.On<object>("DisponibilidadCambio", payload => { Console.WriteLine("[Realtime] Evento recibido: DisponibilidadCambio"); DispatchDisponibilidadCambio(payload); });
             _connection.On<object>("UbicacionCuidadorCambio", payload => DispatchUbicacionCambio(payload));
-            _connection.On<object>("ActividadAgregada", payload => DispatchActividadAgregada(payload));
-            _connection.On<Mensaje>("MensajeNuevo", mensaje => MainThread.BeginInvokeOnMainThread(() => MensajeNuevo?.Invoke(mensaje)));
+            _connection.On<object>("ActividadAgregada", payload => { Console.WriteLine("[Realtime] Evento recibido: ActividadAgregada"); DispatchActividadAgregada(payload); });
+            _connection.On<Mensaje>("MensajeNuevo", mensaje =>
+            {
+                Console.WriteLine("[Realtime] Evento recibido: MensajeNuevo");
+                MainThread.BeginInvokeOnMainThread(() => MensajeNuevo?.Invoke(mensaje));
+            });
             _connection.On<object>("AlertaGeocerca", payload => DispatchAlertaGeocerca(payload));
 
-            _connection.Reconnected += async _ => await _connection.InvokeAsync("Unirse", usuarioId);
+            _connection.Reconnecting += ex =>
+            {
+                Console.WriteLine($"[Realtime] Reconectando... ({ex?.Message})");
+                return Task.CompletedTask;
+            };
+
+            _connection.Reconnected += async _ =>
+            {
+                Console.WriteLine("[Realtime] Reconectado, uniéndose al grupo de nuevo.");
+                await _connection.InvokeAsync("Unirse", usuarioId);
+            };
 
             // WithAutomaticReconnect() reintenta un rato y si no lo logra, dispara Closed
             // y se queda desconectado para siempre (no reintenta más por su cuenta). Sin
@@ -64,10 +78,11 @@ namespace CUIDAPP.Services
             {
                 await _connection.StartAsync();
                 await _connection.InvokeAsync("Unirse", usuarioId);
+                Console.WriteLine($"[Realtime] Conectado y unido al grupo del usuario {usuarioId} (hub: {ApiService.ServerOrigin}/hubs/trabajo).");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error conectando tiempo real: {ex.Message}");
+                Console.WriteLine($"[Realtime] ERROR conectando: {ex.GetType().Name}: {ex.Message}");
             }
         }
 
