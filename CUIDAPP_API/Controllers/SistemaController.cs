@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
 
 namespace CUIDAPP_API.Controllers
 {
@@ -7,28 +6,17 @@ namespace CUIDAPP_API.Controllers
     [ApiController]
     public class SistemaController : ControllerBase
     {
-        private readonly string _connectionString;
-
-        public SistemaController(IConfiguration config)
-        {
-            _connectionString = config.GetConnectionString("DefaultConnection") ?? "";
-        }
-
         // Fuente de verdad para validaciones de fecha/hora en el cliente (ej. PIN de
         // inicio/salida): la app compara contra ESTA hora, no contra el reloj del
-        // dispositivo, porque sp_IniciarTrabajo/sp_FinalizarTrabajo también validan
-        // contra GETDATE() del mismo servidor SQL. Si el reloj del teléfono está mal,
-        // ya no genera bloqueos "sin razón aparente".
+        // dispositivo. Se usa el reloj del servidor de la API (no el de SQL Server)
+        // porque el sistema operativo de la máquina de SQL Server está mal configurado
+        // (zona horaria incorrecta) y los stored procedures relevantes (sp_IniciarTrabajo,
+        // sp_ConfirmarFinalizacionTrabajo, etc.) ahora también reciben la hora como
+        // parámetro desde aquí en vez de generarla con GETDATE().
         [HttpGet("hora")]
-        public async Task<IActionResult> ObtenerHoraServidor()
+        public IActionResult ObtenerHoraServidor()
         {
-            using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand("SELECT GETDATE() AS HoraServidor", connection);
-
-            await connection.OpenAsync();
-            var horaServidor = (DateTime)(await command.ExecuteScalarAsync() ?? DateTime.Now);
-
-            return Ok(new { horaServidor });
+            return Ok(new { horaServidor = DateTime.Now });
         }
     }
 }
