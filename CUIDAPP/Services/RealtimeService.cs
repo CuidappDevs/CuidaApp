@@ -48,6 +48,18 @@ namespace CUIDAPP.Services
 
             _connection.Reconnected += async _ => await _connection.InvokeAsync("Unirse", usuarioId);
 
+            // WithAutomaticReconnect() reintenta un rato y si no lo logra, dispara Closed
+            // y se queda desconectado para siempre (no reintenta más por su cuenta). Sin
+            // este manejador, la app se queda sin tiempo real hasta que el usuario vuelve
+            // a visitar una pantalla que llame a ConectarAsync.
+            _connection.Closed += async ex =>
+            {
+                Console.WriteLine($"Conexión de tiempo real cerrada: {ex?.Message}");
+                await Task.Delay(TimeSpan.FromSeconds(3));
+                if (_usuarioIdConectado == usuarioId)
+                    await ConectarAsync(usuarioId);
+            };
+
             try
             {
                 await _connection.StartAsync();
