@@ -1,0 +1,92 @@
+@page "/"
+@page "/dashboard"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@using CUIDAPP_ADMINISTRATIVO.Services
+
+<PageTitle>Dashboard · Cuidapp Admin</PageTitle>
+
+<div class="d-grid gap-4 adm-two-col" style="grid-template-columns: 1.55fr 1fr; align-items: start;">
+
+    @* ----- Solicitudes pendientes ----- *@
+    <div class="adm-card overflow-hidden">
+        <div class="d-flex align-items-center justify-content-between adm-card-pad" style="border-bottom:1px solid var(--adm-line);">
+            <div class="d-flex flex-column" style="gap:3px;">
+                <span class="adm-card-title">Solicitudes pendientes de revisión</span>
+                <span class="adm-card-sub">Care Partners esperando aprobación de documentos</span>
+            </div>
+            <a href="care-partners" class="adm-btn adm-btn-outline">Ver todas</a>
+        </div>
+
+        @foreach (var q in AdminMockData.Queue())
+        {
+            <div class="d-flex flex-wrap align-items-center" style="gap:12px 16px; padding:16px 24px; border-bottom:1px solid var(--adm-line-soft);">
+                <div class="d-flex align-items-center justify-content-center flex-shrink-0"
+                     style="width:42px; height:42px; border-radius:14px; background:var(--cuid-blue-soft); font-size:14px; font-weight:600; color:var(--cuid-blue);">
+                    @q.Initials
+                </div>
+                <div class="d-flex flex-column" style="flex:1; min-width:0; gap:3px;">
+                    <span style="font-size:14.5px; font-weight:600;">@q.Name</span>
+                    <span class="adm-card-sub">@q.Meta</span>
+                </div>
+                <span class="flex-shrink-0" style="padding:5px 11px; border-radius:999px; font-size:12px; font-weight:600;
+                             background:@(q.DocsAlert ? "#FEE2E2" : "#F3F4F6"); color:@(q.DocsAlert ? "#DC2626" : "#6B7280");">
+                    @q.Docs
+                </span>
+                <span class="flex-shrink-0 text-end" style="width:96px; font-size:13px; color:var(--adm-muted-2);">@q.When</span>
+                <a href="@($"care-partners/{q.PartnerIndex}")" class="adm-btn flex-shrink-0"
+                   style="height:36px; padding:0 16px; border:none; border-radius:11px; background:var(--cuid-blue); color:#fff; font-size:13px;">
+                    Revisar
+                </a>
+            </div>
+        }
+    </div>
+
+    @* ----- Columna derecha ----- *@
+    <div class="d-flex flex-column gap-4">
+
+        @* Gráfico *@
+        <div class="adm-card adm-card-pad d-flex flex-column" style="gap:20px;">
+            <div class="d-flex flex-column" style="gap:3px;">
+                <span class="adm-card-title">Registros por semana</span>
+                <span class="adm-card-sub">Care Partners y clientes nuevos</span>
+            </div>
+            <div class="adm-bars">
+                @foreach (var w in AdminMockData.Weeks)
+                {
+                    <div class="adm-bar-col">
+                        <div class="adm-bar-pair">
+                            <div class="adm-bar adm-bar-a" style="height:@(w.H1)%;"></div>
+                            <div class="adm-bar adm-bar-b" style="height:@(w.H2)%;"></div>
+                        </div>
+                        <span class="adm-bar-label">@w.Label</span>
+                    </div>
+                }
+            </div>
+            <div class="d-flex" style="gap:18px;">
+                <span class="d-flex align-items-center" style="gap:7px; font-size:12.5px; color:var(--adm-muted);">
+                    <span class="adm-legend-dot adm-bar-a"></span>Care Partners
+                </span>
+                <span class="d-flex align-items-center" style="gap:7px; font-size:12.5px; color:var(--adm-muted);">
+                    <span class="adm-legend-dot adm-bar-b"></span>Clientes
+                </span>
+            </div>
+        </div>
+
+        @* Actividad *@
+        <div class="adm-card adm-card-pad d-flex flex-column" style="gap:18px;">
+            <span class="adm-card-title">Actividad reciente</span>
+            <div class="d-flex flex-column" style="gap:16px;">
+                @foreach (var a in AdminMockData.Activity)
+                {
+                    <div class="d-flex" style="gap:12px;">
+                        <span class="adm-timeline-dot" style="background:@a.Dot;"></span>
+                        <div class="d-flex flex-column" style="gap:2px;">
+                            <span class="adm-timeline-text">@a.Text</span>
+                            <span class="adm-timeline-when">@a.Who</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

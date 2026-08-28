@@ -1,0 +1,146 @@
+@page "/login"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AuthLayout
+
+<PageTitle>Iniciar sesión · Cuidapp</PageTitle>
+
+<div class="login-page">
+    <div class="row g-0 min-vh-100">
+
+        @* ---------- Columna izquierda: formulario ---------- *@
+        <div class="col-12 col-lg-6 d-flex flex-column justify-content-between login-form-col">
+
+            @* Marca *@
+            <div class="d-flex align-items-center gap-2">
+                <img src="img/cuidapp-logo.png" alt="Cuidapp" class="login-logo" />
+                <span class="login-brand-name">Cuidapp</span>
+                <span class="login-badge ms-1">Panel administrativo</span>
+            </div>
+
+            @* Bloque central *@
+            <div class="login-center">
+                <div class="mb-4">
+                    <h1 class="login-title mb-2">Iniciar sesión</h1>
+                    <p class="login-subtitle mb-0">Acceso exclusivo para personal autorizado de Cuidapp.</p>
+                </div>
+
+                @if (_showError)
+                {
+                    <div class="login-alert d-flex gap-2 mb-4" role="alert">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444"
+                             stroke-width="2" stroke-linecap="round" class="flex-shrink-0 mt-1">
+                            <circle cx="12" cy="12" r="9"></circle>
+                            <path d="M12 8v4M12 16h.01"></path>
+                        </svg>
+                        <span class="login-alert-text">@_errorMessage</span>
+                    </div>
+                }
+
+                <EditForm Model="_model" OnValidSubmit="HandleLogin">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label login-label">Correo electrónico</label>
+                        <InputText id="email" @bind-Value="_model.Email" type="email"
+                                   class="form-control login-input" placeholder="nombre@cuidapp.do" autocomplete="username" />
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="password" class="form-label login-label">Contraseña</label>
+                        <div class="login-password-wrap">
+                            <InputText id="password" @bind-Value="_model.Password"
+                                       type="@(_showPassword ? "text" : "password")"
+                                       class="form-control login-input login-input--password"
+                                       placeholder="••••••••••" autocomplete="current-password" />
+                            <button type="button" class="login-toggle" @onclick="TogglePassword">
+                                @(_showPassword ? "Ocultar" : "Mostrar")
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn login-submit w-100" disabled="@_submitting">
+                        @if (_submitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>Verificando…</span>
+                        }
+                        else
+                        {
+                            <span>Entrar al panel</span>
+                        }
+                    </button>
+                </EditForm>
+            </div>
+
+            @* Pie *@
+            <p class="login-foot mb-0">El acceso lo otorga el equipo de Cuidapp. Cada sesión queda registrada.</p>
+        </div>
+
+        @* ---------- Columna derecha: panel de marca ---------- *@
+        <div class="col-lg-6 d-none d-lg-flex flex-column justify-content-between login-brand-col">
+            <div class="login-brand-grid"></div>
+            <div class="login-brand-ring login-brand-ring--1"></div>
+            <div class="login-brand-ring login-brand-ring--2"></div>
+
+            <div class="login-eyebrow position-relative">Confianza verificada</div>
+
+            <div class="position-relative login-brand-copy">
+                <h2 class="login-brand-headline mb-3">
+                    Detrás de cada Care Partner aprobada hay una persona que revisó sus documentos.
+                </h2>
+                <p class="login-brand-lead mb-0">
+                    Este panel es ese momento de verificación. Trátalo con el mismo cuidado que los datos que custodia.
+                </p>
+            </div>
+
+            <div class="position-relative d-flex flex-column gap-2">
+                @foreach (var pillar in _pillars)
+                {
+                    <div class="login-pillar d-flex align-items-center gap-2">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff"
+                             stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0">
+                            <path d="M20 6 9 17l-5-5"></path>
+                        </svg>
+                        <span class="login-pillar-text">@pillar</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@code {
+    private readonly LoginModel _model = new();
+    private bool _showPassword;
+    private bool _submitting;
+    private bool _showError;
+    private string _errorMessage = "No tienes permisos para acceder al panel administrativo.";
+
+    private readonly string[] _pillars =
+    {
+        "Identidad validada con cédula",
+        "Antecedentes penales revisados",
+        "Seguimiento y códigos de seguridad"
+    };
+
+    private void TogglePassword() => _showPassword = !_showPassword;
+
+    private async Task HandleLogin()
+    {
+        _showError = false;
+        _submitting = true;
+
+        // TODO: conectar con la API de autenticación (auth/login) y validar RolId == 1 (Admin).
+        // El endpoint de login para administradores todavía no existe en CUIDAPP_API.
+        await Task.Delay(600); // simula la llamada mientras no hay backend
+
+        _submitting = false;
+        _showError = true; // sin backend, mostramos el estado de error del diseño
+    }
+
+    private sealed class LoginModel
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+}

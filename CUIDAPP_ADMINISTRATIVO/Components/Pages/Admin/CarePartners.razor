@@ -1,0 +1,60 @@
+@page "/care-partners"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@using CUIDAPP_ADMINISTRATIVO.Services
+
+<PageTitle>Care Partners · Cuidapp Admin</PageTitle>
+
+<div class="d-flex flex-column gap-3">
+
+    @* Filtros *@
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex flex-wrap" style="gap:8px;">
+            <button type="button" class="adm-filter">Todas</button>
+            <button type="button" class="adm-filter active">Pendientes (12)</button>
+            <button type="button" class="adm-filter">Verificadas</button>
+            <button type="button" class="adm-filter">Rechazadas</button>
+        </div>
+        <span class="adm-card-sub">148 Care Partners registradas</span>
+    </div>
+
+    @* Tabla *@
+    <div class="adm-card overflow-hidden">
+        <div class="adm-thead">
+            <span class="adm-th">Care Partner</span>
+            <span class="adm-th">Cédula</span>
+            <span class="adm-th">Teléfono</span>
+            <span class="adm-th">Verificación</span>
+            <span></span>
+        </div>
+
+        @for (var i = 0; i < AdminMockData.Partners.Count; i++)
+        {
+            var p = AdminMockData.Partners[i];
+            var pill = AdminMockData.Pill(p.Key);
+            var idx = i;
+            <div class="adm-trow">
+                <div class="d-flex align-items-center" style="gap:12px; min-width:0;">
+                    <div class="adm-avatar-sq">@AdminMockData.Initials(p.Name)</div>
+                    <div class="d-flex flex-column" style="gap:2px; min-width:0;">
+                        <span class="adm-cell-strong">@p.Name</span>
+                        <span style="font-size:12.5px; color:var(--adm-muted);">@p.Category</span>
+                    </div>
+                </div>
+                <span class="adm-cell">@p.Cedula</span>
+                <span class="adm-cell">@p.Tel</span>
+                <span class="adm-pill" style="justify-self:start; background:@pill.Bg; color:@pill.Fg;">
+                    <span class="adm-pill-dot" style="background:@pill.Fg;"></span>@p.Status
+                </span>
+                <a href="@($"care-partners/{idx}")" class="adm-btn adm-btn-ghost-line" style="justify-self:end;">Ver ficha</a>
+            </div>
+        }
+
+        <div class="adm-pager">
+            <span class="adm-card-sub">Mostrando 7 de 148</span>
+            <div class="d-flex" style="gap:8px;">
+                <button type="button" class="adm-pager-btn" style="color:var(--adm-muted-2);">Anterior</button>
+                <button type="button" class="adm-pager-btn" style="color:var(--adm-ink);">Siguiente</button>
+            </div>
+        </div>
+    </div>
+</div>
