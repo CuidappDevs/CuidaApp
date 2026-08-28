@@ -1,7 +1,6 @@
 using CUIDAPP_ADMINISTRATIVO.Components;
 
 var builder = WebApplication.CreateBuilder(args);
-// Comentario
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
