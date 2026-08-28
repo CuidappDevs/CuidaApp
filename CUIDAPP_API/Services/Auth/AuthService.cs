@@ -114,6 +114,48 @@ namespace CUIDAPP_API.Services.Auth
             return Convert.ToInt32(result);
         }
 
+        public async Task<(bool Success, Guid ResetToken, string Message)> ForgotPasswordAsync(ForgotPasswordDto dto)
+        {
+            using var connection = new SqlConnection(_connectionString);
+
+            using var cmdFind = new SqlCommand("SELECT Id FROM Usuarios WHERE Email = @Email", connection);
+            cmdFind.Parameters.AddWithValue("@Email", dto.Email);
+            await connection.OpenAsync();
+            var userId = await cmdFind.ExecuteScalarAsync();
+
+            if (userId == null)
+                return (false, Guid.Empty, "No se encontró una cuenta con ese correo");
+
+            var code = new Random().Next(100000, 999999).ToString();
+            var expiresAt = DateTime.UtcNow.AddMinutes(15);
+
+            using var cmdReset = new SqlCommand("sp_CrearPasswordReset", connection);
+            cmdReset.CommandType = CommandType.StoredProcedure;
+            cmdReset.Parameters.AddWithValue("@UserId", Convert.ToInt32(userId));
+            cmdReset.Parameters.AddWithValue("@Code", code);
+            cmdReset.Parameters.AddWithValue("@ExpiresAt", expiresAt);
+
+            var resetToken = (Guid)await cmdReset.ExecuteScalarAsync();
+            return (true, resetToken, code);
+        }
+
+        public async Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordDto dto)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_ActualizarPasswordConReset", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@Email", dto.Email);
+            command.Parameters.AddWithValue("@Code", dto.Code);
+            command.Parameters.AddWithValue("@PasswordHash", HashPassword(dto.NewPassword));
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+                return (Convert.ToBoolean(reader["Success"]), reader["Message"].ToString() ?? "");
+
+            return (false, "Error al procesar la solicitud");
+        }
+
         private string GenerateJwtToken(string email, string role, string userId)
         {
             var jwtSettings = _config.GetSection("Jwt");

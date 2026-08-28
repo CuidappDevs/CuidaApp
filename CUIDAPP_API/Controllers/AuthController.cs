@@ -59,5 +59,39 @@ namespace CUIDAPP_API.Controllers
                 return StatusCode(500, $"Error al registrar: {ex.Message}");
             }
         }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+        {
+            try
+            {
+                var (success, resetToken, message) = await _authService.ForgotPasswordAsync(dto);
+                if (!success)
+                    return BadRequest(new { Message = message });
+
+                return Ok(new { Message = "Código enviado", ResetToken = resetToken, Code = message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+        {
+            try
+            {
+                var (success, message) = await _authService.ResetPasswordAsync(dto);
+                if (!success)
+                    return BadRequest(new { Message = message });
+
+                return Ok(new { Message = message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
     }
 }
