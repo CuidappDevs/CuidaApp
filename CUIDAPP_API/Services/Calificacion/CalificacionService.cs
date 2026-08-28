@@ -65,5 +65,61 @@ namespace CUIDAPP_API.Services.Calificacion
             var resultado = await command.ExecuteScalarAsync();
             return Convert.ToInt32(resultado) == 1;
         }
+
+        public async Task<CalificacionDto?> ObtenerCalificacionDeTrabajoAsync(int trabajoId, int calificadorId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_ObtenerCalificacionDeTrabajo", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@TrabajoId", trabajoId);
+            command.Parameters.AddWithValue("@CalificadorId", calificadorId);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+                return null;
+
+            return new CalificacionDto
+            {
+                Id = Convert.ToInt32(reader["Id"]),
+                TrabajoId = Convert.ToInt32(reader["TrabajoId"]),
+                CalificadorId = Convert.ToInt32(reader["CalificadorId"]),
+                CalificadoId = Convert.ToInt32(reader["CalificadoId"]),
+                Puntuacion = Convert.ToInt32(reader["Puntuacion"]),
+                Comentario = reader["Comentario"] as string,
+                FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"])
+            };
+        }
+
+        public async Task<List<CalificacionRecibidaDto>> ObtenerCalificacionesDeUsuarioAsync(int usuarioId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_ObtenerCalificacionesDeUsuario", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@UsuarioId", usuarioId);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+
+            var calificaciones = new List<CalificacionRecibidaDto>();
+            while (await reader.ReadAsync())
+            {
+                calificaciones.Add(new CalificacionRecibidaDto
+                {
+                    Id = Convert.ToInt32(reader["Id"]),
+                    TrabajoId = Convert.ToInt32(reader["TrabajoId"]),
+                    CalificadorId = Convert.ToInt32(reader["CalificadorId"]),
+                    CalificadorNombre = reader["CalificadorNombre"] as string ?? "",
+                    CalificadorFotoUrl = reader["CalificadorFotoUrl"] as string,
+                    Puntuacion = Convert.ToInt32(reader["Puntuacion"]),
+                    Comentario = reader["Comentario"] as string,
+                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
+                    TipoServicio = reader["TipoServicio"] as string
+                });
+            }
+
+            return calificaciones;
+        }
     }
 }

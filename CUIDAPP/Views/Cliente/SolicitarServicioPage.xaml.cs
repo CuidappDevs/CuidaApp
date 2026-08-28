@@ -23,8 +23,8 @@ namespace CUIDAPP.Views.Cliente
         public SolicitarServicioPage()
         {
             InitializeComponent();
-            PickerFecha.MinimumDate = DateTime.Today;
-            PickerFecha.Date = DateTime.Today;
+            PickerFecha.MinimumDate = ServerClock.Today;
+            PickerFecha.Date = ServerClock.Today;
             PickerHoraInicio.Time = new TimeSpan(9, 0, 0);
             PickerHoraFin.Time = new TimeSpan(11, 0, 0);
 
@@ -98,6 +98,13 @@ namespace CUIDAPP.Views.Cliente
                 return;
             }
 
+            var fechaSeleccionada = (PickerFecha.Date ?? ServerClock.Today).Date;
+            if (fechaSeleccionada == ServerClock.Today && PickerHoraInicio.Time <= ServerClock.Now.TimeOfDay)
+            {
+                await DisplayAlert("Horario inválido", $"Ya son las {ServerClock.Now:h:mm tt}. Elige una hora de inicio más adelante hoy, o programa el servicio para otro día.", "OK");
+                return;
+            }
+
             var clienteId = Preferences.Default.Get("UserId", 0);
             if (clienteId == 0)
             {
@@ -110,11 +117,13 @@ namespace CUIDAPP.Views.Cliente
 
             try
             {
-                var trabajoActivo = await _apiService.ObtenerTrabajoActivoPorClienteAsync(clienteId);
-                if (trabajoActivo != null)
+                // El cliente puede tener varios servicios activos a la vez (con distintos
+                // cuidadores o lugares); solo evitamos duplicar una solicitud al mismo
+                // cuidador mientras ya tenga una pendiente o en curso con él.
+                var serviciosActivos = await _apiService.ObtenerTrabajosActivosPorClienteAsync(clienteId);
+                if (serviciosActivos.Any(t => t.CuidadorId == cuidador.Id && t.Estado is 1 or 2 or 3))
                 {
-                    await DisplayAlert("Ya tienes un servicio activo", "No puedes solicitar otro servicio mientras tengas uno pendiente o en curso.", "OK");
-                    await Shell.Current.GoToAsync("../../..");
+                    await DisplayAlert("Ya tienes una solicitud con este cuidador", "Ya tienes un servicio pendiente o en curso con este mismo cuidador.", "OK");
                     return;
                 }
 

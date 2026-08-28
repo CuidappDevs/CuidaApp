@@ -1,0 +1,137 @@
+@page "/clientes/{Id:int}"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@using CUIDAPP_ADMINISTRATIVO.Services
+
+<PageTitle>Ficha de cliente · Cuidapp Admin</PageTitle>
+
+@if (_client is null)
+{
+    <div class="adm-card adm-card-pad">
+        <p class="mb-2">No se encontró el cliente solicitado.</p>
+        <a href="clientes" class="adm-btn adm-btn-outline">Volver a Clientes</a>
+    </div>
+}
+else
+{
+    var c = _client;
+    var pill = AdminMockData.Pill(c.Key);
+    <div class="d-flex flex-column gap-4">
+        <a href="clientes" class="adm-back">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m15 18-6-6 6-6"></path>
+            </svg>
+            Volver a Clientes
+        </a>
+
+        <div class="d-grid gap-4 adm-two-col" style="grid-template-columns: 1.4fr 1fr; align-items: start;">
+
+            @* ----- Columna izquierda ----- *@
+            <div class="d-flex flex-column gap-4">
+
+                @* Perfil *@
+                <div class="adm-card d-flex" style="padding:28px; gap:22px;">
+                    <div class="adm-avatar-lg">@AdminMockData.Initials(c.Name)</div>
+                    <div class="d-flex flex-column" style="flex:1; gap:16px;">
+                        <div class="d-flex align-items-start justify-content-between gap-3">
+                            <div class="d-flex flex-column" style="gap:5px;">
+                                <span style="font-size:24px; font-weight:600; letter-spacing:-0.01em;">@c.Name</span>
+                                <span style="font-size:14px; color:var(--adm-muted);">Cliente desde marzo 2025 &middot; Arroyo Hondo, D. N.</span>
+                            </div>
+                            <span class="adm-pill flex-shrink-0" style="padding:6px 13px; background:@pill.Bg; color:@pill.Fg;">
+                                <span class="adm-pill-dot" style="background:@pill.Fg;"></span>Cuenta @c.Status.ToLower()
+                            </span>
+                        </div>
+                        <div class="d-grid" style="grid-template-columns:repeat(3,1fr); gap:18px 24px; padding-top:4px; border-top:1px solid var(--adm-line-soft);">
+                            @foreach (var f in AdminMockData.ClientFields(c))
+                            {
+                                <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
+                                    <span class="adm-field-k">@f.Key</span>
+                                    <span class="adm-field-v">@f.Value</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                @* Servicios contratados *@
+                <div class="adm-card overflow-hidden">
+                    <div class="d-flex flex-column" style="gap:4px; padding:24px 28px 20px;">
+                        <span class="adm-card-title">Servicios contratados</span>
+                        <span class="adm-card-sub">Últimos servicios solicitados por este hogar.</span>
+                    </div>
+                    <div class="d-grid adm-sv-head" style="grid-template-columns:1.5fr 1.6fr 1fr 110px; gap:16px; padding:12px 28px; background:var(--adm-surface); border-top:1px solid var(--adm-line); border-bottom:1px solid var(--adm-line);">
+                        <span class="adm-th">Servicio</span>
+                        <span class="adm-th">Care Partner</span>
+                        <span class="adm-th">Fecha</span>
+                        <span class="adm-th">Estado</span>
+                    </div>
+                    @foreach (var sv in AdminMockData.ClientServices)
+                    {
+                        <div class="d-grid align-items-center" style="grid-template-columns:1.5fr 1.6fr 1fr 110px; gap:16px; padding:14px 28px; border-bottom:1px solid var(--adm-line-soft);">
+                            <span style="font-size:14px; font-weight:600;">@sv.Type</span>
+                            <span class="adm-cell">@sv.Partner</span>
+                            <span style="font-size:14px; color:var(--adm-muted);">@sv.Date</span>
+                            <span style="justify-self:start; padding:4px 11px; border-radius:999px; font-size:12.5px; font-weight:600; background:@sv.Bg; color:@sv.Fg;">@sv.State</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @* ----- Columna derecha ----- *@
+            <div class="d-flex flex-column gap-4">
+
+                @* Estado de la cuenta *@
+                <div class="adm-card d-flex flex-column" style="padding:26px; gap:20px;">
+                    <div class="d-flex flex-column" style="gap:4px;">
+                        <span class="adm-card-title">Estado de la cuenta</span>
+                        <span class="adm-card-sub" style="line-height:1.55;">Cualquier cambio queda registrado con tu nombre y la fecha.</span>
+                    </div>
+                    <div class="d-flex flex-column" style="gap:12px;">
+                        @foreach (var fl in AdminMockData.ClientFlags)
+                        {
+                            <div class="adm-flag-row">
+                                <span style="font-size:13.5px; color:var(--adm-ink-2);">@fl.Label</span>
+                                <span class="d-inline-flex align-items-center flex-shrink-0" style="gap:6px; font-size:12.5px; font-weight:600; color:@fl.Fg;">
+                                    <span class="adm-pill-dot" style="background:@fl.Fg;"></span>@fl.Value
+                                </span>
+                            </div>
+                        }
+                    </div>
+                    <textarea class="adm-textarea" placeholder="Nota interna (opcional)"></textarea>
+                    <div class="d-flex flex-column" style="gap:10px;">
+                        <button type="button" class="adm-btn adm-btn-lg adm-btn-save">Guardar cambios</button>
+                        <button type="button" class="adm-btn adm-btn-lg adm-btn-danger">Suspender cuenta</button>
+                    </div>
+                </div>
+
+                @* Historial *@
+                <div class="adm-card d-flex flex-column" style="padding:26px; gap:18px;">
+                    <span class="adm-card-title">Historial de la cuenta</span>
+                    <div class="d-flex flex-column" style="gap:16px;">
+                        @foreach (var h in AdminMockData.ClientHistory)
+                        {
+                            <div class="d-flex" style="gap:12px;">
+                                <span class="adm-timeline-dot" style="background:@h.Dot;"></span>
+                                <div class="d-flex flex-column" style="gap:2px;">
+                                    <span class="adm-timeline-text">@h.Text</span>
+                                    <span class="adm-timeline-when">@h.When</span>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Client? _client;
+
+    protected override void OnParametersSet()
+    {
+        _client = Id >= 0 && Id < AdminMockData.Clients.Count ? AdminMockData.Clients[Id] : null;
+    }
+}

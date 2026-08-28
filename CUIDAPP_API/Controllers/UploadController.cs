@@ -8,9 +8,11 @@ namespace CUIDAPP_API.Controllers
     public class UploadController : ControllerBase
     {
         private readonly IWebHostEnvironment _env;
-        private static readonly string[] ExtensionesPermitidas = { ".jpg", ".jpeg", ".png", ".pdf" };
+        private static readonly string[] ExtensionesPermitidas = { ".jpg", ".jpeg", ".png", ".pdf", ".m4a", ".mp3", ".wav", ".aac" };
         private const long TamanoMaximoBytes = 10 * 1024 * 1024; // 10 MB
-        private static readonly Regex CarpetaValida = new(@"^[a-zA-Z0-9\-_]{1,80}$", RegexOptions.Compiled);
+        // Permite subcarpetas de un solo nivel (ej. "chat/42") para organizar por usuario,
+        // sin abrir la puerta a "..", rutas absolutas, ni traversal fuera de uploads/usuarios.
+        private static readonly Regex CarpetaValida = new(@"^[a-zA-Z0-9\-_]{1,40}(\/[a-zA-Z0-9\-_]{1,40})?$", RegexOptions.Compiled);
 
         public UploadController(IWebHostEnvironment env)
         {
@@ -30,27 +32,38 @@ namespace CUIDAPP_API.Controllers
 
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
             if (!ExtensionesPermitidas.Contains(extension))
-                return BadRequest("Tipo de archivo no permitido. Usa JPG, PNG o PDF.");
+                return BadRequest("Tipo de archivo no permitido. Usa JPG, PNG, PDF o un formato de audio soportado (M4A, MP3, WAV, AAC).");
 
             var nombreCarpeta = !string.IsNullOrWhiteSpace(carpeta) && CarpetaValida.IsMatch(carpeta)
                 ? carpeta
                 : DateTime.UtcNow.ToString("yyyyMM");
 
+            // Reemplaza "/" por Path.DirectorySeparatorChar explícitamente para evitar
+            // cualquier ambigüedad de Path.Combine con subcarpetas tipo "chat/42" entre
+            // distintos sistemas operativos de hosting.
+            var segmentosCarpeta = nombreCarpeta.Split('/');
             var webRoot = _env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot");
-            var directorioDestino = Path.Combine(webRoot, "uploads", "usuarios", nombreCarpeta);
-            Directory.CreateDirectory(directorioDestino);
+            var directorioDestino = Path.Combine(new[] { webRoot, "uploads", "usuarios" }.Concat(segmentosCarpeta).ToArray());
 
-            var nombreArchivo = $"{Guid.NewGuid()}{extension}";
-            var rutaCompleta = Path.Combine(directorioDestino, nombreArchivo);
-
-            using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+            try
             {
-                await file.CopyToAsync(stream);
+                Directory.CreateDirectory(directorioDestino);
+
+                var nombreArchivo = $"{Guid.NewGuid()}{extension}";
+                var rutaCompleta = Path.Combine(directorioDestino, nombreArchivo);
+
+                using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var urlRelativa = $"/uploads/usuarios/{nombreCarpeta}/{nombreArchivo}";
+                return Ok(new { url = urlRelativa });
             }
-
-            var urlRelativa = $"/uploads/usuarios/{nombreCarpeta}/{nombreArchivo}";
-
-            return Ok(new { url = urlRelativa });
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"No se pudo guardar el archivo en el servidor ({ex.GetType().Name}): {ex.Message}. Ruta destino: {directorioDestino}");
+            }
         }
     }
 }

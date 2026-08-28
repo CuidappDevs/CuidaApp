@@ -1,0 +1,157 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject NavigationManager Nav
+
+<div class="adm-shell">
+
+    @* ---------- Sidebar ---------- *@
+    <aside class="adm-sidebar @(_collapsed ? "is-collapsed" : "")">
+        <div class="d-flex flex-column" style="gap:28px;">
+            <div class="adm-brand">
+                <img src="img/cuidapp-logo.png" alt="Cuidapp" />
+                @if (!_collapsed)
+                {
+                    <div class="d-flex flex-column" style="gap:1px; overflow:hidden;">
+                        <span class="adm-brand-name">Cuidapp</span>
+                        <span class="adm-brand-sub">Panel admin</span>
+                    </div>
+                }
+            </div>
+
+            <nav class="adm-nav">
+                @foreach (var item in _navItems)
+                {
+                    <a class="adm-nav-item @(IsActive(item.Section) ? "active" : "")"
+                       href="@item.Href" title="@item.Label">
+                        <span class="adm-nav-icon">
+                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="@item.IconPath"></path>
+                            </svg>
+                        </span>
+                        @if (!_collapsed)
+                        {
+                            <span class="adm-nav-label">@item.Label</span>
+                            @if (item.Count is int c)
+                            {
+                                <span class="adm-nav-count">@c</span>
+                            }
+                        }
+                    </a>
+                }
+            </nav>
+        </div>
+
+        <button type="button" class="adm-collapse-btn" @onclick="ToggleSidebar">
+            <span style="flex:none; width:20px; display:flex; justify-content:center;">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="@(_collapsed ? "m9 18 6-6-6-6" : "m15 18-6-6 6-6")"></path>
+                </svg>
+            </span>
+            @if (!_collapsed)
+            {
+                <span>Colapsar menú</span>
+            }
+        </button>
+    </aside>
+
+    @* ---------- Main ---------- *@
+    <div class="adm-main">
+        <header class="adm-header">
+            <div class="d-flex align-items-center gap-2" style="min-width:0;">
+                <span class="adm-header-title">@_title</span>
+                <span class="adm-header-sub">@_subtitle</span>
+            </div>
+            <div class="d-flex align-items-center" style="gap:16px; flex:none;">
+                <div class="adm-search">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round">
+                        <circle cx="11" cy="11" r="7"></circle>
+                        <path d="m20 20-3.5-3.5"></path>
+                    </svg>
+                    <input type="text" placeholder="Buscar por nombre o cédula" />
+                </div>
+                <div class="adm-divider-v"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="adm-avatar">LM</div>
+                    <div class="d-flex flex-column">
+                        <span style="font-size:13px; font-weight:600;">Laura Méndez</span>
+                        <span style="font-size:12px; color:var(--adm-muted);">Verificaciones</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="adm-content">
+            @Body
+        </div>
+    </div>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    private bool _collapsed;
+    private string _title = "";
+    private string _subtitle = "";
+
+    private record NavItem(string Section, string Label, string Href, string IconPath, int? Count);
+
+    private readonly NavItem[] _navItems =
+    {
+        new("dash", "Dashboard", "dashboard", "M4 13h6V4H4zM14 20h6v-9h-6zM4 20h6v-4H4zM14 8h6V4h-6z", null),
+        new("partners", "Care Partners", "care-partners", "M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M18 8l2 2 3-3", 12),
+        new("clients", "Clientes", "clientes", "M3 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M9 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M17 20v-2a4 4 0 0 0-2-3.4M16 3.5a3.5 3.5 0 0 1 0 7", null),
+    };
+
+    protected override void OnInitialized()
+    {
+        Nav.LocationChanged += OnLocationChanged;
+        UpdateHeader();
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        UpdateHeader();
+        StateHasChanged();
+    }
+
+    private string Segment()
+    {
+        var rel = Nav.ToBaseRelativePath(Nav.Uri).TrimStart('/');
+        var q = rel.IndexOf('?');
+        if (q >= 0) rel = rel[..q];
+        return rel;
+    }
+
+    private string CurrentSection()
+    {
+        var seg = Segment();
+        if (seg.StartsWith("care-partners")) return "partners";
+        if (seg.StartsWith("clientes")) return "clients";
+        return "dash";
+    }
+
+    private bool IsActive(string section) => CurrentSection() == section;
+
+    private void UpdateHeader()
+    {
+        var seg = Segment();
+        (_title, _subtitle) = seg switch
+        {
+            "care-partners" => ("Care Partners registradas", "148 registros · 12 pendientes de revisión"),
+            _ when seg.StartsWith("care-partners/") => ("Ficha de Care Partner", "Revisión de documentos"),
+            "clientes" => ("Clientes registrados", "1,206 hogares en la plataforma"),
+            _ when seg.StartsWith("clientes/") => ("Ficha de cliente", "Cuenta y servicios contratados"),
+            _ => ("Dashboard", "Lunes 24 de agosto, 2026"),
+        };
+    }
+
+    private void ToggleSidebar() => _collapsed = !_collapsed;
+
+    public void Dispose() => Nav.LocationChanged -= OnLocationChanged;
+}

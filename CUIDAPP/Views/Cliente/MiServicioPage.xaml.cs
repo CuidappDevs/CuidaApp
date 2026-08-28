@@ -6,7 +6,6 @@ namespace CUIDAPP.Views.Cliente
     public partial class MiServicioPage : ContentPage
     {
         private readonly ApiService _apiService = new ApiService();
-        private TrabajoCliente? trabajo;
 
         public MiServicioPage()
         {
@@ -17,7 +16,7 @@ namespace CUIDAPP.Views.Cliente
         {
             base.OnAppearing();
             RealtimeService.TrabajoActualizado += OnTrabajoActualizadoTiempoReal;
-            await CargarTrabajo();
+            await CargarServicios();
         }
 
         protected override void OnDisappearing()
@@ -28,153 +27,116 @@ namespace CUIDAPP.Views.Cliente
 
         private async void OnTrabajoActualizadoTiempoReal(int trabajoId, int estado)
         {
-            await CargarTrabajo();
+            await CargarServicios();
         }
 
-        private async Task CargarTrabajo()
+        private async Task CargarServicios()
         {
             var clienteId = Preferences.Default.Get("UserId", 0);
             if (clienteId == 0)
                 return;
 
             LoadingIndicator.IsRunning = true;
-            ContenedorInfo.IsVisible = false;
+            ListaServicios.Clear();
             ContenedorVacio.IsVisible = false;
 
-            trabajo = await _apiService.ObtenerTrabajoActivoPorClienteAsync(clienteId);
+            var servicios = await _apiService.ObtenerTrabajosActivosPorClienteAsync(clienteId);
 
             LoadingIndicator.IsRunning = false;
 
-            if (trabajo == null)
+            if (servicios.Count == 0)
             {
                 ContenedorVacio.IsVisible = true;
                 return;
             }
 
-            ContenedorInfo.IsVisible = true;
-            Renderizar(trabajo);
+            // Con un solo servicio activo, saltamos directo al detalle (misma experiencia de antes).
+            // Usamos "../DetalleServicioClientePage" (en vez de solo el nombre de ruta) para que
+            // esta página se reemplace en la pila de navegación, no se apile debajo: si no,
+            // el botón "atrás" del detalle regresa aquí y este OnAppearing vuelve a saltar
+            // adelante de inmediato, dando la sensación de un loop/bug al usuario.
+            if (servicios.Count == 1)
+            {
+                await Shell.Current.GoToAsync($"../DetalleServicioClientePage", new Dictionary<string, object> { { "TrabajoId", servicios[0].Id } });
+                return;
+            }
+
+            foreach (var servicio in servicios)
+                ListaServicios.Add(CrearTarjetaServicio(servicio));
         }
 
-        private void Renderizar(TrabajoCliente t)
+        private View CrearTarjetaServicio(TrabajoCliente t)
         {
-            LblCuidadorNombre.Text = t.CuidadorNombre;
-            LblTipoServicio.Text = t.TipoServicio;
-
-            if (!string.IsNullOrWhiteSpace(t.CuidadorFotoUrl))
-                ImgCuidador.Source = $"{ApiService.ServerOrigin}{t.CuidadorFotoUrl}";
-
-            LblFechaHora.Text = $"{t.Fecha:dddd, d 'de' MMMM} · {FormatearHora(t.HoraInicio)} - {FormatearHora(t.HoraFin)}";
-            LblDireccion.Text = string.IsNullOrWhiteSpace(t.Direccion) ? "Sin dirección" : t.Direccion;
-            LblPago.Text = $"RD${t.Tarifa:N2}";
-
             var (colorFondo, colorTexto, texto) = t.Estado switch
             {
-                1 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), "Esperando respuesta del cuidador"),
-                2 => (Color.FromArgb("#DBEAFE"), Color.FromArgb("#1E40AF"), "Aceptado, tu cuidador asistirá en la fecha programada"),
+                1 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), "Esperando respuesta"),
+                2 => (Color.FromArgb("#DBEAFE"), Color.FromArgb("#1E40AF"), "Aceptado"),
                 3 => (Color.FromArgb("#EDE9FE"), Color.FromArgb("#5B21B6"), "En progreso"),
-                4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), "Servicio completado"),
-                5 => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "Cancelado"),
-                6 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#991B1B"), "Rechazado por el cuidador"),
-                _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "Desconocido")
-            };
-            BadgeEstado.BackgroundColor = colorFondo;
-            DotEstado.BackgroundColor = colorTexto;
-            LblEstado.TextColor = colorTexto;
-            LblEstado.Text = texto;
-
-            BtnCancelar.IsVisible = t.Estado == 1;
-            BtnCalificar.IsVisible = t.Estado == 4;
-
-            CardPin.IsVisible = t.Estado is 2 or 3 && !string.IsNullOrWhiteSpace(t.PinInicio);
-            if (CardPin.IsVisible)
-                LblPin.Text = t.PinInicio;
-
-            RenderizarPasos(t.Estado);
-        }
-
-        private void RenderizarPasos(int estado)
-        {
-            ListaPasos.Clear();
-
-            var pasos = new List<(string Texto, bool Completado)>
-            {
-                ("Solicitud enviada", true),
-                ("Cuidador aceptó", estado >= 2 && estado != 6),
-                ("Servicio en progreso", estado >= 3 && estado != 6 && estado != 5),
-                ("Servicio completado", estado == 4)
+                4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), "Completado, ¡califica!"),
+                7 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), "Requiere tu confirmación"),
+                _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "En curso")
             };
 
-            if (estado == 6)
-                pasos = new List<(string, bool)> { ("Solicitud enviada", true), ("Rechazado por el cuidador", true) };
-            else if (estado == 5)
-                pasos = new List<(string, bool)> { ("Solicitud enviada", true), ("Cancelado", true) };
-
-            foreach (var (texto, completado) in pasos)
+            var badge = new Border
             {
-                var punto = new Border
+                Stroke = Colors.Transparent,
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 20 },
+                BackgroundColor = colorFondo,
+                Padding = new Thickness(10, 4),
+                HorizontalOptions = LayoutOptions.Start,
+                Content = new Label { Text = texto, FontSize = 11, FontFamily = "OpenSansSemibold", TextColor = colorTexto }
+            };
+
+            var foto = new Border
+            {
+                Stroke = Colors.Transparent,
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 27 },
+                BackgroundColor = Color.FromArgb("#E5E7EB"),
+                WidthRequest = 54,
+                HeightRequest = 54,
+                Margin = new Thickness(0, 0, 14, 0),
+                Content = new Image
                 {
-                    Stroke = Colors.Transparent,
-                    StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 6 },
-                    BackgroundColor = completado ? Color.FromArgb("#5A31F4") : Color.FromArgb("#E5E7EB"),
-                    WidthRequest = 12,
-                    HeightRequest = 12,
-                    VerticalOptions = LayoutOptions.Center,
-                    Margin = new Thickness(0, 0, 12, 0)
-                };
+                    Aspect = Aspect.AspectFill,
+                    Source = string.IsNullOrWhiteSpace(t.CuidadorFotoUrl) ? null : $"{ApiService.ServerOrigin}{t.CuidadorFotoUrl}"
+                }
+            };
 
-                var label = new Label
+            var contenido = new VerticalStackLayout
+            {
+                Spacing = 4,
+                Children =
                 {
-                    Text = texto,
-                    FontSize = 14,
-                    FontFamily = completado ? "OpenSansSemibold" : "OpenSansRegular",
-                    TextColor = completado ? Color.FromArgb("#111827") : Color.FromArgb("#9CA3AF"),
-                    VerticalOptions = LayoutOptions.Center
-                };
+                    badge,
+                    new Label { Text = t.CuidadorNombre, FontSize = 16, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#111827") },
+                    new Label { Text = t.TipoServicio, FontSize = 13, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#6B7280") }
+                }
+            };
 
-                var fila = new HorizontalStackLayout { Spacing = 0, Children = { punto, label }, Margin = new Thickness(0, 8) };
-                ListaPasos.Add(fila);
-            }
-        }
+            var grid = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star) } };
+            grid.Add(foto, 0, 0);
+            grid.Add(contenido, 1, 0);
 
-        private static string FormatearHora(TimeSpan hora)
-        {
-            return DateTime.Today.Add(hora).ToString("h:mm tt");
+            var card = new Border
+            {
+                Stroke = Color.FromArgb("#E5E7EB"),
+                StrokeThickness = 1,
+                BackgroundColor = Colors.White,
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 },
+                Padding = new Thickness(16),
+                Content = grid
+            };
+
+            var tap = new TapGestureRecognizer();
+            tap.Tapped += async (s, e) => await Shell.Current.GoToAsync("DetalleServicioClientePage", new Dictionary<string, object> { { "TrabajoId", t.Id } });
+            card.GestureRecognizers.Add(tap);
+
+            return card;
         }
 
         private async void OnBackTapped(object sender, EventArgs e)
         {
             await Shell.Current.GoToAsync("..");
-        }
-
-        private async void OnCalificarClicked(object sender, EventArgs e)
-        {
-            if (trabajo == null)
-                return;
-
-            var parametros = new Dictionary<string, object>
-            {
-                { "TrabajoId", trabajo.Id },
-                { "CalificadoId", trabajo.CuidadorId },
-                { "CalificadoNombre", trabajo.CuidadorNombre }
-            };
-            await Shell.Current.GoToAsync("CalificarPage", parametros);
-        }
-
-        private async void OnCancelarClicked(object sender, EventArgs e)
-        {
-            if (trabajo == null)
-                return;
-
-            var confirmar = await DisplayAlert("Cancelar solicitud", "¿Seguro que deseas cancelar esta solicitud de servicio?", "Sí, cancelar", "No");
-            if (!confirmar)
-                return;
-
-            var success = await _apiService.ActualizarEstadoTrabajoAsync(trabajo.Id, 5);
-
-            if (success)
-                await CargarTrabajo();
-            else
-                await DisplayAlert("Error", "No se pudo cancelar la solicitud. Intenta de nuevo.", "OK");
         }
     }
 }

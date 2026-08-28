@@ -1,0 +1,266 @@
+/* Tokens de marca Cuidapp — panel administrativo (login) */
+.login-page {
+    --cuid-blue: #0253A5;
+    --cuid-blue-dark: #013883;
+    --ink: #111827;
+    --ink-2: #374151;
+    --muted: #6B7280;
+    --muted-2: #9CA3AF;
+    --line: #E5E7EB;
+    --surface: #F9FAFB;
+    background: #FFFFFF;
+    font-family: "Open Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    overflow-x: hidden;
+}
+
+.login-page .row {
+    width: 100%;
+    margin: 0;
+}
+
+/* ---------- Columna del formulario ---------- */
+.login-form-col {
+    padding: 64px 88px;
+    background: #FFFFFF;
+}
+
+.login-center {
+    max-width: 420px;
+    width: 100%;
+}
+
+.login-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.login-brand-name {
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+}
+
+.login-badge {
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.login-title {
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+}
+
+.login-subtitle {
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.6;
+    color: var(--muted);
+}
+
+/* ---------- Alerta de error ---------- */
+.login-alert {
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+}
+
+.login-alert-text {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #B91C1C;
+}
+
+/* ---------- Campos ---------- */
+.login-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-2);
+    margin-bottom: 8px;
+}
+
+.login-input.form-control {
+    height: 52px;
+    padding: 0 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #FFFFFF;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--ink);
+}
+
+.login-input.form-control::placeholder {
+    color: var(--muted-2);
+}
+
+.login-input.form-control:focus {
+    border-color: var(--cuid-blue);
+    box-shadow: 0 0 0 4px rgba(2, 83, 165, 0.14);
+}
+
+/* Contraseña con botón mostrar/ocultar dentro del campo */
+.login-password-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.login-input--password.form-control {
+    padding-right: 96px;
+}
+
+.login-toggle {
+    position: absolute;
+    right: 8px;
+    height: 36px;
+    padding: 0 12px;
+    border: none;
+    border-radius: 10px;
+    background: #F3F4F6;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--cuid-blue);
+    cursor: pointer;
+}
+
+.login-toggle:hover {
+    background: #E3EEFA;
+}
+
+/* ---------- Botón principal ---------- */
+.login-submit.btn {
+    height: 54px;
+    border: none;
+    border-radius: 14px;
+    background: var(--cuid-blue);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 8px 20px rgba(1, 56, 131, 0.26);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-submit.btn:hover,
+.login-submit.btn:focus {
+    background: var(--cuid-blue-dark);
+    color: #fff;
+}
+
+.login-submit.btn:disabled {
+    opacity: 0.75;
+}
+
+.login-foot {
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.6;
+    color: var(--muted-2);
+}
+
+/* ---------- Columna de marca (derecha) ---------- */
+.login-brand-col {
+    position: relative;
+    background: var(--cuid-blue-dark);
+    padding: 72px;
+    overflow: hidden;
+}
+
+.login-brand-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.10) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.10) 1px, transparent 1px);
+    background-size: 72px 72px;
+}
+
+.login-brand-ring {
+    position: absolute;
+    border-radius: 50%;
+}
+
+.login-brand-ring--1 {
+    right: -180px;
+    top: 120px;
+    width: 520px;
+    height: 520px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.login-brand-ring--2 {
+    right: -80px;
+    top: 260px;
+    width: 320px;
+    height: 320px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.login-eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.66);
+}
+
+.login-brand-copy {
+    max-width: 460px;
+}
+
+.login-brand-headline {
+    font-size: 40px;
+    line-height: 1.22;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #fff;
+    text-wrap: pretty;
+}
+
+.login-brand-lead {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.login-pillar {
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.login-pillar-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 991.98px) {
+    .login-form-col {
+        padding: 40px 24px;
+        gap: 40px;
+    }
+
+    .login-center {
+        max-width: 100%;
+    }
+}

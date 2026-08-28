@@ -39,10 +39,10 @@
 
             <Grid x:Name="LabelPredeterminada" ColumnDefinitions="*, Auto">
                 <Label Grid.Column="0" Text="Usar como predeterminada" FontSize="14" FontFamily="OpenSansRegular" TextColor="#374151" VerticalOptions="Center"/>
-                <Switch x:Name="SwitchPredeterminada" Grid.Column="1" OnColor="#5A31F4"/>
+                <Switch x:Name="SwitchPredeterminada" Grid.Column="1" OnColor="#2563EB"/>
             </Grid>
 
-            <Button x:Name="BtnGuardar" Text="Guardar ubicación" Clicked="OnGuardarClicked" BackgroundColor="#5A31F4" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55"/>
+            <Button x:Name="BtnGuardar" Text="Guardar ubicación" Clicked="OnGuardarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55"/>
         </VerticalStackLayout>
 
     </Grid>

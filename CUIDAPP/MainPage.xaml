@@ -21,6 +21,14 @@
                        HorizontalOptions="Center" 
                        VerticalOptions="Center" />
             </Border>
+            <!-- Logo CUIDAPP -->
+            <Grid WidthRequest="140" HeightRequest="140" HorizontalOptions="Center" Margin="0, 40, 0, 0">
+                <Image Source="logo_cuidapp.png" Aspect="AspectFit" Margin="14" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Image.Shadow>
+                        <Shadow Brush="Black" Offset="0,10" Radius="15" Opacity="0.15" />
+                    </Image.Shadow>
+                </Image>
+            </Grid>
 
             <!-- Saludo -->
             <VerticalStackLayout Spacing="5" HorizontalOptions="Center" Margin="0, 15, 0, 15">
@@ -60,6 +68,12 @@
             <Button x:Name="BtnLogin" Text="Iniciar sesión" FontFamily="OpenSansSemibold" BackgroundColor="{StaticResource ColorPrimary}" TextColor="{StaticResource ColorSurface}" FontSize="16" CornerRadius="12" HeightRequest="55" Margin="0, 5, 0, 15" Clicked="OnLoginClicked">
                 <Button.Shadow>
                     <Shadow Brush="{StaticResource ColorPrimaryDark}" Offset="0,5" Radius="10" Opacity="0.3" />
+            <Label Text="¿Olvidaste tu contraseña?" FontFamily="OpenSansSemibold" FontSize="13" TextColor="#2563EB" HorizontalOptions="End" Margin="0, -10, 0, 15" />
+
+            <!-- Boton Login -->
+            <Button x:Name="BtnLogin" Text="Iniciar sesión" FontFamily="OpenSansSemibold" BackgroundColor="#1D4ED8" TextColor="White" FontSize="16" CornerRadius="12" HeightRequest="55" Margin="0, 5, 0, 15" Clicked="OnLoginClicked">
+                <Button.Shadow>
+                    <Shadow Brush="#1D4ED8" Offset="0,5" Radius="10" Opacity="0.3" />
                 </Button.Shadow>
             </Button>
 
@@ -67,6 +81,8 @@
             <HorizontalStackLayout HorizontalOptions="Center" Spacing="4" Margin="0, 10, 0, 0">
                 <Label Text="¿No tienes cuenta?" FontFamily="OpenSansRegular" FontSize="14" TextColor="{StaticResource ColorTextMuted}" />
                 <Label Text="Regístrate aquí" FontFamily="OpenSansSemibold" FontSize="14" TextColor="{StaticResource ColorPrimary}">
+                <Label Text="¿No tienes cuenta?" FontFamily="OpenSansRegular" FontSize="14" TextColor="#6B7280" />
+                <Label Text="Regístrate aquí" FontFamily="OpenSansSemibold" FontSize="14" TextColor="#2563EB">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnRegisterTapped" />
                     </Label.GestureRecognizers>

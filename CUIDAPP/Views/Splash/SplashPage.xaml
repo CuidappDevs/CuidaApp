@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CUIDAPP.Views.Splash.SplashPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="White">
+
+    <Grid>
+
+        <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="22">
+
+            <Grid x:Name="LogoCircle" WidthRequest="150" HeightRequest="150" HorizontalOptions="Center" Opacity="0" Scale="0.6">
+                <Image Source="logo_cuidapp.png" Aspect="AspectFit" Margin="15" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Image.Shadow>
+                        <Shadow Brush="#2563EB" Offset="0,10" Radius="25" Opacity="0.3" />
+                    </Image.Shadow>
+                </Image>
+            </Grid>
+
+            <Label x:Name="LblTagline"
+                   Text="Cuidado en quien puedes confiar"
+                   FontFamily="OpenSansRegular" FontSize="14"
+                   TextColor="#6B7280"
+                   HorizontalOptions="Center"
+                   Opacity="0"/>
+
+            <HorizontalStackLayout x:Name="DotsPanel" Spacing="10" HorizontalOptions="Center" Margin="0,15,0,0" Opacity="0">
+                <Ellipse x:Name="Dot1" Fill="#2563EB" WidthRequest="10" HeightRequest="10"/>
+                <Ellipse x:Name="Dot2" Fill="#2563EB" WidthRequest="10" HeightRequest="10"/>
+                <Ellipse x:Name="Dot3" Fill="#2563EB" WidthRequest="10" HeightRequest="10"/>
+            </HorizontalStackLayout>
+
+        </VerticalStackLayout>
+
+        <Label x:Name="LblVersion"
+               Text=""
+               FontFamily="OpenSansRegular" FontSize="12"
+               TextColor="#9CA3AF"
+               HorizontalOptions="Center" VerticalOptions="End"
+               Margin="0,0,0,30"
+               Opacity="0"/>
+
+    </Grid>
+
+</ContentPage>

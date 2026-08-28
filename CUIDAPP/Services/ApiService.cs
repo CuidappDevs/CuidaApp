@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using CUIDAPP.Models.Auth;
 using CUIDAPP.Models.Busqueda;
 using CUIDAPP.Models.Calificacion;
+using CUIDAPP.Models.Chat;
 using CUIDAPP.Models.Cliente;
 using CUIDAPP.Models.Cuidador;
 using CUIDAPP.Models.Trabajo;
@@ -13,28 +14,32 @@ namespace CUIDAPP.Services
     {
         private readonly HttpClient _httpClient;
 
-        // La URL cambia sola según la configuración de compilación: en Debug apunta a la
-        // API local de desarrollo, en Release al servidor de producción. Así no hay que
-        // tocar este archivo al publicar — solo compilar en modo Release.
-        //
+        // TEMPORAL: apuntando el build Debug directo a producción para probar ahí en vez
+        // de la API local, mientras se diagnostica el tiempo real / hora del servidor.
+        // Para volver a apuntar a la API local de desarrollo, descomenta el bloque de
+        // abajo y comenta esta línea (o viceversa).
+        private static readonly string BaseUrl = "http://192.169.179.217/api/";
+
+        // --- Configuración original (Debug = API local, Release = producción) ---
         // En Debug: el emulador de Android tiene su propia red virtual donde "localhost"
         // apunta al propio emulador, no a la PC. 10.0.2.2 es el alias especial que el
         // emulador usa para llegar a la máquina host. En Windows/iOS/dispositivo físico
         // se usa la IP real de la PC.
         //
         // IMPORTANTE (local): la API debe correr con el perfil "http" (puerto 5258), no
-        // "IIS Express" (puerto 44352) — en Visual Studio, cambia el perfil en el
-        // desplegable junto al botón de Iniciar.
-        private static readonly string BaseUrl =
-#if DEBUG
-#if ANDROID
-            "http://10.0.2.2:5258/api/";
-#else
-            "http://localhost:5258/api/";
-#endif
-#else
-            "http://192.169.179.217/api/";
-#endif
+        // "IIS Express" — en Visual Studio, cambia el perfil en el desplegable junto al
+        // botón de Iniciar, o mejor, corre `dotnet run --launch-profile http` en terminal.
+        //
+        // private static readonly string BaseUrl =
+        //#if DEBUG
+        //#if ANDROID
+        //    "http://10.0.2.2:5258/api/";
+        //#else
+        //    "http://localhost:5258/api/";
+        //#endif
+        //#else
+        //    "http://192.169.179.217/api/";
+        //#endif
 
         // Origen del servidor (sin /api/) para resolver rutas relativas de archivos, ej. "/uploads/...".
         public static string ServerOrigin => BaseUrl.Substring(0, BaseUrl.IndexOf("/api/", StringComparison.Ordinal));
@@ -49,8 +54,27 @@ namespace CUIDAPP.Services
             
             _httpClient = new HttpClient(handler)
             {
-                BaseAddress = new Uri(BaseUrl)
+                BaseAddress = new Uri(BaseUrl),
+                Timeout = TimeSpan.FromSeconds(20)
             };
+        }
+
+        public async Task<DateTime?> ObtenerHoraServidorAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("sistema/hora");
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                var resultado = await response.Content.ReadFromJsonAsync<Dictionary<string, DateTime>>();
+                return resultado != null && resultado.TryGetValue("horaServidor", out var hora) ? hora : null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo hora del servidor: {ex.Message}");
+                return null;
+            }
         }
 
         public async Task<AuthResponse?> LoginAsync(LoginRequest request)
@@ -72,8 +96,17 @@ namespace CUIDAPP.Services
 
         public async Task<string?> UploadFileAsync(string localFilePath, string carpeta)
         {
+            var (url, _) = await UploadFileConDiagnosticoAsync(localFilePath, carpeta);
+            return url;
+        }
+
+        public async Task<(string? Url, string? Error)> UploadFileConDiagnosticoAsync(string localFilePath, string carpeta)
+        {
             try
             {
+                if (!File.Exists(localFilePath))
+                    return (null, $"El archivo no existe en el dispositivo: {localFilePath}");
+
                 using var content = new MultipartFormDataContent();
                 var bytes = await File.ReadAllBytesAsync(localFilePath);
                 var fileContent = new ByteArrayContent(bytes);
@@ -82,15 +115,21 @@ namespace CUIDAPP.Services
 
                 var response = await _httpClient.PostAsync("upload", content);
                 if (!response.IsSuccessStatusCode)
-                    return null;
+                {
+                    var cuerpo = await response.Content.ReadAsStringAsync();
+                    return (null, $"HTTP {(int)response.StatusCode}: {cuerpo}");
+                }
 
                 var result = await response.Content.ReadFromJsonAsync<UploadResponse>();
-                return result?.Url;
+                if (string.IsNullOrWhiteSpace(result?.Url))
+                    return (null, "El servidor no devolvió una URL de archivo.");
+
+                return (result.Url, null);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error subiendo archivo: {ex.Message}");
-                return null;
+                Console.WriteLine($"Error subiendo archivo: {ex}");
+                return (null, $"{ex.GetType().Name}: {ex.Message}");
             }
         }
 
@@ -429,6 +468,23 @@ namespace CUIDAPP.Services
             public bool Existe { get; set; }
         }
 
+        public async Task<List<CalificacionRecibida>> ObtenerCalificacionesDeUsuarioAsync(int usuarioId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"calificacion/usuario/{usuarioId}");
+                if (!response.IsSuccessStatusCode)
+                    return new List<CalificacionRecibida>();
+
+                return await response.Content.ReadFromJsonAsync<List<CalificacionRecibida>>() ?? new List<CalificacionRecibida>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo calificaciones del usuario: {ex.Message}");
+                return new List<CalificacionRecibida>();
+            }
+        }
+
         public async Task<PerfilCliente?> ObtenerPerfilClienteAsync(int clienteId)
         {
             try
@@ -482,6 +538,103 @@ namespace CUIDAPP.Services
             }
         }
 
+        public async Task<Conversacion?> ObtenerOCrearConversacionAsync(int trabajoId)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"chat/conversacion/{trabajoId}", null);
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                return await response.Content.ReadFromJsonAsync<Conversacion>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo conversación: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<List<Mensaje>> ObtenerMensajesAsync(int conversacionId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"chat/conversacion/{conversacionId}/mensajes");
+                if (!response.IsSuccessStatusCode)
+                    return new List<Mensaje>();
+
+                return await response.Content.ReadFromJsonAsync<List<Mensaje>>() ?? new List<Mensaje>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo mensajes: {ex.Message}");
+                return new List<Mensaje>();
+            }
+        }
+
+        public async Task<Mensaje?> EnviarMensajeAsync(int conversacionId, int remitenteId, string contenido, string tipo = "texto", string? urlArchivo = null, int? duracionSegundos = null)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("chat/mensaje", new { ConversacionId = conversacionId, RemitenteId = remitenteId, Contenido = contenido, Tipo = tipo, UrlArchivo = urlArchivo, DuracionSegundos = duracionSegundos });
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                return await response.Content.ReadFromJsonAsync<Mensaje>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error enviando mensaje: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task MarcarMensajesLeidosAsync(int conversacionId, int usuarioId)
+        {
+            try
+            {
+                await _httpClient.PutAsJsonAsync("chat/leido", new { ConversacionId = conversacionId, UsuarioId = usuarioId });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error marcando mensajes leídos: {ex.Message}");
+            }
+        }
+
+        public async Task<List<TrabajoCliente>> ObtenerTrabajosActivosPorClienteAsync(int clienteId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"trabajo/cliente/{clienteId}/activos");
+                if (!response.IsSuccessStatusCode)
+                    return new List<TrabajoCliente>();
+
+                return await response.Content.ReadFromJsonAsync<List<TrabajoCliente>>() ?? new List<TrabajoCliente>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo trabajos activos del cliente: {ex.Message}");
+                return new List<TrabajoCliente>();
+            }
+        }
+
+        public async Task<TrabajoCliente?> ObtenerTrabajoClientePorIdAsync(int trabajoId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"trabajo/{trabajoId}");
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                return await response.Content.ReadFromJsonAsync<TrabajoCliente>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo trabajo por id: {ex.Message}");
+                return null;
+            }
+        }
+
         public async Task<(bool Success, string? Error)> IniciarTrabajoAsync(int trabajoId, string pin)
         {
             try
@@ -505,6 +658,128 @@ namespace CUIDAPP.Services
             {
                 Console.WriteLine($"Error iniciando trabajo: {ex.Message}");
                 return (false, ex.Message);
+            }
+        }
+
+        public async Task<(bool Success, string? Error)> FinalizarTrabajoAsync(int trabajoId, string pin, string? justificacion = null)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync("trabajo/finalizar", new { TrabajoId = trabajoId, Pin = pin, Justificacion = justificacion });
+                if (response.IsSuccessStatusCode)
+                    return (true, null);
+
+                try
+                {
+                    var errorDto = await response.Content.ReadFromJsonAsync<IniciarTrabajoErrorDto>();
+                    return (false, errorDto?.Message ?? "No se pudo finalizar el trabajo.");
+                }
+                catch
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    return (false, string.IsNullOrWhiteSpace(error) ? "No se pudo finalizar el trabajo." : error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error finalizando trabajo: {ex.Message}");
+                return (false, ex.Message);
+            }
+        }
+
+        public async Task<(bool Success, string? Error)> ConfirmarFinalizacionAsync(int trabajoId, int clienteId, bool confirmado)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync("trabajo/confirmar-finalizacion", new { TrabajoId = trabajoId, ClienteId = clienteId, Confirmado = confirmado });
+                if (response.IsSuccessStatusCode)
+                    return (true, null);
+
+                var errorDto = await response.Content.ReadFromJsonAsync<IniciarTrabajoErrorDto>();
+                return (false, errorDto?.Message ?? "No se pudo registrar tu respuesta.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error confirmando finalización: {ex.Message}");
+                return (false, ex.Message);
+            }
+        }
+
+        public async Task<(bool Success, string? Error)> ForzarFinalizacionAsync(int trabajoId, int cuidadorId)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync("trabajo/forzar-finalizacion", new { TrabajoId = trabajoId, CuidadorId = cuidadorId });
+                if (response.IsSuccessStatusCode)
+                    return (true, null);
+
+                var errorDto = await response.Content.ReadFromJsonAsync<IniciarTrabajoErrorDto>();
+                return (false, errorDto?.Message ?? "No se pudo forzar la finalización.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error forzando finalización: {ex.Message}");
+                return (false, ex.Message);
+            }
+        }
+
+        public async Task<Calificacion?> ObtenerCalificacionDeTrabajoAsync(int trabajoId, int calificadorId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"calificacion/trabajo/{trabajoId}?calificadorId={calificadorId}");
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                return await response.Content.ReadFromJsonAsync<Calificacion>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo calificación: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<List<ActividadTrabajo>> ObtenerActividadesAsync(int trabajoId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"trabajo/{trabajoId}/actividades");
+                if (!response.IsSuccessStatusCode)
+                    return new List<ActividadTrabajo>();
+
+                return await response.Content.ReadFromJsonAsync<List<ActividadTrabajo>>() ?? new List<ActividadTrabajo>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo actividades: {ex.Message}");
+                return new List<ActividadTrabajo>();
+            }
+        }
+
+        public async Task AlertarGeocercaAsync(int trabajoId, double distanciaMetros)
+        {
+            try
+            {
+                await _httpClient.PostAsJsonAsync("trabajo/alerta-geocerca", new { TrabajoId = trabajoId, DistanciaMetros = distanciaMetros });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error enviando alerta de geocerca: {ex.Message}");
+            }
+        }
+
+        public async Task<bool> AgregarActividadAsync(int trabajoId, string descripcion)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("trabajo/actividades", new { TrabajoId = trabajoId, Descripcion = descripcion });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error agregando actividad: {ex.Message}");
+                return false;
             }
         }
 

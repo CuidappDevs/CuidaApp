@@ -17,5 +17,9 @@ namespace CUIDAPP.Models.Trabajo
         public string? Notas { get; set; }
         public DateTime FechaCreacion { get; set; }
         public string? PinInicio { get; set; }
+        public string? PinFin { get; set; }
+        public DateTime? FechaInicioReal { get; set; }
+        public string? JustificacionFinalizacion { get; set; }
+        public bool RechazadoPorCliente { get; set; }
     }
 }

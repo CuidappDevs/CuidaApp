@@ -87,7 +87,7 @@ namespace CUIDAPP.Views.Verificacion
                 ? "Uno o más documentos fueron rechazados. Revisa las observaciones y vuelve a subirlos desde soporte."
                 : "Estamos verificando tus documentos. Te avisaremos cuando tu cuenta esté aprobada para empezar a trabajar.";
 
-            IconEstadoGeneral.Fill = rechazado ? Color.FromArgb("#DC2626") : Color.FromArgb("#4024A2");
+            IconEstadoGeneral.Fill = rechazado ? Color.FromArgb("#DC2626") : Color.FromArgb("#1D4ED8");
 
             ListaDocumentos.Clear();
 

@@ -26,8 +26,8 @@
                                 <TapGestureRecognizer Tapped="OnUbicacionTapped" CommandParameter="{Binding .}"/>
                             </Border.GestureRecognizers>
                             <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="12">
-                                <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="#F3E8FF" StrokeShape="RoundRectangle 10" WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
-                                    <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="#5A31F4" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="#EFF6FF" StrokeShape="RoundRectangle 10" WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                                    <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="#2563EB" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                                 </Border>
                                 <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
                                     <HorizontalStackLayout Spacing="8">
@@ -55,11 +55,11 @@
                 <Label Text="Agrega la dirección de tu casa para reservar más rápido" FontSize="13" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center"/>
             </VerticalStackLayout>
 
-            <ActivityIndicator x:Name="LoaderCarga" IsRunning="False" IsVisible="False" Color="#5A31F4" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <ActivityIndicator x:Name="LoaderCarga" IsRunning="False" IsVisible="False" Color="#2563EB" HorizontalOptions="Center" VerticalOptions="Center"/>
         </Grid>
 
         <VerticalStackLayout Grid.Row="2" Padding="20,10,20,30" BackgroundColor="White">
-            <Button x:Name="BtnAgregar" Text="+ Agregar ubicación" Clicked="OnAgregarClicked" BackgroundColor="#5A31F4" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55"/>
+            <Button x:Name="BtnAgregar" Text="+ Agregar ubicación" Clicked="OnAgregarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55"/>
         </VerticalStackLayout>
 
     </Grid>

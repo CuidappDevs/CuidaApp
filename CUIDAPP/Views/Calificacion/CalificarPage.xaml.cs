@@ -6,6 +6,7 @@ namespace CUIDAPP.Views.Calificacion
     [QueryProperty(nameof(TrabajoId), "TrabajoId")]
     [QueryProperty(nameof(CalificadoId), "CalificadoId")]
     [QueryProperty(nameof(CalificadoNombre), "CalificadoNombre")]
+    [QueryProperty(nameof(RutaSalida), "RutaSalida")]
     public partial class CalificarPage : ContentPage
     {
         private readonly ApiService _apiService = new ApiService();
@@ -14,6 +15,10 @@ namespace CUIDAPP.Views.Calificacion
 
         public int TrabajoId { get; set; }
         public int CalificadoId { get; set; }
+
+        // A dónde navegar al terminar de calificar. Por defecto vuelve atrás ("..");
+        // algunos flujos (calificar y salir directo al dashboard) pasan una ruta absoluta.
+        public string? RutaSalida { get; set; }
 
         public string CalificadoNombre
         {
@@ -83,7 +88,7 @@ namespace CUIDAPP.Views.Calificacion
             if (success)
             {
                 await DisplayAlert("¡Gracias!", "Tu calificación fue enviada.", "OK");
-                await Shell.Current.GoToAsync("..");
+                await Shell.Current.GoToAsync(string.IsNullOrWhiteSpace(RutaSalida) ? ".." : RutaSalida);
             }
             else
             {

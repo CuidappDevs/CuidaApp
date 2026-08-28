@@ -96,7 +96,7 @@ namespace CUIDAPP.Views.Cliente
                 {
                     new Label { Text = cuidador.NombreCompleto, FontSize = 16, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#111827") },
                     new Label { Text = $"A {cuidador.DistanciaKm:N1} km de ti", FontSize = 12, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#6B7280") },
-                    new Label { Text = $"RD${cuidador.TarifaHora:N0} / hora", FontSize = 14, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#5A31F4") }
+                    new Label { Text = $"RD${cuidador.TarifaHora:N0} / hora", FontSize = 14, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#2563EB") }
                 }
             };
 

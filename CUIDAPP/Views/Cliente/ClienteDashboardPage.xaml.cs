@@ -21,6 +21,7 @@ namespace CUIDAPP.Views.Cliente
         private List<CuidadorMapa> cuidadoresEnMapa = new();
         private bool estaVisible;
         private bool pollingIniciado;
+        private const string MapboxAccessToken = "pk.eyJ1IjoiZm9yemU5ZGFyayIsImEiOiJjbXNtbmtvb2oxcHV6Mnpwd2s5bTc1YXViIn0.Zm3kXe_m7Ic04GFCjA40DA";
 
         public ClienteDashboardPage()
         {
@@ -60,10 +61,32 @@ namespace CUIDAPP.Views.Cliente
 
             var clienteIdActual = Preferences.Default.Get("UserId", 0);
             _ = RealtimeService.ConectarAsync(clienteIdActual);
+
+            // Evita suscripciones duplicadas si OnAppearing se dispara más de una vez sin
+            // un OnDisappearing intermedio (puede pasar con navegación "//").
+            RealtimeService.DisponibilidadCambio -= OnDisponibilidadCambioTiempoReal;
+            RealtimeService.UbicacionCuidadorCambio -= OnUbicacionCuidadorCambioTiempoReal;
+            RealtimeService.TrabajoActualizado -= OnTrabajoActualizadoTiempoReal;
             RealtimeService.DisponibilidadCambio += OnDisponibilidadCambioTiempoReal;
             RealtimeService.UbicacionCuidadorCambio += OnUbicacionCuidadorCambioTiempoReal;
             RealtimeService.TrabajoActualizado += OnTrabajoActualizadoTiempoReal;
 
+            try
+            {
+                await CargarPantallaAsync();
+            }
+            catch (Exception ex)
+            {
+                // Una excepción sin atrapar aquí (OnAppearing es "async void") mata la
+                // app en Android en vez de solo mostrar un error.
+                Console.WriteLine($"[ClienteDashboardPage] Error cargando dashboard: {ex}");
+                OverlayCarga.IsVisible = false;
+                await DisplayAlert("Error", "No se pudo cargar tu panel. Desliza para reintentar o revisa tu conexión.", "OK");
+            }
+        }
+
+        private async Task CargarPantallaAsync()
+        {
             IniciarPollingSiHaceFalta();
 
             var nombre = Preferences.Default.Get("UserNombre", "");
@@ -189,23 +212,30 @@ namespace CUIDAPP.Views.Cliente
             if (clienteId == 0)
                 return;
 
-            var trabajoActivo = await _apiService.ObtenerTrabajoActivoPorClienteAsync(clienteId);
-            hayServicioActivo = trabajoActivo != null;
+            var serviciosActivos = await _apiService.ObtenerTrabajosActivosPorClienteAsync(clienteId);
+            hayServicioActivo = serviciosActivos.Count > 0;
 
+            // El cliente ahora puede tener varios servicios a la vez, así que el buscador
+            // se mantiene siempre disponible; el banner es solo un atajo a "Mis servicios".
             BannerServicioActivo.IsVisible = hayServicioActivo;
-            ContenidoExpandible.IsVisible = !hayServicioActivo;
 
-            if (trabajoActivo != null)
+            if (serviciosActivos.Count == 1)
             {
-                var estadoTexto = trabajoActivo.Estado switch
+                var t = serviciosActivos[0];
+                var estadoTexto = t.Estado switch
                 {
                     1 => "Esperando respuesta del cuidador",
                     2 => "Aceptado, en espera de la fecha programada",
                     3 => "En progreso",
                     4 => "Completado, ¡califica a tu cuidador!",
+                    7 => "Tu cuidador dice que terminó, confírmalo",
                     _ => "En curso"
                 };
-                LblBannerServicioActivo.Text = $"{trabajoActivo.TipoServicio} · {estadoTexto}";
+                LblBannerServicioActivo.Text = $"{t.TipoServicio} · {estadoTexto}";
+            }
+            else if (serviciosActivos.Count > 1)
+            {
+                LblBannerServicioActivo.Text = $"Tienes {serviciosActivos.Count} servicios activos";
             }
         }
 
@@ -235,8 +265,8 @@ namespace CUIDAPP.Views.Cliente
     <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
     <script>
         var map = L.map('map', {{ zoomControl: false, attributionControl: false }}).setView([{lat}, {lng}], 14);
-        L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager/{{z}}/{{x}}/{{y}}{{r}}.png', {{ maxZoom: 20, subdomains: 'abcd' }}).addTo(map);
-        var marker = L.circleMarker([{lat}, {lng}], {{ radius: 8, color: '#FFFFFF', weight: 3, fillColor: '#5A31F4', fillOpacity: 1 }}).addTo(map);
+        L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{{z}}/{{x}}/{{y}}{{r}}?access_token={MapboxAccessToken}', {{ maxZoom: 20, tileSize: 512, zoomOffset: -1 }}).addTo(map);
+        var marker = L.circleMarker([{lat}, {lng}], {{ radius: 8, color: '#FFFFFF', weight: 3, fillColor: '#2563EB', fillOpacity: 1 }}).addTo(map);
         var capaCuidadores = L.layerGroup().addTo(map);
 
         // Se llama desde C# cuando llega una ubicación GPS más precisa, sin recargar la página.
@@ -347,7 +377,7 @@ namespace CUIDAPP.Views.Cliente
             {
                 Stroke = esSeleccionado ? Colors.Transparent : Color.FromArgb("#E5E7EB"),
                 StrokeThickness = 1,
-                BackgroundColor = esSeleccionado ? Color.FromArgb("#5A31F4") : Colors.White,
+                BackgroundColor = esSeleccionado ? Color.FromArgb("#2563EB") : Colors.White,
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 20 },
                 Padding = new Thickness(16, 8),
                 Content = new Label
@@ -431,7 +461,7 @@ namespace CUIDAPP.Views.Cliente
                 Text = $"Desde\nRD${servicio.TarifaDesde:N0}",
                 FontSize = 12,
                 FontFamily = "OpenSansSemibold",
-                TextColor = Color.FromArgb("#5A31F4"),
+                TextColor = Color.FromArgb("#2563EB"),
                 HorizontalTextAlignment = TextAlignment.End,
                 VerticalOptions = LayoutOptions.Center
             };
@@ -465,7 +495,7 @@ namespace CUIDAPP.Views.Cliente
                 "Limpieza del hogar" => ("🧹", Color.FromArgb("#DBEAFE"), Color.FromArgb("#3B82F6")),
                 "Niñera / Cuidadora" => ("👶", Color.FromArgb("#FCE7F3"), Color.FromArgb("#DB2777")),
                 "Cuidadora de adultos" => ("🧑‍⚕️", Color.FromArgb("#D1FAE5"), Color.FromArgb("#10B981")),
-                _ => ("🏠", Color.FromArgb("#F3E8FF"), Color.FromArgb("#A855F7"))
+                _ => ("🏠", Color.FromArgb("#EFF6FF"), Color.FromArgb("#3B82F6"))
             };
         }
 
@@ -527,8 +557,9 @@ namespace CUIDAPP.Views.Cliente
 
             if (panelExpandido)
             {
-                // Si hay un servicio activo, el panel expandido muestra el banner, no el buscador.
-                ContenidoExpandible.IsVisible = !hayServicioActivo;
+                // El cliente puede tener servicios activos y seguir buscando otros a la vez:
+                // el banner (si hay alguno activo) y el buscador conviven en el panel.
+                ContenidoExpandible.IsVisible = true;
                 BannerServicioActivo.IsVisible = hayServicioActivo;
             }
 
