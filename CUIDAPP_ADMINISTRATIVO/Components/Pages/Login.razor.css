@@ -93,7 +93,10 @@
     margin-bottom: 8px;
 }
 
-.login-input.form-control {
+/* ::deep es obligatorio: <InputText> renderiza su propio <input> desde
+   un componente de Blazor, que no hereda el atributo de scope de esta
+   página — sin ::deep ninguna de estas reglas llegaría a aplicarse. */
+::deep .login-input.form-control {
     height: 52px;
     padding: 0 16px;
     border: 1px solid var(--line);
@@ -102,44 +105,86 @@
     font-size: 15px;
     font-weight: 400;
     color: var(--ink);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.login-input.form-control::placeholder {
+::deep .login-input.form-control::placeholder {
     color: var(--muted-2);
 }
 
-.login-input.form-control:focus {
+::deep .login-input.form-control:hover {
+    border-color: #C7CDD6;
+}
+
+::deep .login-input.form-control:focus {
     border-color: var(--cuid-blue);
     box-shadow: 0 0 0 4px rgba(2, 83, 165, 0.14);
 }
 
-/* Contraseña con botón mostrar/ocultar dentro del campo */
-.login-password-wrap {
+/* Blazor marca los campos validados con .valid.modified y les pone un
+   outline verde (ver app.css) — lo anulamos, el login no necesita ese
+   feedback de validación por campo. */
+::deep .login-input.form-control.valid.modified,
+::deep .login-input.form-control.invalid {
+    outline: none;
+}
+
+/* Campo con ícono a la izquierda (correo / candado) */
+.login-field-wrap {
     position: relative;
     display: flex;
     align-items: center;
 }
 
-.login-input--password.form-control {
-    padding-right: 96px;
+.login-field-icon {
+    position: absolute;
+    left: 16px;
+    color: var(--muted-2);
+    pointer-events: none;
+}
+
+::deep .login-input--icon.form-control {
+    padding-left: 46px;
+}
+
+.login-field-wrap:focus-within .login-field-icon {
+    color: var(--cuid-blue);
+}
+
+/* Contraseña: botón de ojo circular dentro del campo */
+::deep .login-input--password.form-control {
+    padding-right: 52px;
 }
 
 .login-toggle {
     position: absolute;
     right: 8px;
+    width: 36px;
     height: 36px;
-    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border: none;
     border-radius: 10px;
-    background: #F3F4F6;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--cuid-blue);
+    background: transparent;
+    color: var(--muted);
     cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .login-toggle:hover {
-    background: #E3EEFA;
+    background: #F3F4F6;
+    color: var(--cuid-blue);
+}
+
+.login-toggle:focus {
+    outline: none;
+}
+
+.login-toggle:focus-visible {
+    background: #F3F4F6;
+    color: var(--cuid-blue);
+    box-shadow: 0 0 0 3px rgba(2, 83, 165, 0.2);
 }
 
 /* ---------- Botón principal ---------- */

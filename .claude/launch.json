@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "cuidapp-administrativo",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "CUIDAPP_ADMINISTRATIVO", "--launch-profile", "http"],
+      "port": 5203
+    }
+  ]
+}

@@ -1,5 +1,13 @@
-﻿@page "/not-found"
-@layout MainLayout
+@page "/not-found"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
 
-<h3>Not Found</h3>
-<p>Sorry, the content you are looking for does not exist.</p>
+<PageTitle>Página no encontrada · Cuidapp Admin</PageTitle>
+
+<div class="d-flex flex-column align-items-center justify-content-center text-center" style="min-height:60vh; gap:14px;">
+    <span style="font-size:52px; font-weight:700; color:var(--cuid-blue);">404</span>
+    <h3 class="mb-0" style="font-weight:600;">No encontramos esta página</h3>
+    <p class="adm-card-sub mb-2">Puede que el enlace esté roto o que la sección ya no exista.</p>
+    <a href="dashboard" class="adm-btn" style="height:40px; padding:0 20px; border:none; border-radius:11px; background:var(--cuid-blue); color:#fff; font-size:14px;">
+        Volver al dashboard
+    </a>
+</div>
