@@ -5,27 +5,48 @@
 
     <!-- Note: For Android please see also Platforms\Android\Resources\values\colors.xml -->
 
-    <Color x:Key="Primary">#512BD4</Color>
-    <Color x:Key="PrimaryDark">#ac99ea</Color>
-    <Color x:Key="PrimaryDarkText">#242424</Color>
-    <Color x:Key="Secondary">#DFD8F7</Color>
-    <Color x:Key="SecondaryDarkText">#9880e5</Color>
-    <Color x:Key="Tertiary">#2B0B98</Color>
+    <!-- Brand Colors -->
+    <Color x:Key="ColorPrimary">#1C4D96</Color>
+    <Color x:Key="ColorPrimaryAlt">#215E99</Color>
+    <Color x:Key="ColorPrimaryDark">#0F4761</Color>
+    <Color x:Key="ColorPrimaryLight">#4C94D8</Color>
+    <Color x:Key="ColorAccent">#0F9ED5</Color>
+    
+    <!-- Neutral Colors -->
+    <Color x:Key="ColorTextStrong">#0A2F41</Color>
+    <Color x:Key="ColorTextMuted">#4B5563</Color>
+    <Color x:Key="ColorSurface">#FFFFFF</Color>
+    <Color x:Key="ColorBackground">#F5F8FC</Color>
+    <Color x:Key="ColorBorder">#D9E2EC</Color>
+    
+    <!-- Semantic Functional Colors -->
+    <Color x:Key="ColorDanger">#C62828</Color>
+    <Color x:Key="ColorSuccess">#2E7D32</Color>
+    <Color x:Key="ColorWarning">#8A4B00</Color>
+    <Color x:Key="ColorInfo">#156082</Color>
+
+    <!-- Legacy Colors (kept for compatibility) -->
+    <Color x:Key="Primary">#1C4D96</Color>
+    <Color x:Key="PrimaryDark">#0F4761</Color>
+    <Color x:Key="PrimaryDarkText">#0A2F41</Color>
+    <Color x:Key="Secondary">#D9E2EC</Color>
+    <Color x:Key="SecondaryDarkText">#4B5563</Color>
+    <Color x:Key="Tertiary">#0F9ED5</Color>
 
     <Color x:Key="White">White</Color>
     <Color x:Key="Black">Black</Color>
-    <Color x:Key="Magenta">#D600AA</Color>
-    <Color x:Key="MidnightBlue">#190649</Color>
-    <Color x:Key="OffBlack">#1f1f1f</Color>
+    <Color x:Key="Magenta">#C62828</Color>
+    <Color x:Key="MidnightBlue">#0F4761</Color>
+    <Color x:Key="OffBlack">#0A2F41</Color>
 
-    <Color x:Key="Gray100">#E1E1E1</Color>
-    <Color x:Key="Gray200">#C8C8C8</Color>
-    <Color x:Key="Gray300">#ACACAC</Color>
-    <Color x:Key="Gray400">#919191</Color>
-    <Color x:Key="Gray500">#6E6E6E</Color>
-    <Color x:Key="Gray600">#404040</Color>
-    <Color x:Key="Gray900">#212121</Color>
-    <Color x:Key="Gray950">#141414</Color>
+    <Color x:Key="Gray100">#F5F8FC</Color>
+    <Color x:Key="Gray200">#D9E2EC</Color>
+    <Color x:Key="Gray300">#B0BEC5</Color>
+    <Color x:Key="Gray400">#90A4AE</Color>
+    <Color x:Key="Gray500">#4B5563</Color>
+    <Color x:Key="Gray600">#37474F</Color>
+    <Color x:Key="Gray900">#0A2F41</Color>
+    <Color x:Key="Gray950">#051A2A</Color>
 
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
     <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>
