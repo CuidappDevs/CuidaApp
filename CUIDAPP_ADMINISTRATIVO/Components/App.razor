@@ -19,9 +19,26 @@
 </head>
 
 <body>
+    <div id="app-loading">
+        <div class="app-loading-inner">
+            <img src="img/cuidapp-logo.png" alt="Cuidapp" class="app-loading-logo" />
+            <div class="app-loading-spinner"></div>
+        </div>
+    </div>
+
     <Routes @rendermode="InteractiveServer" />
     <ReconnectModal />
     <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script>
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                var el = document.getElementById('app-loading');
+                if (!el) return;
+                el.classList.add('app-loading-hide');
+                setTimeout(function () { el.remove(); }, 400);
+            }, 350);
+        });
+    </script>
 </body>
 
 </html>

@@ -19,6 +19,10 @@ using CUIDAPP_API.Interfaces.Chat;
 using CUIDAPP_API.Services.Chat;
 using CUIDAPP_API.Interfaces.Email;
 using CUIDAPP_API.Services.Email;
+using CUIDAPP_API.Interfaces.Pago;
+using CUIDAPP_API.Services.Pago;
+using CUIDAPP_API.Interfaces.Ticket;
+using CUIDAPP_API.Services.Ticket;
 using CUIDAPP_API.Services.Realtime;
 using CUIDAPP_API.Hubs;
 using Microsoft.Extensions.FileProviders;
@@ -49,6 +53,8 @@ builder.Services.AddScoped<ICalificacionService, CalificacionService>();
 builder.Services.AddScoped<IUbicacionClienteService, UbicacionClienteService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IPagoAdminService, PagoAdminService>();
+builder.Services.AddScoped<ITicketService, TicketService>();
 
 var app = builder.Build();
 

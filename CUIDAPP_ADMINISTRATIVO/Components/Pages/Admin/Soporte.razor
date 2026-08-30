@@ -1,0 +1,114 @@
+@page "/soporte"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@using CUIDAPP_ADMINISTRATIVO.Models.Ticket
+@using CUIDAPP_ADMINISTRATIVO.Services
+@inject TicketAdminApiService TicketService
+@inject NavigationManager Nav
+
+<PageTitle>Soporte · Cuidapp Admin</PageTitle>
+
+<div class="d-flex flex-column" style="gap:20px;">
+
+    <div class="d-flex" style="gap:8px;">
+        @foreach (var tab in _tabs)
+        {
+            <button type="button" class="adm-btn @(_estadoFiltro == tab.Estado ? "" : "adm-btn-outline")"
+                    style="@(_estadoFiltro == tab.Estado ? "background:var(--cuid-blue); color:#fff; border:none;" : "")"
+                    @onclick="() => CambiarFiltro(tab.Estado)">
+                @tab.Label
+            </button>
+        }
+    </div>
+
+    @if (_cargando)
+    {
+        <div class="adm-card adm-card-pad text-center" style="color:var(--adm-muted);">Cargando reportes...</div>
+    }
+    else if (_tickets.Count == 0)
+    {
+        <div class="adm-card adm-card-pad text-center" style="color:var(--adm-muted);">No hay reportes en este estado.</div>
+    }
+    else
+    {
+        <div class="adm-card overflow-hidden">
+            @foreach (var t in _tickets)
+            {
+                <div class="d-flex flex-wrap align-items-center" style="gap:12px 16px; padding:16px 24px; border-bottom:1px solid var(--adm-line-soft); cursor:pointer;"
+                     @onclick="() => IrADetalle(t.Id)">
+
+                    <div class="d-flex align-items-center justify-content-center flex-shrink-0"
+                         style="width:42px; height:42px; border-radius:14px; background:var(--cuid-blue-soft); font-size:13px; font-weight:600; color:var(--cuid-blue);">
+                        @t.RolTexto.Substring(0,1)
+                    </div>
+
+                    <div class="d-flex flex-column" style="flex:1; min-width:220px; gap:3px;">
+                        <span style="font-size:14.5px; font-weight:600;">@t.Asunto</span>
+                        <span class="adm-card-sub">@t.Categoria · @t.UsuarioNombre (@t.RolTexto) · @t.TotalMensajes mensaje(s)</span>
+                    </div>
+
+                    <span class="flex-shrink-0" style="padding:5px 11px; border-radius:999px; font-size:12px; font-weight:600;
+                                 background:@EstadoBg(t.Estado); color:@EstadoColor(t.Estado);">
+                        @t.EstadoTexto
+                    </span>
+
+                    <span class="flex-shrink-0 text-end" style="width:110px; font-size:12px; color:var(--adm-muted-2);">
+                        @t.FechaActualizacion.ToString("dd MMM yyyy")
+                    </span>
+                </div>
+            }
+        </div>
+    }
+
+</div>
+
+@code {
+    private record Tab(int? Estado, string Label);
+
+    private readonly Tab[] _tabs =
+    {
+        new(1, "Abiertos"),
+        new(2, "En proceso"),
+        new(3, "Resueltos"),
+        new(null, "Todos"),
+    };
+
+    private int? _estadoFiltro = 1;
+    private List<TicketAdmin> _tickets = new();
+    private bool _cargando = true;
+
+    protected override async Task OnInitializedAsync() => await CargarTickets();
+
+    private void IrADetalle(int ticketId) => Nav.NavigateTo($"soporte/{ticketId}");
+
+    private async Task CambiarFiltro(int? estado)
+    {
+        _estadoFiltro = estado;
+        await CargarTickets();
+    }
+
+    private async Task CargarTickets()
+    {
+        _cargando = true;
+        StateHasChanged();
+
+        _tickets = await TicketService.ObtenerTicketsAsync(_estadoFiltro);
+
+        _cargando = false;
+    }
+
+    private static string EstadoBg(int estado) => estado switch
+    {
+        1 => "#FEE2E2",
+        2 => "#DBEAFE",
+        3 => "#DCFCE7",
+        _ => "#F3F4F6"
+    };
+
+    private static string EstadoColor(int estado) => estado switch
+    {
+        1 => "#B91C1C",
+        2 => "#1D4ED8",
+        3 => "#166534",
+        _ => "#6B7280"
+    };
+}

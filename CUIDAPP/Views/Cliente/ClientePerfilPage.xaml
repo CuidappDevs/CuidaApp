@@ -68,6 +68,8 @@
 
                 <Button Text="Mis calificaciones" Clicked="OnMisCalificacionesTapped" BackgroundColor="#F3F4F6" TextColor="#111827" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50"/>
 
+                <Button Text="Soporte / Reportar un problema" Clicked="OnSoporteTapped" BackgroundColor="#F3F4F6" TextColor="#111827" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50"/>
+
                 <Button Text="Cerrar sesión" Clicked="OnCerrarSesionTapped" BackgroundColor="#FEE2E2" TextColor="#DC2626" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50"/>
 
             </VerticalStackLayout>

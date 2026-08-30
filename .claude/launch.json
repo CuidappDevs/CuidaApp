@@ -6,6 +6,12 @@
       "runtimeExecutable": "dotnet",
       "runtimeArgs": ["run", "--project", "CUIDAPP_ADMINISTRATIVO", "--launch-profile", "http"],
       "port": 5203
+    },
+    {
+      "name": "cuidapp-api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "CUIDAPP_API", "--launch-profile", "http"],
+      "port": 5258
     }
   ]
 }

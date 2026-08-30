@@ -1,6 +1,8 @@
 @page "/care-partners"
 @layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@using CUIDAPP_ADMINISTRATIVO.Models.Cuidador
 @using CUIDAPP_ADMINISTRATIVO.Services
+@inject CuidadorAdminApiService CuidadorService
 
 <PageTitle>Care Partners · Cuidapp Admin</PageTitle>
 
@@ -9,52 +11,108 @@
     @* Filtros *@
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
         <div class="d-flex flex-wrap" style="gap:8px;">
-            <button type="button" class="adm-filter">Todas</button>
-            <button type="button" class="adm-filter active">Pendientes (12)</button>
-            <button type="button" class="adm-filter">Verificadas</button>
-            <button type="button" class="adm-filter">Rechazadas</button>
+            <button type="button" class="adm-filter @(_estadoFiltro is null ? "active" : "")" @onclick="() => CambiarFiltro(null)">Todas</button>
+            <button type="button" class="adm-filter @(_estadoFiltro == 1 ? "active" : "")" @onclick="() => CambiarFiltro(1)">Pendientes</button>
+            <button type="button" class="adm-filter @(_estadoFiltro == 2 ? "active" : "")" @onclick="() => CambiarFiltro(2)">Verificadas</button>
+            <button type="button" class="adm-filter @(_estadoFiltro == 3 ? "active" : "")" @onclick="() => CambiarFiltro(3)">Rechazadas</button>
         </div>
-        <span class="adm-card-sub">148 Care Partners registradas</span>
-    </div>
-
-    @* Tabla *@
-    <div class="adm-card overflow-hidden">
-        <div class="adm-thead">
-            <span class="adm-th">Care Partner</span>
-            <span class="adm-th">Cédula</span>
-            <span class="adm-th">Teléfono</span>
-            <span class="adm-th">Verificación</span>
-            <span></span>
-        </div>
-
-        @for (var i = 0; i < AdminMockData.Partners.Count; i++)
+        @if (!_cargando)
         {
-            var p = AdminMockData.Partners[i];
-            var pill = AdminMockData.Pill(p.Key);
-            var idx = i;
-            <div class="adm-trow">
-                <div class="d-flex align-items-center" style="gap:12px; min-width:0;">
-                    <div class="adm-avatar-sq">@AdminMockData.Initials(p.Name)</div>
-                    <div class="d-flex flex-column" style="gap:2px; min-width:0;">
-                        <span class="adm-cell-strong">@p.Name</span>
-                        <span style="font-size:12.5px; color:var(--adm-muted);">@p.Category</span>
-                    </div>
-                </div>
-                <span class="adm-cell">@p.Cedula</span>
-                <span class="adm-cell">@p.Tel</span>
-                <span class="adm-pill" style="justify-self:start; background:@pill.Bg; color:@pill.Fg;">
-                    <span class="adm-pill-dot" style="background:@pill.Fg;"></span>@p.Status
-                </span>
-                <a href="@($"care-partners/{idx}")" class="adm-btn adm-btn-ghost-line" style="justify-self:end;">Ver ficha</a>
-            </div>
+            <span class="adm-card-sub">@_cuidadores.Count Care Partners registradas</span>
         }
-
-        <div class="adm-pager">
-            <span class="adm-card-sub">Mostrando 7 de 148</span>
-            <div class="d-flex" style="gap:8px;">
-                <button type="button" class="adm-pager-btn" style="color:var(--adm-muted-2);">Anterior</button>
-                <button type="button" class="adm-pager-btn" style="color:var(--adm-ink);">Siguiente</button>
-            </div>
-        </div>
     </div>
+
+    @if (_cargando)
+    {
+        <div class="adm-card adm-card-pad text-center" style="color:var(--adm-muted);">Cargando Care Partners...</div>
+    }
+    else if (_cuidadores.Count == 0)
+    {
+        <div class="adm-card adm-card-pad text-center" style="color:var(--adm-muted);">No hay Care Partners en este estado.</div>
+    }
+    else
+    {
+        @* Tabla *@
+        <div class="adm-card overflow-hidden">
+            <div class="adm-thead" style="grid-template-columns: 2fr 1.2fr 1fr 1fr 1fr auto;">
+                <span class="adm-th">Care Partner</span>
+                <span class="adm-th">Especialidad</span>
+                <span class="adm-th">Tarifa</span>
+                <span class="adm-th">Verificación</span>
+                <span class="adm-th">Cuenta</span>
+                <span></span>
+            </div>
+
+            @foreach (var c in _cuidadores)
+            {
+                <div class="adm-trow" style="grid-template-columns: 2fr 1.2fr 1fr 1fr 1fr auto;">
+                    <div class="d-flex align-items-center" style="gap:12px; min-width:0;">
+                        <div class="adm-avatar-sq">@Iniciales(c.NombreCompleto)</div>
+                        <div class="d-flex flex-column" style="gap:2px; min-width:0;">
+                            <span class="adm-cell-strong">@c.NombreCompleto</span>
+                            <span style="font-size:12.5px; color:var(--adm-muted);">@c.Email</span>
+                        </div>
+                    </div>
+                    <span class="adm-cell">@c.Especialidad</span>
+                    <span class="adm-cell">RD$ @c.TarifaHora.ToString("N0")/hr</span>
+                    <span class="adm-pill" style="justify-self:start; background:@EstadoBg(c.EstadoAprobacion); color:@EstadoColor(c.EstadoAprobacion);">
+                        <span class="adm-pill-dot" style="background:@EstadoColor(c.EstadoAprobacion);"></span>@c.EstadoTexto
+                    </span>
+                    <span class="adm-pill" style="justify-self:start; background:@(c.IsActive ? "#DCFCE7" : "#FEE2E2"); color:@(c.IsActive ? "#166534" : "#B91C1C");">
+                        <span class="adm-pill-dot" style="background:@(c.IsActive ? "#166534" : "#B91C1C");"></span>@c.CuentaTexto
+                    </span>
+                    <a href="@($"care-partners/{c.UsuarioId}")" class="adm-btn adm-btn-ghost-line" style="justify-self:end;">Ver ficha</a>
+                </div>
+            }
+        </div>
+    }
 </div>
+
+@code {
+    private int? _estadoFiltro = 1;
+    private List<CuidadorAdmin> _cuidadores = new();
+    private bool _cargando = true;
+
+    protected override async Task OnInitializedAsync() => await Cargar();
+
+    private async Task CambiarFiltro(int? estado)
+    {
+        _estadoFiltro = estado;
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        _cargando = true;
+        StateHasChanged();
+
+        _cuidadores = await CuidadorService.ObtenerCuidadoresAsync(_estadoFiltro);
+
+        _cargando = false;
+    }
+
+    private static string Iniciales(string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre))
+            return "";
+
+        var partes = nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return string.Concat(partes.Take(2).Select(p => char.ToUpperInvariant(p[0])));
+    }
+
+    private static string EstadoBg(int estado) => estado switch
+    {
+        1 => "#FEF3C7",
+        2 => "#DCFCE7",
+        3 => "#FEE2E2",
+        _ => "#F3F4F6"
+    };
+
+    private static string EstadoColor(int estado) => estado switch
+    {
+        1 => "#B45309",
+        2 => "#166534",
+        3 => "#B91C1C",
+        _ => "#6B7280"
+    };
+}

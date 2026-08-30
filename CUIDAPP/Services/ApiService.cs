@@ -5,6 +5,7 @@ using CUIDAPP.Models.Calificacion;
 using CUIDAPP.Models.Chat;
 using CUIDAPP.Models.Cliente;
 using CUIDAPP.Models.Cuidador;
+using CUIDAPP.Models.Ticket;
 using CUIDAPP.Models.Trabajo;
 using CUIDAPP.Models.Upload;
 
@@ -856,6 +857,72 @@ namespace CUIDAPP.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"Error reseteando contraseña: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<int?> CrearTicketAsync(CrearTicketRequest request)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("ticket", request);
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                var result = await response.Content.ReadFromJsonAsync<Dictionary<string, int>>();
+                return result != null && result.TryGetValue("ticketId", out var id) ? id : null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creando ticket: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<List<Ticket>> ObtenerMisTicketsAsync(int usuarioId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"ticket/usuario/{usuarioId}");
+                if (!response.IsSuccessStatusCode)
+                    return new List<Ticket>();
+
+                return await response.Content.ReadFromJsonAsync<List<Ticket>>() ?? new List<Ticket>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo tickets: {ex.Message}");
+                return new List<Ticket>();
+            }
+        }
+
+        public async Task<TicketDetalle?> ObtenerDetalleTicketAsync(int ticketId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"ticket/{ticketId}");
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                return await response.Content.ReadFromJsonAsync<TicketDetalle>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo detalle de ticket: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<bool> AgregarMensajeTicketAsync(int ticketId, int autorId, string mensaje)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"ticket/{ticketId}/mensaje", new { AutorId = autorId, EsAdmin = false, Mensaje = mensaje });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error agregando mensaje a ticket: {ex.Message}");
                 return false;
             }
         }
