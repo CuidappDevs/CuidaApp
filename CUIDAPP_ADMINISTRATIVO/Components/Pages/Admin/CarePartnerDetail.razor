@@ -1,10 +1,18 @@
 @page "/care-partners/{Id:int}"
 @layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@using System.Security.Claims
+@using CUIDAPP_ADMINISTRATIVO.Models.Cuidador
 @using CUIDAPP_ADMINISTRATIVO.Services
+@inject CuidadorAdminApiService CuidadorService
+@inject NavigationManager Nav
 
 <PageTitle>Ficha de Care Partner · Cuidapp Admin</PageTitle>
 
-@if (_partner is null)
+@if (_cargando)
+{
+    <div class="adm-card adm-card-pad">Cargando ficha...</div>
+}
+else if (_cuidador is null)
 {
     <div class="adm-card adm-card-pad">
         <p class="mb-2">No se encontró la Care Partner solicitada.</p>
@@ -13,7 +21,7 @@
 }
 else
 {
-    var p = _partner;
+    var p = _cuidador;
     <div class="d-flex flex-column gap-4">
         <a href="care-partners" class="adm-back">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -22,6 +30,11 @@ else
             Volver a Care Partners
         </a>
 
+        @if (!string.IsNullOrWhiteSpace(_mensajeAccion))
+        {
+            <div class="adm-card adm-card-pad" style="background:#EFF6FF; border-color:#BFDBFE;">@_mensajeAccion</div>
+        }
+
         <div class="d-grid gap-4 adm-two-col" style="grid-template-columns: 1.4fr 1fr; align-items: start;">
 
             @* ----- Columna izquierda ----- *@
@@ -29,29 +42,65 @@ else
 
                 @* Perfil *@
                 <div class="adm-card d-flex" style="padding:28px; gap:22px;">
-                    <div class="adm-photo-ph">
-                        <span style="font-size:18px; font-weight:600; color:var(--adm-muted-2);">@AdminMockData.Initials(p.Name)</span>
-                        <span style="font-size:10px; color:var(--adm-muted-2);">Foto</span>
-                    </div>
+                    @if (!string.IsNullOrWhiteSpace(p.FotoUrl))
+                    {
+                        <img src="@(CuidadorService.ServerOrigin + p.FotoUrl)" style="width:84px; height:84px; border-radius:16px; object-fit:cover; flex-shrink:0;" />
+                    }
+                    else
+                    {
+                        <div class="adm-photo-ph">
+                            <span style="font-size:18px; font-weight:600; color:var(--adm-muted-2);">@Iniciales(p.NombreCompleto)</span>
+                            <span style="font-size:10px; color:var(--adm-muted-2);">Sin foto</span>
+                        </div>
+                    }
                     <div class="d-flex flex-column" style="flex:1; gap:16px;">
                         <div class="d-flex align-items-start justify-content-between gap-3">
                             <div class="d-flex flex-column" style="gap:5px;">
-                                <span style="font-size:24px; font-weight:600; letter-spacing:-0.01em;">@p.Name</span>
-                                <span style="font-size:14px; color:var(--adm-muted);">@p.Category &middot; Solicitud recibida el @p.Date</span>
+                                <span style="font-size:24px; font-weight:600; letter-spacing:-0.01em;">@p.NombreCompleto</span>
+                                <span style="font-size:14px; color:var(--adm-muted);">@p.Especialidad &middot; Registrado el @p.FechaCreacion.ToString("dd MMM yyyy")</span>
                             </div>
-                            <span class="adm-pill flex-shrink-0" style="padding:6px 13px; background:#FEF3C7; color:#B45309;">
-                                <span class="adm-pill-dot" style="background:#B45309;"></span>Pendiente de revisión
-                            </span>
+                            <div class="d-flex flex-column flex-shrink-0" style="gap:6px; align-items:flex-end;">
+                                <span class="adm-pill" style="padding:6px 13px; background:@EstadoBg(p.EstadoAprobacion); color:@EstadoColor(p.EstadoAprobacion);">
+                                    <span class="adm-pill-dot" style="background:@EstadoColor(p.EstadoAprobacion);"></span>@p.EstadoTexto
+                                </span>
+                                <span class="adm-pill" style="padding:6px 13px; background:@(p.IsActive ? "#DCFCE7" : "#FEE2E2"); color:@(p.IsActive ? "#166534" : "#B91C1C");">
+                                    <span class="adm-pill-dot" style="background:@(p.IsActive ? "#166534" : "#B91C1C");"></span>Cuenta @p.CuentaTexto.ToLower()
+                                </span>
+                            </div>
                         </div>
                         <div class="d-grid" style="grid-template-columns:repeat(3,1fr); gap:18px 24px; padding-top:4px; border-top:1px solid var(--adm-line-soft);">
-                            @foreach (var f in AdminMockData.PartnerFields(p))
-                            {
-                                <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
-                                    <span class="adm-field-k">@f.Key</span>
-                                    <span class="adm-field-v">@f.Value</span>
-                                </div>
-                            }
+                            <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
+                                <span class="adm-field-k">Correo</span>
+                                <span class="adm-field-v">@p.Email</span>
+                            </div>
+                            <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
+                                <span class="adm-field-k">Tarifa por hora</span>
+                                <span class="adm-field-v">RD$ @p.TarifaHora.ToString("N2")</span>
+                            </div>
+                            <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
+                                <span class="adm-field-k">Método de cobro</span>
+                                <span class="adm-field-v">@(p.MetodoCobro ?? "-")</span>
+                            </div>
+                            <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
+                                <span class="adm-field-k">Calificación</span>
+                                <span class="adm-field-v">@(p.PromedioCalificacion is null ? "Sin calificar" : $"{p.PromedioCalificacion:0.0} ★ ({p.TotalCalificaciones})")</span>
+                            </div>
+                            <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
+                                <span class="adm-field-k">Trabajos completados</span>
+                                <span class="adm-field-v">@p.TrabajosCompletados</span>
+                            </div>
+                            <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
+                                <span class="adm-field-k">Disponibilidad</span>
+                                <span class="adm-field-v">@(p.Disponible ? "Disponible ahora" : "No disponible")</span>
+                            </div>
                         </div>
+                        @if (!string.IsNullOrWhiteSpace(p.Bio))
+                        {
+                            <div style="padding-top:12px; border-top:1px solid var(--adm-line-soft);">
+                                <span class="adm-field-k d-block mb-1">Biografía</span>
+                                <span style="font-size:14px; color:var(--adm-ink); line-height:1.5;">@p.Bio</span>
+                            </div>
+                        }
                     </div>
                 </div>
 
@@ -61,27 +110,68 @@ else
                         <span class="adm-card-title">Documentos aportados</span>
                         <span class="adm-card-sub">Verifica que sean legibles, vigentes y correspondan a la misma persona.</span>
                     </div>
-                    <div class="d-grid" style="grid-template-columns:1fr 1fr; gap:20px;">
-                        @foreach (var doc in AdminMockData.PartnerDocs(p))
-                        {
-                            <div class="d-flex flex-column" style="gap:12px;">
-                                <div class="adm-doc-preview">
-                                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M14 3v5h5"></path>
-                                        <path d="M6 2h8l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"></path>
-                                    </svg>
-                                    <span style="font-size:13px; font-weight:600; color:var(--adm-muted);">@doc.File</span>
-                                    <span style="font-size:12px; color:var(--adm-muted-2);">Vista previa del documento</span>
-                                </div>
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div class="d-flex flex-column" style="gap:2px;">
-                                        <span style="font-size:14px; font-weight:600;">@doc.Title</span>
-                                        <span style="font-size:12.5px; color:var(--adm-muted);">@doc.Meta</span>
+
+                    @if (_documentos.Count == 0)
+                    {
+                        <span class="adm-card-sub">Esta Care Partner todavía no ha subido documentos.</span>
+                    }
+                    else
+                    {
+                        <div class="d-grid" style="grid-template-columns:1fr 1fr; gap:20px;">
+                            @foreach (var doc in _documentos)
+                            {
+                                var url = CuidadorService.ServerOrigin + doc.UrlArchivo;
+                                <div class="d-flex flex-column" style="gap:12px;">
+                                    <a href="@url" target="_blank" class="adm-doc-preview" style="text-decoration:none; overflow:hidden; padding:0;">
+                                        <img src="@url" style="width:100%; height:100%; object-fit:cover;" />
+                                    </a>
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex flex-column" style="gap:2px;">
+                                            <span style="font-size:14px; font-weight:600;">@doc.TipoTexto</span>
+                                            <span style="font-size:12.5px; color:var(--adm-muted);">Subido el @doc.FechaSubida.ToString("dd MMM yyyy")</span>
+                                        </div>
+                                        <a href="@url" target="_blank" class="adm-btn adm-btn-ghost-line">Descargar</a>
                                     </div>
-                                    <button type="button" class="adm-btn adm-btn-ghost-line">Ampliar</button>
                                 </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                @* Editar información *@
+                <div class="adm-card" style="padding:28px;">
+                    <div class="d-flex flex-column mb-4" style="gap:4px;">
+                        <span class="adm-card-title">Editar información</span>
+                        <span class="adm-card-sub">Cambios visibles de inmediato para clientes y en la app de la Care Partner.</span>
+                    </div>
+
+                    <div class="d-flex flex-column" style="gap:16px;">
+                        <div class="d-grid" style="grid-template-columns:1fr 1fr; gap:16px;">
+                            <div class="d-flex flex-column" style="gap:6px;">
+                                <span class="adm-field-k">Nombre completo</span>
+                                <input class="adm-input" @bind="_editNombre" />
                             </div>
-                        }
+                            <div class="d-flex flex-column" style="gap:6px;">
+                                <span class="adm-field-k">Especialidad</span>
+                                <input class="adm-input" @bind="_editEspecialidad" />
+                            </div>
+                            <div class="d-flex flex-column" style="gap:6px;">
+                                <span class="adm-field-k">Tarifa por hora (RD$)</span>
+                                <input class="adm-input" type="number" step="0.01" @bind="_editTarifa" />
+                            </div>
+                            <div class="d-flex flex-column" style="gap:6px;">
+                                <span class="adm-field-k">Método de cobro</span>
+                                <input class="adm-input" @bind="_editMetodoCobro" />
+                            </div>
+                        </div>
+                        <div class="d-flex flex-column" style="gap:6px;">
+                            <span class="adm-field-k">Biografía</span>
+                            <textarea class="adm-textarea" @bind="_editBio"></textarea>
+                        </div>
+                        <button type="button" class="adm-btn" style="align-self:flex-start; height:42px; padding:0 22px; border:none; border-radius:11px; background:var(--cuid-blue); color:#fff; font-size:14px;"
+                                disabled="@_guardandoInfo" @onclick="GuardarInfo">
+                            @(_guardandoInfo ? "Guardando..." : "Guardar cambios")
+                        </button>
                     </div>
                 </div>
             </div>
@@ -89,51 +179,71 @@ else
             @* ----- Columna derecha ----- *@
             <div class="d-flex flex-column gap-4">
 
-                @* Decisión *@
+                @* Verificación de documentos *@
                 <div class="adm-card d-flex flex-column" style="padding:26px; gap:20px;">
                     <div class="d-flex flex-column" style="gap:4px;">
-                        <span class="adm-card-title">Decisión de acceso</span>
-                        <span class="adm-card-sub" style="line-height:1.55;">Queda registrada con tu nombre y la fecha.</span>
+                        <span class="adm-card-title">Impedir acceso</span>
+                        <span class="adm-card-sub" style="line-height:1.55;">Aprobar habilita a la Care Partner a recibir solicitudes de servicio.</span>
                     </div>
-                    <div class="d-flex flex-column" style="gap:12px;">
-                        @foreach (var ch in AdminMockData.PartnerChecks)
-                        {
-                            <label class="adm-check">
-                                <span class="adm-check-box @(ch.On ? "on" : "")">
-                                    @if (ch.On)
-                                    {
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M20 6 9 17l-5-5"></path>
-                                        </svg>
-                                    }
-                                </span>
-                                @ch.Label
-                            </label>
-                        }
-                    </div>
-                    <textarea class="adm-textarea" placeholder="Nota interna (opcional)"></textarea>
+                    <textarea @bind="_observaciones" class="adm-textarea" placeholder="Motivo (obligatorio si vas a rechazar)"></textarea>
                     <div class="d-flex flex-column" style="gap:10px;">
-                        <button type="button" class="adm-btn adm-btn-lg adm-btn-approve">Aprobar acceso</button>
-                        <button type="button" class="adm-btn adm-btn-lg adm-btn-danger">Rechazar solicitud</button>
+                        <button type="button" class="adm-btn adm-btn-lg adm-btn-approve" disabled="@_procesando" @onclick="() => CambiarEstado(2)">
+                            Aprobar acceso
+                        </button>
+                        <button type="button" class="adm-btn adm-btn-lg adm-btn-danger" disabled="@_procesando" @onclick="() => CambiarEstado(3)">
+                            Rechazar solicitud
+                        </button>
                     </div>
                 </div>
 
-                @* Historial *@
+                @* Estado de la cuenta (suspensión / baneo) *@
                 <div class="adm-card d-flex flex-column" style="padding:26px; gap:18px;">
-                    <span class="adm-card-title">Historial de la solicitud</span>
-                    <div class="d-flex flex-column" style="gap:16px;">
-                        @foreach (var h in AdminMockData.PartnerHistory(p))
-                        {
-                            <div class="d-flex" style="gap:12px;">
-                                <span class="adm-timeline-dot" style="background:@h.Dot;"></span>
-                                <div class="d-flex flex-column" style="gap:2px;">
-                                    <span class="adm-timeline-text">@h.Text</span>
-                                    <span class="adm-timeline-when">@h.When</span>
-                                </div>
-                            </div>
-                        }
+                    <div class="d-flex flex-column" style="gap:4px;">
+                        <span class="adm-card-title">Estado de la cuenta</span>
+                        <span class="adm-card-sub" style="line-height:1.55;">
+                            @if (p.IsActive)
+                            {
+                                <text>Suspender bloquea el inicio de sesión de inmediato, sin borrar su historial.</text>
+                            }
+                            else
+                            {
+                                <text>Esta cuenta está suspendida — no puede iniciar sesión hasta que la reactives.</text>
+                            }
+                        </span>
                     </div>
+
+                    @if (p.IsActive)
+                    {
+                        <textarea @bind="_motivoSancion" class="adm-textarea" placeholder="Motivo de la suspensión (obligatorio)"></textarea>
+                        <button type="button" class="adm-btn adm-btn-lg adm-btn-danger" disabled="@_procesandoCuenta" @onclick="Suspender">
+                            @(_procesandoCuenta ? "Procesando..." : "Suspender cuenta")
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="adm-btn adm-btn-lg adm-btn-approve" disabled="@_procesandoCuenta" @onclick="Reactivar">
+                            @(_procesandoCuenta ? "Procesando..." : "Reactivar cuenta")
+                        </button>
+                    }
+
+                    @if (_sanciones.Count > 0)
+                    {
+                        <div class="d-flex flex-column" style="gap:14px; padding-top:14px; border-top:1px solid var(--adm-line-soft);">
+                            <span class="adm-card-title" style="font-size:13px;">Historial de sanciones</span>
+                            @foreach (var s in _sanciones)
+                            {
+                                <div class="d-flex" style="gap:12px;">
+                                    <span class="adm-timeline-dot" style="background:@(s.Accion == "Suspendido" ? "#DC2626" : "#16A34A");"></span>
+                                    <div class="d-flex flex-column" style="gap:2px;">
+                                        <span class="adm-timeline-text">@s.Accion @(string.IsNullOrWhiteSpace(s.Motivo) ? "" : $"— {s.Motivo}")</span>
+                                        <span class="adm-timeline-when">@s.AdminNombre · @s.FechaCreacion.ToString("dd MMM yyyy, HH:mm")</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
                 </div>
+
             </div>
         </div>
     </div>
@@ -142,10 +252,161 @@ else
 @code {
     [Parameter] public int Id { get; set; }
 
-    private Partner? _partner;
+    [CascadingParameter]
+    private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthStateTask { get; set; }
 
-    protected override void OnParametersSet()
+    private CuidadorAdmin? _cuidador;
+    private List<DocumentoAdmin> _documentos = new();
+    private List<SancionCuidador> _sanciones = new();
+    private bool _cargando = true;
+    private bool _procesando;
+    private bool _procesandoCuenta;
+    private bool _guardandoInfo;
+    private string _observaciones = "";
+    private string _motivoSancion = "";
+    private string? _mensajeAccion;
+    private int _adminId;
+
+    private string _editNombre = "";
+    private string _editEspecialidad = "";
+    private decimal _editTarifa;
+    private string _editBio = "";
+    private string _editMetodoCobro = "";
+
+    protected override async Task OnParametersSetAsync()
     {
-        _partner = Id >= 0 && Id < AdminMockData.Partners.Count ? AdminMockData.Partners[Id] : null;
+        if (AuthStateTask != null)
+        {
+            var user = (await AuthStateTask).User;
+            _adminId = int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : 0;
+        }
+
+        await Cargar();
     }
+
+    private async Task Cargar()
+    {
+        _cargando = true;
+        StateHasChanged();
+
+        _cuidador = await CuidadorService.ObtenerDetalleAsync(Id);
+
+        if (_cuidador != null)
+        {
+            _documentos = await CuidadorService.ObtenerDocumentosAsync(Id);
+            _sanciones = await CuidadorService.ObtenerSancionesAsync(Id);
+
+            _editNombre = _cuidador.NombreCompleto;
+            _editEspecialidad = _cuidador.Especialidad ?? "";
+            _editTarifa = _cuidador.TarifaHora;
+            _editBio = _cuidador.Bio ?? "";
+            _editMetodoCobro = _cuidador.MetodoCobro ?? "";
+        }
+
+        _cargando = false;
+    }
+
+    private async Task CambiarEstado(int nuevoEstado)
+    {
+        if (nuevoEstado == 3 && string.IsNullOrWhiteSpace(_observaciones))
+        {
+            _mensajeAccion = "Escribe el motivo del rechazo antes de continuar.";
+            return;
+        }
+
+        _procesando = true;
+        _mensajeAccion = null;
+
+        var success = await CuidadorService.ActualizarEstadoAsync(Id, nuevoEstado, string.IsNullOrWhiteSpace(_observaciones) ? null : _observaciones);
+
+        _procesando = false;
+        _mensajeAccion = success
+            ? (nuevoEstado == 2 ? "Care Partner aprobada correctamente." : "Solicitud rechazada.")
+            : "No se pudo actualizar el estado. Intenta de nuevo.";
+
+        if (success)
+            await Cargar();
+    }
+
+    private async Task Suspender()
+    {
+        if (string.IsNullOrWhiteSpace(_motivoSancion))
+        {
+            _mensajeAccion = "Escribe el motivo de la suspensión antes de continuar.";
+            return;
+        }
+
+        _procesandoCuenta = true;
+        _mensajeAccion = null;
+
+        var success = await CuidadorService.SuspenderAsync(Id, _adminId, _motivoSancion);
+
+        _procesandoCuenta = false;
+        _mensajeAccion = success ? "Cuenta suspendida — ya no puede iniciar sesión." : "No se pudo suspender la cuenta. Intenta de nuevo.";
+        _motivoSancion = "";
+
+        if (success)
+            await Cargar();
+    }
+
+    private async Task Reactivar()
+    {
+        _procesandoCuenta = true;
+        _mensajeAccion = null;
+
+        var success = await CuidadorService.ReactivarAsync(Id, _adminId);
+
+        _procesandoCuenta = false;
+        _mensajeAccion = success ? "Cuenta reactivada." : "No se pudo reactivar la cuenta. Intenta de nuevo.";
+
+        if (success)
+            await Cargar();
+    }
+
+    private async Task GuardarInfo()
+    {
+        if (string.IsNullOrWhiteSpace(_editNombre) || string.IsNullOrWhiteSpace(_editEspecialidad))
+        {
+            _mensajeAccion = "El nombre y la especialidad no pueden quedar vacíos.";
+            return;
+        }
+
+        _guardandoInfo = true;
+        _mensajeAccion = null;
+
+        var success = await CuidadorService.ActualizarInfoAsync(Id, _editNombre.Trim(), _editEspecialidad.Trim(), _editTarifa,
+            string.IsNullOrWhiteSpace(_editBio) ? null : _editBio.Trim(),
+            string.IsNullOrWhiteSpace(_editMetodoCobro) ? null : _editMetodoCobro.Trim());
+
+        _guardandoInfo = false;
+        _mensajeAccion = success ? "Información actualizada." : "No se pudo guardar. Intenta de nuevo.";
+
+        if (success)
+            await Cargar();
+    }
+
+    private static string Iniciales(string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre))
+            return "";
+
+        var partes = nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return string.Concat(partes.Take(2).Select(p => char.ToUpperInvariant(p[0])));
+    }
+
+    private static string EstadoBg(int estado) => estado switch
+    {
+        1 => "#FEF3C7",
+        2 => "#DCFCE7",
+        3 => "#FEE2E2",
+        _ => "#F3F4F6"
+    };
+
+    private static string EstadoColor(int estado) => estado switch
+    {
+        1 => "#B45309",
+        2 => "#166534",
+        3 => "#B91C1C",
+        _ => "#6B7280"
+    };
 }

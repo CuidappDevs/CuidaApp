@@ -77,6 +77,11 @@ namespace CUIDAPP.Views.Cliente
             await Shell.Current.GoToAsync("MisCalificacionesPage");
         }
 
+        private async void OnSoporteTapped(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync("MisReportesPage");
+        }
+
         private async void OnCerrarSesionTapped(object sender, EventArgs e)
         {
             Preferences.Default.Clear();

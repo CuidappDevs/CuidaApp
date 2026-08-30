@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CUIDAPP.Views.Soporte.NuevoReportePage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#FFFFFF">
+
+    <Grid RowDefinitions="Auto, *">
+
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" Padding="20,15,20,10" BackgroundColor="White">
+            <ContentView x:Name="BtnBack" VerticalOptions="Center">
+                <ContentView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </ContentView.GestureRecognizers>
+                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
+            </ContentView>
+            <Label Grid.Column="1" Text="Nuevo reporte" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+        </Grid>
+
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="20,25,20,20" Spacing="20">
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Categoría" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                    <Picker x:Name="PickerCategoria" Title="Selecciona una categoría" FontFamily="OpenSansRegular" FontSize="15" TextColor="#111827">
+                        <Picker.Items>
+                            <x:String>Cuenta</x:String>
+                            <x:String>Pago</x:String>
+                            <x:String>Servicio</x:String>
+                            <x:String>Chat</x:String>
+                            <x:String>Otro</x:String>
+                        </Picker.Items>
+                    </Picker>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Asunto" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                    <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="15,2">
+                        <Entry x:Name="EntryAsunto" Placeholder="Resume tu problema en pocas palabras" FontFamily="OpenSansRegular" FontSize="15" HeightRequest="45"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Descripción" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                    <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12">
+                        <Editor x:Name="EditorDescripcion" Placeholder="Cuéntanos qué pasó con el mayor detalle posible..." FontFamily="OpenSansRegular" FontSize="14" HeightRequest="140" AutoSize="Disabled"/>
+                    </Border>
+                </VerticalStackLayout>
+
+                <Button x:Name="BtnEnviar" Text="Enviar reporte" Clicked="OnEnviarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" Margin="0,10,0,0"/>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+    </Grid>
+
+</ContentPage>

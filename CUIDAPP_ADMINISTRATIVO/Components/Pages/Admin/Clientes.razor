@@ -1,6 +1,8 @@
 @page "/clientes"
 @layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@using CUIDAPP_ADMINISTRATIVO.Models.Cliente
 @using CUIDAPP_ADMINISTRATIVO.Services
+@inject ClienteAdminApiService ClienteService
 
 <PageTitle>Clientes · Cuidapp Admin</PageTitle>
 
@@ -9,48 +11,74 @@
     @* Filtros *@
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
         <div class="d-flex flex-wrap" style="gap:8px;">
-            <button type="button" class="adm-filter active">Todos</button>
-            <button type="button" class="adm-filter">Activos</button>
-            <button type="button" class="adm-filter">Suspendidos</button>
+            <button type="button" class="adm-filter @(_activoFiltro is null ? "active" : "")" @onclick="() => CambiarFiltro(null)">Todos</button>
+            <button type="button" class="adm-filter @(_activoFiltro == true ? "active" : "")" @onclick="() => CambiarFiltro(true)">Activos</button>
+            <button type="button" class="adm-filter @(_activoFiltro == false ? "active" : "")" @onclick="() => CambiarFiltro(false)">Suspendidos</button>
         </div>
-        <span class="adm-card-sub">1,206 clientes registrados</span>
-    </div>
-
-    @* Tabla *@
-    <div class="adm-card overflow-hidden">
-        <div class="adm-thead">
-            <span class="adm-th">Nombre</span>
-            <span class="adm-th">Cédula</span>
-            <span class="adm-th">Teléfono</span>
-            <span class="adm-th">Estado de cuenta</span>
-            <span></span>
-        </div>
-
-        @for (var i = 0; i < AdminMockData.Clients.Count; i++)
+        @if (!_cargando)
         {
-            var c = AdminMockData.Clients[i];
-            var pill = AdminMockData.Pill(c.Key);
-            var idx = i;
-            <div class="adm-trow">
-                <div class="d-flex flex-column" style="gap:2px; min-width:0;">
-                    <span class="adm-cell-strong">@c.Name</span>
-                    <span style="font-size:12.5px; color:var(--adm-muted);">@c.Mail</span>
-                </div>
-                <span class="adm-cell">@c.Cedula</span>
-                <span class="adm-cell">@c.Tel</span>
-                <span class="adm-pill" style="justify-self:start; background:@pill.Bg; color:@pill.Fg;">
-                    <span class="adm-pill-dot" style="background:@pill.Fg;"></span>@c.Status
-                </span>
-                <a href="@($"clientes/{idx}")" class="adm-btn adm-btn-ghost-line" style="justify-self:end;">Ver ficha</a>
-            </div>
+            <span class="adm-card-sub">@_clientes.Count clientes registrados</span>
         }
-
-        <div class="adm-pager">
-            <span class="adm-card-sub">Mostrando 7 de 1,206</span>
-            <div class="d-flex" style="gap:8px;">
-                <button type="button" class="adm-pager-btn" style="color:var(--adm-muted-2);">Anterior</button>
-                <button type="button" class="adm-pager-btn" style="color:var(--adm-ink);">Siguiente</button>
-            </div>
-        </div>
     </div>
+
+    @if (_cargando)
+    {
+        <div class="adm-card adm-card-pad text-center" style="color:var(--adm-muted);">Cargando clientes...</div>
+    }
+    else if (_clientes.Count == 0)
+    {
+        <div class="adm-card adm-card-pad text-center" style="color:var(--adm-muted);">No hay clientes en este estado.</div>
+    }
+    else
+    {
+        <div class="adm-card overflow-hidden">
+            <div class="adm-thead">
+                <span class="adm-th">Nombre</span>
+                <span class="adm-th">Contacto de emergencia</span>
+                <span class="adm-th">Servicios</span>
+                <span class="adm-th">Estado de cuenta</span>
+                <span></span>
+            </div>
+
+            @foreach (var c in _clientes)
+            {
+                <div class="adm-trow">
+                    <div class="d-flex flex-column" style="gap:2px; min-width:0;">
+                        <span class="adm-cell-strong">@c.NombreCompleto</span>
+                        <span style="font-size:12.5px; color:var(--adm-muted);">@c.Email</span>
+                    </div>
+                    <span class="adm-cell">@(c.ContactoEmergenciaNombre ?? "-")</span>
+                    <span class="adm-cell">@c.ServiciosCompletados / @c.TotalServiciosSolicitados completados</span>
+                    <span class="adm-pill" style="justify-self:start; background:@(c.IsActive ? "#DCFCE7" : "#FEE2E2"); color:@(c.IsActive ? "#166534" : "#B91C1C");">
+                        <span class="adm-pill-dot" style="background:@(c.IsActive ? "#166534" : "#B91C1C");"></span>@c.CuentaTexto
+                    </span>
+                    <a href="@($"clientes/{c.UsuarioId}")" class="adm-btn adm-btn-ghost-line" style="justify-self:end;">Ver ficha</a>
+                </div>
+            }
+        </div>
+    }
 </div>
+
+@code {
+    private bool? _activoFiltro;
+    private List<ClienteAdmin> _clientes = new();
+    private bool _cargando = true;
+
+    protected override async Task OnInitializedAsync() => await Cargar();
+
+    private async Task CambiarFiltro(bool? activo)
+    {
+        _activoFiltro = activo;
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        _cargando = true;
+        StateHasChanged();
+
+        _clientes = await ClienteService.ObtenerClientesAsync(_activoFiltro);
+
+        _cargando = false;
+    }
+}

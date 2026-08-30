@@ -615,6 +615,26 @@
     box-shadow: 0 0 0 4px rgba(2, 83, 165, 0.12);
 }
 
+.adm-input {
+    height: 42px;
+    padding: 0 14px;
+    border: 1px solid var(--adm-line);
+    border-radius: 10px;
+    background: var(--adm-surface);
+    font-family: inherit;
+    font-weight: 400;
+    font-size: 14px;
+    color: var(--adm-ink);
+    width: 100%;
+}
+
+.adm-input:focus {
+    outline: none;
+    border-color: var(--cuid-blue);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(2, 83, 165, 0.12);
+}
+
 .adm-check {
     display: flex;
     align-items: center;

@@ -1,5 +1,8 @@
 @page "/"
 @layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AuthLayout
+@using CUIDAPP_ADMINISTRATIVO.Services
+@inject AdminAuthService AuthService
+@inject NavigationManager Nav
 
 <PageTitle>Iniciar sesión · Cuidapp</PageTitle>
 
@@ -159,12 +162,22 @@
         _showError = false;
         _submitting = true;
 
-        // TODO: conectar con la API de autenticación (auth/login) y validar RolId == 1 (Admin).
-        // El endpoint de login para administradores todavía no existe en CUIDAPP_API.
-        await Task.Delay(600); // simula la llamada mientras no hay backend
+        var result = await AuthService.LoginAsync(_model.Email, _model.Password);
 
-        _submitting = false;
-        _showError = true; // sin backend, mostramos el estado de error del diseño
+        if (!result.Success || result.Data == null)
+        {
+            _errorMessage = result.ErrorMessage ?? "No se pudo iniciar sesión.";
+            _showError = true;
+            _submitting = false;
+            return;
+        }
+
+        // No podemos escribir la cookie de sesión desde aquí (este componente corre
+        // sobre el circuito de SignalR, no sobre una request HTTP normal). Guardamos
+        // el resultado bajo un código de un solo uso y forzamos una navegación real
+        // de navegador (forceLoad) al endpoint que sí puede completarla.
+        var code = PendingLoginStore.Guardar(result.Data);
+        Nav.NavigateTo($"/account/login-complete?code={code}", forceLoad: true);
     }
 
     private sealed class LoginModel

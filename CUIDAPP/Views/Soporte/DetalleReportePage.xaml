@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:CUIDAPP.Models.Ticket"
+             x:Class="CUIDAPP.Views.Soporte.DetalleReportePage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#F9FAFB">
+
+    <Grid RowDefinitions="Auto, *, Auto">
+
+        <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Padding="20,15,20,10" BackgroundColor="White">
+            <ContentView x:Name="BtnBack" VerticalOptions="Center">
+                <ContentView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </ContentView.GestureRecognizers>
+                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
+            </ContentView>
+            <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
+                <Label x:Name="LblAsunto" Text="Reporte" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
+                <Label x:Name="LblEstado" Text="" FontSize="11" FontFamily="OpenSansSemibold" TextColor="#2563EB" HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <ActivityIndicator x:Name="LoadingIndicator" IsRunning="True" IsVisible="True" Color="#2563EB" VerticalOptions="Center" HorizontalOptions="Center"/>
+
+            <ScrollView x:Name="ScrollMensajes" IsVisible="False">
+                <VerticalStackLayout x:Name="PanelMensajes" Padding="16" Spacing="12"/>
+            </ScrollView>
+        </Grid>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*, Auto" Padding="16,10,16,20" ColumnSpacing="10" BackgroundColor="White">
+            <Border Grid.Column="0" Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 20" Padding="15,2">
+                <Entry x:Name="EntryMensaje" Placeholder="Escribe un mensaje..." FontFamily="OpenSansRegular" FontSize="14" HeightRequest="42"/>
+            </Border>
+            <ContentView Grid.Column="1" VerticalOptions="Center">
+                <ContentView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnEnviarMensajeTapped" />
+                </ContentView.GestureRecognizers>
+                <Border Stroke="Transparent" BackgroundColor="#2563EB" StrokeShape="RoundRectangle 20" WidthRequest="42" HeightRequest="42">
+                    <Path Data="M2 21l21-9L2 3v7l15 2-15 2v7z" Fill="White" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
+            </ContentView>
+        </Grid>
+
+    </Grid>
+
+</ContentPage>

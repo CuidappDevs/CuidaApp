@@ -1,6 +1,7 @@
 @inherits LayoutComponentBase
 @implements IDisposable
 @inject NavigationManager Nav
+@using System.Security.Claims
 
 <div class="adm-shell">
 
@@ -72,18 +73,21 @@
                     <input type="text" placeholder="Buscar por nombre o cédula" />
                 </div>
                 <div class="adm-divider-v"></div>
-                <div class="d-flex align-items-center gap-2">
-                    <div class="adm-avatar">LM</div>
+                <div class="d-flex align-items-center gap-2" style="cursor:pointer;" @onclick="CerrarSesion" title="Cerrar sesión">
+                    <div class="adm-avatar">@Iniciales(_nombre)</div>
                     <div class="d-flex flex-column">
-                        <span style="font-size:13px; font-weight:600;">Laura Méndez</span>
-                        <span style="font-size:12px; color:var(--adm-muted);">Verificaciones</span>
+                        <span style="font-size:13px; font-weight:600;">@_nombre</span>
+                        <span style="font-size:12px; color:var(--adm-muted);">Administrador</span>
                     </div>
                 </div>
             </div>
         </header>
 
         <div class="adm-content">
-            @Body
+            @if (_autorizado)
+            {
+                @Body
+            }
         </div>
     </div>
 </div>
@@ -95,7 +99,12 @@
 </div>
 
 @code {
+    [CascadingParameter]
+    private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthStateTask { get; set; }
+
     private bool _collapsed;
+    private bool _autorizado;
+    private string _nombre = "";
     private string _title = "";
     private string _subtitle = "";
 
@@ -104,15 +113,41 @@
     private readonly NavItem[] _navItems =
     {
         new("dash", "Dashboard", "dashboard", "M4 13h6V4H4zM14 20h6v-9h-6zM4 20h6v-4H4zM14 8h6V4h-6z", null),
-        new("partners", "Care Partners", "care-partners", "M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M18 8l2 2 3-3", 12),
+        new("partners", "Care Partners", "care-partners", "M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M18 8l2 2 3-3", null),
         new("clients", "Clientes", "clientes", "M3 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M9 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M17 20v-2a4 4 0 0 0-2-3.4M16 3.5a3.5 3.5 0 0 1 0 7", null),
+        new("pagos", "Pagos y finanzas", "pagos", "M2 7h20M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2M2 7v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7M6 15h4", null),
+        new("soporte", "Soporte", "soporte", "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z", null),
+        new("admins", "Administradores", "administradores", "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z", null),
     };
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        var user = AuthStateTask != null ? (await AuthStateTask).User : new ClaimsPrincipal();
+
+        if (!(user.Identity?.IsAuthenticated ?? false) || user.FindFirst(ClaimTypes.Role)?.Value != "1")
+        {
+            Nav.NavigateTo("/", forceLoad: true);
+            return;
+        }
+
+        _autorizado = true;
+        _nombre = user.FindFirst(ClaimTypes.Name)?.Value ?? "";
+
         Nav.LocationChanged += OnLocationChanged;
         UpdateHeader();
     }
+
+    private static string Iniciales(string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre))
+            return "";
+
+        var partes = nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var iniciales = string.Concat(partes.Take(2).Select(p => char.ToUpperInvariant(p[0])));
+        return iniciales;
+    }
+
+    private void CerrarSesion() => Nav.NavigateTo("/account/logout", forceLoad: true);
 
     private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
@@ -133,6 +168,9 @@
         var seg = Segment();
         if (seg.StartsWith("care-partners")) return "partners";
         if (seg.StartsWith("clientes")) return "clients";
+        if (seg.StartsWith("pagos")) return "pagos";
+        if (seg.StartsWith("soporte")) return "soporte";
+        if (seg.StartsWith("administradores")) return "admins";
         return "dash";
     }
 
@@ -143,10 +181,14 @@
         var seg = Segment();
         (_title, _subtitle) = seg switch
         {
-            "care-partners" => ("Care Partners registradas", "148 registros · 12 pendientes de revisión"),
+            "care-partners" => ("Care Partners registradas", "Verifica identidad y documentos"),
             _ when seg.StartsWith("care-partners/") => ("Ficha de Care Partner", "Revisión de documentos"),
-            "clientes" => ("Clientes registrados", "1,206 hogares en la plataforma"),
+            "clientes" => ("Clientes registrados", "Gestiona cuentas e información de contacto"),
             _ when seg.StartsWith("clientes/") => ("Ficha de cliente", "Cuenta y servicios contratados"),
+            "pagos" => ("Pagos y finanzas", "Autoriza y confirma los pagos a Care Partners"),
+            "soporte" => ("Soporte", "Reportes de clientes y Care Partners"),
+            _ when seg.StartsWith("soporte/") => ("Reporte", "Detalle y seguimiento"),
+            "administradores" => ("Administradores", "Gestiona quién tiene acceso al panel"),
             _ => ("Dashboard", "Lunes 24 de agosto, 2026"),
         };
     }

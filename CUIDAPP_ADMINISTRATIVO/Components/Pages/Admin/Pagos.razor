@@ -1,0 +1,186 @@
+@page "/pagos"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@using System.Security.Claims
+@using CUIDAPP_ADMINISTRATIVO.Models.Pago
+@using CUIDAPP_ADMINISTRATIVO.Services
+@inject PagoAdminApiService PagoService
+
+<PageTitle>Pagos y finanzas · Cuidapp Admin</PageTitle>
+
+<div class="d-flex flex-column" style="gap:20px;">
+
+    @* ----- Filtro por estado ----- *@
+    <div class="d-flex" style="gap:8px;">
+        @foreach (var tab in _tabs)
+        {
+            <button type="button" class="adm-btn @(_estadoFiltro == tab.Estado ? "" : "adm-btn-outline")"
+                    style="@(_estadoFiltro == tab.Estado ? "background:var(--cuid-blue); color:#fff; border:none;" : "")"
+                    @onclick="() => CambiarFiltro(tab.Estado)">
+                @tab.Label
+            </button>
+        }
+    </div>
+
+    @if (_cargando)
+    {
+        <div class="adm-card adm-card-pad text-center" style="color:var(--adm-muted);">Cargando pagos...</div>
+    }
+    else if (_pagos.Count == 0)
+    {
+        <div class="adm-card adm-card-pad text-center" style="color:var(--adm-muted);">No hay pagos en este estado.</div>
+    }
+    else
+    {
+        <div class="adm-card overflow-hidden">
+            @foreach (var pago in _pagos)
+            {
+                <div class="d-flex flex-wrap align-items-center" style="gap:12px 16px; padding:16px 24px; border-bottom:1px solid var(--adm-line-soft);">
+
+                    <div class="d-flex flex-column" style="flex:1; min-width:220px; gap:3px;">
+                        <span style="font-size:14.5px; font-weight:600;">@pago.CuidadorNombre</span>
+                        <span class="adm-card-sub">@pago.TipoServicio · Cliente: @pago.ClienteNombre</span>
+                        @if (pago.PagoDisputado)
+                        {
+                            <span style="font-size:12px; font-weight:600; color:#DC2626;">⚠ Pago disputado</span>
+                        }
+                    </div>
+
+                    <span style="flex-shrink:0; width:110px; font-size:15px; font-weight:700; color:var(--adm-ink);">
+                        RD$ @pago.Monto.ToString("N2")
+                    </span>
+
+                    <span class="flex-shrink-0" style="padding:5px 11px; border-radius:999px; font-size:12px; font-weight:600;
+                                 background:@EstadoBg(pago.Estado); color:@EstadoColor(pago.Estado);">
+                        @pago.EstadoTexto
+                    </span>
+
+                    <div class="d-flex flex-column flex-shrink-0 text-end" style="width:150px; font-size:12px; color:var(--adm-muted-2);">
+                        <span>Creado: @pago.FechaCreacion.ToString("dd MMM yyyy")</span>
+                        @if (pago.FechaAutorizacion is not null)
+                        {
+                            <span>Autorizado: @pago.FechaAutorizacion.Value.ToString("dd MMM yyyy")</span>
+                        }
+                        @if (pago.FechaPago is not null)
+                        {
+                            <span>Pagado: @pago.FechaPago.Value.ToString("dd MMM yyyy")</span>
+                        }
+                    </div>
+
+                    <div class="flex-shrink-0" style="width:150px; text-align:right;">
+                        @if (pago.Estado == 1)
+                        {
+                            <button type="button" class="adm-btn" style="height:36px; padding:0 16px; border:none; border-radius:11px; background:var(--cuid-blue); color:#fff; font-size:13px;"
+                                    disabled="@(_procesando == pago.Id)" @onclick="() => Autorizar(pago.Id)">
+                                @(_procesando == pago.Id ? "..." : "Autorizar")
+                            </button>
+                        }
+                        else if (pago.Estado == 3)
+                        {
+                            <button type="button" class="adm-btn" style="height:36px; padding:0 16px; border:none; border-radius:11px; background:#16A34A; color:#fff; font-size:13px;"
+                                    disabled="@(_procesando == pago.Id)" @onclick="() => Aprobar(pago.Id)">
+                                @(_procesando == pago.Id ? "..." : "Confirmar envío")
+                            </button>
+                        }
+                        else
+                        {
+                            <span style="font-size:12px; color:var(--adm-muted-2);">
+                                @if (!string.IsNullOrWhiteSpace(pago.AprobadoPorNombre))
+                                {
+                                    <text>Por @pago.AprobadoPorNombre</text>
+                                }
+                            </span>
+                        }
+                    </div>
+
+                </div>
+            }
+        </div>
+    }
+
+</div>
+
+@code {
+    [CascadingParameter]
+    private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthStateTask { get; set; }
+
+    private record Tab(int? Estado, string Label);
+
+    private readonly Tab[] _tabs =
+    {
+        new(1, "Pendientes"),
+        new(3, "Autorizados"),
+        new(2, "Pagados"),
+        new(null, "Todos"),
+    };
+
+    private int? _estadoFiltro = 1;
+    private List<PagoAdmin> _pagos = new();
+    private bool _cargando = true;
+    private int _adminId;
+    private int? _procesando;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthStateTask != null)
+        {
+            var user = (await AuthStateTask).User;
+            _adminId = int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : 0;
+        }
+
+        await CargarPagos();
+    }
+
+    private async Task CambiarFiltro(int? estado)
+    {
+        _estadoFiltro = estado;
+        await CargarPagos();
+    }
+
+    private async Task CargarPagos()
+    {
+        _cargando = true;
+        StateHasChanged();
+
+        _pagos = await PagoService.ObtenerPagosAsync(_estadoFiltro);
+
+        _cargando = false;
+    }
+
+    private async Task Autorizar(int pagoId)
+    {
+        _procesando = pagoId;
+        StateHasChanged();
+
+        await PagoService.AutorizarPagoAsync(pagoId, _adminId);
+        await CargarPagos();
+
+        _procesando = null;
+    }
+
+    private async Task Aprobar(int pagoId)
+    {
+        _procesando = pagoId;
+        StateHasChanged();
+
+        await PagoService.AprobarPagoAsync(pagoId, _adminId);
+        await CargarPagos();
+
+        _procesando = null;
+    }
+
+    private static string EstadoBg(int estado) => estado switch
+    {
+        1 => "#FEF3C7",
+        3 => "#DBEAFE",
+        2 => "#DCFCE7",
+        _ => "#F3F4F6"
+    };
+
+    private static string EstadoColor(int estado) => estado switch
+    {
+        1 => "#92400E",
+        3 => "#1D4ED8",
+        2 => "#166534",
+        _ => "#6B7280"
+    };
+}

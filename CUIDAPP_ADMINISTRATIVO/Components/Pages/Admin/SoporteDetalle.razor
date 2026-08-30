@@ -1,0 +1,175 @@
+@page "/soporte/{TicketId:int}"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@using System.Security.Claims
+@using CUIDAPP_ADMINISTRATIVO.Models.Ticket
+@using CUIDAPP_ADMINISTRATIVO.Services
+@inject TicketAdminApiService TicketService
+@inject NavigationManager Nav
+
+<PageTitle>Reporte #@TicketId · Cuidapp Admin</PageTitle>
+
+@if (_cargando)
+{
+    <div class="adm-card adm-card-pad text-center" style="color:var(--adm-muted);">Cargando reporte...</div>
+}
+else if (_detalle == null)
+{
+    <div class="adm-card adm-card-pad text-center" style="color:var(--adm-muted);">No se encontró el reporte.</div>
+}
+else
+{
+    <div class="d-grid gap-4" style="grid-template-columns: 1fr 340px; align-items:start;">
+
+        @* ----- Hilo de mensajes ----- *@
+        <div class="adm-card d-flex flex-column" style="height:calc(100vh - 220px);">
+            <div class="adm-card-pad" style="border-bottom:1px solid var(--adm-line);">
+                <span class="adm-card-title">@_detalle.Ticket.Asunto</span>
+                <div class="adm-card-sub">@_detalle.Ticket.Categoria · Reportado por @_detalle.Ticket.UsuarioNombre (@_detalle.Ticket.RolTexto)</div>
+            </div>
+
+            <div class="d-flex flex-column" style="flex:1; overflow-y:auto; padding:20px; gap:14px;">
+                @foreach (var m in _detalle.Mensajes)
+                {
+                    <div class="d-flex flex-column" style="align-items:@(m.EsAdmin ? "flex-end" : "flex-start");">
+                        <div style="max-width:70%; padding:10px 14px; border-radius:14px;
+                                    background:@(m.EsAdmin ? "var(--cuid-blue)" : "#F3F4F6");
+                                    color:@(m.EsAdmin ? "#fff" : "#111827");">
+                            @if (m.EsAdmin)
+                            {
+                                <div style="font-size:11px; font-weight:600; opacity:0.85; margin-bottom:2px;">Soporte</div>
+                            }
+                            <div style="font-size:14px; white-space:pre-wrap;">@m.Mensaje</div>
+                        </div>
+                        <span style="font-size:11px; color:var(--adm-muted-2); margin-top:3px;">@m.FechaCreacion.ToString("dd MMM, HH:mm")</span>
+                    </div>
+                }
+            </div>
+
+            <div class="d-flex" style="gap:10px; padding:16px 20px; border-top:1px solid var(--adm-line);">
+                <input @bind="_nuevoMensaje" @bind:event="oninput" @onkeydown="OnKeyDown" placeholder="Escribe una respuesta..."
+                       style="flex:1; height:42px; border-radius:10px; border:1px solid var(--adm-line); padding:0 14px; font-size:14px;" />
+                <button type="button" class="adm-btn" style="height:42px; padding:0 20px; border:none; border-radius:10px; background:var(--cuid-blue); color:#fff; font-size:14px;"
+                        disabled="@_enviando" @onclick="EnviarMensaje">
+                    Enviar
+                </button>
+            </div>
+        </div>
+
+        @* ----- Panel lateral ----- *@
+        <div class="d-flex flex-column" style="gap:16px;">
+
+            <div class="adm-card adm-card-pad d-flex flex-column" style="gap:12px;">
+                <span class="adm-card-title">Estado del reporte</span>
+                <span class="d-inline-block" style="padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600; width:fit-content;
+                             background:@EstadoBg(_detalle.Ticket.Estado); color:@EstadoColor(_detalle.Ticket.Estado);">
+                    @_detalle.Ticket.EstadoTexto
+                </span>
+
+                <div class="d-flex flex-column" style="gap:8px; margin-top:6px;">
+                    @if (_detalle.Ticket.Estado != 2)
+                    {
+                        <button type="button" class="adm-btn adm-btn-outline" @onclick='() => CambiarEstado(2)'>Marcar "En proceso"</button>
+                    }
+                    @if (_detalle.Ticket.Estado != 3)
+                    {
+                        <button type="button" class="adm-btn" style="border:none; background:#16A34A; color:#fff;" @onclick='() => CambiarEstado(3)'>Marcar como resuelto</button>
+                    }
+                    @if (_detalle.Ticket.Estado == 3)
+                    {
+                        <button type="button" class="adm-btn adm-btn-outline" @onclick='() => CambiarEstado(1)'>Reabrir</button>
+                    }
+                </div>
+            </div>
+
+            <div class="adm-card adm-card-pad d-flex flex-column" style="gap:8px;">
+                <span class="adm-card-title">Usuario</span>
+                <span style="font-size:14px; font-weight:600;">@_detalle.Ticket.UsuarioNombre</span>
+                <span class="adm-card-sub">@_detalle.Ticket.UsuarioEmail</span>
+                <span class="adm-card-sub">@_detalle.Ticket.RolTexto</span>
+                @if (_detalle.Ticket.TrabajoId is not null)
+                {
+                    <span class="adm-card-sub">Trabajo relacionado: #@_detalle.Ticket.TrabajoId</span>
+                }
+            </div>
+
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int TicketId { get; set; }
+
+    [CascadingParameter]
+    private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthStateTask { get; set; }
+
+    private TicketDetalle? _detalle;
+    private bool _cargando = true;
+    private bool _enviando;
+    private string _nuevoMensaje = "";
+    private int _adminId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthStateTask != null)
+        {
+            var user = (await AuthStateTask).User;
+            _adminId = int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : 0;
+        }
+
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        _cargando = true;
+        StateHasChanged();
+
+        _detalle = await TicketService.ObtenerDetalleAsync(TicketId);
+
+        _cargando = false;
+    }
+
+    private async Task EnviarMensaje()
+    {
+        if (string.IsNullOrWhiteSpace(_nuevoMensaje) || _enviando)
+            return;
+
+        _enviando = true;
+        var texto = _nuevoMensaje;
+        _nuevoMensaje = "";
+
+        await TicketService.AgregarMensajeAsync(TicketId, _adminId, texto);
+        await Cargar();
+
+        _enviando = false;
+    }
+
+    private async Task OnKeyDown(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+            await EnviarMensaje();
+    }
+
+    private async Task CambiarEstado(int estado)
+    {
+        await TicketService.ActualizarEstadoAsync(TicketId, estado, _adminId);
+        await Cargar();
+    }
+
+    private static string EstadoBg(int estado) => estado switch
+    {
+        1 => "#FEE2E2",
+        2 => "#DBEAFE",
+        3 => "#DCFCE7",
+        _ => "#F3F4F6"
+    };
+
+    private static string EstadoColor(int estado) => estado switch
+    {
+        1 => "#B91C1C",
+        2 => "#1D4ED8",
+        3 => "#166534",
+        _ => "#6B7280"
+    };
+}
