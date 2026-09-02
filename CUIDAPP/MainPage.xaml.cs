@@ -22,6 +22,11 @@ namespace CUIDAPP
             await Shell.Current.GoToAsync("ForgotPasswordPage");
         }
 
+        private void OnTogglePasswordVisibility(object sender, EventArgs e)
+        {
+            EntryPassword.IsPassword = !EntryPassword.IsPassword;
+        }
+
         private async void OnLoginClicked(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(EntryEmail.Text) || string.IsNullOrWhiteSpace(EntryPassword.Text))

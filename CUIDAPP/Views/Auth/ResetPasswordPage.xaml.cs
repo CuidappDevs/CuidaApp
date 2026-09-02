@@ -47,6 +47,16 @@ namespace CUIDAPP.Views.Auth
             await Shell.Current.GoToAsync("..");
         }
 
+        private void OnToggleNewPassVisibility(object sender, EventArgs e)
+        {
+            EntryNewPass.IsPassword = !EntryNewPass.IsPassword;
+        }
+
+        private void OnToggleConfirmPassVisibility(object sender, EventArgs e)
+        {
+            EntryConfirmPass.IsPassword = !EntryConfirmPass.IsPassword;
+        }
+
         private async void OnRestablecerClicked(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(EntryNewPass.Text) || EntryNewPass.Text.Length < 6)
