@@ -8,19 +8,6 @@
     <ScrollView>
         <VerticalStackLayout Padding="25,20" Spacing="25">
             
-            <!-- Circulo CUIDAPP -->
-            <Border Stroke="Transparent" StrokeThickness="0" StrokeShape="RoundRectangle 80" WidthRequest="140" HeightRequest="140" HorizontalOptions="Center" Margin="0, 40, 0, 0" BackgroundColor="{StaticResource ColorPrimary}">
-                <Border.Shadow>
-                    <Shadow Brush="Black" Offset="0,10" Radius="15" Opacity="0.15" />
-                </Border.Shadow>
-                
-                <Label Text="CUIDAPP" 
-                       FontFamily="OpenSansSemibold" 
-                       FontSize="22" 
-                       TextColor="{StaticResource ColorSurface}" 
-                       HorizontalOptions="Center" 
-                       VerticalOptions="Center" />
-            </Border>
             <!-- Logo CUIDAPP -->
             <Grid WidthRequest="140" HeightRequest="140" HorizontalOptions="Center" Margin="0, 40, 0, 0">
                 <Image Source="logo_cuidapp.png" Aspect="AspectFit" Margin="14" HorizontalOptions="Center" VerticalOptions="Center">
