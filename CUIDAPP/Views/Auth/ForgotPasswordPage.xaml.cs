@@ -6,7 +6,6 @@ namespace CUIDAPP.Views.Auth
     {
         private readonly ApiService _apiService = new ApiService();
         private string _userEmail = "";
-        private string _resetCode = "";
         private Entry[] _pins;
         private CancellationTokenSource _timerCts;
 
@@ -87,8 +86,18 @@ namespace CUIDAPP.Views.Auth
                     return;
                 }
 
-                _resetCode = result.Code;
-                await DisplayAlert("Código de recuperación", $"Tu código es: {_resetCode}\n\n(En producción esto se enviaría por email)", "OK");
+                var asunto = "CuidaApp - Código de recuperación de contraseña";
+                var cuerpoHtml = $"""
+                    <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
+                        <h2 style="color: #1C4D96; text-align: center;">CuidaApp</h2>
+                        <p>Tu código de recuperación es:</p>
+                        <div style="background: #F5F8FC; border: 1px solid #D9E2EC; border-radius: 8px; padding: 15px; text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 8px; color: #0A2F41;">{result.Code}</div>
+                        <p style="color: #4B5563; font-size: 13px;">Este código expira en 15 minutos. Si no solicitaste este cambio, ignora este mensaje.</p>
+                    </div>
+                    """;
+                await _apiService.EnviarEmailAsync(_userEmail, asunto, cuerpoHtml);
+
+                await DisplayAlert("Código enviado", $"Revisa tu correo electrónico ({_userEmail}) para obtener el código de recuperación.", "OK");
 
                 Step1.IsVisible = false;
                 Step2.IsVisible = true;
@@ -158,8 +167,18 @@ namespace CUIDAPP.Views.Auth
                     return;
                 }
 
-                _resetCode = result.Code;
-                await DisplayAlert("Código de recuperación", $"Tu código es: {_resetCode}\n\n(En producción esto se enviaría por email)", "OK");
+                var asunto = "CuidaApp - Código de recuperación de contraseña";
+                var cuerpoHtml = $"""
+                    <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
+                        <h2 style="color: #1C4D96; text-align: center;">CuidaApp</h2>
+                        <p>Tu código de recuperación es:</p>
+                        <div style="background: #F5F8FC; border: 1px solid #D9E2EC; border-radius: 8px; padding: 15px; text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 8px; color: #0A2F41;">{result.Code}</div>
+                        <p style="color: #4B5563; font-size: 13px;">Este código expira en 15 minutos. Si no solicitaste este cambio, ignora este mensaje.</p>
+                    </div>
+                    """;
+                await _apiService.EnviarEmailAsync(_userEmail, asunto, cuerpoHtml);
+
+                await DisplayAlert("Código reenviado", $"Se envió un nuevo código a {_userEmail}. Revisa tu bandeja de entrada y carpeta de spam.", "OK");
 
                 StartTimer();
                 _pins[0].Focus();

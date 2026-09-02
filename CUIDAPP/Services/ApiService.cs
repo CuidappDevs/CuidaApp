@@ -861,6 +861,20 @@ namespace CUIDAPP.Services
             }
         }
 
+        public async Task<bool> EnviarEmailAsync(string destinatario, string asunto, string cuerpoHtml)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("email/enviar", new { Destinatario = destinatario, Asunto = asunto, CuerpoHtml = cuerpoHtml });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error enviando email: {ex.Message}");
+                return false;
+            }
+        }
+
         public async Task<int?> CrearTicketAsync(CrearTicketRequest request)
         {
             try
