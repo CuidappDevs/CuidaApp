@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using CUIDAPP_API.DTOs.Auth;
 using CUIDAPP_API.Interfaces.Auth;
+using CUIDAPP_API.Interfaces.Email;
 
 namespace CUIDAPP_API.Services.Auth
 {
@@ -14,10 +15,12 @@ namespace CUIDAPP_API.Services.Auth
     {
         private readonly string _connectionString;
         private readonly IConfiguration _config;
+        private readonly IEmailService _emailService;
 
-        public AuthService(IConfiguration config)
+        public AuthService(IConfiguration config, IEmailService emailService)
         {
             _config = config;
+            _emailService = emailService;
             _connectionString = _config.GetConnectionString("DefaultConnection") ?? "";
         }
 
@@ -136,7 +139,26 @@ namespace CUIDAPP_API.Services.Auth
             cmdReset.Parameters.AddWithValue("@ExpiresAt", expiresAt);
 
             var resetToken = (Guid)await cmdReset.ExecuteScalarAsync();
-            return (true, resetToken, code);
+
+            try
+            {
+                var asunto = "CuidaApp - Código de recuperación de contraseña";
+                var cuerpoHtml = $"""
+                    <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
+                        <h2 style="color: #1C4D96; text-align: center;">CuidaApp</h2>
+                        <p>Tu código de recuperación es:</p>
+                        <div style="background: #F5F8FC; border: 1px solid #D9E2EC; border-radius: 8px; padding: 15px; text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 8px; color: #0A2F41;">{code}</div>
+                        <p style="color: #4B5563; font-size: 13px;">Este código expira en 15 minutos. Si no solicitaste este cambio, ignora este mensaje.</p>
+                    </div>
+                    """;
+                await _emailService.EnviarAsync(dto.Email, asunto, cuerpoHtml);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error enviando email de recuperación: {ex.Message}");
+            }
+
+            return (true, resetToken, "Código enviado");
         }
 
         public async Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordDto dto)
