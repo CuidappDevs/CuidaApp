@@ -262,6 +262,7 @@ namespace CUIDAPP.Views.Trabajos
             BtnIniciar.IsVisible = trabajo.Estado == 2;
             BtnCompletar.IsVisible = trabajo.Estado == 3;
             BtnCancelar.IsVisible = trabajo.Estado == 2 || trabajo.Estado == 3;
+            BtnSOS.IsVisible = trabajo.Estado == 2 || trabajo.Estado == 3;
             CardActividades.IsVisible = trabajo.Estado == 3;
             BtnChat.IsVisible = trabajo.Estado is 2 or 3 or 7;
 
@@ -397,6 +398,48 @@ namespace CUIDAPP.Views.Trabajos
 
             var parametros = new Dictionary<string, object> { { "Trabajo", trabajo } };
             await Shell.Current.GoToAsync("CancelarServicioPage", parametros);
+        }
+
+        private async void OnSOSClicked(object sender, EventArgs e)
+        {
+            if (trabajo == null)
+                return;
+
+            var confirmar = await DisplayAlert(
+                "SOS - Pedir auxilio",
+                "Se enviará una alerta de emergencia al equipo de administración de CuidApp. ¿Estás seguro de que necesitas auxilio?",
+                "Sí, enviar alerta", "Cancelar");
+            if (!confirmar)
+                return;
+
+            BtnSOS.IsEnabled = false;
+            BtnSOS.Text = " Enviando alerta...";
+
+            try
+            {
+                var ubicacion = await LocationService.ObtenerUbicacionActualAsync();
+                var latitud = ubicacion?.Latitude ?? 0;
+                var longitud = ubicacion?.Longitude ?? 0;
+
+                var usuarioId = Preferences.Default.Get("UserId", 0);
+                var tipoUsuario = Preferences.Default.Get("RolId", 0) == 3 ? "Cuidador" : "Cliente";
+
+                var success = await _apiService.EnviarSOSAsync(trabajo.Id, usuarioId, tipoUsuario, latitud, longitud);
+
+                if (success)
+                {
+                    await DisplayAlert("Alerta enviada", "Nuestro equipo de administración ha sido notificado y coordinará asistencia de inmediato.", "OK");
+                }
+                else
+                {
+                    await DisplayAlert("Error", "No se pudo enviar la alerta SOS. Intenta de nuevo o llama al 911.", "OK");
+                }
+            }
+            finally
+            {
+                BtnSOS.IsEnabled = true;
+                BtnSOS.Text = " SOS - Pedir auxilio";
+            }
         }
 
         private async Task CargarMapaRutaAsync()

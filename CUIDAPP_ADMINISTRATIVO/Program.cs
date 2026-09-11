@@ -33,6 +33,7 @@ builder.Services.AddHttpClient<AdminAccountApiService>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]!);
 });
+builder.Services.AddSingleton<SosNotificationService>();
 
 // Autenticación por cookie: la sesión vive en el navegador (no en el circuito de
 // Blazor Server), así que sobrevive a un refresh completo de la página. El JWT que
