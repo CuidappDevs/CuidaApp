@@ -7,7 +7,7 @@ namespace CUIDAPP_API.DTOs.SOS
         public int UsuarioId { get; set; }
         public required string TipoUsuario { get; set; }
         public required string NombreUsuario { get; set; }
-        public string? TelefonoUsuario { get; set; }
+        public string? EmailUsuario { get; set; }
         public double Latitud { get; set; }
         public double Longitud { get; set; }
         public string? Motivo { get; set; }

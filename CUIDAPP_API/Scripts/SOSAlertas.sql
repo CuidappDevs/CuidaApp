@@ -1,6 +1,10 @@
 -- =============================================
 -- Tabla SOSAlertas para emergencias
+-- Base de datos: DBCuidappDev
 -- =============================================
+
+USE [DBCuidappDev];
+GO
 
 CREATE TABLE SOSAlertas (
     Id INT IDENTITY(1,1) PRIMARY KEY,
@@ -37,8 +41,8 @@ BEGIN
     VALUES (@TrabajoId, @UsuarioId, @TipoUsuario, @Latitud, @Longitud, @Motivo, 'Pendiente', @FechaCreacion);
 
     SELECT a.Id, a.TrabajoId, a.UsuarioId, a.TipoUsuario,
-           u.Nombre + ' ' + ISNULL(u.Apellido, '') AS NombreUsuario,
-           u.Telefono AS TelefonoUsuario,
+           u.NombreCompleto AS NombreUsuario,
+           u.Email AS EmailUsuario,
            a.Latitud, a.Longitud, a.Motivo, a.Estado, a.FechaCreacion
     FROM SOSAlertas a
     INNER JOIN Usuarios u ON a.UsuarioId = u.Id
@@ -54,8 +58,8 @@ CREATE PROCEDURE sp_ObtenerSOSAlertasPendientes
 AS
 BEGIN
     SELECT a.Id, a.TrabajoId, a.UsuarioId, a.TipoUsuario,
-           u.Nombre + ' ' + ISNULL(u.Apellido, '') AS NombreUsuario,
-           u.Telefono AS TelefonoUsuario,
+           u.NombreCompleto AS NombreUsuario,
+           u.Email AS EmailUsuario,
            a.Latitud, a.Longitud, a.Motivo, a.Estado, a.FechaCreacion,
            a.FechaAtencion, a.AtendidoPor
     FROM SOSAlertas a

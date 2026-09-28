@@ -45,7 +45,7 @@ namespace CUIDAPP_API.Services.SOS
                     UsuarioId = Convert.ToInt32(reader["UsuarioId"]),
                     TipoUsuario = reader["TipoUsuario"].ToString()!,
                     NombreUsuario = reader["NombreUsuario"].ToString()!,
-                    TelefonoUsuario = reader["TelefonoUsuario"] as string,
+                    EmailUsuario = reader["EmailUsuario"] as string,
                     Latitud = Convert.ToDouble(reader["Latitud"]),
                     Longitud = Convert.ToDouble(reader["Longitud"]),
                     Motivo = reader["Motivo"] as string,
@@ -83,7 +83,7 @@ namespace CUIDAPP_API.Services.SOS
         public async Task<SOSAlertaDto?> ObtenerAlertaPorIdAsync(int id)
         {
             using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand("SELECT a.*, u.Nombre + ' ' + ISNULL(u.Apellido, '') AS NombreUsuario, u.Telefono AS TelefonoUsuario FROM SOSAlertas a INNER JOIN Usuarios u ON a.UsuarioId = u.Id WHERE a.Id = @Id", connection);
+            using var command = new SqlCommand("SELECT a.*, u.NombreCompleto AS NombreUsuario, u.Email AS EmailUsuario FROM SOSAlertas a INNER JOIN Usuarios u ON a.UsuarioId = u.Id WHERE a.Id = @Id", connection);
             command.Parameters.AddWithValue("@Id", id);
 
             await connection.OpenAsync();
@@ -130,7 +130,7 @@ namespace CUIDAPP_API.Services.SOS
                 UsuarioId = Convert.ToInt32(reader["UsuarioId"]),
                 TipoUsuario = reader["TipoUsuario"].ToString()!,
                 NombreUsuario = reader["NombreUsuario"].ToString()!,
-                TelefonoUsuario = reader["TelefonoUsuario"] as string,
+                EmailUsuario = reader["EmailUsuario"] as string,
                 Latitud = Convert.ToDouble(reader["Latitud"]),
                 Longitud = Convert.ToDouble(reader["Longitud"]),
                 Motivo = reader["Motivo"] as string,

@@ -42,9 +42,9 @@
                                 &nbsp;· Trabajo #@alerta.TrabajoId
                                 &nbsp;· @alerta.FechaCreacion.ToString("HH:mm:ss")
                             </div>
-                            @if (!string.IsNullOrEmpty(alerta.TelefonoUsuario))
+                            @if (!string.IsNullOrEmpty(alerta.EmailUsuario))
                             {
-                                <div style="font-size:12px; color:#6B7280; margin-top:4px;">📞 @alerta.TelefonoUsuario</div>
+                                <div style="font-size:12px; color:#6B7280; margin-top:4px;">📧 @alerta.EmailUsuario</div>
                             }
                             @if (!string.IsNullOrEmpty(alerta.Motivo))
                             {

@@ -44,7 +44,7 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
                     UsuarioId = GetInt(alerta, "UsuarioId"),
                     TipoUsuario = GetString(alerta, "TipoUsuario") ?? "",
                     NombreUsuario = GetString(alerta, "NombreUsuario") ?? "Desconocido",
-                    TelefonoUsuario = GetString(alerta, "TelefonoUsuario"),
+                    EmailUsuario = GetString(alerta, "EmailUsuario"),
                     Latitud = GetDouble(alerta, "Latitud"),
                     Longitud = GetDouble(alerta, "Longitud"),
                     Motivo = GetString(alerta, "Motivo"),
@@ -118,7 +118,7 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
         public int UsuarioId { get; set; }
         public string TipoUsuario { get; set; } = "";
         public string NombreUsuario { get; set; } = "";
-        public string? TelefonoUsuario { get; set; }
+        public string? EmailUsuario { get; set; }
         public double Latitud { get; set; }
         public double Longitud { get; set; }
         public string? Motivo { get; set; }
