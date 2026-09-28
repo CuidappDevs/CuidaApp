@@ -191,6 +191,13 @@
             <!-- Cancelar (visible si ya fue aceptado o está en progreso) -->
             <Button x:Name="BtnCancelar" Text="Cancelar servicio" Clicked="OnCancelarClicked" BackgroundColor="Transparent" TextColor="#EF4444" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="12" HeightRequest="45" IsVisible="False"/>
 
+            <!-- SOS - Pedir auxilio (visible si aceptado o en progreso) -->
+            <Button x:Name="BtnSOS" Text=" SOS - Pedir auxilio" Clicked="OnSOSClicked" BackgroundColor="#C62828" TextColor="White" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50" IsVisible="False">
+                <Button.Shadow>
+                    <Shadow Brush="#C62828" Offset="0,0" Radius="12" Opacity="0.4" />
+                </Button.Shadow>
+            </Button>
+
             <!-- Estado Completado: Calificar al cliente -->
             <Button x:Name="BtnCalificarCliente" Text="Calificar al cliente" Clicked="OnCalificarClienteClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsVisible="False"/>
         </VerticalStackLayout>

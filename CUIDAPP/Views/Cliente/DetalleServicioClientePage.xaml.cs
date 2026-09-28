@@ -137,6 +137,7 @@ namespace CUIDAPP.Views.Cliente
             LblEstado.Text = texto;
 
             BtnCancelar.IsVisible = t.Estado == 1;
+            BtnSOS.IsVisible = t.Estado == 2 || t.Estado == 3;
             BtnCalificar.IsVisible = t.Estado == 4;
 
             CardConfirmarFinalizacion.IsVisible = t.Estado == 7;
@@ -361,6 +362,48 @@ namespace CUIDAPP.Views.Cliente
                 await DisplayAlert("Error", "No se pudo cancelar la solicitud. Intenta de nuevo.", "OK");
                 BtnCancelar.IsEnabled = true;
                 BtnCancelar.Text = "Cancelar solicitud";
+            }
+        }
+
+        private async void OnSOSClicked(object sender, EventArgs e)
+        {
+            if (trabajo == null)
+                return;
+
+            var confirmar = await DisplayAlert(
+                "SOS - Pedir auxilio",
+                "Se enviará una alerta de emergencia al equipo de administración de CuidApp. ¿Estás seguro de que necesitas auxilio?",
+                "Sí, enviar alerta", "Cancelar");
+            if (!confirmar)
+                return;
+
+            BtnSOS.IsEnabled = false;
+            BtnSOS.Text = " Enviando alerta...";
+
+            try
+            {
+                var ubicacion = await LocationService.ObtenerUbicacionActualAsync();
+                var latitud = ubicacion?.Latitude ?? 0;
+                var longitud = ubicacion?.Longitude ?? 0;
+
+                var usuarioId = Preferences.Default.Get("UserId", 0);
+                var tipoUsuario = Preferences.Default.Get("RolId", 0) == 3 ? "Cuidador" : "Cliente";
+
+                var success = await _apiService.EnviarSOSAsync(trabajo.Id, usuarioId, tipoUsuario, latitud, longitud);
+
+                if (success)
+                {
+                    await DisplayAlert("Alerta enviada", "Nuestro equipo de administración ha sido notificado y coordinará asistencia de inmediato.", "OK");
+                }
+                else
+                {
+                    await DisplayAlert("Error", "No se pudo enviar la alerta SOS. Intenta de nuevo o llama al 911.", "OK");
+                }
+            }
+            finally
+            {
+                BtnSOS.IsEnabled = true;
+                BtnSOS.Text = " SOS - Pedir auxilio";
             }
         }
     }

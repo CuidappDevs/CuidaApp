@@ -126,6 +126,13 @@
 
                 <Button x:Name="BtnCancelar" Text="Cancelar solicitud" Clicked="OnCancelarClicked" BackgroundColor="Transparent" TextColor="#EF4444" BorderColor="#EF4444" BorderWidth="1" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50" IsVisible="False"/>
 
+                <!-- SOS - Pedir auxilio (visible si aceptado o en progreso) -->
+                <Button x:Name="BtnSOS" Text=" SOS - Pedir auxilio" Clicked="OnSOSClicked" BackgroundColor="#C62828" TextColor="White" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50" IsVisible="False">
+                    <Button.Shadow>
+                        <Shadow Brush="#C62828" Offset="0,0" Radius="12" Opacity="0.4" />
+                    </Button.Shadow>
+                </Button>
+
                 <Button x:Name="BtnCalificar" Text="Calificar a tu cuidador" Clicked="OnCalificarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50" IsVisible="False"/>
 
             </VerticalStackLayout>
