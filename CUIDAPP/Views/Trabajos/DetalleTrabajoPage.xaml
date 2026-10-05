@@ -121,6 +121,15 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <!-- Tareas que pidió el cliente (se tachan al completarlas, solo En Progreso) -->
+                <Border x:Name="CardTareas" Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="20" IsVisible="False">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Tareas del cliente" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                        <Label x:Name="LblAyudaTareas" Text="Marca cada tarea al completarla; el cliente recibirá un aviso." FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
+                        <VerticalStackLayout x:Name="ListaTareas" Spacing="8"/>
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- Bitácora de actividades (solo visible mientras el trabajo está En Progreso) -->
                 <Border x:Name="CardActividades" Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="20" IsVisible="False">
                     <VerticalStackLayout Spacing="14">

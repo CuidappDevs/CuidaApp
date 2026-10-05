@@ -71,6 +71,18 @@
                     </Border>
                 </VerticalStackLayout>
 
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Tareas para el cuidador (opcional)" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                    <Label Text="Indícale qué debe hacer. Te avisaremos en tiempo real cada vez que complete una." FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
+                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
+                        <Border Grid.Column="0" Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
+                            <Entry x:Name="EntryTarea" Placeholder="Ej. Preparar el almuerzo" MaxLength="200" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="45" Completed="OnAgregarTareaClicked"/>
+                        </Border>
+                        <Button Grid.Column="1" Text="Agregar" Clicked="OnAgregarTareaClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="13" CornerRadius="10" WidthRequest="85" HeightRequest="45"/>
+                    </Grid>
+                    <VerticalStackLayout x:Name="ListaTareas" Spacing="8"/>
+                </VerticalStackLayout>
+
                 <Border Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="20">
                     <VerticalStackLayout Spacing="12">
                         <Grid ColumnDefinitions="*, Auto">

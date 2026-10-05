@@ -103,6 +103,12 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <!-- Tareas que el cliente pidió; se tachan en tiempo real -->
+                <VerticalStackLayout x:Name="CardTareasCliente" Spacing="10" IsVisible="False">
+                    <Label Text="Tareas del servicio" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                    <VerticalStackLayout x:Name="ListaTareasCliente" Spacing="8"/>
+                </VerticalStackLayout>
+
                 <!-- Bitácora de actividades reportadas por el cuidador -->
                 <VerticalStackLayout x:Name="CardActividadesCliente" Spacing="10" IsVisible="False">
                     <Label Text="Actividad en tiempo real" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827"/>

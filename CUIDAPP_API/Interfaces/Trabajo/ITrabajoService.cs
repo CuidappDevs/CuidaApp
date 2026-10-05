@@ -19,6 +19,8 @@ namespace CUIDAPP_API.Interfaces.Trabajo
         Task<bool> CancelarTrabajoCuidadorAsync(CancelarTrabajoDto dto);
         Task<IEnumerable<ActividadTrabajoDto>> ObtenerActividadesAsync(int trabajoId);
         Task<ActividadTrabajoDto> AgregarActividadAsync(AgregarActividadTrabajoDto dto);
+        Task<IEnumerable<TareaTrabajoDto>> ObtenerTareasAsync(int trabajoId);
+        Task<TareaTrabajoDto?> CompletarTareaAsync(int tareaId);
         Task AlertarGeocercaAsync(int trabajoId, double distanciaMetros);
     }
 }

@@ -28,6 +28,7 @@ namespace CUIDAPP.Views.Cliente
             RealtimeService.TrabajoActualizado += OnTrabajoActualizadoTiempoReal;
             RealtimeService.ActividadAgregada += OnActividadAgregadaTiempoReal;
             RealtimeService.AlertaGeocerca += OnAlertaGeocercaTiempoReal;
+            RealtimeService.TareaCompletada += OnTareaCompletadaTiempoReal;
             IniciarRelojSiHaceFalta();
             await CargarTrabajo();
         }
@@ -38,6 +39,7 @@ namespace CUIDAPP.Views.Cliente
             RealtimeService.TrabajoActualizado -= OnTrabajoActualizadoTiempoReal;
             RealtimeService.ActividadAgregada -= OnActividadAgregadaTiempoReal;
             RealtimeService.AlertaGeocerca -= OnAlertaGeocercaTiempoReal;
+            RealtimeService.TareaCompletada -= OnTareaCompletadaTiempoReal;
         }
 
         private async void OnAlertaGeocercaTiempoReal(int idTrabajo, double distanciaMetros)
@@ -63,6 +65,43 @@ namespace CUIDAPP.Views.Cliente
 
             LblSinActividadesCliente.IsVisible = false;
             ListaActividadesCliente.Insert(0, CrearTarjetaActividad(descripcion, fechaHora));
+        }
+
+        private async void OnTareaCompletadaTiempoReal(int idTrabajo, int tareaId, string descripcion)
+        {
+            if (idTrabajo != trabajoId)
+                return;
+
+            await CargarTareasAsync();
+        }
+
+        private async Task CargarTareasAsync()
+        {
+            if (trabajo == null)
+                return;
+
+            var tareasTrabajo = await _apiService.ObtenerTareasAsync(trabajo.Id);
+            CardTareasCliente.IsVisible = tareasTrabajo.Count > 0 && trabajo.Estado is 2 or 3 or 7;
+            ListaTareasCliente.Clear();
+
+            foreach (var tarea in tareasTrabajo)
+            {
+                ListaTareasCliente.Add(new Border
+                {
+                    Stroke = Colors.Transparent,
+                    BackgroundColor = Colors.White,
+                    StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
+                    Padding = new Thickness(14, 10),
+                    Content = new Label
+                    {
+                        Text = (tarea.Completada ? "☑  " : "☐  ") + tarea.Descripcion,
+                        FontSize = 14,
+                        FontFamily = "OpenSansRegular",
+                        TextColor = tarea.Completada ? Color.FromArgb("#9CA3AF") : Color.FromArgb("#111827"),
+                        TextDecorations = tarea.Completada ? TextDecorations.Strikethrough : TextDecorations.None
+                    }
+                });
+            }
         }
 
         private void IniciarRelojSiHaceFalta()
@@ -165,6 +204,8 @@ namespace CUIDAPP.Views.Cliente
             CardActividadesCliente.IsVisible = t.Estado == 3;
             if (CardActividadesCliente.IsVisible)
                 _ = CargarActividadesAsync();
+
+            _ = CargarTareasAsync();
 
             BtnChat.IsVisible = t.Estado is 2 or 3 or 7;
 
@@ -283,7 +324,7 @@ namespace CUIDAPP.Views.Cliente
                 { "TrabajoId", trabajo.Id },
                 { "CalificadoId", trabajo.CuidadorId },
                 { "CalificadoNombre", trabajo.CuidadorNombre },
-                { "RutaSalida", "///ClienteDashboardPage" }
+                { "RutaSalida", "//MainPage/ClienteDashboardPage" }
             };
             await Shell.Current.GoToAsync("CalificarPage", parametros);
         }

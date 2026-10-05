@@ -57,7 +57,7 @@ namespace CUIDAPP.Views.Cliente
                 { "TrabajoId", pendiente.Id },
                 { "CalificadoId", pendiente.CuidadorId },
                 { "CalificadoNombre", pendiente.CuidadorNombre },
-                { "RutaSalida", "///ClienteDashboardPage" }
+                { "RutaSalida", "//MainPage/ClienteDashboardPage" }
             };
             await Shell.Current.GoToAsync("CalificarPage", parametros);
         }

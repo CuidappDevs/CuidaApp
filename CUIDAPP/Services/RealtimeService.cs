@@ -15,6 +15,7 @@ namespace CUIDAPP.Services
         public static event Action<int, bool>? DisponibilidadCambio;   // CuidadorId, Disponible
         public static event Action<int, double, double>? UbicacionCuidadorCambio; // CuidadorId, Lat, Lng
         public static event Action<int, string, DateTime>? ActividadAgregada; // TrabajoId, Descripcion, FechaHora
+        public static event Action<int, int, string>? TareaCompletada; // TrabajoId, TareaId, Descripcion
         public static event Action<Mensaje>? MensajeNuevo;
         public static event Action<int, double>? AlertaGeocerca; // TrabajoId, DistanciaMetros
 
@@ -43,6 +44,7 @@ namespace CUIDAPP.Services
             _connection.On<object>("DisponibilidadCambio", payload => { Console.WriteLine("[Realtime] Evento recibido: DisponibilidadCambio"); DispatchDisponibilidadCambio(payload); });
             _connection.On<object>("UbicacionCuidadorCambio", payload => DispatchUbicacionCambio(payload));
             _connection.On<object>("ActividadAgregada", payload => { Console.WriteLine("[Realtime] Evento recibido: ActividadAgregada"); DispatchActividadAgregada(payload); });
+            _connection.On<object>("TareaCompletada", payload => DispatchTareaCompletada(payload));
             _connection.On<Mensaje>("MensajeNuevo", mensaje =>
             {
                 Console.WriteLine("[Realtime] Evento recibido: MensajeNuevo");
@@ -132,6 +134,15 @@ namespace CUIDAPP.Services
             var descripcion = json.GetProperty("descripcion").GetString() ?? "";
             var fechaHora = json.GetProperty("fechaHora").GetDateTime();
             MainThread.BeginInvokeOnMainThread(() => ActividadAgregada?.Invoke(trabajoId, descripcion, fechaHora));
+        }
+
+        private static void DispatchTareaCompletada(object payload)
+        {
+            var json = (System.Text.Json.JsonElement)payload;
+            var trabajoId = json.GetProperty("trabajoId").GetInt32();
+            var tareaId = json.GetProperty("id").GetInt32();
+            var descripcion = json.GetProperty("descripcion").GetString() ?? "";
+            MainThread.BeginInvokeOnMainThread(() => TareaCompletada?.Invoke(trabajoId, tareaId, descripcion));
         }
 
         private static void DispatchAlertaGeocerca(object payload)
