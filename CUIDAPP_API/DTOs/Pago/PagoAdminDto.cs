@@ -10,6 +10,7 @@ namespace CUIDAPP_API.DTOs.Pago
         public string ClienteNombre { get; set; } = "";
         public string TipoServicio { get; set; } = "";
         public decimal Monto { get; set; }
+        public decimal Propina { get; set; }
         public int Estado { get; set; } // 1=Pendiente, 3=Autorizado, 2=Pagado
         public DateTime FechaCreacion { get; set; }
         public int? AutorizadoPorAdminId { get; set; }

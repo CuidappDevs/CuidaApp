@@ -7,6 +7,8 @@ namespace CUIDAPP.Models.Cuidador
         public string TipoServicio { get; set; } = string.Empty;
         public string ClienteNombre { get; set; } = string.Empty;
         public decimal Monto { get; set; }
+        public decimal Propina { get; set; }
+        public decimal Total => Monto + Propina;
         public int Estado { get; set; } // 1=Pendiente, 2=Pagado
         public DateTime? FechaPago { get; set; }
         public DateTime FechaCreacion { get; set; }

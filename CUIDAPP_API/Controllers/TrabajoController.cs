@@ -150,12 +150,19 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        // Tope de seguridad para una propina (RD$); evita montos absurdos por error de tecleo.
+        private const decimal MaxPropina = 50000m;
+
         [HttpPut("confirmar-finalizacion")]
         public async Task<IActionResult> ConfirmarFinalizacion([FromBody] ConfirmarFinalizacionDto dto)
         {
             try
             {
-                var (success, motivo) = await _trabajoService.ConfirmarFinalizacionAsync(dto.TrabajoId, dto.ClienteId, dto.Confirmado);
+                var propina = Math.Round(dto.Propina ?? 0m, 2);
+                if (propina < 0 || propina > MaxPropina)
+                    return BadRequest(new { Motivo = "PROPINA_INVALIDA", Message = $"La propina debe estar entre 0 y {MaxPropina:N0}." });
+
+                var (success, motivo) = await _trabajoService.ConfirmarFinalizacionAsync(dto.TrabajoId, dto.ClienteId, dto.Confirmado, propina);
                 if (success)
                     return Ok(new { Message = "Confirmación registrada" });
 

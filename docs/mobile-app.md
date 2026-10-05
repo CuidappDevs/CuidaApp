@@ -39,3 +39,10 @@ Todos los cambios de la app móvil son aditivos o de corrección de bugs — nin
 - Selector en la pantalla de login y en los perfiles de cliente y cuidador. Al cambiar de idioma se reconstruye el `Shell` y se vuelve al dashboard del usuario.
 - Para agregar textos: añadir la clave en `es.json` y `en.json` y correr `Resources/Strings/verificar_traducciones.py`.
 - Pendiente fuera de alcance: mensajes de error que devuelve la API (siguen en español) y el panel administrativo.
+
+
+## Propina al finalizar
+
+- Cliente (`DetalleServicioClientePage`): en la tarjeta "¿Confirmas que el trabajo fue completado?" aparecen chips *Sin propina / RD$100 / RD$150 / RD$200 / Otro monto*; muestra el total con propina y la envía al confirmar.
+- Cuidador: recibe un aviso en tiempo real (`PropinaRecibida`) y en *Mi dinero* cada pago muestra el total y "incl. propina".
+- Los montos sugeridos están fijos en la app (`PropinasSugeridas`); el tope (RD$50,000) debe coincidir con `MaxPropina` en `TrabajoController`.

@@ -30,6 +30,7 @@ namespace CUIDAPP.Views.Cliente
             RealtimeService.ActividadAgregada += OnActividadAgregadaTiempoReal;
             RealtimeService.AlertaGeocerca += OnAlertaGeocercaTiempoReal;
             RealtimeService.TareaCompletada += OnTareaCompletadaTiempoReal;
+            ConstruirChipsPropina();
             IniciarRelojSiHaceFalta();
             await CargarTrabajo();
         }
@@ -339,21 +340,107 @@ namespace CUIDAPP.Views.Cliente
             OverlayTerminado.IsVisible = false;
         }
 
+        // ---- Propina opcional ----
+        private static readonly decimal[] PropinasSugeridas = { 100m, 150m, 200m };
+        private const decimal MaxPropina = 50000m; // mismo tope que valida la API
+        private decimal propina;       // 0 = sin propina
+        private bool propinaOtroMonto; // el cliente eligió "Otro monto"
+
+        private void ConstruirChipsPropina()
+        {
+            ChipsPropina.Clear();
+            AgregarChipPropina(Localizador.T("sin_propina"), !propinaOtroMonto && propina == 0, () => { propina = 0; propinaOtroMonto = false; });
+            foreach (var monto in PropinasSugeridas)
+            {
+                var m = monto;
+                AgregarChipPropina($"RD${m:N0}", !propinaOtroMonto && propina == m, () => { propina = m; propinaOtroMonto = false; });
+            }
+            AgregarChipPropina(Localizador.T("otro_monto"), propinaOtroMonto, () => { propinaOtroMonto = true; propina = ParsearPropina(EntryPropina.Text) ?? 0; });
+
+            BoxPropinaOtro.IsVisible = propinaOtroMonto;
+            ActualizarResumenPropina();
+        }
+
+        private void AgregarChipPropina(string texto, bool seleccionado, Action alElegir)
+        {
+            var chip = new Border
+            {
+                Stroke = seleccionado ? Color.FromArgb("#16A34A") : Color.FromArgb("#F59E0B"),
+                StrokeThickness = 1,
+                BackgroundColor = seleccionado ? Color.FromArgb("#16A34A") : Colors.White,
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 18 },
+                Padding = new Thickness(14, 8),
+                Margin = new Thickness(0, 0, 8, 8),
+                Content = new Label
+                {
+                    Text = texto,
+                    FontSize = 13,
+                    FontFamily = "OpenSansSemibold",
+                    TextColor = seleccionado ? Colors.White : Color.FromArgb("#92400E")
+                }
+            };
+            chip.GestureRecognizers.Add(new TapGestureRecognizer
+            {
+                Command = new Command(() =>
+                {
+                    alElegir();
+                    ConstruirChipsPropina();
+                })
+            });
+            ChipsPropina.Add(chip);
+        }
+
+        private static decimal? ParsearPropina(string? texto)
+        {
+            if (string.IsNullOrWhiteSpace(texto))
+                return null;
+            return decimal.TryParse(texto.Trim().Replace(',', '.'), System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var valor)
+                ? Math.Round(valor, 2)
+                : null;
+        }
+
+        private void OnPropinaTextChanged(object sender, TextChangedEventArgs e)
+        {
+            propina = ParsearPropina(EntryPropina.Text) ?? 0;
+            ActualizarResumenPropina();
+        }
+
+        private void ActualizarResumenPropina()
+        {
+            LblResumenPropina.IsVisible = trabajo != null && propina > 0;
+            if (LblResumenPropina.IsVisible)
+                LblResumenPropina.Text = Localizador.F("total_con_propina", trabajo!.Tarifa + propina);
+        }
+
         private async void OnConfirmarFinalizacionClicked(object sender, EventArgs e)
         {
             if (trabajo == null)
                 return;
+
+            if (propinaOtroMonto && (propina <= 0 || propina > MaxPropina))
+            {
+                await DisplayAlert(Localizador.T("error"), Localizador.T("propina_invalida"), Localizador.T("ok"));
+                return;
+            }
 
             var clienteId = Preferences.Default.Get("UserId", 0);
 
             BtnConfirmarFinalizacion.IsEnabled = false;
             BtnConfirmarFinalizacion.Text = Localizador.T("confirmando");
 
-            var (success, error) = await _apiService.ConfirmarFinalizacionAsync(trabajo.Id, clienteId, true);
+            var propinaEnviada = propina;
+            var (success, error) = await _apiService.ConfirmarFinalizacionAsync(trabajo.Id, clienteId, true, propinaEnviada);
 
             if (success)
             {
+                propina = 0;
+                propinaOtroMonto = false;
+                EntryPropina.Text = "";
+                ConstruirChipsPropina();
                 await CargarTrabajo();
+
+                if (propinaEnviada > 0)
+                    await DisplayAlert(Localizador.T("gracias"), Localizador.F("gracias_propina", propinaEnviada), Localizador.T("ok"));
             }
             else
             {

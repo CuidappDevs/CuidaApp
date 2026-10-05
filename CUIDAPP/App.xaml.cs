@@ -44,6 +44,23 @@ namespace CUIDAPP
             RealtimeService.ActividadAgregada += OnActividadAgregadaGlobal;
             RealtimeService.AlertaGeocerca += OnAlertaGeocercaGlobal;
             RealtimeService.TareaCompletada += OnTareaCompletadaGlobal;
+            RealtimeService.PropinaRecibida += OnPropinaRecibidaGlobal;
+        }
+
+        private void OnPropinaRecibidaGlobal(int trabajoId, decimal monto)
+        {
+            // Solo el cuidador recibe este evento.
+            if (Preferences.Default.Get("RolId", 0) != 3)
+                return;
+
+            var titulo = Localizador.T("notif_propina_titulo");
+            var texto = Localizador.F("notif_propina_texto", monto);
+            NotificacionHistorial.Agregar(titulo, texto, "trabajo", trabajoId);
+
+            if (EstaEnPrimerPlano)
+                GlobalNotifier.MostrarBanner(titulo, texto);
+            else
+                NativeNotifier.Mostrar(titulo, texto);
         }
 
         private void OnTareaCompletadaGlobal(int trabajoId, int tareaId, string descripcion)
