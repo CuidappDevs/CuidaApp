@@ -31,3 +31,11 @@ Nueva pantalla (`Views/Calificacion/MisCalificacionesPage.xaml`) — historial d
 ## Notas de compatibilidad
 
 Todos los cambios de la app móvil son aditivos o de corrección de bugs — ningún endpoint de la API que ya usaba la app fue modificado en su comportamiento (los cambios de `CUIDAPP_API` en esta sesión son endpoints nuevos, no tocan los existentes que la app ya consume).
+
+## Multi-idioma (español / inglés)
+
+- `Localization/Localizador.cs` carga `Resources/Strings/{es,en}.json` (recursos incrustados) y aplica la cultura; el idioma se guarda en `Preferences["Idioma"]` y, si no hay uno guardado, se usa el del dispositivo (es/en, por defecto es).
+- XAML usa `{loc:T clave}` (se actualiza en vivo); C# usa `Localizador.T/F/D`. Ver las reglas en `AGENTS.md`.
+- Selector en la pantalla de login y en los perfiles de cliente y cuidador. Al cambiar de idioma se reconstruye el `Shell` y se vuelve al dashboard del usuario.
+- Para agregar textos: añadir la clave en `es.json` y `en.json` y correr `Resources/Strings/verificar_traducciones.py`.
+- Pendiente fuera de alcance: mensajes de error que devuelve la API (siguen en español) y el panel administrativo.

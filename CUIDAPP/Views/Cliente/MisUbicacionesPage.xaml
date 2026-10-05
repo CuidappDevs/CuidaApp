@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Cliente.MisUbicacionesPage"
              Shell.NavBarIsVisible="False"
              BackgroundColor="#F9FAFB">
@@ -14,7 +15,7 @@
                 </ContentView.GestureRecognizers>
                 <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
             </ContentView>
-            <Label x:Name="LblTitulo" Grid.Column="1" Text="Mis ubicaciones" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <Label x:Name="LblTitulo" Grid.Column="1" Text="{loc:T mis_ubicaciones}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
         </Grid>
 
         <Grid Grid.Row="1">
@@ -33,7 +34,7 @@
                                     <HorizontalStackLayout Spacing="8">
                                         <Label Text="{Binding Nombre}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
                                         <Border Stroke="Transparent" BackgroundColor="#ECFDF5" StrokeShape="RoundRectangle 8" Padding="8,2" IsVisible="{Binding EsPredeterminada}">
-                                            <Label Text="Predeterminada" FontSize="10" FontFamily="OpenSansSemibold" TextColor="#065F46"/>
+                                            <Label Text="{loc:T predeterminada}" FontSize="10" FontFamily="OpenSansSemibold" TextColor="#065F46"/>
                                         </Border>
                                     </HorizontalStackLayout>
                                     <Label Text="{Binding Direccion}" FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" LineBreakMode="TailTruncation"/>
@@ -51,15 +52,15 @@
             </CollectionView>
 
             <VerticalStackLayout x:Name="EstadoVacio" IsVisible="False" HorizontalOptions="Center" VerticalOptions="Center" Spacing="10">
-                <Label Text="Aún no tienes ubicaciones guardadas" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#6B7280" HorizontalOptions="Center"/>
-                <Label Text="Agrega la dirección de tu casa para reservar más rápido" FontSize="13" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                <Label Text="{loc:T aun_no_tienes_ubicaciones_guardadas}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#6B7280" HorizontalOptions="Center"/>
+                <Label Text="{loc:T agrega_la_direccion_de_tu}" FontSize="13" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center"/>
             </VerticalStackLayout>
 
             <ActivityIndicator x:Name="LoaderCarga" IsRunning="False" IsVisible="False" Color="#2563EB" HorizontalOptions="Center" VerticalOptions="Center"/>
         </Grid>
 
         <VerticalStackLayout Grid.Row="2" Padding="20,10,20,30" BackgroundColor="White">
-            <Button x:Name="BtnAgregar" Text="+ Agregar ubicación" Clicked="OnAgregarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55"/>
+            <Button x:Name="BtnAgregar" Text="{loc:T agregar_ubicacion}" Clicked="OnAgregarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55"/>
         </VerticalStackLayout>
 
     </Grid>

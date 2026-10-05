@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:CUIDAPP.Localization"
              xmlns:models="clr-namespace:CUIDAPP.Models.Ticket"
              x:Class="CUIDAPP.Views.Soporte.MisReportesPage"
              Shell.NavBarIsVisible="False"
@@ -15,7 +16,7 @@
                 </ContentView.GestureRecognizers>
                 <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
             </ContentView>
-            <Label Grid.Column="1" Text="Mis reportes" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <Label Grid.Column="1" Text="{loc:T mis_reportes}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
         </Grid>
 
         <Grid Grid.Row="1">
@@ -24,7 +25,7 @@
 
             <VerticalStackLayout x:Name="PanelVacio" IsVisible="False" VerticalOptions="Center" HorizontalOptions="Center" Spacing="10" Padding="40">
                 <Path Data="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" Fill="#D1D5DB" Aspect="Uniform" WidthRequest="48" HeightRequest="48" HorizontalOptions="Center"/>
-                <Label Text="Todavía no has hecho ningún reporte" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#6B7280" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                <Label Text="{loc:T todavia_no_has_hecho_ningun}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#6B7280" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
             </VerticalStackLayout>
 
             <CollectionView x:Name="ListaTickets" IsVisible="False" Margin="0,15,0,0">
@@ -43,7 +44,14 @@
                                     <Label Grid.Column="1" Text="{Binding EstadoTexto}" FontSize="11" FontFamily="OpenSansSemibold" TextColor="#2563EB"/>
                                 </Grid>
                                 <Label Text="{Binding Categoria}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
-                                <Label Text="{Binding FechaActualizacion, StringFormat='Actualizado: {0:dd MMM yyyy}'}" FontSize="11" FontFamily="OpenSansRegular" TextColor="#9CA3AF"/>
+                                <Label FontSize="11" FontFamily="OpenSansRegular" TextColor="#9CA3AF">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{loc:T actualizado}"/>
+                                            <Span Text="{Binding FechaActualizacion, StringFormat=' {0:dd MMM yyyy}'}"/>
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
                             </VerticalStackLayout>
                         </Border>
                     </DataTemplate>
@@ -53,7 +61,7 @@
         </Grid>
 
         <VerticalStackLayout Grid.Row="2" Padding="20,10,20,25" BackgroundColor="White">
-            <Button Text="Nuevo reporte" Clicked="OnNuevoReporteTapped" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="52"/>
+            <Button Text="{loc:T nuevo_reporte}" Clicked="OnNuevoReporteTapped" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="52"/>
         </VerticalStackLayout>
 
     </Grid>

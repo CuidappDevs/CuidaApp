@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 namespace CUIDAPP.Services
 {
     // Notificación del sistema operativo (aparece en la barra/bandeja de Android), para
@@ -20,9 +21,9 @@ namespace CUIDAPP.Services
                     var manager = (Android.App.NotificationManager)contexto.GetSystemService(Android.Content.Context.NotificationService)!;
                     if (manager.GetNotificationChannel(canalId) == null)
                     {
-                        var canal = new Android.App.NotificationChannel(canalId, "Mensajes y actividad", Android.App.NotificationImportance.High)
+                        var canal = new Android.App.NotificationChannel(canalId, Localizador.T("canal_mensajes_actividad"), Android.App.NotificationImportance.High)
                         {
-                            Description = "Notificaciones de chat, solicitudes y actualizaciones de trabajos"
+                            Description = Localizador.T("notificaciones_de_chat_solicitudes_y")
                         };
                         manager.CreateNotificationChannel(canal);
                     }

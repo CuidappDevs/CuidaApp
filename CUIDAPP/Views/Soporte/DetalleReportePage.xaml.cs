@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Models.Ticket;
 using CUIDAPP.Services;
 
@@ -64,7 +65,7 @@ namespace CUIDAPP.Views.Soporte
             {
                 contenido.Children.Add(new Label
                 {
-                    Text = "Soporte Cuidapp",
+                    Text = Localizador.T("soporte_cuidapp"),
                     FontFamily = "OpenSansSemibold",
                     FontSize = 11,
                     TextColor = Color.FromArgb("#2563EB")

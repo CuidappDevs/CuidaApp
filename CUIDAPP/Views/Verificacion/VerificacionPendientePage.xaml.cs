@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Models.Cuidador;
 using CUIDAPP.Services;
 
@@ -39,17 +40,17 @@ namespace CUIDAPP.Views.Verificacion
             }
 
             BtnActualizar.IsEnabled = false;
-            BtnActualizar.Text = "Consultando...";
+            BtnActualizar.Text = Localizador.T("consultando");
 
             var estado = await _apiService.ObtenerEstadoVerificacionAsync(userId);
 
             BtnActualizar.IsEnabled = true;
-            BtnActualizar.Text = "Actualizar estado";
+            BtnActualizar.Text = Localizador.T("actualizar_estado");
 
             if (estado == null)
             {
                 if (mostrarErrorSiFalla)
-                    await DisplayAlert("Error", "No se pudo consultar el estado. Verifica tu conexión.", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_consultar_el"), Localizador.T("ok"));
                 return;
             }
 
@@ -82,10 +83,10 @@ namespace CUIDAPP.Views.Verificacion
         {
             bool rechazado = estado.EstadoAprobacion == 3;
 
-            LblTituloEstado.Text = rechazado ? "Documentos rechazados" : "Documentos en revisión";
+            LblTituloEstado.Text = rechazado ? Localizador.T("documentos_rechazados") : Localizador.T("documentos_en_revision");
             LblDescripcionEstado.Text = rechazado
-                ? "Uno o más documentos fueron rechazados. Revisa las observaciones y vuelve a subirlos desde soporte."
-                : "Estamos verificando tus documentos. Te avisaremos cuando tu cuenta esté aprobada para empezar a trabajar.";
+                ? Localizador.T("uno_o_mas_documentos_fueron")
+                : Localizador.T("estamos_verificando_tus_documentos_te");
 
             IconEstadoGeneral.Fill = rechazado ? Color.FromArgb("#DC2626") : Color.FromArgb("#1D4ED8");
 
@@ -109,16 +110,16 @@ namespace CUIDAPP.Views.Verificacion
         {
             var (colorFondo, colorTexto, textoEstado) = doc.Estado switch
             {
-                2 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), "Aprobado"),
-                3 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#991B1B"), "Rechazado"),
-                _ => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), "Pendiente")
+                2 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), Localizador.T("aprobado")),
+                3 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#991B1B"), Localizador.T("rechazado")),
+                _ => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("pendiente"))
             };
 
             var nombreDocumento = doc.TipoDocumento switch
             {
-                "Cedula" => "Cédula de Identidad",
-                "CartaAntecedentes" => "Carta de Antecedentes Penales",
-                _ => doc.TipoDocumento
+                "Cedula" => Localizador.T("doc_cedula"),
+                "CartaAntecedentes" => Localizador.T("doc_carta"),
+                _ => Localizador.D(doc.TipoDocumento)
             };
 
             var badge = new Border
@@ -147,7 +148,7 @@ namespace CUIDAPP.Views.Verificacion
                 Children =
                 {
                     new Label { Text = nombreDocumento, FontFamily = "OpenSansSemibold", FontSize = 15, TextColor = Color.FromArgb("#111827") },
-                    new Label { Text = $"Subido el {doc.FechaSubida:dd/MM/yyyy}", FontFamily = "OpenSansRegular", FontSize = 12, TextColor = Color.FromArgb("#6B7280") }
+                    new Label { Text = Localizador.F("subido_el", doc.FechaSubida), FontFamily = "OpenSansRegular", FontSize = 12, TextColor = Color.FromArgb("#6B7280") }
                 }
             };
 
@@ -155,7 +156,7 @@ namespace CUIDAPP.Views.Verificacion
             {
                 contenido.Children.Add(new Label
                 {
-                    Text = $"Motivo: {doc.ObservacionesAdmin}",
+                    Text = Localizador.F("motivo", doc.ObservacionesAdmin),
                     FontFamily = "OpenSansRegular",
                     FontSize = 12,
                     TextColor = Color.FromArgb("#991B1B"),

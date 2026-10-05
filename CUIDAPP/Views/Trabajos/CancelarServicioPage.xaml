@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Trabajos.CancelarServicioPage"
              Shell.NavBarIsVisible="False"
              BackgroundColor="#FFFFFF">
@@ -14,24 +15,24 @@
                 </ContentView.GestureRecognizers>
                 <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
             </ContentView>
-            <Label Grid.Column="1" Text="Cancelar servicio" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <Label Grid.Column="1" Text="{loc:T cancelar_servicio}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
         </Grid>
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="20,15,20,20" Spacing="18">
 
                 <Border Stroke="#FEE2E2" StrokeThickness="1" BackgroundColor="#FEF2F2" StrokeShape="RoundRectangle 12" Padding="15">
-                    <Label Text="Cancelar un servicio ya aceptado afecta la confianza del cliente. Selecciona el motivo real para que podamos ayudarte mejor." FontSize="13" FontFamily="OpenSansRegular" TextColor="#991B1B" HorizontalTextAlignment="Center"/>
+                    <Label Text="{loc:T cancelar_un_servicio_ya_aceptado}" FontSize="13" FontFamily="OpenSansRegular" TextColor="#991B1B" HorizontalTextAlignment="Center"/>
                 </Border>
 
-                <Label Text="¿Por qué necesitas cancelar?" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                <Label Text="{loc:T por_que_necesitas_cancelar}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
 
                 <VerticalStackLayout x:Name="ListaMotivos" Spacing="10" />
 
                 <VerticalStackLayout x:Name="ContenedorOtro" Spacing="8" IsVisible="False">
-                    <Label Text="Cuéntanos brevemente" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                    <Label Text="{loc:T cuentanos_brevemente}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
                     <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
-                        <Entry x:Name="EntryOtroMotivo" Placeholder="Escribe el motivo" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="45" TextChanged="OnOtroMotivoTextChanged"/>
+                        <Entry x:Name="EntryOtroMotivo" Placeholder="{loc:T escribe_el_motivo}" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="45" TextChanged="OnOtroMotivoTextChanged"/>
                     </Border>
                 </VerticalStackLayout>
 
@@ -42,7 +43,7 @@
             <Border.Shadow>
                 <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
             </Border.Shadow>
-            <Button x:Name="BtnConfirmar" Text="Confirmar cancelación" Clicked="OnConfirmarClicked" BackgroundColor="#EF4444" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsEnabled="False"/>
+            <Button x:Name="BtnConfirmar" Text="{loc:T confirmar_cancelacion}" Clicked="OnConfirmarClicked" BackgroundColor="#EF4444" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsEnabled="False"/>
         </VerticalStackLayout>
 
     </Grid>

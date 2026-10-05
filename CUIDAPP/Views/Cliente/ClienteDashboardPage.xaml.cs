@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using System.Globalization;
 using System.Text.Json;
 using CUIDAPP.Models.Busqueda;
@@ -81,7 +82,7 @@ namespace CUIDAPP.Views.Cliente
                 // app en Android en vez de solo mostrar un error.
                 Console.WriteLine($"[ClienteDashboardPage] Error cargando dashboard: {ex}");
                 OverlayCarga.IsVisible = false;
-                await DisplayAlert("Error", "No se pudo cargar tu panel. Desliza para reintentar o revisa tu conexión.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_cargar_tu"), Localizador.T("ok"));
             }
         }
 
@@ -91,7 +92,7 @@ namespace CUIDAPP.Views.Cliente
 
             var nombre = Preferences.Default.Get("UserNombre", "");
             var primerNombre = string.IsNullOrWhiteSpace(nombre) ? "" : nombre.Split(' ').First();
-            LblSaludo.Text = string.IsNullOrWhiteSpace(primerNombre) ? "Hola" : $"Hola, {primerNombre}";
+            LblSaludo.Text = string.IsNullOrWhiteSpace(primerNombre) ? Localizador.T("hola") : Localizador.F("hola_2", primerNombre);
 
             var fotoUrl = Preferences.Default.Get("UserFotoUrl", "");
             if (!string.IsNullOrWhiteSpace(fotoUrl))
@@ -224,18 +225,18 @@ namespace CUIDAPP.Views.Cliente
                 var t = serviciosActivos[0];
                 var estadoTexto = t.Estado switch
                 {
-                    1 => "Esperando respuesta del cuidador",
-                    2 => "Aceptado, en espera de la fecha programada",
-                    3 => "En progreso",
-                    4 => "Completado, ¡califica a tu cuidador!",
-                    7 => "Tu cuidador dice que terminó, confírmalo",
-                    _ => "En curso"
+                    1 => Localizador.T("banner_esperando"),
+                    2 => Localizador.T("banner_aceptado"),
+                    3 => Localizador.T("en_progreso"),
+                    4 => Localizador.T("banner_completado"),
+                    7 => Localizador.T("banner_confirmalo"),
+                    _ => Localizador.T("en_curso")
                 };
-                LblBannerServicioActivo.Text = $"{t.TipoServicio} · {estadoTexto}";
+                LblBannerServicioActivo.Text = Localizador.F("tipo_estado_banner", Localizador.D(t.TipoServicio), estadoTexto);
             }
             else if (serviciosActivos.Count > 1)
             {
-                LblBannerServicioActivo.Text = $"Tienes {serviciosActivos.Count} servicios activos";
+                LblBannerServicioActivo.Text = Localizador.F("tienes_servicios_activos", serviciosActivos.Count);
             }
         }
 
@@ -360,12 +361,12 @@ namespace CUIDAPP.Views.Cliente
         {
             ListaCategorias.Clear();
 
-            var chipTodos = CrearChipCategoria("Todos", null);
+            var chipTodos = CrearChipCategoria(Localizador.T("todos"), null);
             ListaCategorias.Add(chipTodos);
 
             foreach (var servicio in serviciosCercanos)
             {
-                ListaCategorias.Add(CrearChipCategoria(servicio.Especialidad, servicio.Especialidad));
+                ListaCategorias.Add(CrearChipCategoria(Localizador.D(servicio.Especialidad), servicio.Especialidad));
             }
         }
 
@@ -451,14 +452,14 @@ namespace CUIDAPP.Views.Cliente
                 VerticalOptions = LayoutOptions.Center,
                 Children =
                 {
-                    new Label { Text = servicio.Especialidad, FontSize = 15, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#111827") },
-                    new Label { Text = $"{servicio.CuidadoresDisponibles} disponible(s) cerca de ti", FontSize = 12, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#6B7280") }
+                    new Label { Text = Localizador.D(servicio.Especialidad), FontSize = 15, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#111827") },
+                    new Label { Text = Localizador.F("disponible_s_cerca_de_ti", servicio.CuidadoresDisponibles), FontSize = 12, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#6B7280") }
                 }
             };
 
             var precio = new Label
             {
-                Text = $"Desde\nRD${servicio.TarifaDesde:N0}",
+                Text = Localizador.F("desde_rd", servicio.TarifaDesde),
                 FontSize = 12,
                 FontFamily = "OpenSansSemibold",
                 TextColor = Color.FromArgb("#2563EB"),
@@ -513,7 +514,7 @@ namespace CUIDAPP.Views.Cliente
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error al abrir el servicio", ex.ToString(), "OK");
+                await DisplayAlert(Localizador.T("error_al_abrir_el_servicio"), ex.ToString(), Localizador.T("ok"));
             }
         }
 
@@ -581,7 +582,7 @@ namespace CUIDAPP.Views.Cliente
 
         private async void OnCerrarSesionTapped(object sender, EventArgs e)
         {
-            var confirmar = await DisplayAlert("Cerrar sesión", "¿Estás seguro de que deseas cerrar sesión?", "Sí", "Cancelar");
+            var confirmar = await DisplayAlert(Localizador.T("cerrar_sesion"), Localizador.T("estas_seguro_de_que_deseas"), Localizador.T("si"), Localizador.T("cancelar"));
             if (!confirmar)
                 return;
 

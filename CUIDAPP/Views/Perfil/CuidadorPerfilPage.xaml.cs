@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Models.Cuidador;
 using CUIDAPP.Services;
 
@@ -12,10 +13,49 @@ namespace CUIDAPP.Views.Perfil
             InitializeComponent();
         }
 
+        private PerfilCuidador? _perfil;
+        private List<DocumentoEstado> _documentos = new();
+
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            Localizador.Instancia.IdiomaCambiado -= RepintarTextos;
+            Localizador.Instancia.IdiomaCambiado += RepintarTextos;
             await CargarPerfil();
+        }
+
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            Localizador.Instancia.IdiomaCambiado -= RepintarTextos;
+        }
+
+        // Textos armados por código: se vuelven a pintar al instante cuando cambia el idioma.
+        private void RepintarTextos()
+        {
+            AplicarPerfil();
+            RenderizarVerificaciones(_documentos);
+        }
+
+        private void AplicarPerfil()
+        {
+            var perfil = _perfil;
+            if (perfil == null)
+                return;
+
+            LblNombre.Text = perfil.NombreCompleto;
+            LblNombreCarnet.Text = perfil.NombreCompleto;
+            LblEspecialidad.Text = Localizador.D(perfil.Especialidad);
+            LblEspecialidadBanner.Text = Localizador.D(perfil.Especialidad).ToUpper(Localizador.Cultura);
+            LblEspecialidadTarifa.Text = Localizador.D(perfil.Especialidad);
+            LblBio.Text = string.IsNullOrWhiteSpace(perfil.Bio) ? Localizador.T("aun_no_has_agregado_una") : perfil.Bio;
+            LblTarifa.Text = Localizador.F("rd_hr", perfil.TarifaHora);
+            LblEstadoCuenta.Text = perfil.EstadoAprobacion switch
+            {
+                2 => Localizador.T("aprobado"),
+                3 => Localizador.T("rechazado"),
+                _ => Localizador.T("pendiente")
+            };
         }
 
         private async Task CargarPerfil()
@@ -33,19 +73,8 @@ namespace CUIDAPP.Views.Perfil
             var perfil = perfilTask.Result;
             if (perfil != null)
             {
-                LblNombre.Text = perfil.NombreCompleto;
-                LblNombreCarnet.Text = perfil.NombreCompleto;
-                LblEspecialidad.Text = perfil.Especialidad ?? "";
-                LblEspecialidadBanner.Text = (perfil.Especialidad ?? "").ToUpperInvariant();
-                LblEspecialidadTarifa.Text = perfil.Especialidad ?? "";
-                LblBio.Text = string.IsNullOrWhiteSpace(perfil.Bio) ? "Aún no has agregado una biografía." : perfil.Bio;
-                LblTarifa.Text = $"RD$ {perfil.TarifaHora:N0} / hr";
-                LblEstadoCuenta.Text = perfil.EstadoAprobacion switch
-                {
-                    2 => "Aprobado",
-                    3 => "Rechazado",
-                    _ => "Pendiente"
-                };
+                _perfil = perfil;
+                AplicarPerfil();
 
                 if (!string.IsNullOrWhiteSpace(perfil.FotoUrl))
                 {
@@ -57,7 +86,8 @@ namespace CUIDAPP.Views.Perfil
 
             LblTrabajosCompletados.Text = trabajosTask.Result.Count(t => t.Estado == 4).ToString();
 
-            RenderizarVerificaciones(estadoTask.Result?.Documentos ?? new List<DocumentoEstado>());
+            _documentos = estadoTask.Result?.Documentos ?? new List<DocumentoEstado>();
+            RenderizarVerificaciones(_documentos);
         }
 
         private void RenderizarVerificaciones(List<DocumentoEstado> documentos)
@@ -68,7 +98,7 @@ namespace CUIDAPP.Views.Perfil
             {
                 ListaVerificaciones.Add(new Label
                 {
-                    Text = "No hay documentos registrados.",
+                    Text = Localizador.T("no_hay_documentos_registrados"),
                     FontSize = 13,
                     FontFamily = "OpenSansRegular",
                     TextColor = Color.FromArgb("#9CA3AF")
@@ -86,16 +116,16 @@ namespace CUIDAPP.Views.Perfil
         {
             var (colorFondo, colorTexto, titulo, subtitulo) = doc.Estado switch
             {
-                2 => (Color.FromArgb("#D1FAE5"), Color.FromArgb("#10B981"), "Verificado", "Documento aprobado por administración"),
-                3 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#DC2626"), "Rechazado", doc.ObservacionesAdmin ?? "Debes volver a subir este documento"),
-                _ => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#D97706"), "En revisión", "Aún no ha sido revisado por administración")
+                2 => (Color.FromArgb("#D1FAE5"), Color.FromArgb("#10B981"), Localizador.T("verificado"), Localizador.T("documento_aprobado_por_administracion")),
+                3 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#DC2626"), Localizador.T("rechazado"), doc.ObservacionesAdmin ?? Localizador.T("debes_volver_a_subir_este")),
+                _ => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#D97706"), Localizador.T("en_revision"), Localizador.T("aun_no_ha_sido_revisado"))
             };
 
             var nombreDocumento = doc.TipoDocumento switch
             {
-                "Cedula" => "Cédula de Identidad",
-                "CartaAntecedentes" => "Carta de Antecedentes Penales",
-                _ => doc.TipoDocumento
+                "Cedula" => Localizador.T("doc_cedula"),
+                "CartaAntecedentes" => Localizador.T("doc_carta"),
+                _ => Localizador.D(doc.TipoDocumento)
             };
 
             var icono = new Border
@@ -109,7 +139,7 @@ namespace CUIDAPP.Views.Perfil
                 Margin = new Thickness(0, 0, 12, 0),
                 Content = new Label
                 {
-                    Text = titulo == "Verificado" ? "✓" : titulo == "Rechazado" ? "✕" : "…",
+                    Text = titulo == Localizador.T("verificado") ? "✓" : titulo == Localizador.T("rechazado") ? "✕" : "…",
                     TextColor = colorTexto,
                     FontFamily = "OpenSansSemibold",
                     FontSize = 14,

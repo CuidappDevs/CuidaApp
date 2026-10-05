@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Services;
 
 namespace CUIDAPP.Views.Auth
@@ -32,12 +33,12 @@ namespace CUIDAPP.Views.Auth
             LblMatch.IsVisible = true;
             if (newPass == confirmPass)
             {
-                LblMatch.Text = "✓ Las contraseñas coinciden";
+                LblMatch.Text = Localizador.T("las_contrasenas_coinciden");
                 LblMatch.TextColor = Colors.Green;
             }
             else
             {
-                LblMatch.Text = "✗ Las contraseñas no coinciden";
+                LblMatch.Text = Localizador.T("las_contrasenas_no_coinciden_2");
                 LblMatch.TextColor = Colors.Red;
             }
         }
@@ -61,18 +62,18 @@ namespace CUIDAPP.Views.Auth
         {
             if (string.IsNullOrWhiteSpace(EntryNewPass.Text) || EntryNewPass.Text.Length < 6)
             {
-                await DisplayAlert("Error", "La contraseña debe tener al menos 6 caracteres.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("la_contrasena_debe_tener_al_2"), Localizador.T("ok"));
                 return;
             }
 
             if (EntryNewPass.Text != EntryConfirmPass.Text)
             {
-                await DisplayAlert("Error", "Las contraseñas no coinciden.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("las_contrasenas_no_coinciden"), Localizador.T("ok"));
                 return;
             }
 
             BtnRestablecer.IsEnabled = false;
-            BtnRestablecer.Text = "Restableciendo...";
+            BtnRestablecer.Text = Localizador.T("restableciendo");
 
             try
             {
@@ -80,23 +81,23 @@ namespace CUIDAPP.Views.Auth
 
                 if (success)
                 {
-                    await DisplayAlert("Éxito", "Tu contraseña ha sido actualizada correctamente.", "OK");
+                    await DisplayAlert(Localizador.T("exito"), Localizador.T("tu_contrasena_ha_sido_actualizada"), Localizador.T("ok"));
                     await Shell.Current.GoToAsync("//MainPage");
                 }
                 else
                 {
-                    await DisplayAlert("Error", "Código inválido o expirado. Intenta solicitar uno nuevo.", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.T("codigo_invalido_o_expirado_intenta"), Localizador.T("ok"));
                     await Shell.Current.GoToAsync("//MainPage");
                 }
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"Ocurrió un error: {ex.Message}", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.F("ocurrio_un_error", ex.Message), Localizador.T("ok"));
             }
             finally
             {
                 BtnRestablecer.IsEnabled = true;
-                BtnRestablecer.Text = "Restablecer contraseña";
+                BtnRestablecer.Text = Localizador.T("restablecer_contrasena");
             }
         }
     }

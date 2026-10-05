@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Models.Busqueda;
 using CUIDAPP.Models.Cliente;
 using CUIDAPP.Models.Trabajo;
@@ -21,7 +22,7 @@ namespace CUIDAPP.Views.Cliente
 
             if (tareas.Count >= MaxTareas)
             {
-                _ = DisplayAlert("Límite alcanzado", $"Puedes agregar hasta {MaxTareas} tareas.", "OK");
+                _ = DisplayAlert(Localizador.T("limite_alcanzado"), Localizador.F("puedes_agregar_hasta_tareas", MaxTareas), Localizador.T("ok"));
                 return;
             }
 
@@ -84,8 +85,8 @@ namespace CUIDAPP.Views.Cliente
         private void Renderizar(CuidadorCercano c)
         {
             LblNombre.Text = c.NombreCompleto;
-            LblEspecialidad.Text = c.Especialidad;
-            LblTarifa.Text = $"RD$ {c.TarifaHora:N0} / hr";
+            LblEspecialidad.Text = Localizador.D(c.Especialidad);
+            LblTarifa.Text = Localizador.F("rd_hr", c.TarifaHora);
 
             if (!string.IsNullOrWhiteSpace(c.FotoUrl))
                 ImgFoto.Source = $"{ApiService.ServerOrigin}{c.FotoUrl}";
@@ -103,7 +104,7 @@ namespace CUIDAPP.Views.Cliente
             var horas = (decimal)(horaFin - horaInicio).TotalHours;
 
             LblTotal.Text = horas > 0
-                ? $"RD${(cuidador.TarifaHora * horas):N2}"
+                ? Localizador.F("rd", (cuidador.TarifaHora * horas))
                 : "--";
         }
 
@@ -137,32 +138,32 @@ namespace CUIDAPP.Views.Cliente
 
             if (ubicacionElegida == null)
             {
-                await DisplayAlert("Error", "Selecciona a dónde debe ir el cuidador.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("selecciona_a_donde_debe_ir"), Localizador.T("ok"));
                 return;
             }
 
             if (PickerHoraFin.Time <= PickerHoraInicio.Time)
             {
-                await DisplayAlert("Error", "La hora de fin debe ser posterior a la hora de inicio.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("la_hora_de_fin_debe"), Localizador.T("ok"));
                 return;
             }
 
             var fechaSeleccionada = (PickerFecha.Date ?? ServerClock.Today).Date;
             if (fechaSeleccionada == ServerClock.Today && PickerHoraInicio.Time <= ServerClock.Now.TimeOfDay)
             {
-                await DisplayAlert("Horario inválido", $"Ya son las {ServerClock.Now:h:mm tt}. Elige una hora de inicio más adelante hoy, o programa el servicio para otro día.", "OK");
+                await DisplayAlert(Localizador.T("horario_invalido"), Localizador.F("ya_son_las_elige_una", ServerClock.Now), Localizador.T("ok"));
                 return;
             }
 
             var clienteId = Preferences.Default.Get("UserId", 0);
             if (clienteId == 0)
             {
-                await DisplayAlert("Error", "Tu sesión expiró. Vuelve a iniciar sesión.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("tu_sesion_expiro_vuelve_a"), Localizador.T("ok"));
                 return;
             }
 
             BtnEnviar.IsEnabled = false;
-            BtnEnviar.Text = "Enviando...";
+            BtnEnviar.Text = Localizador.T("enviando");
 
             try
             {
@@ -172,7 +173,7 @@ namespace CUIDAPP.Views.Cliente
                 var serviciosActivos = await _apiService.ObtenerTrabajosActivosPorClienteAsync(clienteId);
                 if (serviciosActivos.Any(t => t.CuidadorId == cuidador.Id && t.Estado is 1 or 2 or 3))
                 {
-                    await DisplayAlert("Ya tienes una solicitud con este cuidador", "Ya tienes un servicio pendiente o en curso con este mismo cuidador.", "OK");
+                    await DisplayAlert(Localizador.T("ya_tienes_una_solicitud_con"), Localizador.T("ya_tienes_un_servicio_pendiente"), Localizador.T("ok"));
                     return;
                 }
 
@@ -200,22 +201,22 @@ namespace CUIDAPP.Views.Cliente
 
                 if (success)
                 {
-                    await DisplayAlert("Solicitud enviada", $"Le avisamos a {cuidador.NombreCompleto}. Te notificaremos cuando responda.", "OK");
+                    await DisplayAlert(Localizador.T("solicitud_enviada"), Localizador.F("le_avisamos_a_te_notificaremos", cuidador.NombreCompleto), Localizador.T("ok"));
                     await Shell.Current.GoToAsync("../../..");
                 }
                 else
                 {
-                    await DisplayAlert("Error", $"No se pudo enviar la solicitud.\n\n{error}", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.F("no_se_pudo_enviar_la_3", error), Localizador.T("ok"));
                 }
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error inesperado", ex.ToString(), "OK");
+                await DisplayAlert(Localizador.T("error_inesperado"), ex.ToString(), Localizador.T("ok"));
             }
             finally
             {
                 BtnEnviar.IsEnabled = true;
-                BtnEnviar.Text = "Enviar solicitud";
+                BtnEnviar.Text = Localizador.T("enviar_solicitud");
             }
         }
     }

@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Models.Trabajo;
 using CUIDAPP.Services;
 
@@ -45,7 +46,7 @@ namespace CUIDAPP.Views.Trabajos
                     Padding = new Thickness(15, 13),
                     Content = new Label
                     {
-                        Text = motivo.Descripcion,
+                        Text = Localizador.D(motivo.Descripcion),
                         FontSize = 14,
                         FontFamily = esSeleccionado ? "OpenSansSemibold" : "OpenSansRegular",
                         TextColor = esSeleccionado ? Color.FromArgb("#1D4ED8") : Color.FromArgb("#374151")
@@ -95,12 +96,12 @@ namespace CUIDAPP.Views.Trabajos
             if (trabajo == null || motivoSeleccionado == null)
                 return;
 
-            var confirmar = await DisplayAlert("Confirmar cancelación", "¿Seguro que deseas cancelar este servicio? Esta acción no se puede deshacer.", "Sí, cancelar", "No");
+            var confirmar = await DisplayAlert(Localizador.T("confirmar_cancelacion"), Localizador.T("seguro_que_deseas_cancelar_este"), Localizador.T("si_cancelar"), Localizador.T("no"));
             if (!confirmar)
                 return;
 
             BtnConfirmar.IsEnabled = false;
-            BtnConfirmar.Text = "Cancelando...";
+            BtnConfirmar.Text = Localizador.T("cancelando");
 
             var esOtro = motivoSeleccionado.Descripcion.Equals("Otro", StringComparison.OrdinalIgnoreCase);
             var textoMotivo = esOtro ? EntryOtroMotivo.Text?.Trim() : null;
@@ -113,8 +114,8 @@ namespace CUIDAPP.Views.Trabajos
             }
             else
             {
-                await DisplayAlert("Error", "No se pudo cancelar el servicio. Intenta de nuevo.", "OK");
-                BtnConfirmar.Text = "Confirmar cancelación";
+                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_cancelar_el"), Localizador.T("ok"));
+                BtnConfirmar.Text = Localizador.T("confirmar_cancelacion");
                 BtnConfirmar.IsEnabled = true;
             }
         }

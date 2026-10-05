@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Chat.ChatPage"
              Shell.NavBarIsVisible="False"
              BackgroundColor="#F9FAFB">
@@ -17,7 +18,7 @@
             <Border Grid.Column="1" Stroke="Transparent" StrokeShape="RoundRectangle 18" BackgroundColor="#E5E7EB" WidthRequest="36" HeightRequest="36" Margin="14,0,10,0">
                 <Image x:Name="ImgOtro" Aspect="AspectFill" />
             </Border>
-            <Label x:Name="LblOtroNombre" Grid.Column="2" Text="Chat" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827" VerticalOptions="Center"/>
+            <Label x:Name="LblOtroNombre" Grid.Column="2" Text="{loc:T chat}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827" VerticalOptions="Center"/>
         </Grid>
 
         <ScrollView x:Name="ScrollMensajes" Grid.Row="1">
@@ -44,10 +45,10 @@
             </Border>
 
             <Border x:Name="ContenedorEntry" Grid.Column="2" Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 20" Padding="16,0">
-                <Entry x:Name="EntryMensaje" Placeholder="Escribe un mensaje..." FontFamily="OpenSansRegular" FontSize="14" HeightRequest="46" Completed="OnEnviarClicked"/>
+                <Entry x:Name="EntryMensaje" Placeholder="{loc:T escribe_un_mensaje}" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="46" Completed="OnEnviarClicked"/>
             </Border>
 
-            <Label x:Name="LblGrabando" Grid.Column="2" Text="🔴 Grabando... toca el micrófono para enviar" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#DC2626" VerticalOptions="Center" HorizontalOptions="Center" IsVisible="False"/>
+            <Label x:Name="LblGrabando" Grid.Column="2" Text="{loc:T grabando_toca_el_microfono_para}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#DC2626" VerticalOptions="Center" HorizontalOptions="Center" IsVisible="False"/>
 
             <Border Grid.Column="3" Stroke="Transparent" BackgroundColor="#2563EB" StrokeShape="RoundRectangle 23" WidthRequest="46" HeightRequest="46">
                 <Border.GestureRecognizers>

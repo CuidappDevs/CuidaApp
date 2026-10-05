@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using Microsoft.Maui.Controls;
 using CUIDAPP.Services;
 using CUIDAPP.Models.Auth;
@@ -99,12 +100,12 @@ namespace CUIDAPP.Views.Registro
             {
                 if (string.IsNullOrWhiteSpace(EntryEmail.Text) || !EntryEmail.Text.Contains("@"))
                 {
-                    await DisplayAlert("Error", "Por favor ingresa un correo electrónico válido.", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.T("por_favor_ingresa_un_correo"), Localizador.T("ok"));
                     return false;
                 }
                 if (string.IsNullOrWhiteSpace(EntryPassword.Text) || EntryPassword.Text.Length < 6)
                 {
-                    await DisplayAlert("Error", "La contraseña debe tener al menos 6 caracteres.", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.T("la_contrasena_debe_tener_al_2"), Localizador.T("ok"));
                     return false;
                 }
             }
@@ -112,7 +113,7 @@ namespace CUIDAPP.Views.Registro
             {
                 if (string.IsNullOrWhiteSpace(EntryNombre.Text))
                 {
-                    await DisplayAlert("Error", "El nombre completo es obligatorio.", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.T("el_nombre_completo_es_obligatorio"), Localizador.T("ok"));
                     return false;
                 }
             }
@@ -120,7 +121,7 @@ namespace CUIDAPP.Views.Registro
             {
                 if (string.IsNullOrWhiteSpace(EntryTarifa.Text) || !decimal.TryParse(EntryTarifa.Text, out decimal tarifa) || tarifa <= 0)
                 {
-                    await DisplayAlert("Error", "Por favor ingresa una tarifa por hora válida (ej. 15.00).", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.T("por_favor_ingresa_una_tarifa"), Localizador.T("ok"));
                     return false;
                 }
             }
@@ -128,13 +129,13 @@ namespace CUIDAPP.Views.Registro
             {
                 if (string.IsNullOrWhiteSpace(EntryDireccion.Text))
                 {
-                    await DisplayAlert("Error", "Selecciona tu dirección en el mapa.", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.T("selecciona_tu_direccion_en_el"), Localizador.T("ok"));
                     return false;
                 }
                 if (string.IsNullOrWhiteSpace(EntryEmergenciaNombre.Text) ||
                     string.IsNullOrWhiteSpace(EntryEmergenciaTelefono.Text))
                 {
-                    await DisplayAlert("Error", "Por favor completa todos los campos de contacto y emergencia.", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.T("por_favor_completa_todos_los"), Localizador.T("ok"));
                     return false;
                 }
             }
@@ -142,7 +143,7 @@ namespace CUIDAPP.Views.Registro
             {
                 if (fotoFile == null)
                 {
-                    await DisplayAlert("Error", "Selecciona tu foto de perfil.", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.T("selecciona_tu_foto_de_perfil"), Localizador.T("ok"));
                     return false;
                 }
             }
@@ -150,7 +151,7 @@ namespace CUIDAPP.Views.Registro
             {
                 if (cedulaFile == null || antecedentesFile == null)
                 {
-                    await DisplayAlert("Error", "Selecciona ambos documentos.", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.T("selecciona_ambos_documentos"), Localizador.T("ok"));
                     return false;
                 }
             }
@@ -161,8 +162,8 @@ namespace CUIDAPP.Views.Registro
         private async Task FinishRegistration()
         {
             // Mostrar modal de carga con texto de "Cargando..."
-            OverlayTitle.Text = "Cargando...";
-            OverlayMessage.Text = "Subiendo documentos...";
+            OverlayTitle.Text = Localizador.T("cargando");
+            OverlayMessage.Text = Localizador.T("subiendo_documentos");
             OverlayIcon.IsVisible = false; // Ocultar el icono de check
             OverlayExito.IsVisible = true;
             await OverlayExito.FadeTo(1, 300);
@@ -177,7 +178,7 @@ namespace CUIDAPP.Views.Registro
                 fotoUrl = await _apiService.UploadFileAsync(fotoFile.FullPath, carpetaUsuario) ?? "";
                 if (fotoUrl == "")
                 {
-                    await MostrarErrorSubida("No se pudo subir tu foto de perfil.");
+                    await MostrarErrorSubida(Localizador.T("err_subir_foto"));
                     return;
                 }
             }
@@ -189,7 +190,7 @@ namespace CUIDAPP.Views.Registro
                     cedulaUrl = await _apiService.UploadFileAsync(cedulaFile.FullPath, carpetaUsuario) ?? "";
                     if (cedulaUrl == "")
                     {
-                        await MostrarErrorSubida("No se pudo subir tu cédula.");
+                        await MostrarErrorSubida(Localizador.T("err_subir_cedula"));
                         return;
                     }
                 }
@@ -199,13 +200,13 @@ namespace CUIDAPP.Views.Registro
                     antecedentesUrl = await _apiService.UploadFileAsync(antecedentesFile.FullPath, carpetaUsuario) ?? "";
                     if (antecedentesUrl == "")
                     {
-                        await MostrarErrorSubida("No se pudo subir tu carta de antecedentes.");
+                        await MostrarErrorSubida(Localizador.T("err_subir_carta"));
                         return;
                     }
                 }
             }
 
-            OverlayMessage.Text = "Enviando datos al servidor";
+            OverlayMessage.Text = Localizador.T("enviando_datos_al_servidor");
 
             bool success = false;
 
@@ -256,8 +257,8 @@ namespace CUIDAPP.Views.Registro
             if (success)
             {
                 // Cambiar el overlay a modo Éxito
-                OverlayTitle.Text = "¡Éxito!";
-                OverlayMessage.Text = "Registro completado";
+                OverlayTitle.Text = Localizador.T("exito_2");
+                OverlayMessage.Text = Localizador.T("registro_completado");
                 OverlayIcon.IsVisible = true;
 
                 await Task.Delay(1500); // 1.5s para que lo vea
@@ -271,7 +272,7 @@ namespace CUIDAPP.Views.Registro
             {
                 await OverlayExito.FadeTo(0, 200);
                 OverlayExito.IsVisible = false;
-                await DisplayAlert("Error", "Ocurrió un error al conectar con el servidor. Verifica que la API esté corriendo.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("ocurrio_un_error_al_conectar"), Localizador.T("ok"));
             }
         }
 
@@ -279,7 +280,7 @@ namespace CUIDAPP.Views.Registro
         {
             await OverlayExito.FadeTo(0, 200);
             OverlayExito.IsVisible = false;
-            await DisplayAlert("Error", $"{mensaje} Verifica tu conexión e intenta de nuevo.", "OK");
+            await DisplayAlert(Localizador.T("error"), Localizador.F("verifica_tu_conexion_e_intenta", mensaje), Localizador.T("ok"));
         }
 
         private async void OnElegirDireccionMapaTapped(object sender, EventArgs e)
@@ -306,7 +307,7 @@ namespace CUIDAPP.Views.Registro
             {
                 var result = await FilePicker.Default.PickAsync(new PickOptions
                 {
-                    PickerTitle = "Selecciona una imagen de perfil",
+                    PickerTitle = Localizador.T("picker_imagen_perfil"),
                     FileTypes = FilePickerFileType.Images
                 });
 
@@ -319,7 +320,7 @@ namespace CUIDAPP.Views.Registro
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"No se pudo seleccionar la imagen: {ex.Message}", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.F("no_se_pudo_seleccionar_la", ex.Message), Localizador.T("ok"));
             }
         }
 
@@ -329,7 +330,7 @@ namespace CUIDAPP.Views.Registro
             {
                 var result = await FilePicker.Default.PickAsync(new PickOptions
                 {
-                    PickerTitle = "Selecciona el documento de Cédula"
+                    PickerTitle = Localizador.T("picker_doc_cedula")
                 });
 
                 if (result != null)
@@ -341,7 +342,7 @@ namespace CUIDAPP.Views.Registro
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"No se pudo seleccionar el archivo: {ex.Message}", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.F("no_se_pudo_seleccionar_el", ex.Message), Localizador.T("ok"));
             }
         }
 
@@ -351,7 +352,7 @@ namespace CUIDAPP.Views.Registro
             {
                 var result = await FilePicker.Default.PickAsync(new PickOptions
                 {
-                    PickerTitle = "Selecciona la Carta de Antecedentes"
+                    PickerTitle = Localizador.T("picker_carta")
                 });
 
                 if (result != null)
@@ -363,7 +364,7 @@ namespace CUIDAPP.Views.Registro
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"No se pudo seleccionar el archivo: {ex.Message}", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.F("no_se_pudo_seleccionar_el", ex.Message), Localizador.T("ok"));
             }
         }
 
@@ -481,7 +482,7 @@ namespace CUIDAPP.Views.Registro
 
         private async Task UpdateStepUI(bool animate)
         {
-            StepIndicator.Text = $"{currentStepIndex + 1} de {currentFlow.Count}";
+            StepIndicator.Text = Localizador.F("de", currentStepIndex + 1, currentFlow.Count);
             TopTitle.IsVisible = currentStepIndex > 0;
 
             var targetView = currentFlow[currentStepIndex];

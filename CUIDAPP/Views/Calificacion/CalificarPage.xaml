@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Calificacion.CalificarPage"
              Shell.NavBarIsVisible="False"
              BackgroundColor="#FFFFFF">
@@ -14,7 +15,7 @@
                 </ContentView.GestureRecognizers>
                 <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
             </ContentView>
-            <Label Grid.Column="1" Text="Calificar" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <Label Grid.Column="1" Text="{loc:T calificar}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
         </Grid>
 
         <ScrollView Grid.Row="1">
@@ -25,7 +26,7 @@
                 </Border>
 
                 <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
-                    <Label x:Name="LblTitulo" Text="¿Cómo estuvo tu experiencia?" FontSize="19" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
+                    <Label x:Name="LblTitulo" Text="{loc:T como_estuvo_tu_experiencia}" FontSize="19" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
                     <Label x:Name="LblSubtitulo" Text="" FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
                 </VerticalStackLayout>
 
@@ -48,9 +49,9 @@
                 </HorizontalStackLayout>
 
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="Comentario (opcional)" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                    <Label Text="{loc:T comentario_opcional}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
                     <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12">
-                        <Editor x:Name="EditorComentario" Placeholder="Cuéntanos más..." FontFamily="OpenSansRegular" FontSize="14" HeightRequest="90" AutoSize="Disabled"/>
+                        <Editor x:Name="EditorComentario" Placeholder="{loc:T cuentanos_mas}" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="90" AutoSize="Disabled"/>
                     </Border>
                 </VerticalStackLayout>
 
@@ -61,7 +62,7 @@
             <Border.Shadow>
                 <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
             </Border.Shadow>
-            <Button x:Name="BtnEnviar" Text="Enviar calificación" Clicked="OnEnviarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsEnabled="False"/>
+            <Button x:Name="BtnEnviar" Text="{loc:T enviar_calificacion}" Clicked="OnEnviarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsEnabled="False"/>
         </VerticalStackLayout>
 
     </Grid>

@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Services;
 
 namespace CUIDAPP.Views.Auth
@@ -68,12 +69,12 @@ namespace CUIDAPP.Views.Auth
         {
             if (string.IsNullOrWhiteSpace(EntryEmail.Text))
             {
-                await DisplayAlert("Error", "Ingresa tu correo electrónico.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("ingresa_tu_correo_electronico"), Localizador.T("ok"));
                 return;
             }
 
             BtnEnviar.IsEnabled = false;
-            BtnEnviar.Text = "Enviando...";
+            BtnEnviar.Text = Localizador.T("enviando");
 
             try
             {
@@ -82,27 +83,27 @@ namespace CUIDAPP.Views.Auth
 
                 if (result == null)
                 {
-                    await DisplayAlert("Error", "No se pudo conectar con el servidor.", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_conectar_con"), Localizador.T("ok"));
                     return;
                 }
 
-                var asunto = "CuidaApp - Código de recuperación de contraseña";
+                var asunto = Localizador.T("email_asunto_recuperacion");
                 var cuerpoHtml = $"""
                     <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
                         <h2 style="color: #1C4D96; text-align: center;">CuidaApp</h2>
-                        <p>Tu código de recuperación es:</p>
+                        <p>{Localizador.T("email_codigo_es")}</p>
                         <div style="background: #F5F8FC; border: 1px solid #D9E2EC; border-radius: 8px; padding: 15px; text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 8px; color: #0A2F41;">{result.Code}</div>
-                        <p style="color: #4B5563; font-size: 13px;">Este código expira en 15 minutos. Si no solicitaste este cambio, ignora este mensaje.</p>
+                        <p style="color: #4B5563; font-size: 13px;">{Localizador.T("email_expira")}</p>
                     </div>
                     """;
                 await _apiService.EnviarEmailAsync(_userEmail, asunto, cuerpoHtml);
 
-                await DisplayAlert("Código enviado", $"Revisa tu correo electrónico ({_userEmail}) para obtener el código de recuperación.", "OK");
+                await DisplayAlert(Localizador.T("codigo_enviado"), Localizador.F("revisa_tu_correo_electronico_para", _userEmail), Localizador.T("ok"));
 
                 Step1.IsVisible = false;
                 Step2.IsVisible = true;
-                TopTitle.Text = "Verificar código";
-                LblEmail.Text = $"Se envió un código a {_userEmail}";
+                TopTitle.Text = Localizador.T("verificar_codigo");
+                LblEmail.Text = Localizador.F("se_envio_un_codigo_a", _userEmail);
                 
                 StartTimer();
                 _pins[0].Focus();
@@ -110,7 +111,7 @@ namespace CUIDAPP.Views.Auth
             finally
             {
                 BtnEnviar.IsEnabled = true;
-                BtnEnviar.Text = "Enviar código";
+                BtnEnviar.Text = Localizador.T("enviar_codigo");
             }
         }
 
@@ -128,7 +129,7 @@ namespace CUIDAPP.Views.Auth
                     
                     MainThread.BeginInvokeOnMainThread(() =>
                     {
-                        LblTimer.Text = $"Reenviar código en {i}s";
+                        LblTimer.Text = Localizador.F("reenviar_codigo_en_s", i);
                         LblReenviar.Opacity = 0.5;
                         LblReenviar.GestureRecognizers.Clear();
                     });
@@ -154,7 +155,7 @@ namespace CUIDAPP.Views.Auth
                 return;
 
             BtnEnviar.IsEnabled = false;
-            BtnEnviar.Text = "Enviando...";
+            BtnEnviar.Text = Localizador.T("enviando");
 
             try
             {
@@ -163,22 +164,22 @@ namespace CUIDAPP.Views.Auth
 
                 if (result == null)
                 {
-                    await DisplayAlert("Error", "No se pudo conectar con el servidor.", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_conectar_con"), Localizador.T("ok"));
                     return;
                 }
 
-                var asunto = "CuidaApp - Código de recuperación de contraseña";
+                var asunto = Localizador.T("email_asunto_recuperacion");
                 var cuerpoHtml = $"""
                     <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
                         <h2 style="color: #1C4D96; text-align: center;">CuidaApp</h2>
-                        <p>Tu código de recuperación es:</p>
+                        <p>{Localizador.T("email_codigo_es")}</p>
                         <div style="background: #F5F8FC; border: 1px solid #D9E2EC; border-radius: 8px; padding: 15px; text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 8px; color: #0A2F41;">{result.Code}</div>
-                        <p style="color: #4B5563; font-size: 13px;">Este código expira en 15 minutos. Si no solicitaste este cambio, ignora este mensaje.</p>
+                        <p style="color: #4B5563; font-size: 13px;">{Localizador.T("email_expira")}</p>
                     </div>
                     """;
                 await _apiService.EnviarEmailAsync(_userEmail, asunto, cuerpoHtml);
 
-                await DisplayAlert("Código reenviado", $"Se envió un nuevo código a {_userEmail}. Revisa tu bandeja de entrada y carpeta de spam.", "OK");
+                await DisplayAlert(Localizador.T("codigo_reenviado"), Localizador.F("se_envio_un_nuevo_codigo", _userEmail), Localizador.T("ok"));
 
                 StartTimer();
                 _pins[0].Focus();
@@ -186,7 +187,7 @@ namespace CUIDAPP.Views.Auth
             finally
             {
                 BtnEnviar.IsEnabled = true;
-                BtnEnviar.Text = "Enviar código";
+                BtnEnviar.Text = Localizador.T("enviar_codigo");
             }
         }
 
@@ -195,12 +196,12 @@ namespace CUIDAPP.Views.Auth
             var code = GetCode();
             if (code.Length != 6)
             {
-                await DisplayAlert("Error", "Ingresa el código de 6 dígitos.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("ingresa_el_codigo_de_6"), Localizador.T("ok"));
                 return;
             }
 
             BtnVerificar.IsEnabled = false;
-            BtnVerificar.Text = "Verificando...";
+            BtnVerificar.Text = Localizador.T("verificando");
 
             try
             {
@@ -210,7 +211,7 @@ namespace CUIDAPP.Views.Auth
             finally
             {
                 BtnVerificar.IsEnabled = true;
-                BtnVerificar.Text = "Verificar código";
+                BtnVerificar.Text = Localizador.T("verificar_codigo");
             }
         }
     }

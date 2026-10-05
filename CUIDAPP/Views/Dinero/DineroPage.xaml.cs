@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Models.Cuidador;
 using CUIDAPP.Services;
 
@@ -33,8 +34,8 @@ namespace CUIDAPP.Views.Dinero
             LoadingIndicator.IsRunning = false;
 
             var ganancias = gananciasTask.Result;
-            LblTotalCobrado.Text = $"RD$ {(ganancias?.TotalCobrado ?? 0):N2}";
-            LblPendiente.Text = $"RD$ {(ganancias?.PendientePorCobrar ?? 0):N2}";
+            LblTotalCobrado.Text = Localizador.F("rd_3", (ganancias?.TotalCobrado ?? 0));
+            LblPendiente.Text = Localizador.F("rd_3", (ganancias?.PendientePorCobrar ?? 0));
 
             RenderizarPagos(pagosTask.Result);
         }
@@ -54,7 +55,7 @@ namespace CUIDAPP.Views.Dinero
         {
             var esPagado = pago.Estado == 2;
             var colorMonto = esPagado ? Color.FromArgb("#059669") : Color.FromArgb("#D97706");
-            var textoEstado = esPagado ? "Pagado" : "Pendiente";
+            var textoEstado = esPagado ? Localizador.T("pagado") : Localizador.T("pendiente");
             var fecha = esPagado && pago.FechaPago.HasValue ? pago.FechaPago.Value : pago.FechaCreacion;
 
             var icono = new Border
@@ -83,7 +84,7 @@ namespace CUIDAPP.Views.Dinero
                 VerticalOptions = LayoutOptions.Center,
                 Children =
                 {
-                    new Label { Text = pago.TipoServicio, FontSize = 15, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#111827") },
+                    new Label { Text = Localizador.D(pago.TipoServicio), FontSize = 15, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#111827") },
                     new Label { Text = $"{pago.ClienteNombre} • {fecha:d MMM}", FontSize = 12, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#6B7280") }
                 }
             };
@@ -95,7 +96,7 @@ namespace CUIDAPP.Views.Dinero
                 VerticalOptions = LayoutOptions.Center,
                 Children =
                 {
-                    new Label { Text = $"+ RD$ {pago.Monto:N2}", FontSize = 15, FontFamily = "OpenSansSemibold", TextColor = colorMonto, HorizontalTextAlignment = TextAlignment.End },
+                    new Label { Text = Localizador.F("rd_4", pago.Monto), FontSize = 15, FontFamily = "OpenSansSemibold", TextColor = colorMonto, HorizontalTextAlignment = TextAlignment.End },
                     new Label { Text = textoEstado, FontSize = 11, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#9CA3AF"), HorizontalTextAlignment = TextAlignment.End }
                 }
             };

@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Models.Trabajo;
 using CUIDAPP.Services;
 
@@ -47,7 +48,7 @@ namespace CUIDAPP.Views.Cliente
             if (idTrabajo != trabajoId)
                 return;
 
-            await DisplayAlert("⚠️ Tu cuidador se alejó del sitio", $"Se alejó {distanciaMetros:N0} m del domicilio donde se está realizando el servicio.", "Entendido");
+            await DisplayAlert(Localizador.T("tu_cuidador_se_alejo_del"), Localizador.F("se_alejo_m_del_domicilio", distanciaMetros), Localizador.T("entendido"));
         }
 
         private async void OnTrabajoActualizadoTiempoReal(int idActualizado, int estado)
@@ -150,25 +151,25 @@ namespace CUIDAPP.Views.Cliente
         private void Renderizar(TrabajoCliente t)
         {
             LblCuidadorNombre.Text = t.CuidadorNombre;
-            LblTipoServicio.Text = t.TipoServicio;
+            LblTipoServicio.Text = Localizador.D(t.TipoServicio);
 
             if (!string.IsNullOrWhiteSpace(t.CuidadorFotoUrl))
                 ImgCuidador.Source = $"{ApiService.ServerOrigin}{t.CuidadorFotoUrl}";
 
-            LblFechaHora.Text = $"{t.Fecha:dddd, d 'de' MMMM} · {FormatearHora(t.HoraInicio)} - {FormatearHora(t.HoraFin)}";
-            LblDireccion.Text = string.IsNullOrWhiteSpace(t.Direccion) ? "Sin dirección" : t.Direccion;
-            LblPago.Text = $"RD${t.Tarifa:N2}";
+            LblFechaHora.Text = Localizador.F("fecha_hora_rango", Localizador.FechaLarga(t.Fecha), FormatearHora(t.HoraInicio), FormatearHora(t.HoraFin));
+            LblDireccion.Text = string.IsNullOrWhiteSpace(t.Direccion) ? Localizador.T("sin_direccion") : t.Direccion;
+            LblPago.Text = Localizador.F("rd", t.Tarifa);
 
             var (colorFondo, colorTexto, texto) = t.Estado switch
             {
-                1 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), "Esperando respuesta del cuidador"),
-                2 => (Color.FromArgb("#DBEAFE"), Color.FromArgb("#1E40AF"), "Aceptado, tu cuidador asistirá en la fecha programada"),
-                3 => (Color.FromArgb("#EDE9FE"), Color.FromArgb("#5B21B6"), "En progreso"),
-                4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), "Servicio completado"),
-                5 => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "Cancelado"),
-                6 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#991B1B"), "Rechazado por el cuidador"),
-                7 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), "Esperando tu confirmación"),
-                _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "Desconocido")
+                1 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("banner_esperando")),
+                2 => (Color.FromArgb("#DBEAFE"), Color.FromArgb("#1E40AF"), Localizador.T("aceptado_tu_cuidador_asistira_en")),
+                3 => (Color.FromArgb("#EDE9FE"), Color.FromArgb("#5B21B6"), Localizador.T("en_progreso")),
+                4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), Localizador.T("servicio_completado")),
+                5 => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), Localizador.T("cancelado")),
+                6 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#991B1B"), Localizador.T("rechazado_por_cuidador")),
+                7 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("esperando_tu_confirmacion")),
+                _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), Localizador.T("desconocido"))
             };
             BadgeEstado.BackgroundColor = colorFondo;
             DotEstado.BackgroundColor = colorTexto;
@@ -185,7 +186,7 @@ namespace CUIDAPP.Views.Cliente
                 LblJustificacionFinalizacion.IsVisible = !string.IsNullOrWhiteSpace(t.JustificacionFinalizacion);
                 LblJustificacionFinalizacion.Text = string.IsNullOrWhiteSpace(t.JustificacionFinalizacion)
                     ? ""
-                    : $"Motivo: {t.JustificacionFinalizacion}";
+                    : Localizador.F("motivo", t.JustificacionFinalizacion);
             }
 
             if (estadoAnterior == 7 && t.Estado == 4)
@@ -266,16 +267,16 @@ namespace CUIDAPP.Views.Cliente
 
             var pasos = new List<(string Texto, bool Completado)>
             {
-                ("Solicitud enviada", true),
-                ("Cuidador aceptó", estado >= 2 && estado != 6),
-                ("Servicio en progreso", estado >= 3 && estado != 6 && estado != 5),
-                ("Servicio completado", estado == 4)
+                (Localizador.T("solicitud_enviada"), true),
+                (Localizador.T("cuidador_acepto"), estado >= 2 && estado != 6),
+                (Localizador.T("servicio_en_progreso"), estado >= 3 && estado != 6 && estado != 5),
+                (Localizador.T("servicio_completado"), estado == 4)
             };
 
             if (estado == 6)
-                pasos = new List<(string, bool)> { ("Solicitud enviada", true), ("Rechazado por el cuidador", true) };
+                pasos = new List<(string, bool)> { (Localizador.T("solicitud_enviada"), true), (Localizador.T("rechazado_por_cuidador"), true) };
             else if (estado == 5)
-                pasos = new List<(string, bool)> { ("Solicitud enviada", true), ("Cancelado", true) };
+                pasos = new List<(string, bool)> { (Localizador.T("solicitud_enviada"), true), (Localizador.T("cancelado"), true) };
 
             foreach (var (texto, completado) in pasos)
             {
@@ -346,7 +347,7 @@ namespace CUIDAPP.Views.Cliente
             var clienteId = Preferences.Default.Get("UserId", 0);
 
             BtnConfirmarFinalizacion.IsEnabled = false;
-            BtnConfirmarFinalizacion.Text = "Confirmando...";
+            BtnConfirmarFinalizacion.Text = Localizador.T("confirmando");
 
             var (success, error) = await _apiService.ConfirmarFinalizacionAsync(trabajo.Id, clienteId, true);
 
@@ -356,9 +357,9 @@ namespace CUIDAPP.Views.Cliente
             }
             else
             {
-                await DisplayAlert("Error", error ?? "No se pudo confirmar. Intenta de nuevo.", "OK");
+                await DisplayAlert(Localizador.T("error"), error ?? Localizador.T("no_se_pudo_confirmar_intenta"), Localizador.T("ok"));
                 BtnConfirmarFinalizacion.IsEnabled = true;
-                BtnConfirmarFinalizacion.Text = "Sí, terminó";
+                BtnConfirmarFinalizacion.Text = Localizador.T("si_termino");
             }
         }
 
@@ -367,7 +368,7 @@ namespace CUIDAPP.Views.Cliente
             if (trabajo == null)
                 return;
 
-            var confirmar = await DisplayAlert("¿El trabajo no ha terminado?", "Le avisaremos a tu cuidador que aún falta trabajo por hacer.", "Sí, avisar", "Cancelar");
+            var confirmar = await DisplayAlert(Localizador.T("el_trabajo_no_ha_terminado"), Localizador.T("le_avisaremos_a_tu_cuidador"), Localizador.T("si_avisar"), Localizador.T("cancelar"));
             if (!confirmar)
                 return;
 
@@ -377,7 +378,7 @@ namespace CUIDAPP.Views.Cliente
             if (success)
                 await CargarTrabajo();
             else
-                await DisplayAlert("Error", error ?? "No se pudo registrar tu respuesta. Intenta de nuevo.", "OK");
+                await DisplayAlert(Localizador.T("error"), error ?? Localizador.T("no_se_pudo_registrar_tu"), Localizador.T("ok"));
         }
 
         private async void OnCancelarClicked(object sender, EventArgs e)
@@ -385,12 +386,12 @@ namespace CUIDAPP.Views.Cliente
             if (trabajo == null)
                 return;
 
-            var confirmar = await DisplayAlert("Cancelar solicitud", "¿Seguro que deseas cancelar esta solicitud de servicio?", "Sí, cancelar", "No");
+            var confirmar = await DisplayAlert(Localizador.T("cancelar_solicitud"), Localizador.T("seguro_que_deseas_cancelar_esta"), Localizador.T("si_cancelar"), Localizador.T("no"));
             if (!confirmar)
                 return;
 
             BtnCancelar.IsEnabled = false;
-            BtnCancelar.Text = "Cancelando...";
+            BtnCancelar.Text = Localizador.T("cancelando");
 
             var success = await _apiService.ActualizarEstadoTrabajoAsync(trabajo.Id, 5);
 
@@ -400,9 +401,9 @@ namespace CUIDAPP.Views.Cliente
             }
             else
             {
-                await DisplayAlert("Error", "No se pudo cancelar la solicitud. Intenta de nuevo.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_cancelar_la"), Localizador.T("ok"));
                 BtnCancelar.IsEnabled = true;
-                BtnCancelar.Text = "Cancelar solicitud";
+                BtnCancelar.Text = Localizador.T("cancelar_solicitud");
             }
         }
 
@@ -412,14 +413,14 @@ namespace CUIDAPP.Views.Cliente
                 return;
 
             var confirmar = await DisplayAlert(
-                "SOS - Pedir auxilio",
-                "Se enviará una alerta de emergencia al equipo de administración de CuidApp. ¿Estás seguro de que necesitas auxilio?",
-                "Sí, enviar alerta", "Cancelar");
+                Localizador.T("sos_pedir_auxilio_2"),
+                Localizador.T("se_enviara_una_alerta_de"),
+                Localizador.T("si_enviar_alerta"), Localizador.T("cancelar"));
             if (!confirmar)
                 return;
 
             BtnSOS.IsEnabled = false;
-            BtnSOS.Text = " Enviando alerta...";
+            BtnSOS.Text = Localizador.T("enviando_alerta");
 
             try
             {
@@ -434,17 +435,17 @@ namespace CUIDAPP.Views.Cliente
 
                 if (success)
                 {
-                    await DisplayAlert("Alerta enviada", "Nuestro equipo de administración ha sido notificado y coordinará asistencia de inmediato.", "OK");
+                    await DisplayAlert(Localizador.T("alerta_enviada"), Localizador.T("nuestro_equipo_de_administracion_ha"), Localizador.T("ok"));
                 }
                 else
                 {
-                    await DisplayAlert("Error", "No se pudo enviar la alerta SOS. Intenta de nuevo o llama al 911.", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_enviar_la_2"), Localizador.T("ok"));
                 }
             }
             finally
             {
                 BtnSOS.IsEnabled = true;
-                BtnSOS.Text = " SOS - Pedir auxilio";
+                BtnSOS.Text = Localizador.T("sos_pedir_auxilio");
             }
         }
     }

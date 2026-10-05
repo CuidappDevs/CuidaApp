@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.MainPage"
              Shell.NavBarIsVisible="False"
              BackgroundColor="{StaticResource ColorBackground}">
@@ -19,21 +20,21 @@
 
             <!-- Saludo -->
             <VerticalStackLayout Spacing="5" HorizontalOptions="Center" Margin="0, 15, 0, 15">
-                <Label Text="¡Hola de nuevo!" FontFamily="OpenSansSemibold" FontSize="28" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Center" />
-                <Label Text="Ingresa tus datos para continuar" FontFamily="OpenSansRegular" FontSize="15" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center" />
+                <Label Text="{loc:T hola_de_nuevo}" FontFamily="OpenSansSemibold" FontSize="28" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Center" />
+                <Label Text="{loc:T ingresa_tus_datos_para_continuar}" FontFamily="OpenSansRegular" FontSize="15" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center" />
             </VerticalStackLayout>
 
             <!-- Input Correo -->
             <VerticalStackLayout Spacing="6">
-                <Label Text="Correo electrónico o teléfono" FontFamily="OpenSansSemibold" FontSize="13" TextColor="{StaticResource ColorTextStrong}" />
+                <Label Text="{loc:T correo_electronico_o_telefono}" FontFamily="OpenSansSemibold" FontSize="13" TextColor="{StaticResource ColorTextStrong}" />
                 <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1" StrokeShape="RoundRectangle 12" BackgroundColor="{StaticResource ColorSurface}" Padding="15,2">
-                    <Entry x:Name="EntryEmail" Placeholder="ejemplo@correo.com" FontFamily="OpenSansRegular" PlaceholderColor="{StaticResource ColorTextMuted}" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" ClearButtonVisibility="WhileEditing" HeightRequest="45" Keyboard="Email" />
+                    <Entry x:Name="EntryEmail" Placeholder="{loc:T ejemplo_correo_com}" FontFamily="OpenSansRegular" PlaceholderColor="{StaticResource ColorTextMuted}" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" ClearButtonVisibility="WhileEditing" HeightRequest="45" Keyboard="Email" />
                 </Border>
             </VerticalStackLayout>
 
             <!-- Input Contraseña -->
             <VerticalStackLayout Spacing="6">
-                <Label Text="Contraseña" FontFamily="OpenSansSemibold" FontSize="13" TextColor="{StaticResource ColorTextStrong}" />
+                <Label Text="{loc:T contrasena}" FontFamily="OpenSansSemibold" FontSize="13" TextColor="{StaticResource ColorTextStrong}" />
                 <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1" StrokeShape="RoundRectangle 12" BackgroundColor="{StaticResource ColorSurface}" Padding="15,2">
                     <Grid ColumnDefinitions="*, Auto">
                         <Entry x:Name="EntryPassword" Placeholder="••••••••" FontFamily="OpenSansRegular" PlaceholderColor="{StaticResource ColorTextMuted}" TextColor="{StaticResource ColorTextStrong}" FontSize="15" IsPassword="True" BackgroundColor="Transparent" Grid.Column="0" HeightRequest="45" />
@@ -49,14 +50,14 @@
             </VerticalStackLayout>
 
             <!-- Olvidaste contraseña -->
-            <Label Text="¿Olvidaste tu contraseña?" FontFamily="OpenSansSemibold" FontSize="13" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="End" Margin="0, -10, 0, 15">
+            <Label Text="{loc:T olvidaste_tu_contrasena}" FontFamily="OpenSansSemibold" FontSize="13" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="End" Margin="0, -10, 0, 15">
                 <Label.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnForgotPasswordTapped" />
                 </Label.GestureRecognizers>
             </Label>
 
             <!-- Boton Login -->
-            <Button x:Name="BtnLogin" Text="Iniciar sesión" FontFamily="OpenSansSemibold" BackgroundColor="{StaticResource ColorPrimary}" TextColor="{StaticResource ColorSurface}" FontSize="16" CornerRadius="12" HeightRequest="55" Margin="0, 5, 0, 15" Clicked="OnLoginClicked">
+            <Button x:Name="BtnLogin" Text="{loc:T iniciar_sesion}" FontFamily="OpenSansSemibold" BackgroundColor="{StaticResource ColorPrimary}" TextColor="{StaticResource ColorSurface}" FontSize="16" CornerRadius="12" HeightRequest="55" Margin="0, 5, 0, 15" Clicked="OnLoginClicked">
                 <Button.Shadow>
                     <Shadow Brush="{StaticResource ColorPrimaryDark}" Offset="0,5" Radius="10" Opacity="0.3" />
                 </Button.Shadow>
@@ -64,13 +65,15 @@
 
             <!-- Link Registro -->
             <HorizontalStackLayout HorizontalOptions="Center" Spacing="4" Margin="0, 10, 0, 0">
-                <Label Text="¿No tienes cuenta?" FontFamily="OpenSansRegular" FontSize="14" TextColor="{StaticResource ColorTextMuted}" />
-                <Label Text="Regístrate aquí" FontFamily="OpenSansSemibold" FontSize="14" TextColor="{StaticResource ColorPrimary}">
+                <Label Text="{loc:T no_tienes_cuenta}" FontFamily="OpenSansRegular" FontSize="14" TextColor="{StaticResource ColorTextMuted}" />
+                <Label Text="{loc:T registrate_aqui}" FontFamily="OpenSansSemibold" FontSize="14" TextColor="{StaticResource ColorPrimary}">
                     <Label.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnRegisterTapped" />
                     </Label.GestureRecognizers>
                 </Label>
             </HorizontalStackLayout>
+
+            <loc:SelectorIdioma Margin="0,6,0,6"/>
 
         </VerticalStackLayout>
     </ScrollView>

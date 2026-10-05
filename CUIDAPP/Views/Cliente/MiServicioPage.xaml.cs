@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Models.Trabajo;
 using CUIDAPP.Services;
 
@@ -69,12 +70,12 @@ namespace CUIDAPP.Views.Cliente
         {
             var (colorFondo, colorTexto, texto) = t.Estado switch
             {
-                1 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), "Esperando respuesta"),
-                2 => (Color.FromArgb("#DBEAFE"), Color.FromArgb("#1E40AF"), "Aceptado"),
-                3 => (Color.FromArgb("#EDE9FE"), Color.FromArgb("#5B21B6"), "En progreso"),
-                4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), "Completado, ¡califica!"),
-                7 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), "Requiere tu confirmación"),
-                _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "En curso")
+                1 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("esperando_respuesta")),
+                2 => (Color.FromArgb("#DBEAFE"), Color.FromArgb("#1E40AF"), Localizador.T("aceptado")),
+                3 => (Color.FromArgb("#EDE9FE"), Color.FromArgb("#5B21B6"), Localizador.T("en_progreso")),
+                4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), Localizador.T("completado_califica")),
+                7 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("requiere_tu_confirmacion")),
+                _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), Localizador.T("en_curso"))
             };
 
             var badge = new Border
@@ -109,7 +110,7 @@ namespace CUIDAPP.Views.Cliente
                 {
                     badge,
                     new Label { Text = t.CuidadorNombre, FontSize = 16, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#111827") },
-                    new Label { Text = t.TipoServicio, FontSize = 13, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#6B7280") }
+                    new Label { Text = Localizador.D(t.TipoServicio), FontSize = 13, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#6B7280") }
                 }
             };
 

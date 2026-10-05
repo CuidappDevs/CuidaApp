@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -75,8 +76,8 @@ namespace CUIDAPP.Views.Trabajos
 
             if (estadoAnterior == 7 && trabajo.Estado == 3 && trabajo.RechazadoPorCliente)
             {
-                await DisplayAlert("El cliente indicó que el trabajo no ha terminado",
-                    "Puedes volver a intentar finalizarlo con el PIN, o si estás seguro de que ya terminaste, puedes insistir (en ese caso el trabajo no generará pago).", "Entendido");
+                await DisplayAlert(Localizador.T("el_cliente_indico_que_el_2"),
+                    Localizador.T("puedes_volver_a_intentar_finalizarlo"), Localizador.T("entendido"));
             }
         }
 
@@ -119,7 +120,7 @@ namespace CUIDAPP.Views.Trabajos
                 {
                     fueraDeGeocerca = true;
                     await _apiService.AlertarGeocercaAsync(trabajo.Id, distanciaKm * 1000);
-                    await DisplayAlert("Estás lejos del sitio del servicio", $"Te alejaste {distanciaKm * 1000:N0} m del domicilio. Le avisamos al cliente.", "OK");
+                    await DisplayAlert(Localizador.T("estas_lejos_del_sitio_del"), Localizador.F("te_alejaste_m_del_domicilio", distanciaKm * 1000), Localizador.T("ok"));
                 }
             }
             else
@@ -170,7 +171,7 @@ namespace CUIDAPP.Views.Trabajos
                     {
                         check.IsChecked = false;
                         check.IsEnabled = true;
-                        await DisplayAlert("Error", "No se pudo marcar la tarea. Intenta de nuevo.", "OK");
+                        await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_marcar_la"), Localizador.T("ok"));
                     }
                 };
 
@@ -236,13 +237,13 @@ namespace CUIDAPP.Views.Trabajos
                 }
                 else
                 {
-                    await DisplayAlert("Error", "No se pudo enviar el reporte. Intenta de nuevo.", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_enviar_el"), Localizador.T("ok"));
                 }
             }
             finally
             {
                 BtnAgregarActividad.IsEnabled = true;
-                BtnAgregarActividad.Text = "Enviar";
+                BtnAgregarActividad.Text = Localizador.T("enviar");
             }
         }
 
@@ -292,22 +293,22 @@ namespace CUIDAPP.Views.Trabajos
             if (!string.IsNullOrWhiteSpace(trabajo.ClienteFotoUrl))
                 ImgCliente.Source = $"{ApiService.ServerOrigin}{trabajo.ClienteFotoUrl}";
 
-            LblTipoServicio.Text = trabajo.TipoServicio;
-            LblFecha.Text = trabajo.Fecha.ToString("dddd, d 'de' MMMM");
+            LblTipoServicio.Text = Localizador.D(trabajo.TipoServicio);
+            LblFecha.Text = Localizador.FechaLarga(trabajo.Fecha);
             LblHora.Text = $"{FormatearHora(trabajo.HoraInicio)} - {FormatearHora(trabajo.HoraFin)}";
-            LblDireccion.Text = string.IsNullOrWhiteSpace(trabajo.Direccion) ? "Sin dirección" : trabajo.Direccion;
-            LblPago.Text = $"RD${trabajo.Tarifa:N2}";
+            LblDireccion.Text = string.IsNullOrWhiteSpace(trabajo.Direccion) ? Localizador.T("sin_direccion") : trabajo.Direccion;
+            LblPago.Text = Localizador.F("rd", trabajo.Tarifa);
 
             var (colorFondo, colorTexto, texto) = trabajo.Estado switch
             {
-                1 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), "Pendiente"),
-                2 => (Color.FromArgb("#DBEAFE"), Color.FromArgb("#1E40AF"), "Aceptado"),
-                3 => (Color.FromArgb("#EDE9FE"), Color.FromArgb("#5B21B6"), "En progreso"),
-                4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), "Completado"),
-                5 => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "Cancelado"),
-                6 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#991B1B"), "Rechazado"),
-                7 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), "Esperando confirmación del cliente"),
-                _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "Desconocido")
+                1 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("pendiente")),
+                2 => (Color.FromArgb("#DBEAFE"), Color.FromArgb("#1E40AF"), Localizador.T("aceptado")),
+                3 => (Color.FromArgb("#EDE9FE"), Color.FromArgb("#5B21B6"), Localizador.T("en_progreso")),
+                4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), Localizador.T("completado")),
+                5 => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), Localizador.T("cancelado")),
+                6 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#991B1B"), Localizador.T("rechazado")),
+                7 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("esperando_confirmacion_del_cliente")),
+                _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), Localizador.T("desconocido"))
             };
             BadgeEstado.BackgroundColor = colorFondo;
             LblEstado.TextColor = colorTexto;
@@ -331,9 +332,9 @@ namespace CUIDAPP.Views.Trabajos
                 return;
 
             var confirmar = await DisplayAlert(
-                "¿Insistir sin cobro?",
-                "El trabajo se marcará como completado, pero no se generará el pago porque el cliente indicó que no había terminado. ¿Continuar?",
-                "Sí, insistir", "Cancelar");
+                Localizador.T("insistir_sin_cobro"),
+                Localizador.T("el_trabajo_se_marcara_como"),
+                Localizador.T("si_insistir"), Localizador.T("cancelar"));
             if (!confirmar)
                 return;
 
@@ -343,7 +344,7 @@ namespace CUIDAPP.Views.Trabajos
             if (success)
                 await Shell.Current.GoToAsync("..");
             else
-                await DisplayAlert("Error", error ?? "No se pudo forzar la finalización.", "OK");
+                await DisplayAlert(Localizador.T("error"), error ?? Localizador.T("no_se_pudo_forzar_la"), Localizador.T("ok"));
         }
 
         private async void OnChatClicked(object sender, EventArgs e)
@@ -373,19 +374,19 @@ namespace CUIDAPP.Views.Trabajos
         private async void OnAceptarClicked(object sender, EventArgs e)
         {
             BtnAceptar.IsEnabled = BtnRechazar.IsEnabled = false;
-            BtnAceptar.Text = "Aceptando...";
+            BtnAceptar.Text = Localizador.T("aceptando");
             await CambiarEstado(2);
             BtnAceptar.IsEnabled = BtnRechazar.IsEnabled = true;
-            BtnAceptar.Text = "Aceptar";
+            BtnAceptar.Text = Localizador.T("aceptar");
         }
 
         private async void OnRechazarClicked(object sender, EventArgs e)
         {
             BtnAceptar.IsEnabled = BtnRechazar.IsEnabled = false;
-            BtnRechazar.Text = "Rechazando...";
+            BtnRechazar.Text = Localizador.T("rechazando");
             await CambiarEstado(6);
             BtnAceptar.IsEnabled = BtnRechazar.IsEnabled = true;
-            BtnRechazar.Text = "Rechazar";
+            BtnRechazar.Text = Localizador.T("rechazar");
         }
 
         private const double DistanciaMaximaKm = 0.15; // 150 metros
@@ -398,18 +399,18 @@ namespace CUIDAPP.Views.Trabajos
             if (trabajo.Fecha.Date != ServerClock.Today)
             {
                 var mensaje = trabajo.Fecha.Date > ServerClock.Today
-                    ? $"Este servicio está programado para el {trabajo.Fecha:d 'de' MMMM}. Todavía no puedes iniciarlo."
-                    : $"Este servicio estaba programado para el {trabajo.Fecha:d 'de' MMMM} y ya pasó la fecha.";
-                await DisplayAlert("No es la fecha del servicio", mensaje, "OK");
+                    ? Localizador.F("servicio_programado_futuro", Localizador.DiaMes(trabajo.Fecha))
+                    : Localizador.F("servicio_programado_pasado", Localizador.DiaMes(trabajo.Fecha));
+                await DisplayAlert(Localizador.T("no_es_la_fecha_del"), mensaje, Localizador.T("ok"));
                 return;
             }
 
             if (ServerClock.Now.TimeOfDay > trabajo.HoraFin)
             {
                 var continuar = await DisplayAlert(
-                    "El horario programado ya pasó",
-                    $"Este servicio estaba programado de {FormatearHora(trabajo.HoraInicio)} a {FormatearHora(trabajo.HoraFin)} y ya es más tarde. ¿Aun así quieres iniciarlo ahora?",
-                    "Sí, iniciar", "Cancelar");
+                    Localizador.T("el_horario_programado_ya_paso"),
+                    Localizador.F("este_servicio_estaba_programado_de", FormatearHora(trabajo.HoraInicio), FormatearHora(trabajo.HoraFin)),
+                    Localizador.T("si_iniciar"), Localizador.T("cancelar"));
                 if (!continuar)
                     return;
             }
@@ -419,7 +420,7 @@ namespace CUIDAPP.Views.Trabajos
                 var ubicacionActual = await LocationService.ObtenerUbicacionActualAsync();
                 if (ubicacionActual == null)
                 {
-                    await DisplayAlert("Ubicación no disponible", "No pudimos verificar tu ubicación. Activa el GPS e intenta de nuevo.", "OK");
+                    await DisplayAlert(Localizador.T("ubicacion_no_disponible"), Localizador.T("no_pudimos_verificar_tu_ubicacion"), Localizador.T("ok"));
                     return;
                 }
 
@@ -428,7 +429,7 @@ namespace CUIDAPP.Views.Trabajos
 
                 if (distanciaKm > DistanciaMaximaKm)
                 {
-                    await DisplayAlert("Estás muy lejos", $"Debes estar en la dirección del servicio para iniciar el trabajo. Estás a {distanciaKm * 1000:N0} m de distancia.", "OK");
+                    await DisplayAlert(Localizador.T("estas_muy_lejos"), Localizador.F("debes_estar_en_la_direccion", distanciaKm * 1000), Localizador.T("ok"));
                     return;
                 }
             }
@@ -461,14 +462,14 @@ namespace CUIDAPP.Views.Trabajos
                 return;
 
             var confirmar = await DisplayAlert(
-                "SOS - Pedir auxilio",
-                "Se enviará una alerta de emergencia al equipo de administración de CuidApp. ¿Estás seguro de que necesitas auxilio?",
-                "Sí, enviar alerta", "Cancelar");
+                Localizador.T("sos_pedir_auxilio_2"),
+                Localizador.T("se_enviara_una_alerta_de"),
+                Localizador.T("si_enviar_alerta"), Localizador.T("cancelar"));
             if (!confirmar)
                 return;
 
             BtnSOS.IsEnabled = false;
-            BtnSOS.Text = " Enviando alerta...";
+            BtnSOS.Text = Localizador.T("enviando_alerta");
 
             try
             {
@@ -483,17 +484,17 @@ namespace CUIDAPP.Views.Trabajos
 
                 if (success)
                 {
-                    await DisplayAlert("Alerta enviada", "Nuestro equipo de administración ha sido notificado y coordinará asistencia de inmediato.", "OK");
+                    await DisplayAlert(Localizador.T("alerta_enviada"), Localizador.T("nuestro_equipo_de_administracion_ha"), Localizador.T("ok"));
                 }
                 else
                 {
-                    await DisplayAlert("Error", "No se pudo enviar la alerta SOS. Intenta de nuevo o llama al 911.", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_enviar_la_2"), Localizador.T("ok"));
                 }
             }
             finally
             {
                 BtnSOS.IsEnabled = true;
-                BtnSOS.Text = " SOS - Pedir auxilio";
+                BtnSOS.Text = Localizador.T("sos_pedir_auxilio");
             }
         }
 
@@ -646,7 +647,7 @@ namespace CUIDAPP.Views.Trabajos
             }
             else
             {
-                await DisplayAlert("Error", "No se pudo actualizar el trabajo. Intenta de nuevo.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_actualizar_el"), Localizador.T("ok"));
             }
         }
     }

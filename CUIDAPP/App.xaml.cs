@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using Microsoft.Extensions.DependencyInjection;
 using CUIDAPP.Models.Chat;
 using CUIDAPP.Services;
@@ -51,13 +52,13 @@ namespace CUIDAPP
             if (Preferences.Default.Get("RolId", 0) == 3)
                 return;
 
-            var texto = $"Tarea completada: {descripcion}";
-            NotificacionHistorial.Agregar("Tu cuidador completó una tarea", texto, "trabajo", trabajoId);
+            var texto = Localizador.F("tarea_completada_detalle", descripcion);
+            NotificacionHistorial.Agregar(Localizador.T("tu_cuidador_completo_una_tarea"), texto, "trabajo", trabajoId);
 
             if (EstaEnPrimerPlano)
-                GlobalNotifier.MostrarBanner("Tarea completada", texto);
+                GlobalNotifier.MostrarBanner(Localizador.T("tarea_completada"), texto);
             else
-                NativeNotifier.Mostrar("Tu cuidador completó una tarea", texto);
+                NativeNotifier.Mostrar(Localizador.T("tu_cuidador_completo_una_tarea"), texto);
         }
 
         private void OnActividadAgregadaGlobal(int trabajoId, string descripcion, DateTime fechaHora)
@@ -68,21 +69,21 @@ namespace CUIDAPP
             if (rolId == 3)
                 return;
 
-            NotificacionHistorial.Agregar("Tu cuidador reportó una actividad", descripcion, "trabajo", trabajoId);
+            NotificacionHistorial.Agregar(Localizador.T("tu_cuidador_reporto_una_actividad"), descripcion, "trabajo", trabajoId);
 
             if (EstaEnPrimerPlano)
-                GlobalNotifier.MostrarBanner("Actividad reportada", descripcion);
+                GlobalNotifier.MostrarBanner(Localizador.T("actividad_reportada"), descripcion);
             else
-                NativeNotifier.Mostrar("Tu cuidador reportó una actividad", descripcion);
+                NativeNotifier.Mostrar(Localizador.T("tu_cuidador_reporto_una_actividad"), descripcion);
         }
 
         private void OnAlertaGeocercaGlobal(int trabajoId, double distanciaMetros)
         {
-            var texto = $"Se alejó {distanciaMetros:N0} m del domicilio donde se realiza el servicio.";
-            NotificacionHistorial.Agregar("⚠️ Tu cuidador se alejó del sitio", texto, "geocerca", trabajoId);
+            var texto = Localizador.F("alejo_m_domicilio_servicio", distanciaMetros);
+            NotificacionHistorial.Agregar(Localizador.T("tu_cuidador_se_alejo_del"), texto, "geocerca", trabajoId);
 
             if (!EstaEnPrimerPlano)
-                NativeNotifier.Mostrar("⚠️ Tu cuidador se alejó del sitio", texto);
+                NativeNotifier.Mostrar(Localizador.T("tu_cuidador_se_alejo_del"), texto);
         }
 
         private void OnMensajeNuevoGlobal(Mensaje mensaje)
@@ -93,12 +94,12 @@ namespace CUIDAPP
 
             var texto = mensaje.Tipo switch
             {
-                "imagen" => "📷 Te enviaron una foto",
-                "audio" => "🎤 Te enviaron una nota de voz",
+                "imagen" => Localizador.T("notif_foto"),
+                "audio" => Localizador.T("notif_audio"),
                 _ => mensaje.Contenido
             };
 
-            NotificacionHistorial.Agregar("Nuevo mensaje", texto, "mensaje");
+            NotificacionHistorial.Agregar(Localizador.T("nuevo_mensaje"), texto, "mensaje");
 
             // Si ya tiene esa misma conversación abierta, ChatPage se encarga de pintarlo
             // en vivo — no hace falta ni banner ni notificación del sistema encima.
@@ -106,9 +107,9 @@ namespace CUIDAPP
                 return;
 
             if (EstaEnPrimerPlano)
-                GlobalNotifier.MostrarBanner("Nuevo mensaje", texto);
+                GlobalNotifier.MostrarBanner(Localizador.T("nuevo_mensaje"), texto);
             else
-                NativeNotifier.Mostrar("Nuevo mensaje", texto);
+                NativeNotifier.Mostrar(Localizador.T("nuevo_mensaje"), texto);
         }
 
         private void OnNuevaSolicitudGlobal(int trabajoId, int clienteId)
@@ -117,32 +118,32 @@ namespace CUIDAPP
             if (miUsuarioId == 0)
                 return;
 
-            const string texto = "Un cliente solicitó tus servicios. Revisa los detalles.";
-            NotificacionHistorial.Agregar("Nueva solicitud de servicio", texto, "solicitud", trabajoId);
+            var texto = Localizador.T("un_cliente_solicito_tus_servicios");
+            NotificacionHistorial.Agregar(Localizador.T("nueva_solicitud_de_servicio"), texto, "solicitud", trabajoId);
 
             if (EstaEnPrimerPlano)
-                GlobalNotifier.MostrarBanner("Nueva solicitud", texto);
+                GlobalNotifier.MostrarBanner(Localizador.T("nueva_solicitud"), texto);
             else
-                NativeNotifier.Mostrar("Nueva solicitud de servicio", texto);
+                NativeNotifier.Mostrar(Localizador.T("nueva_solicitud_de_servicio"), texto);
         }
 
         private void OnTrabajoActualizadoGlobal(int trabajoId, int estado)
         {
             var texto = estado switch
             {
-                2 => "Tu solicitud fue aceptada.",
-                3 => "El servicio ya está en progreso.",
-                4 => "¡El servicio fue completado!",
-                5 => "El servicio fue cancelado.",
-                6 => "Tu solicitud fue rechazada.",
-                7 => "Tu cuidador indicó que el servicio terminó. Confírmalo.",
-                _ => "Hay una actualización en tu servicio."
+                2 => Localizador.T("est_aceptada"),
+                3 => Localizador.T("est_en_progreso"),
+                4 => Localizador.T("est_completado"),
+                5 => Localizador.T("est_cancelado"),
+                6 => Localizador.T("est_rechazada"),
+                7 => Localizador.T("est_cuidador_termino"),
+                _ => Localizador.T("est_actualizacion")
             };
 
-            NotificacionHistorial.Agregar("Actualización de servicio", texto, "trabajo", trabajoId);
+            NotificacionHistorial.Agregar(Localizador.T("actualizacion_de_servicio"), texto, "trabajo", trabajoId);
 
             if (!EstaEnPrimerPlano)
-                NativeNotifier.Mostrar("Actualización de servicio", texto);
+                NativeNotifier.Mostrar(Localizador.T("actualizacion_de_servicio"), texto);
             // En primer plano no mostramos banner aquí: cada pantalla de detalle ya se
             // refresca sola y mostrar un banner encima sería redundante con eso.
         }

@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Models.Busqueda;
 using CUIDAPP.Services;
 
@@ -24,7 +25,7 @@ namespace CUIDAPP.Views.Cliente
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-            LblTituloServicio.Text = Especialidad;
+            LblTituloServicio.Text = Localizador.D(Especialidad);
             estaVisible = true;
 
             await CargarCuidadores();
@@ -95,8 +96,8 @@ namespace CUIDAPP.Views.Cliente
                 Children =
                 {
                     new Label { Text = cuidador.NombreCompleto, FontSize = 16, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#111827") },
-                    new Label { Text = $"A {cuidador.DistanciaKm:N1} km de ti", FontSize = 12, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#6B7280") },
-                    new Label { Text = $"RD${cuidador.TarifaHora:N0} / hora", FontSize = 14, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#2563EB") }
+                    new Label { Text = Localizador.F("a_km_de_ti", cuidador.DistanciaKm), FontSize = 12, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#6B7280") },
+                    new Label { Text = Localizador.F("rd_hora", cuidador.TarifaHora), FontSize = 14, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#2563EB") }
                 }
             };
 
@@ -139,7 +140,7 @@ namespace CUIDAPP.Views.Cliente
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error al abrir el perfil", ex.ToString(), "OK");
+                await DisplayAlert(Localizador.T("error_al_abrir_el_perfil"), ex.ToString(), Localizador.T("ok"));
             }
         }
 

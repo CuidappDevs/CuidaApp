@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Models.Calificacion;
 using CUIDAPP.Services;
 
@@ -26,7 +27,7 @@ namespace CUIDAPP.Views.Calificacion
             set
             {
                 _calificadoNombre = value ?? "";
-                LblSubtitulo.Text = string.IsNullOrWhiteSpace(_calificadoNombre) ? "" : $"Califica a {_calificadoNombre}";
+                LblSubtitulo.Text = string.IsNullOrWhiteSpace(_calificadoNombre) ? "" : Localizador.F("califica_a", _calificadoNombre);
             }
         }
         private string _calificadoNombre = "";
@@ -72,7 +73,7 @@ namespace CUIDAPP.Views.Calificacion
                 return;
 
             BtnEnviar.IsEnabled = false;
-            BtnEnviar.Text = "Enviando...";
+            BtnEnviar.Text = Localizador.T("enviando");
 
             var request = new CrearCalificacionRequest
             {
@@ -87,7 +88,7 @@ namespace CUIDAPP.Views.Calificacion
 
             if (success)
             {
-                await DisplayAlert("¡Gracias!", "Tu calificación fue enviada.", "OK");
+                await DisplayAlert(Localizador.T("gracias"), Localizador.T("tu_calificacion_fue_enviada"), Localizador.T("ok"));
                 try
                 {
                     await Shell.Current.GoToAsync(string.IsNullOrWhiteSpace(RutaSalida) ? ".." : RutaSalida);
@@ -101,8 +102,8 @@ namespace CUIDAPP.Views.Calificacion
             }
             else
             {
-                await DisplayAlert("Error", "No se pudo enviar la calificación. Es posible que ya hayas calificado este trabajo.", "OK");
-                BtnEnviar.Text = "Enviar calificación";
+                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_enviar_la"), Localizador.T("ok"));
+                BtnEnviar.Text = Localizador.T("enviar_calificacion");
                 BtnEnviar.IsEnabled = true;
             }
         }

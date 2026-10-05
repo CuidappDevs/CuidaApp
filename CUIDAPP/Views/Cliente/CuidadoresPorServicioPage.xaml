@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Cliente.CuidadoresPorServicioPage"
              Shell.NavBarIsVisible="False"
              BackgroundColor="#F9FAFB">
@@ -16,13 +17,13 @@
                 <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
             </ContentView>
 
-            <Label Grid.Column="1" x:Name="LblTituloServicio" Text="Cuidadores" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <Label Grid.Column="1" x:Name="LblTituloServicio" Text="{loc:T cuidadores}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
         </Grid>
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="20,15,20,30" Spacing="15">
                 <ActivityIndicator x:Name="LoadingIndicator" IsRunning="True" Color="#2563EB" />
-                <Label x:Name="LblSinCuidadores" Text="No hay cuidadores disponibles para este servicio en tu zona." FontSize="14" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center" IsVisible="False" Margin="0,30,0,0" />
+                <Label x:Name="LblSinCuidadores" Text="{loc:T no_hay_cuidadores_disponibles_para}" FontSize="14" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center" IsVisible="False" Margin="0,30,0,0" />
                 <VerticalStackLayout x:Name="ListaCuidadores" Spacing="15" />
             </VerticalStackLayout>
         </ScrollView>

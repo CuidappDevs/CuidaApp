@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Cliente.SeleccionarPuntoMapaPage"
              Shell.NavBarIsVisible="False"
              BackgroundColor="#FFFFFF">
@@ -14,35 +15,35 @@
                 </ContentView.GestureRecognizers>
                 <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
             </ContentView>
-            <Label Grid.Column="1" Text="Elige la ubicación" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <Label Grid.Column="1" Text="{loc:T elige_la_ubicacion}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
         </Grid>
 
         <Grid Grid.Row="1">
             <WebView x:Name="MapaWebView" Navigating="OnMapaNavigating"/>
-            <Label Text="Toca el mapa para marcar el punto" FontSize="13" FontFamily="OpenSansSemibold" TextColor="White" BackgroundColor="#CC111827" Padding="14,8" HorizontalOptions="Center" VerticalOptions="Start" Margin="0,15,0,0" />
+            <Label Text="{loc:T toca_el_mapa_para_marcar}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="White" BackgroundColor="#CC111827" Padding="14,8" HorizontalOptions="Center" VerticalOptions="Start" Margin="0,15,0,0" />
         </Grid>
 
         <VerticalStackLayout Grid.Row="2" Padding="20,15,20,30" Spacing="12" BackgroundColor="White">
             <VerticalStackLayout x:Name="LabelNombre" Spacing="8">
-                <Label Text="Nombre de la ubicación" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                <Label Text="{loc:T nombre_de_la_ubicacion}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
                 <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
-                    <Entry x:Name="EntryNombre" Placeholder="Ej. Casa, Casa de mamá, Trabajo..." FontFamily="OpenSansRegular" FontSize="14" HeightRequest="45"/>
+                    <Entry x:Name="EntryNombre" Placeholder="{loc:T ej_casa_casa_de_mama}" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="45"/>
                 </Border>
             </VerticalStackLayout>
 
             <VerticalStackLayout Spacing="8">
-                <Label Text="Dirección" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                <Label Text="{loc:T direccion}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
                 <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
-                    <Entry x:Name="EntryDireccion" Placeholder="Ej. Calle Principal #12, Sector..." FontFamily="OpenSansRegular" FontSize="14" HeightRequest="45"/>
+                    <Entry x:Name="EntryDireccion" Placeholder="{loc:T ej_calle_principal_12_sector}" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="45"/>
                 </Border>
             </VerticalStackLayout>
 
             <Grid x:Name="LabelPredeterminada" ColumnDefinitions="*, Auto">
-                <Label Grid.Column="0" Text="Usar como predeterminada" FontSize="14" FontFamily="OpenSansRegular" TextColor="#374151" VerticalOptions="Center"/>
+                <Label Grid.Column="0" Text="{loc:T usar_como_predeterminada}" FontSize="14" FontFamily="OpenSansRegular" TextColor="#374151" VerticalOptions="Center"/>
                 <Switch x:Name="SwitchPredeterminada" Grid.Column="1" OnColor="#2563EB"/>
             </Grid>
 
-            <Button x:Name="BtnGuardar" Text="Guardar ubicación" Clicked="OnGuardarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55"/>
+            <Button x:Name="BtnGuardar" Text="{loc:T guardar_ubicacion}" Clicked="OnGuardarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55"/>
         </VerticalStackLayout>
 
     </Grid>

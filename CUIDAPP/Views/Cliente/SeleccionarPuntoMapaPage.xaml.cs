@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using System.Globalization;
 using System.Web;
 using CUIDAPP.Models.Cliente;
@@ -37,7 +38,7 @@ namespace CUIDAPP.Views.Cliente
             {
                 LabelNombre.IsVisible = EntryNombre.IsVisible = false;
                 LabelPredeterminada.IsVisible = SwitchPredeterminada.IsVisible = false;
-                BtnGuardar.Text = "Usar esta ubicación";
+                BtnGuardar.Text = Localizador.T("usar_esta_ubicacion");
             }
 
             if (ubicacionExistente != null)
@@ -134,7 +135,7 @@ namespace CUIDAPP.Views.Cliente
 
             if (string.IsNullOrWhiteSpace(EntryDireccion.Text))
             {
-                await DisplayAlert("Falta la dirección", "Escribe la dirección de referencia.", "OK");
+                await DisplayAlert(Localizador.T("falta_la_direccion"), Localizador.T("escribe_la_direccion_de_referencia"), Localizador.T("ok"));
                 return;
             }
 
@@ -154,19 +155,19 @@ namespace CUIDAPP.Views.Cliente
 
             if (string.IsNullOrWhiteSpace(EntryNombre.Text))
             {
-                await DisplayAlert("Falta el nombre", "Ponle un nombre a esta ubicación (ej. Casa, Trabajo).", "OK");
+                await DisplayAlert(Localizador.T("falta_el_nombre"), Localizador.T("ponle_un_nombre_a_esta"), Localizador.T("ok"));
                 return;
             }
 
             var clienteId = Preferences.Default.Get("UserId", 0);
             if (clienteId == 0)
             {
-                await DisplayAlert("Error", "Tu sesión expiró. Vuelve a iniciar sesión.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("tu_sesion_expiro_vuelve_a"), Localizador.T("ok"));
                 return;
             }
 
             BtnGuardar.IsEnabled = false;
-            BtnGuardar.Text = "Guardando...";
+            BtnGuardar.Text = Localizador.T("guardando");
 
             try
             {
@@ -192,13 +193,13 @@ namespace CUIDAPP.Views.Cliente
                 }
                 else
                 {
-                    await DisplayAlert("Error", "No se pudo guardar la ubicación. Intenta de nuevo.", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_guardar_la"), Localizador.T("ok"));
                 }
             }
             finally
             {
                 BtnGuardar.IsEnabled = true;
-                BtnGuardar.Text = "Guardar ubicación";
+                BtnGuardar.Text = Localizador.T("guardar_ubicacion");
             }
         }
     }
