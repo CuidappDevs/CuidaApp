@@ -97,6 +97,15 @@
                         <Label Text="{loc:T tu_cuidador_indico_que_el}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#92400E" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
                         <Label x:Name="LblJustificacionFinalizacion" Text="" FontSize="13" FontFamily="OpenSansRegular" TextColor="#B45309" IsVisible="False"/>
                         <Label Text="{loc:T confirmas_que_el_trabajo_fue}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#92400E" HorizontalOptions="Center"/>
+
+                        <!-- Propina opcional (tipo Uber) -->
+                        <BoxView HeightRequest="1" Color="#FDE68A" Margin="0,4"/>
+                        <Label Text="{loc:T propina_titulo}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#92400E"/>
+                        <FlexLayout x:Name="ChipsPropina" Wrap="Wrap" JustifyContent="Start"/>
+                        <Border x:Name="BoxPropinaOtro" IsVisible="False" Stroke="#F59E0B" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="12,0">
+                            <Entry x:Name="EntryPropina" Placeholder="{loc:T monto_propina_rd}" Keyboard="Numeric" MaxLength="8" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="44" TextChanged="OnPropinaTextChanged"/>
+                        </Border>
+                        <Label x:Name="LblResumenPropina" IsVisible="False" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#166534" HorizontalOptions="Center"/>
                         <Grid ColumnDefinitions="*, *" ColumnSpacing="10" Margin="0,6,0,0">
                             <Button Grid.Column="0" Text="{loc:T no_aun_no}" Clicked="OnRechazarFinalizacionClicked" BackgroundColor="White" TextColor="#92400E" BorderColor="#F59E0B" BorderWidth="1" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="10" HeightRequest="48"/>
                             <Button Grid.Column="1" x:Name="BtnConfirmarFinalizacion" Text="{loc:T si_termino}" Clicked="OnConfirmarFinalizacionClicked" BackgroundColor="#16A34A" TextColor="White" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="10" HeightRequest="48"/>

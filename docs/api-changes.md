@@ -76,3 +76,14 @@ El cliente puede definir tareas al solicitar el servicio; el cuidador las marca 
 | POST | `/api/trabajo` | `CrearTrabajoDto` acepta `tareas: string[]` opcional (máx. 20, 200 caracteres c/u) |
 | GET | `/api/trabajo/{id}/tareas` | Lista las tareas del trabajo |
 | POST | `/api/trabajo/tareas/{tareaId}/completar` | Marca la tarea (solo si el trabajo está En Progreso) y notifica al cliente |
+
+
+## Propina del cliente (bono al finalizar)
+
+El cliente puede dejar una propina opcional al confirmar que el servicio terminó (montos rápidos RD$100 / 150 / 200 u otro monto). Requiere aplicar [`sql/propina-servicio.sql`](./sql/propina-servicio.sql) (primero en `DBCuidappDev`).
+
+- `PUT /api/trabajo/confirmar-finalizacion` acepta `propina` (decimal, opcional). Se valida entre 0 y 50,000; solo aplica si `confirmado = true`. Error 400 `PROPINA_INVALIDA` si está fuera de rango.
+- `Pagos.Propina` (DECIMAL, default 0). El pago al cuidador = `Monto` (tarifa) + `Propina`; `sp_ObtenerGananciasCuidador` ya suma ambos.
+- `PagoDto` (cuidador) y `PagoAdminDto` (panel) exponen `Propina`.
+- SignalR: evento `PropinaRecibida { trabajoId, monto }` al cuidador cuando recibe una propina.
+- Compatibilidad: el parámetro `@Propina` del SP es opcional, así que una API/app anteriores siguen funcionando (propina = 0).

@@ -12,6 +12,8 @@ namespace CUIDAPP_API.DTOs.Trabajo
         public int TrabajoId { get; set; }
         public int ClienteId { get; set; }
         public bool Confirmado { get; set; }
+        /// <summary>Propina opcional (RD$) para el cuidador; solo aplica si Confirmado = true.</summary>
+        public decimal? Propina { get; set; }
     }
 
     public class ForzarFinalizacionDto

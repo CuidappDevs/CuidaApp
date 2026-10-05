@@ -176,6 +176,7 @@ namespace CUIDAPP_API.Services.Cuidador
                     TipoServicio = reader["TipoServicio"].ToString() ?? "",
                     ClienteNombre = reader["ClienteNombre"].ToString() ?? "",
                     Monto = Convert.ToDecimal(reader["Monto"]),
+                    Propina = Convert.ToDecimal(reader["Propina"]),
                     Estado = Convert.ToInt32(reader["Estado"]),
                     FechaPago = reader["FechaPago"] == DBNull.Value ? null : Convert.ToDateTime(reader["FechaPago"]),
                     FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"])

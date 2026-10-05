@@ -272,7 +272,7 @@ namespace CUIDAPP_API.Services.Trabajo
             return (false, "ERROR_DESCONOCIDO");
         }
 
-        public async Task<(bool Success, string Motivo)> ConfirmarFinalizacionAsync(int trabajoId, int clienteId, bool confirmado)
+        public async Task<(bool Success, string Motivo)> ConfirmarFinalizacionAsync(int trabajoId, int clienteId, bool confirmado, decimal propina = 0)
         {
             using var connection = new SqlConnection(_connectionString);
             using var command = new SqlCommand("sp_ConfirmarFinalizacionTrabajo", connection);
@@ -281,6 +281,7 @@ namespace CUIDAPP_API.Services.Trabajo
             command.Parameters.AddWithValue("@ClienteId", clienteId);
             command.Parameters.AddWithValue("@Confirmado", confirmado);
             command.Parameters.AddWithValue("@FechaHora", HoraLocalRD.Ahora);
+            command.Parameters.AddWithValue("@Propina", confirmado ? propina : 0m);
 
             await connection.OpenAsync();
             using var reader = await command.ExecuteReaderAsync();
@@ -299,6 +300,8 @@ namespace CUIDAPP_API.Services.Trabajo
                         var nuevoEstado = confirmado ? 4 : 3;
                         await _notifier.NotificarAsync(participantes.Value.ClienteId, "TrabajoActualizado", new { TrabajoId = trabajoId, Estado = nuevoEstado });
                         await _notifier.NotificarAsync(participantes.Value.CuidadorId, "TrabajoActualizado", new { TrabajoId = trabajoId, Estado = nuevoEstado });
+                        if (confirmado && propina > 0)
+                            await _notifier.NotificarAsync(participantes.Value.CuidadorId, "PropinaRecibida", new { TrabajoId = trabajoId, Monto = propina });
                     }
                 }
 

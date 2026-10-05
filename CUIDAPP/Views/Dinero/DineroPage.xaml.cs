@@ -96,10 +96,22 @@ namespace CUIDAPP.Views.Dinero
                 VerticalOptions = LayoutOptions.Center,
                 Children =
                 {
-                    new Label { Text = Localizador.F("rd_4", pago.Monto), FontSize = 15, FontFamily = "OpenSansSemibold", TextColor = colorMonto, HorizontalTextAlignment = TextAlignment.End },
+                    new Label { Text = Localizador.F("rd_4", pago.Total), FontSize = 15, FontFamily = "OpenSansSemibold", TextColor = colorMonto, HorizontalTextAlignment = TextAlignment.End },
                     new Label { Text = textoEstado, FontSize = 11, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#9CA3AF"), HorizontalTextAlignment = TextAlignment.End }
                 }
             };
+
+            if (pago.Propina > 0)
+            {
+                montoStack.Children.Insert(1, new Label
+                {
+                    Text = Localizador.F("incluye_propina", pago.Propina),
+                    FontSize = 11,
+                    FontFamily = "OpenSansSemibold",
+                    TextColor = Color.FromArgb("#059669"),
+                    HorizontalTextAlignment = TextAlignment.End
+                });
+            }
 
             var grid = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) } };
             grid.Add(icono, 0, 0);

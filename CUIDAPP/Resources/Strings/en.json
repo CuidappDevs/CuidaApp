@@ -543,5 +543,15 @@
   "dato_residente_legal": "Legal resident",
   "dato_extranjero_en_proceso": "Foreigner in process",
   "dato_cedula": "ID card",
-  "dato_cartaantecedentes": "Police clearance letter"
+  "dato_cartaantecedentes": "Police clearance letter",
+  "propina_titulo": "Would you like to tip your caregiver? (optional)",
+  "sin_propina": "No tip",
+  "otro_monto": "Other amount",
+  "monto_propina_rd": "Amount in RD$",
+  "total_con_propina": "Total with tip: RD${0:N2}",
+  "propina_invalida": "Enter a valid tip amount (maximum RD$50,000).",
+  "gracias_propina": "Your RD${0:N0} tip was sent to your caregiver.",
+  "notif_propina_titulo": "You received a tip!",
+  "notif_propina_texto": "A client left you a RD${0:N0} tip.",
+  "incluye_propina": "incl. tip RD${0:N0}"
 }

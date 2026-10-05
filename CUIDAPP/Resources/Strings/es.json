@@ -543,5 +543,15 @@
   "dato_residente_legal": "Residente legal",
   "dato_extranjero_en_proceso": "Extranjero en proceso",
   "dato_cedula": "Cedula",
-  "dato_cartaantecedentes": "CartaAntecedentes"
+  "dato_cartaantecedentes": "CartaAntecedentes",
+  "propina_titulo": "¿Quieres dejar una propina a tu cuidador? (opcional)",
+  "sin_propina": "Sin propina",
+  "otro_monto": "Otro monto",
+  "monto_propina_rd": "Monto en RD$",
+  "total_con_propina": "Total con propina: RD${0:N2}",
+  "propina_invalida": "Ingresa un monto válido para la propina (máximo RD$50,000).",
+  "gracias_propina": "Tu propina de RD${0:N0} fue enviada a tu cuidador.",
+  "notif_propina_titulo": "¡Recibiste una propina!",
+  "notif_propina_texto": "Un cliente te dejó una propina de RD${0:N0}.",
+  "incluye_propina": "incl. propina RD${0:N0}"
 }

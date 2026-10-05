@@ -38,6 +38,7 @@ namespace CUIDAPP_API.Services.Pago
                     ClienteNombre = reader["ClienteNombre"] as string ?? "",
                     TipoServicio = reader["TipoServicio"] as string ?? "",
                     Monto = Convert.ToDecimal(reader["Monto"]),
+                    Propina = Convert.ToDecimal(reader["Propina"]),
                     Estado = Convert.ToInt32(reader["Estado"]),
                     FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
                     AutorizadoPorAdminId = reader["AutorizadoPorAdminId"] == DBNull.Value ? null : Convert.ToInt32(reader["AutorizadoPorAdminId"]),

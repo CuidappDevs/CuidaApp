@@ -7,6 +7,7 @@ namespace CUIDAPP_API.DTOs.Cuidador
         public required string TipoServicio { get; set; }
         public required string ClienteNombre { get; set; }
         public decimal Monto { get; set; }
+        public decimal Propina { get; set; }
         public int Estado { get; set; } // 1=Pendiente, 2=Pagado
         public DateTime? FechaPago { get; set; }
         public DateTime FechaCreacion { get; set; }

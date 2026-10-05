@@ -689,11 +689,11 @@ namespace CUIDAPP.Services
             }
         }
 
-        public async Task<(bool Success, string? Error)> ConfirmarFinalizacionAsync(int trabajoId, int clienteId, bool confirmado)
+        public async Task<(bool Success, string? Error)> ConfirmarFinalizacionAsync(int trabajoId, int clienteId, bool confirmado, decimal propina = 0)
         {
             try
             {
-                var response = await _httpClient.PutAsJsonAsync("trabajo/confirmar-finalizacion", new { TrabajoId = trabajoId, ClienteId = clienteId, Confirmado = confirmado });
+                var response = await _httpClient.PutAsJsonAsync("trabajo/confirmar-finalizacion", new { TrabajoId = trabajoId, ClienteId = clienteId, Confirmado = confirmado, Propina = propina });
                 if (response.IsSuccessStatusCode)
                     return (true, null);
 
