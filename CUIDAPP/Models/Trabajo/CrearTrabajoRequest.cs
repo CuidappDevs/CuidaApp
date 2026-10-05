@@ -12,5 +12,6 @@ namespace CUIDAPP.Models.Trabajo
         public decimal Tarifa { get; set; }
         public decimal? Latitud { get; set; }
         public decimal? Longitud { get; set; }
+        public List<string>? Tareas { get; set; }
     }
 }

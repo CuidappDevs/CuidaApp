@@ -196,6 +196,35 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [HttpGet("{trabajoId}/tareas")]
+        public async Task<IActionResult> ObtenerTareas(int trabajoId)
+        {
+            try
+            {
+                return Ok(await _trabajoService.ObtenerTareasAsync(trabajoId));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
+        [HttpPost("tareas/{tareaId}/completar")]
+        public async Task<IActionResult> CompletarTarea(int tareaId)
+        {
+            try
+            {
+                var tarea = await _trabajoService.CompletarTareaAsync(tareaId);
+                if (tarea == null)
+                    return BadRequest("La tarea no existe, ya estaba completada o el servicio no está en progreso.");
+                return Ok(tarea);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
         [HttpGet("{trabajoId}/actividades")]
         public async Task<IActionResult> ObtenerActividades(int trabajoId)
         {

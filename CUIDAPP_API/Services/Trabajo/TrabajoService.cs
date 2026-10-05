@@ -40,6 +40,22 @@ namespace CUIDAPP_API.Services.Trabajo
             var result = await command.ExecuteScalarAsync();
             var trabajoId = Convert.ToInt32(result);
 
+            var tareas = (dto.Tareas ?? new List<string>())
+                .Select(t => t?.Trim() ?? "")
+                .Where(t => t.Length > 0)
+                .Select(t => t.Length > 200 ? t[..200] : t)
+                .Take(20)
+                .ToList();
+            for (var i = 0; i < tareas.Count; i++)
+            {
+                using var tareaCmd = new SqlCommand("sp_AgregarTareaTrabajo", connection);
+                tareaCmd.CommandType = CommandType.StoredProcedure;
+                tareaCmd.Parameters.AddWithValue("@TrabajoId", trabajoId);
+                tareaCmd.Parameters.AddWithValue("@Descripcion", tareas[i]);
+                tareaCmd.Parameters.AddWithValue("@Orden", i);
+                await tareaCmd.ExecuteNonQueryAsync();
+            }
+
             await _notifier.NotificarAsync(dto.CuidadorId, "NuevaSolicitud", new { TrabajoId = trabajoId, dto.ClienteId });
 
             return trabajoId;
@@ -375,6 +391,58 @@ namespace CUIDAPP_API.Services.Trabajo
 
             return actividad;
         }
+
+        public async Task<IEnumerable<TareaTrabajoDto>> ObtenerTareasAsync(int trabajoId)
+        {
+            var tareas = new List<TareaTrabajoDto>();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_ObtenerTareasTrabajo", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@TrabajoId", trabajoId);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+                tareas.Add(MapearTarea(reader));
+
+            return tareas;
+        }
+
+        public async Task<TareaTrabajoDto?> CompletarTareaAsync(int tareaId)
+        {
+            TareaTrabajoDto? tarea = null;
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_CompletarTareaTrabajo", connection))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("@TareaId", tareaId);
+                command.Parameters.AddWithValue("@FechaCompletada", HoraLocalRD.Ahora);
+
+                await connection.OpenAsync();
+                using var reader = await command.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                    tarea = MapearTarea(reader);
+            }
+
+            if (tarea == null)
+                return null;
+
+            var participantes = await ObtenerParticipantesAsync(tarea.TrabajoId);
+            if (participantes.HasValue)
+                await _notifier.NotificarAsync(participantes.Value.ClienteId, "TareaCompletada", tarea);
+
+            return tarea;
+        }
+
+        private static TareaTrabajoDto MapearTarea(SqlDataReader reader) => new()
+        {
+            Id = Convert.ToInt32(reader["Id"]),
+            TrabajoId = Convert.ToInt32(reader["TrabajoId"]),
+            Descripcion = reader["Descripcion"].ToString() ?? "",
+            Orden = Convert.ToInt32(reader["Orden"]),
+            Completada = Convert.ToBoolean(reader["Completada"]),
+            FechaCompletada = reader["FechaCompletada"] == DBNull.Value ? null : Convert.ToDateTime(reader["FechaCompletada"])
+        };
 
         public async Task AlertarGeocercaAsync(int trabajoId, double distanciaMetros)
         {

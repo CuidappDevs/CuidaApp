@@ -41,6 +41,7 @@ namespace CUIDAPP.Views.Trabajos
             await CargarMapaRutaAsync();
             await ActualizarBotonCalificarAsync();
             await CargarActividadesAsync();
+            await CargarTareasAsync();
             IniciarMonitorGeocercaSiHaceFalta();
         }
 
@@ -69,6 +70,7 @@ namespace CUIDAPP.Views.Trabajos
             RenderizarTrabajo();
             await ActualizarBotonCalificarAsync();
             await CargarActividadesAsync();
+            await CargarTareasAsync();
             await CargarMapaRutaAsync();
 
             if (estadoAnterior == 7 && trabajo.Estado == 3 && trabajo.RechazadoPorCliente)
@@ -123,6 +125,59 @@ namespace CUIDAPP.Views.Trabajos
             else
             {
                 fueraDeGeocerca = false;
+            }
+        }
+
+        private async Task CargarTareasAsync()
+        {
+            if (trabajo == null)
+                return;
+
+            var tareasTrabajo = await _apiService.ObtenerTareasAsync(trabajo.Id);
+            var puedeMarcar = trabajo.Estado == 3;
+
+            CardTareas.IsVisible = tareasTrabajo.Count > 0 && trabajo.Estado is 1 or 2 or 3;
+            LblAyudaTareas.IsVisible = puedeMarcar;
+            ListaTareas.Clear();
+
+            foreach (var tarea in tareasTrabajo)
+            {
+                var check = new CheckBox { IsChecked = tarea.Completada, IsEnabled = puedeMarcar && !tarea.Completada, VerticalOptions = LayoutOptions.Center };
+                var texto = new Label
+                {
+                    Text = tarea.Descripcion,
+                    FontSize = 14,
+                    FontFamily = "OpenSansRegular",
+                    VerticalOptions = LayoutOptions.Center,
+                    TextColor = tarea.Completada ? Color.FromArgb("#9CA3AF") : Color.FromArgb("#111827"),
+                    TextDecorations = tarea.Completada ? TextDecorations.Strikethrough : TextDecorations.None
+                };
+
+                var tareaId = tarea.Id;
+                check.CheckedChanged += async (s, args) =>
+                {
+                    if (!args.Value)
+                        return;
+
+                    check.IsEnabled = false;
+                    var ok = await _apiService.CompletarTareaAsync(tareaId);
+                    if (ok)
+                    {
+                        texto.TextColor = Color.FromArgb("#9CA3AF");
+                        texto.TextDecorations = TextDecorations.Strikethrough;
+                    }
+                    else
+                    {
+                        check.IsChecked = false;
+                        check.IsEnabled = true;
+                        await DisplayAlert("Error", "No se pudo marcar la tarea. Intenta de nuevo.", "OK");
+                    }
+                };
+
+                var fila = new HorizontalStackLayout { Spacing = 6 };
+                fila.Add(check);
+                fila.Add(texto);
+                ListaTareas.Add(fila);
             }
         }
 
@@ -223,7 +278,7 @@ namespace CUIDAPP.Views.Trabajos
                 { "TrabajoId", trabajo.Id },
                 { "CalificadoId", trabajo.ClienteId },
                 { "CalificadoNombre", trabajo.ClienteNombre },
-                { "RutaSalida", "///CuidadorDashboardPage" }
+                { "RutaSalida", "//MainPage/CuidadorDashboardPage" }
             };
             await Shell.Current.GoToAsync("CalificarPage", parametros);
         }

@@ -10,6 +10,55 @@ namespace CUIDAPP.Views.Cliente
         private readonly ApiService _apiService = new ApiService();
         private CuidadorCercano? cuidador;
         private UbicacionCliente? ubicacionElegida;
+        private readonly List<string> tareas = new();
+        private const int MaxTareas = 20;
+
+        private void OnAgregarTareaClicked(object sender, EventArgs e)
+        {
+            var texto = EntryTarea.Text?.Trim();
+            if (string.IsNullOrEmpty(texto))
+                return;
+
+            if (tareas.Count >= MaxTareas)
+            {
+                _ = DisplayAlert("Límite alcanzado", $"Puedes agregar hasta {MaxTareas} tareas.", "OK");
+                return;
+            }
+
+            tareas.Add(texto);
+            EntryTarea.Text = "";
+            RenderizarTareas();
+        }
+
+        private void RenderizarTareas()
+        {
+            ListaTareas.Clear();
+            foreach (var tarea in tareas.ToList())
+            {
+                var quitar = new Label { Text = "✕", FontSize = 16, TextColor = Color.FromArgb("#9CA3AF"), VerticalOptions = LayoutOptions.Center, Padding = new Thickness(8, 0) };
+                quitar.GestureRecognizers.Add(new TapGestureRecognizer
+                {
+                    Command = new Command(() =>
+                    {
+                        tareas.Remove(tarea);
+                        RenderizarTareas();
+                    })
+                });
+
+                var fila = new Grid { ColumnDefinitions = { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) } };
+                fila.Add(new Label { Text = "☐  " + tarea, FontSize = 14, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#111827"), VerticalOptions = LayoutOptions.Center });
+                fila.Add(quitar, 1);
+
+                ListaTareas.Add(new Border
+                {
+                    Stroke = Colors.Transparent,
+                    BackgroundColor = Color.FromArgb("#F8FAFC"),
+                    StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
+                    Padding = new Thickness(12, 10),
+                    Content = fila
+                });
+            }
+        }
 
         public void ApplyQueryAttributes(IDictionary<string, object> query)
         {
@@ -143,7 +192,8 @@ namespace CUIDAPP.Views.Cliente
                     Direccion = ubicacionElegida.Direccion,
                     Tarifa = tarifaTotal,
                     Latitud = ubicacionElegida.Latitud,
-                    Longitud = ubicacionElegida.Longitud
+                    Longitud = ubicacionElegida.Longitud,
+                    Tareas = tareas.Count > 0 ? tareas.ToList() : null
                 };
 
                 var (success, error) = await _apiService.CrearTrabajoAsync(request);

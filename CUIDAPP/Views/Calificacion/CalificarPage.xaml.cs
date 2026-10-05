@@ -88,7 +88,16 @@ namespace CUIDAPP.Views.Calificacion
             if (success)
             {
                 await DisplayAlert("¡Gracias!", "Tu calificación fue enviada.", "OK");
-                await Shell.Current.GoToAsync(string.IsNullOrWhiteSpace(RutaSalida) ? ".." : RutaSalida);
+                try
+                {
+                    await Shell.Current.GoToAsync(string.IsNullOrWhiteSpace(RutaSalida) ? ".." : RutaSalida);
+                }
+                catch (Exception ex)
+                {
+                    // Una ruta de salida inválida no debe tumbar la app (async void): volvemos atrás.
+                    Console.WriteLine($"Error navegando tras calificar: {ex.Message}");
+                    await Shell.Current.GoToAsync("..");
+                }
             }
             else
             {

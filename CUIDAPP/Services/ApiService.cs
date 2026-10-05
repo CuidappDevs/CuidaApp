@@ -770,6 +770,37 @@ namespace CUIDAPP.Services
             }
         }
 
+        public async Task<List<TareaTrabajo>> ObtenerTareasAsync(int trabajoId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"trabajo/{trabajoId}/tareas");
+                if (!response.IsSuccessStatusCode)
+                    return new List<TareaTrabajo>();
+
+                return await response.Content.ReadFromJsonAsync<List<TareaTrabajo>>() ?? new List<TareaTrabajo>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo tareas: {ex.Message}");
+                return new List<TareaTrabajo>();
+            }
+        }
+
+        public async Task<bool> CompletarTareaAsync(int tareaId)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsync($"trabajo/tareas/{tareaId}/completar", null);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error completando tarea: {ex.Message}");
+                return false;
+            }
+        }
+
         public async Task<bool> AgregarActividadAsync(int trabajoId, string descripcion)
         {
             try
