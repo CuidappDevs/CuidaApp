@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Trabajos.FinalizarTrabajoPage"
              Shell.NavBarIsVisible="False"
              BackgroundColor="#FFFFFF">
@@ -14,7 +15,7 @@
                 </ContentView.GestureRecognizers>
                 <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
             </ContentView>
-            <Label Grid.Column="1" Text="Finalizar trabajo" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <Label Grid.Column="1" Text="{loc:T finalizar_trabajo}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
         </Grid>
 
         <ScrollView Grid.Row="1">
@@ -25,8 +26,8 @@
                 </Border>
 
                 <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
-                    <Label Text="Ingresa el código de salida" FontSize="19" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
-                    <Label Text="Pídele a tu cliente el código de 4 dígitos para confirmar que el servicio ha terminado." FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" HorizontalTextAlignment="Center" Margin="20,0,20,0"/>
+                    <Label Text="{loc:T ingresa_el_codigo_de_salida}" FontSize="19" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
+                    <Label Text="{loc:T pidele_a_tu_cliente_el}" FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" HorizontalTextAlignment="Center" Margin="20,0,20,0"/>
                 </VerticalStackLayout>
 
                 <VerticalStackLayout Spacing="14">
@@ -52,9 +53,9 @@
 
                 <!-- Solo visible si se está terminando antes de la hora acordada -->
                 <VerticalStackLayout x:Name="CardJustificacion" Spacing="8" IsVisible="False">
-                    <Label Text="Estás terminando antes de lo acordado. Explícale al cliente por qué:" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#92400E"/>
+                    <Label Text="{loc:T estas_terminando_antes_de_lo}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#92400E"/>
                     <Border Stroke="#FDE68A" StrokeThickness="1" BackgroundColor="#FFFBEB" StrokeShape="RoundRectangle 12" Padding="12,8">
-                        <Editor x:Name="EditorJustificacion" Placeholder="Ej. El cliente me pidió terminar antes, ya no había más tareas pendientes..." FontFamily="OpenSansRegular" FontSize="14" HeightRequest="80" AutoSize="TextChanges"/>
+                        <Editor x:Name="EditorJustificacion" Placeholder="{loc:T ej_el_cliente_me_pidio}" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="80" AutoSize="TextChanges"/>
                     </Border>
                 </VerticalStackLayout>
 
@@ -65,7 +66,7 @@
             <Border.Shadow>
                 <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
             </Border.Shadow>
-            <Button x:Name="BtnConfirmar" Text="Confirmar finalización" Clicked="OnConfirmarClicked" BackgroundColor="#16A34A" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsEnabled="False"/>
+            <Button x:Name="BtnConfirmar" Text="{loc:T confirmar_finalizacion}" Clicked="OnConfirmarClicked" BackgroundColor="#16A34A" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsEnabled="False"/>
         </VerticalStackLayout>
 
     </Grid>

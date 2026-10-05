@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Trabajos.IniciarTrabajoPage"
              Shell.NavBarIsVisible="False"
              BackgroundColor="#FFFFFF">
@@ -14,7 +15,7 @@
                 </ContentView.GestureRecognizers>
                 <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
             </ContentView>
-            <Label Grid.Column="1" Text="Iniciar trabajo" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <Label Grid.Column="1" Text="{loc:T iniciar_trabajo}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
         </Grid>
 
         <ScrollView Grid.Row="1">
@@ -25,8 +26,8 @@
                 </Border>
 
                 <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
-                    <Label Text="Ingresa el código del cliente" FontSize="19" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
-                    <Label Text="Pídele a tu cliente el código de 4 dígitos para confirmar que iniciarás el servicio." FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" HorizontalTextAlignment="Center" Margin="20,0,20,0"/>
+                    <Label Text="{loc:T ingresa_el_codigo_del_cliente}" FontSize="19" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
+                    <Label Text="{loc:T pidele_a_tu_cliente_el_2}" FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" HorizontalTextAlignment="Center" Margin="20,0,20,0"/>
                 </VerticalStackLayout>
 
                 <VerticalStackLayout Spacing="14">
@@ -57,7 +58,7 @@
             <Border.Shadow>
                 <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
             </Border.Shadow>
-            <Button x:Name="BtnConfirmar" Text="Confirmar inicio" Clicked="OnConfirmarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsEnabled="False"/>
+            <Button x:Name="BtnConfirmar" Text="{loc:T confirmar_inicio}" Clicked="OnConfirmarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsEnabled="False"/>
         </VerticalStackLayout>
 
     </Grid>

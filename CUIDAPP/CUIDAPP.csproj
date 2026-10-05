@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net10.0-android</TargetFrameworks>
@@ -67,6 +67,11 @@
 
 		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Textos por idioma (clave -> texto). Ver Localization/Localizador.cs -->
+		<EmbeddedResource Include="Resources\Strings\*.json" LogicalName="CUIDAPP.Strings.%(Filename).json" />
 	</ItemGroup>
 
 	<ItemGroup>

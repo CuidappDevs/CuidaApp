@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using System.Collections.ObjectModel;
 using CUIDAPP.Models.Cliente;
 using CUIDAPP.Services;
@@ -25,7 +26,7 @@ namespace CUIDAPP.Views.Cliente
         protected override async void OnAppearing()
         {
             base.OnAppearing();
-            LblTitulo.Text = modoSeleccion ? "Elige a dónde vas" : "Mis ubicaciones";
+            LblTitulo.Text = modoSeleccion ? Localizador.T("elige_a_donde_vas") : Localizador.T("mis_ubicaciones");
             await CargarUbicaciones();
         }
 
@@ -66,7 +67,7 @@ namespace CUIDAPP.Views.Cliente
             if (e.Parameter is not UbicacionCliente ubicacion)
                 return;
 
-            var confirmar = await DisplayAlert("Eliminar ubicación", $"¿Eliminar \"{ubicacion.Nombre}\"?", "Sí, eliminar", "Cancelar");
+            var confirmar = await DisplayAlert(Localizador.T("eliminar_ubicacion"), Localizador.F("eliminar", ubicacion.Nombre), Localizador.T("si_eliminar"), Localizador.T("cancelar"));
             if (!confirmar)
                 return;
 
@@ -76,7 +77,7 @@ namespace CUIDAPP.Views.Cliente
             if (success)
                 await CargarUbicaciones();
             else
-                await DisplayAlert("Error", "No se pudo eliminar la ubicación. Intenta de nuevo.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_eliminar_la"), Localizador.T("ok"));
         }
 
         private async void OnAgregarClicked(object sender, EventArgs e)

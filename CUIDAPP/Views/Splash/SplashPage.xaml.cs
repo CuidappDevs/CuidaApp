@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using Microsoft.Maui.Controls.Shapes;
 
 namespace CUIDAPP.Views.Splash
@@ -18,7 +19,7 @@ namespace CUIDAPP.Views.Splash
 
             var version = AppInfo.Current.VersionString;
             var build = AppInfo.Current.BuildString;
-            LblVersion.Text = $"Versión {version} ({build})";
+            LblVersion.Text = Localizador.F("version", version, build);
 
             await Task.WhenAll(
                 LogoCircle.FadeTo(1, 550, Easing.CubicOut),

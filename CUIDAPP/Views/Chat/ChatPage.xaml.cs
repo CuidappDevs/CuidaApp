@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using Plugin.Maui.Audio;
 using CUIDAPP.Models.Chat;
 using CUIDAPP.Services;
@@ -55,7 +56,7 @@ namespace CUIDAPP.Views.Chat
             var conversacion = await _apiService.ObtenerOCrearConversacionAsync(trabajoId);
             if (conversacion == null)
             {
-                await DisplayAlert("Error", "No se pudo abrir el chat. Intenta de nuevo.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_abrir_el"), Localizador.T("ok"));
                 await Shell.Current.GoToAsync("..");
                 return;
             }
@@ -105,7 +106,7 @@ namespace CUIDAPP.Views.Chat
                 HorizontalOptions = LayoutOptions.Fill,
                 Content = new Label
                 {
-                    Text = "🔒 Por tu seguridad, no compartas contraseñas, datos bancarios, cédula ni otra información sensible por este chat. Úsalo solo para coordinar el servicio.",
+                    Text = Localizador.T("por_tu_seguridad_no_compartas"),
                     FontSize = 12,
                     FontFamily = "OpenSansRegular",
                     TextColor = Color.FromArgb("#92400E"),
@@ -334,7 +335,7 @@ namespace CUIDAPP.Views.Chat
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"No se pudo reproducir la nota de voz.\n{ex.Message}", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.F("no_se_pudo_reproducir_la", ex.Message), Localizador.T("ok"));
             }
         }
 
@@ -365,7 +366,7 @@ namespace CUIDAPP.Views.Chat
                 var (url, error) = await _apiService.UploadFileConDiagnosticoAsync(foto.FullPath, $"chat/{miUsuarioId}");
                 if (url == null)
                 {
-                    await DisplayAlert("No se pudo subir la imagen", error ?? "Error desconocido.", "OK");
+                    await DisplayAlert(Localizador.T("no_se_pudo_subir_la"), error ?? Localizador.T("error_desconocido"), Localizador.T("ok"));
                     return;
                 }
 
@@ -375,7 +376,7 @@ namespace CUIDAPP.Views.Chat
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error", $"No se pudo adjuntar la imagen.\n{ex.Message}", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.F("no_se_pudo_adjuntar_la", ex.Message), Localizador.T("ok"));
             }
         }
 
@@ -389,7 +390,7 @@ namespace CUIDAPP.Views.Chat
                 var permiso = await Permissions.RequestAsync<Permissions.Microphone>();
                 if (permiso != PermissionStatus.Granted)
                 {
-                    await DisplayAlert("Permiso necesario", "Necesitamos acceso al micrófono para grabar notas de voz.", "OK");
+                    await DisplayAlert(Localizador.T("permiso_necesario"), Localizador.T("necesitamos_acceso_al_microfono_para"), Localizador.T("ok"));
                     return;
                 }
 
@@ -422,14 +423,14 @@ namespace CUIDAPP.Views.Chat
 
                 if (duracionSegundos < 1)
                 {
-                    await DisplayAlert("Nota muy corta", "Mantén presionado un poco más para grabar algo audible.", "OK");
+                    await DisplayAlert(Localizador.T("nota_muy_corta"), Localizador.T("manten_presionado_un_poco_mas"), Localizador.T("ok"));
                     return;
                 }
 
                 var (url, error) = await _apiService.UploadFileConDiagnosticoAsync(_rutaGrabacionActual, $"chat/{miUsuarioId}");
                 if (url == null)
                 {
-                    await DisplayAlert("No se pudo subir la nota de voz", error ?? "Error desconocido.", "OK");
+                    await DisplayAlert(Localizador.T("no_se_pudo_subir_la_2"), error ?? Localizador.T("error_desconocido"), Localizador.T("ok"));
                     return;
                 }
 

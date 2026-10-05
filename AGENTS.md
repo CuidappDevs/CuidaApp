@@ -70,6 +70,16 @@ Each domain has its own folder in Controllers/, Interfaces/, Services/, DTOs/:
 - Plugin.Maui.Audio for voice messages
 - Colors defined in `Resources/Styles/Colors.xaml` as StaticResource
 
+## Multi-idioma (MAUI)
+
+La app está en **español (base) e inglés**. Reglas:
+- **Nunca escribir texto visible fijo.** Todo texto de UI (XAML, `DisplayAlert`, `Text = ...`, notificaciones, estados) va por clave.
+- XAML: `Text="{loc:T clave}"` (con `xmlns:loc="clr-namespace:CUIDAPP.Localization"`). C#: `Localizador.T("clave")` o `Localizador.F("clave", arg0, arg1)` con `{0}`, `{1}` en el texto.
+- Textos que vienen de la BD (especialidades, motivos de cancelación, documentos): `Localizador.D(texto)`; la traducción vive en la clave `dato_{texto_normalizado}` (minúsculas, sin acentos, `_`). Si no hay traducción, se muestra el texto original.
+- Los textos están en `CUIDAPP/Resources/Strings/{es,en}.json` (clave → texto). Agregar la clave en **todos** los idiomas y correr `python CUIDAPP/Resources/Strings/verificar_traducciones.py` (falla si falta una clave o cambian los `{n}`).
+- Agregar un idioma: crear `Resources/Strings/{codigo}.json` y añadirlo a `Localizador.Idiomas`. La elección se guarda en `Preferences["Idioma"]`; el selector (`<loc:SelectorIdioma/>`) está en login y en los perfiles.
+- Lo que se **guarda en la BD** o viaja al servidor (categoría de ticket, especialidad, texto de mensajes de chat) sigue en español a propósito; solo se traduce al mostrarlo.
+
 ## Blazor Admin
 
 - Cookie-based authentication (8h expiry, sliding)

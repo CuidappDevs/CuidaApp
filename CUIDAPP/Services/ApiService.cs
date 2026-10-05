@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using System.Net.Http.Json;
 using CUIDAPP.Models.Auth;
 using CUIDAPP.Models.Busqueda;
@@ -106,7 +107,7 @@ namespace CUIDAPP.Services
             try
             {
                 if (!File.Exists(localFilePath))
-                    return (null, $"El archivo no existe en el dispositivo: {localFilePath}");
+                    return (null, Localizador.F("err_archivo_no_existe", localFilePath));
 
                 using var content = new MultipartFormDataContent();
                 var bytes = await File.ReadAllBytesAsync(localFilePath);
@@ -123,7 +124,7 @@ namespace CUIDAPP.Services
 
                 var result = await response.Content.ReadFromJsonAsync<UploadResponse>();
                 if (string.IsNullOrWhiteSpace(result?.Url))
-                    return (null, "El servidor no devolvió una URL de archivo.");
+                    return (null, Localizador.T("err_sin_url_archivo"));
 
                 return (result.Url, null);
             }
@@ -647,12 +648,12 @@ namespace CUIDAPP.Services
                 try
                 {
                     var errorDto = await response.Content.ReadFromJsonAsync<IniciarTrabajoErrorDto>();
-                    return (false, errorDto?.Message ?? "No se pudo iniciar el trabajo.");
+                    return (false, errorDto?.Message ?? Localizador.T("err_iniciar_trabajo"));
                 }
                 catch
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    return (false, string.IsNullOrWhiteSpace(error) ? "No se pudo iniciar el trabajo." : error);
+                    return (false, string.IsNullOrWhiteSpace(error) ? Localizador.T("err_iniciar_trabajo") : error);
                 }
             }
             catch (Exception ex)
@@ -673,12 +674,12 @@ namespace CUIDAPP.Services
                 try
                 {
                     var errorDto = await response.Content.ReadFromJsonAsync<IniciarTrabajoErrorDto>();
-                    return (false, errorDto?.Message ?? "No se pudo finalizar el trabajo.");
+                    return (false, errorDto?.Message ?? Localizador.T("err_finalizar_trabajo"));
                 }
                 catch
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    return (false, string.IsNullOrWhiteSpace(error) ? "No se pudo finalizar el trabajo." : error);
+                    return (false, string.IsNullOrWhiteSpace(error) ? Localizador.T("err_finalizar_trabajo") : error);
                 }
             }
             catch (Exception ex)
@@ -697,7 +698,7 @@ namespace CUIDAPP.Services
                     return (true, null);
 
                 var errorDto = await response.Content.ReadFromJsonAsync<IniciarTrabajoErrorDto>();
-                return (false, errorDto?.Message ?? "No se pudo registrar tu respuesta.");
+                return (false, errorDto?.Message ?? Localizador.T("err_registrar_respuesta"));
             }
             catch (Exception ex)
             {
@@ -715,7 +716,7 @@ namespace CUIDAPP.Services
                     return (true, null);
 
                 var errorDto = await response.Content.ReadFromJsonAsync<IniciarTrabajoErrorDto>();
-                return (false, errorDto?.Message ?? "No se pudo forzar la finalización.");
+                return (false, errorDto?.Message ?? Localizador.T("no_se_pudo_forzar_la"));
             }
             catch (Exception ex)
             {

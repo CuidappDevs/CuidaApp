@@ -1,3 +1,5 @@
+using CUIDAPP.Localization;
+using CUIDAPP.Models.Cliente;
 using CUIDAPP.Services;
 
 namespace CUIDAPP.Views.Cliente
@@ -11,9 +13,34 @@ namespace CUIDAPP.Views.Cliente
             InitializeComponent();
         }
 
+        private PerfilCliente? _perfil;
+
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            Localizador.Instancia.IdiomaCambiado -= AplicarPerfil;
+        }
+
+        // Textos armados por código: se vuelven a pintar al instante cuando cambia el idioma.
+        private void AplicarPerfil()
+        {
+            if (_perfil == null)
+                return;
+
+            LblNombre.Text = _perfil.NombreCompleto;
+            LblEmail.Text = _perfil.Email;
+            LblDireccion.Text = string.IsNullOrWhiteSpace(_perfil.DireccionPrincipal) ? Localizador.T("sin_direccion_registrada") : _perfil.DireccionPrincipal;
+
+            LblContacto.Text = string.IsNullOrWhiteSpace(_perfil.ContactoEmergenciaNombre)
+                ? Localizador.T("sin_contacto_registrado")
+                : $"{_perfil.ContactoEmergenciaNombre} · {_perfil.ContactoEmergenciaTelefono}";
+        }
+
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            Localizador.Instancia.IdiomaCambiado -= AplicarPerfil;
+            Localizador.Instancia.IdiomaCambiado += AplicarPerfil;
 
             var clienteId = Preferences.Default.Get("UserId", 0);
             if (clienteId == 0)
@@ -23,13 +50,8 @@ namespace CUIDAPP.Views.Cliente
             if (perfil == null)
                 return;
 
-            LblNombre.Text = perfil.NombreCompleto;
-            LblEmail.Text = perfil.Email;
-            LblDireccion.Text = string.IsNullOrWhiteSpace(perfil.DireccionPrincipal) ? "Sin dirección registrada" : perfil.DireccionPrincipal;
-
-            LblContacto.Text = string.IsNullOrWhiteSpace(perfil.ContactoEmergenciaNombre)
-                ? "Sin contacto registrado"
-                : $"{perfil.ContactoEmergenciaNombre} · {perfil.ContactoEmergenciaTelefono}";
+            _perfil = perfil;
+            AplicarPerfil();
 
             if (!string.IsNullOrWhiteSpace(perfil.FotoUrl))
                 ImgFoto.Source = $"{ApiService.ServerOrigin}{perfil.FotoUrl}";
@@ -45,9 +67,9 @@ namespace CUIDAPP.Views.Cliente
                 return;
 
             var calificar = await DisplayAlert(
-                "¡Servicio completado!",
-                $"{pendiente.CuidadorNombre} terminó tu servicio y necesita tu calificación.",
-                "Calificar ahora", "Después");
+                Localizador.T("servicio_completado"),
+                Localizador.F("termino_tu_servicio_y_necesita", pendiente.CuidadorNombre),
+                Localizador.T("calificar_ahora"), Localizador.T("despues"));
 
             if (!calificar)
                 return;

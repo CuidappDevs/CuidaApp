@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Cliente.ClientePerfilPage"
              Shell.NavBarIsVisible="False"
              BackgroundColor="#F9FAFB">
@@ -44,7 +45,7 @@
                                 <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="#2563EB" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                             </Border>
                             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Margin="15,0,0,0">
-                                <Label Text="Dirección principal" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
+                                <Label Text="{loc:T direccion_principal}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
                                 <Label x:Name="LblDireccion" Text="" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
                             </VerticalStackLayout>
                         </Grid>
@@ -56,7 +57,7 @@
                                 <Path Data="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 4C13.66 4 15 5.34 15 7C15 8.66 13.66 10 12 10C10.34 10 9 8.66 9 7C9 5.34 10.34 4 12 4ZM16 18H8V16C8 13.34 13.33 12 16 12C16 12 16 12.01 16 12.01V18Z" Fill="#2563EB" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                             </Border>
                             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Margin="15,0,0,0">
-                                <Label Text="Contacto de emergencia" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
+                                <Label Text="{loc:T contacto_de_emergencia}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
                                 <Label x:Name="LblContacto" Text="" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
                             </VerticalStackLayout>
                         </Grid>
@@ -64,13 +65,15 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <Button Text="Mis ubicaciones" Clicked="OnMisUbicacionesTapped" BackgroundColor="#F3F4F6" TextColor="#111827" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50"/>
+                <Button Text="{loc:T mis_ubicaciones}" Clicked="OnMisUbicacionesTapped" BackgroundColor="#F3F4F6" TextColor="#111827" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50"/>
 
-                <Button Text="Mis calificaciones" Clicked="OnMisCalificacionesTapped" BackgroundColor="#F3F4F6" TextColor="#111827" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50"/>
+                <Button Text="{loc:T mis_calificaciones}" Clicked="OnMisCalificacionesTapped" BackgroundColor="#F3F4F6" TextColor="#111827" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50"/>
 
-                <Button Text="Soporte / Reportar un problema" Clicked="OnSoporteTapped" BackgroundColor="#F3F4F6" TextColor="#111827" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50"/>
+                <Button Text="{loc:T soporte_reportar_un_problema}" Clicked="OnSoporteTapped" BackgroundColor="#F3F4F6" TextColor="#111827" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50"/>
 
-                <Button Text="Cerrar sesión" Clicked="OnCerrarSesionTapped" BackgroundColor="#FEE2E2" TextColor="#DC2626" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50"/>
+                <loc:SelectorIdioma Margin="0,6,0,6"/>
+
+                <Button Text="{loc:T cerrar_sesion}" Clicked="OnCerrarSesionTapped" BackgroundColor="#FEE2E2" TextColor="#DC2626" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50"/>
 
             </VerticalStackLayout>
 

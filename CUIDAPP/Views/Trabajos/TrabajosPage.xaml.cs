@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Models.Trabajo;
 using CUIDAPP.Services;
 
@@ -105,14 +106,14 @@ namespace CUIDAPP.Views.Trabajos
         {
             var (colorFondo, colorTexto, textoEstado) = trabajo.Estado switch
             {
-                1 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), "Pendiente"),
-                2 => (Color.FromArgb("#DBEAFE"), Color.FromArgb("#1E40AF"), "Aceptado"),
-                3 => (Color.FromArgb("#EDE9FE"), Color.FromArgb("#5B21B6"), "En progreso"),
-                4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), "Completado"),
-                5 => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "Cancelado"),
-                6 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#991B1B"), "Rechazado"),
-                7 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), "Esperando confirmación"),
-                _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), "Desconocido")
+                1 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("pendiente")),
+                2 => (Color.FromArgb("#DBEAFE"), Color.FromArgb("#1E40AF"), Localizador.T("aceptado")),
+                3 => (Color.FromArgb("#EDE9FE"), Color.FromArgb("#5B21B6"), Localizador.T("en_progreso")),
+                4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), Localizador.T("completado")),
+                5 => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), Localizador.T("cancelado")),
+                6 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#991B1B"), Localizador.T("rechazado")),
+                7 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("esperando_confirmacion")),
+                _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), Localizador.T("desconocido"))
             };
 
             var badge = new Border
@@ -143,7 +144,7 @@ namespace CUIDAPP.Views.Trabajos
                 Children =
                 {
                     headerGrid,
-                    new Label { Text = trabajo.TipoServicio, FontSize = 18, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#111827") },
+                    new Label { Text = Localizador.D(trabajo.TipoServicio), FontSize = 18, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#111827") },
                     new Label { Text = trabajo.ClienteNombre, FontSize = 14, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#4B5563") }
                 }
             };
@@ -159,7 +160,7 @@ namespace CUIDAPP.Views.Trabajos
             }, 0, 0);
             footerGrid.Add(new Label
             {
-                Text = $"RD${trabajo.Tarifa:N0}",
+                Text = Localizador.F("rd_2", trabajo.Tarifa),
                 FontSize = 16,
                 FontFamily = "OpenSansSemibold",
                 TextColor = Color.FromArgb("#111827"),

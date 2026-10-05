@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using Android.App;
 using Android.Content;
 using Android.OS;
@@ -23,16 +24,16 @@ namespace CUIDAPP.Platforms.Android
 
             if (Build.VERSION.SdkInt >= BuildVersionCodes.O && manager.GetNotificationChannel(CanalId) == null)
             {
-                var canal = new NotificationChannel(CanalId, "Conexión activa", NotificationImportance.Min)
+                var canal = new NotificationChannel(CanalId, Localizador.T("canal_conexion_activa"), NotificationImportance.Min)
                 {
-                    Description = "Mantiene la app conectada para recibir avisos al instante"
+                    Description = Localizador.T("mantiene_la_app_conectada_para")
                 };
                 manager.CreateNotificationChannel(canal);
             }
 
             var notificacion = new NotificationCompat.Builder(this, CanalId)
-                .SetContentTitle("CuidApp está activo")
-                .SetContentText("Recibiendo mensajes y avisos en tiempo real")
+                .SetContentTitle(Localizador.T("cuidapp_esta_activo"))
+                .SetContentText(Localizador.T("recibiendo_avisos_tiempo_real"))
                 .SetSmallIcon(ApplicationInfo?.Icon ?? global::Android.Resource.Drawable.SymDefAppIcon)
                 .SetOngoing(true)
                 .SetPriority(NotificationCompat.PriorityMin)

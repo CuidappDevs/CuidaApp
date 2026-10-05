@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Services;
 
 namespace CUIDAPP.Views.Dashboard
@@ -105,7 +106,7 @@ namespace CUIDAPP.Views.Dashboard
                 // corre dentro de un OnAppearing "async void", donde una excepción sin
                 // capturar mata el proceso en Android en vez de solo mostrar un error.
                 Console.WriteLine($"[CuidadorDashboardPage] Error cargando dashboard: {ex}");
-                await DisplayAlert("Error", "No se pudo cargar tu panel. Desliza para reintentar o revisa tu conexión.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_cargar_tu"), Localizador.T("ok"));
             }
         }
 
@@ -141,7 +142,7 @@ namespace CUIDAPP.Views.Dashboard
             if (perfil != null)
             {
                 var primerNombre = perfil.NombreCompleto.Split(' ').FirstOrDefault() ?? perfil.NombreCompleto;
-                LblSaludo.Text = $"Hola, {primerNombre}";
+                LblSaludo.Text = Localizador.F("hola_2", primerNombre);
 
                 if (!string.IsNullOrWhiteSpace(perfil.FotoUrl))
                     ImgFotoPerfil.Source = $"{ApiService.ServerOrigin}{perfil.FotoUrl}";
@@ -150,8 +151,8 @@ namespace CUIDAPP.Views.Dashboard
                 ActualizarUiDisponibilidad();
             }
 
-            LblGanadoHoy.Text = $"RD${(ganancias?.GanadoHoy ?? 0):N0}";
-            LblPendienteCobrar.Text = $"RD${(ganancias?.PendientePorCobrar ?? 0):N0}";
+            LblGanadoHoy.Text = Localizador.F("rd_2", (ganancias?.GanadoHoy ?? 0));
+            LblPendienteCobrar.Text = Localizador.F("rd_2", (ganancias?.PendientePorCobrar ?? 0));
 
             if (proximoTrabajo != null)
             {
@@ -159,8 +160,8 @@ namespace CUIDAPP.Views.Dashboard
                 LblSinTrabajos.IsVisible = false;
 
                 LblProximoHorario.Text = $"{FormatearHora(proximoTrabajo.HoraInicio)} - {FormatearHora(proximoTrabajo.HoraFin)}";
-                LblProximoServicio.Text = proximoTrabajo.TipoServicio;
-                LblProximoDireccion.Text = string.IsNullOrWhiteSpace(proximoTrabajo.Direccion) ? "Sin dirección" : proximoTrabajo.Direccion;
+                LblProximoServicio.Text = Localizador.D(proximoTrabajo.TipoServicio);
+                LblProximoDireccion.Text = string.IsNullOrWhiteSpace(proximoTrabajo.Direccion) ? Localizador.T("sin_direccion") : proximoTrabajo.Direccion;
             }
             else
             {
@@ -185,18 +186,18 @@ namespace CUIDAPP.Views.Dashboard
                 CardDisponibilidad.BackgroundColor = Color.FromArgb("#ECFDF5");
                 IconoDisponibleFondo.BackgroundColor = Color.FromArgb("#10B981");
                 IconoDisponible.Fill = Colors.White;
-                LblDisponible.Text = "Disponible ahora";
+                LblDisponible.Text = Localizador.T("disponible_ahora");
                 LblDisponible.TextColor = Color.FromArgb("#065F46");
-                LblDisponibleSubtitulo.Text = "Los clientes pueden verte y solicitarte servicios.";
+                LblDisponibleSubtitulo.Text = Localizador.T("los_clientes_pueden_verte_y");
             }
             else
             {
                 CardDisponibilidad.BackgroundColor = Color.FromArgb("#F3F4F6");
                 IconoDisponibleFondo.BackgroundColor = Color.FromArgb("#E5E7EB");
                 IconoDisponible.Fill = Color.FromArgb("#9CA3AF");
-                LblDisponible.Text = "No disponible";
+                LblDisponible.Text = Localizador.T("no_disponible");
                 LblDisponible.TextColor = Color.FromArgb("#374151");
-                LblDisponibleSubtitulo.Text = "Estás desconectado. Los clientes no pueden verte.";
+                LblDisponibleSubtitulo.Text = Localizador.T("estas_desconectado_los_clientes_no");
             }
         }
 
@@ -213,7 +214,7 @@ namespace CUIDAPP.Views.Dashboard
 
             var nuevoValor = e.Value;
             SwitchDisponible.IsEnabled = false;
-            LblDisponibleSubtitulo.Text = "Actualizando...";
+            LblDisponibleSubtitulo.Text = Localizador.T("actualizando");
 
             var success = await _apiService.ActualizarDisponibilidadAsync(cuidadorId, nuevoValor);
             SwitchDisponible.IsEnabled = true;
@@ -228,7 +229,7 @@ namespace CUIDAPP.Views.Dashboard
             }
             else
             {
-                await DisplayAlert("Error", "No se pudo actualizar tu disponibilidad. Intenta de nuevo.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_actualizar_tu"), Localizador.T("ok"));
                 // Revertir visualmente sin volver a llamar a la API.
                 suprimirEventoToggle = true;
                 SwitchDisponible.IsToggled = disponibleActual;
@@ -263,7 +264,7 @@ namespace CUIDAPP.Views.Dashboard
 
         private async void OnCerrarSesionTapped(object sender, EventArgs e)
         {
-            var confirmar = await DisplayAlert("Cerrar sesión", "¿Estás seguro de que deseas cerrar sesión?", "Sí", "Cancelar");
+            var confirmar = await DisplayAlert(Localizador.T("cerrar_sesion"), Localizador.T("estas_seguro_de_que_deseas"), Localizador.T("si"), Localizador.T("cancelar"));
             if (!confirmar)
                 return;
 

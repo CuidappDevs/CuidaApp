@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Models.Auth;
 using CUIDAPP.Services;
 
@@ -31,12 +32,12 @@ namespace CUIDAPP
         {
             if (string.IsNullOrWhiteSpace(EntryEmail.Text) || string.IsNullOrWhiteSpace(EntryPassword.Text))
             {
-                await DisplayAlert("Error", "Ingresa tu correo y contraseña.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("ingresa_tu_correo_y_contrasena"), Localizador.T("ok"));
                 return;
             }
 
             BtnLogin.IsEnabled = false;
-            BtnLogin.Text = "Ingresando...";
+            BtnLogin.Text = Localizador.T("ingresando");
 
             try
             {
@@ -50,7 +51,7 @@ namespace CUIDAPP
 
                 if (result == null)
                 {
-                    await DisplayAlert("Error", "Credenciales inválidas o no se pudo conectar con el servidor.", "OK");
+                    await DisplayAlert(Localizador.T("error"), Localizador.T("credenciales_invalidas_o_no_se"), Localizador.T("ok"));
                     return;
                 }
 
@@ -78,14 +79,14 @@ namespace CUIDAPP
                         await Shell.Current.GoToAsync("ClienteDashboardPage");
                         break;
                     default: // Admin u otro rol
-                        await DisplayAlert("Bienvenido", "Inicio de sesión exitoso.", "OK");
+                        await DisplayAlert(Localizador.T("bienvenido"), Localizador.T("inicio_de_sesion_exitoso"), Localizador.T("ok"));
                         break;
                 }
             }
             finally
             {
                 BtnLogin.IsEnabled = true;
-                BtnLogin.Text = "Iniciar sesión";
+                BtnLogin.Text = Localizador.T("iniciar_sesion");
             }
         }
     }

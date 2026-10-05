@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Services;
 
 namespace CUIDAPP.Views.Calificacion
@@ -47,7 +48,7 @@ namespace CUIDAPP.Views.Calificacion
 
             var promedio = calificaciones.Average(c => c.Puntuacion);
             LblPromedio.Text = promedio.ToString("0.0");
-            LblTotal.Text = $"Basado en {calificaciones.Count} calificación{(calificaciones.Count == 1 ? "" : "es")}";
+            LblTotal.Text = calificaciones.Count == 1 ? Localizador.T("basado_en_1_calificacion") : Localizador.F("basado_en_n_calificaciones", calificaciones.Count);
             PanelResumen.IsVisible = true;
 
             ListaCalificaciones.ItemsSource = calificaciones;

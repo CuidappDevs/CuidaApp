@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 namespace CUIDAPP.Models.Ticket
 {
     public class Ticket
@@ -12,10 +13,10 @@ namespace CUIDAPP.Models.Ticket
 
         public string EstadoTexto => Estado switch
         {
-            1 => "Abierto",
-            2 => "En proceso",
-            3 => "Resuelto",
-            _ => "Desconocido"
+            1 => Localizador.T("ticket_abierto"),
+            2 => Localizador.T("ticket_en_proceso"),
+            3 => Localizador.T("ticket_resuelto"),
+            _ => Localizador.T("desconocido")
         };
     }
 }

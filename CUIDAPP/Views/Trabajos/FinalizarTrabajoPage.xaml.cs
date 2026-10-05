@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Models.Trabajo;
 using CUIDAPP.Services;
 
@@ -13,7 +14,7 @@ namespace CUIDAPP.Views.Trabajos
             if (query.TryGetValue("Trabajo", out var value) && value is Trabajo t)
             {
                 trabajo = t;
-                LblCliente.Text = $"Servicio para {t.ClienteNombre}";
+                LblCliente.Text = Localizador.F("servicio_para", t.ClienteNombre);
                 CardJustificacion.IsVisible = ServerClock.Now.TimeOfDay < t.HoraFin;
             }
         }
@@ -68,25 +69,25 @@ namespace CUIDAPP.Views.Trabajos
         {
             if (trabajo == null)
             {
-                await DisplayAlert("Error", "No se encontró la información del trabajo. Vuelve a intentarlo.", "OK");
+                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_encontro_la_informacion"), Localizador.T("ok"));
                 return;
             }
 
             var pin = ObtenerPin();
             if (pin.Length != 4)
             {
-                await DisplayAlert("Código incompleto", "Ingresa los 4 dígitos del PIN.", "OK");
+                await DisplayAlert(Localizador.T("codigo_incompleto"), Localizador.T("ingresa_los_4_digitos_del"), Localizador.T("ok"));
                 return;
             }
 
             if (CardJustificacion.IsVisible && string.IsNullOrWhiteSpace(EditorJustificacion.Text))
             {
-                await DisplayAlert("Falta la justificación", "Explícale al cliente por qué terminas antes de lo acordado.", "OK");
+                await DisplayAlert(Localizador.T("falta_la_justificacion"), Localizador.T("explicale_al_cliente_por_que"), Localizador.T("ok"));
                 return;
             }
 
             BtnConfirmar.IsEnabled = false;
-            BtnConfirmar.Text = "Verificando...";
+            BtnConfirmar.Text = Localizador.T("verificando");
             LblError.IsVisible = false;
 
             try
@@ -96,13 +97,13 @@ namespace CUIDAPP.Views.Trabajos
 
                 if (success)
                 {
-                    await DisplayAlert("Enviado", "Le avisamos al cliente para que confirme que el trabajo terminó.", "OK");
+                    await DisplayAlert(Localizador.T("enviado"), Localizador.T("le_avisamos_al_cliente_para"), Localizador.T("ok"));
                     await Shell.Current.GoToAsync("../..");
                     return;
                 }
 
                 LblError.Text = string.IsNullOrWhiteSpace(error)
-                    ? "El código no es correcto. Verifícalo con el cliente e intenta de nuevo."
+                    ? Localizador.T("el_codigo_no_es_correcto")
                     : error;
                 LblError.IsVisible = true;
                 EntryPin1.Text = EntryPin2.Text = EntryPin3.Text = EntryPin4.Text = "";
@@ -110,11 +111,11 @@ namespace CUIDAPP.Views.Trabajos
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error inesperado", $"No se pudo verificar el código. Intenta de nuevo.\n\n{ex.Message}", "OK");
+                await DisplayAlert(Localizador.T("error_inesperado"), Localizador.F("no_se_pudo_verificar_el", ex.Message), Localizador.T("ok"));
             }
             finally
             {
-                BtnConfirmar.Text = "Confirmar finalización";
+                BtnConfirmar.Text = Localizador.T("confirmar_finalizacion");
                 ActualizarEstadoBoton();
             }
         }

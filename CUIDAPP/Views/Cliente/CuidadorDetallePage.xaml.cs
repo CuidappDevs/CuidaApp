@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Models.Busqueda;
 using CUIDAPP.Services;
 
@@ -36,10 +37,10 @@ namespace CUIDAPP.Views.Cliente
         private void Renderizar(CuidadorCercano cuidador)
         {
             LblNombre.Text = cuidador.NombreCompleto;
-            LblEspecialidad.Text = cuidador.Especialidad;
-            LblDistancia.Text = $"A {cuidador.DistanciaKm:N1} km de tu ubicación";
-            LblTarifa.Text = $"RD$ {cuidador.TarifaHora:N0} / hr";
-            LblBio.Text = string.IsNullOrWhiteSpace(cuidador.Bio) ? "Este cuidador no ha agregado una biografía." : cuidador.Bio;
+            LblEspecialidad.Text = Localizador.D(cuidador.Especialidad);
+            LblDistancia.Text = Localizador.F("a_km_de_tu_ubicacion", cuidador.DistanciaKm);
+            LblTarifa.Text = Localizador.F("rd_hr", cuidador.TarifaHora);
+            LblBio.Text = string.IsNullOrWhiteSpace(cuidador.Bio) ? Localizador.T("este_cuidador_no_ha_agregado") : cuidador.Bio;
 
             if (!string.IsNullOrWhiteSpace(cuidador.FotoUrl))
                 ImgFoto.Source = $"{ApiService.ServerOrigin}{cuidador.FotoUrl}";
@@ -62,7 +63,7 @@ namespace CUIDAPP.Views.Cliente
             }
             catch (Exception ex)
             {
-                await DisplayAlert("Error al continuar", ex.ToString(), "OK");
+                await DisplayAlert(Localizador.T("error_al_continuar"), ex.ToString(), Localizador.T("ok"));
             }
         }
     }

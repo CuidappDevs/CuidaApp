@@ -1,3 +1,4 @@
+using CUIDAPP.Localization;
 using CUIDAPP.Models.Ticket;
 using CUIDAPP.Services;
 
@@ -7,31 +8,36 @@ namespace CUIDAPP.Views.Soporte
     {
         private readonly ApiService _apiService = new ApiService();
 
+        // El servidor guarda la categoría en español; al usuario se la mostramos traducida.
+        private static readonly string[] CategoriasValor = { "Cuenta", "Pago", "Servicio", "Chat", "Otro" };
+
         public NuevoReportePage()
         {
             InitializeComponent();
+            PickerCategoria.ItemsSource = CategoriasValor.Select(Localizador.D).ToList();
         }
 
         private async void OnEnviarClicked(object sender, EventArgs e)
         {
-            if (PickerCategoria.SelectedItem is not string categoria)
+            if (PickerCategoria.SelectedIndex < 0)
             {
-                await DisplayAlert("Falta información", "Selecciona una categoría.", "OK");
+                await DisplayAlert(Localizador.T("falta_informacion"), Localizador.T("selecciona_una_categoria_2"), Localizador.T("ok"));
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(EntryAsunto.Text) || string.IsNullOrWhiteSpace(EditorDescripcion.Text))
             {
-                await DisplayAlert("Falta información", "Completa el asunto y la descripción.", "OK");
+                await DisplayAlert(Localizador.T("falta_informacion"), Localizador.T("completa_el_asunto_y_la"), Localizador.T("ok"));
                 return;
             }
 
+            var categoria = CategoriasValor[PickerCategoria.SelectedIndex];
             var usuarioId = Preferences.Default.Get("UserId", 0);
             if (usuarioId == 0)
                 return;
 
             BtnEnviar.IsEnabled = false;
-            BtnEnviar.Text = "Enviando...";
+            BtnEnviar.Text = Localizador.T("enviando");
 
             var request = new CrearTicketRequest
             {
@@ -45,13 +51,13 @@ namespace CUIDAPP.Views.Soporte
 
             if (ticketId != null)
             {
-                await DisplayAlert("Reporte enviado", "Nuestro equipo lo revisará pronto. Puedes seguir su estado en Mis reportes.", "OK");
+                await DisplayAlert(Localizador.T("reporte_enviado"), Localizador.T("nuestro_equipo_lo_revisara_pronto"), Localizador.T("ok"));
                 await Shell.Current.GoToAsync("..");
             }
             else
             {
-                await DisplayAlert("Error", "No se pudo enviar el reporte. Intenta de nuevo.", "OK");
-                BtnEnviar.Text = "Enviar reporte";
+                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_enviar_el"), Localizador.T("ok"));
+                BtnEnviar.Text = Localizador.T("enviar_reporte");
                 BtnEnviar.IsEnabled = true;
             }
         }
