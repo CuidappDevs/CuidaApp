@@ -940,5 +940,27 @@ namespace CUIDAPP.Services
                 return false;
             }
         }
+
+        public async Task<bool> EnviarSOSAsync(int trabajoId, int usuarioId, string tipoUsuario, double latitud, double longitud, string? motivo = null)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("sos", new
+                {
+                    TrabajoId = trabajoId,
+                    UsuarioId = usuarioId,
+                    TipoUsuario = tipoUsuario,
+                    Latitud = latitud,
+                    Longitud = longitud,
+                    Motivo = motivo
+                });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error enviando SOS: {ex.Message}");
+                return false;
+            }
+        }
     }
 }
