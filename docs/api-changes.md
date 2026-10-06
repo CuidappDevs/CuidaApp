@@ -87,3 +87,13 @@ El cliente puede dejar una propina opcional al confirmar que el servicio termin�
 - `PagoDto` (cuidador) y `PagoAdminDto` (panel) exponen `Propina`.
 - SignalR: evento `PropinaRecibida { trabajoId, monto }` al cuidador cuando recibe una propina.
 - Compatibilidad: el parámetro `@Propina` del SP es opcional, así que una API/app anteriores siguen funcionando (propina = 0).
+
+
+## Alerta automática "hombre muerto" (caída + inmovilidad)
+
+Requiere aplicar [`sql/dead-man-sos.sql`](./sql/dead-man-sos.sql) (primero en `DBCuidappDev`).
+
+- `POST /api/sos/dead-man-triggered` `{ trabajoId, usuarioId, latitud, longitud, impactoG?, segundosInmovil? }`. Solo se acepta si el servicio es del cuidador y está **En Progreso** (400 en otro caso). Crea una alerta `Origen = 'Automatica'`, emite `AlertaSOS` al panel y envía un correo al familiar si el cuidador registró uno. Si ya hay una alerta automática pendiente para ese trabajo no crea otra.
+- `SOSAlertas.Origen` (`Manual` | `Automatica`) y `SOSAlertaDto` / evento `AlertaSOS` incluyen `Origen` y el contacto de emergencia (`ContactoNombre/Telefono/Email`).
+- `PerfilCuidador` tiene contacto de emergencia (`ContactoEmergenciaNombre/Telefono/Email`): `GET|PUT /api/cuidador/{id}/contacto-emergencia` (requiere nombre y teléfono o correo).
+- Limitación: no hay proveedor de SMS/WhatsApp; al familiar se le avisa solo por correo, y el panel muestra su teléfono para que el admin lo llame.

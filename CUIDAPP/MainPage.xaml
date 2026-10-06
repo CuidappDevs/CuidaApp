@@ -4,77 +4,127 @@
              xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.MainPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="{StaticResource ColorBackground}">
+             BackgroundColor="{StaticResource ColorPrimaryDark}"
+             SafeAreaEdges="None">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="25,20" Spacing="25">
-            
-            <!-- Logo CUIDAPP -->
-            <Grid WidthRequest="140" HeightRequest="140" HorizontalOptions="Center" Margin="0, 40, 0, 0">
-                <Image Source="logo_cuidapp.png" Aspect="AspectFit" Margin="14" HorizontalOptions="Center" VerticalOptions="Center">
-                    <Image.Shadow>
-                        <Shadow Brush="Black" Offset="0,10" Radius="15" Opacity="0.15" />
-                    </Image.Shadow>
-                </Image>
+    <!-- Borde a borde: el encabezado azul pasa por debajo de la barra de estado -->
+    <ScrollView SafeAreaEdges="None">
+        <Grid x:Name="RaizLogin" RowDefinitions="Auto,Auto" SafeAreaEdges="None">
+            <!-- Degradado en toda la pantalla: al salir la hoja no queda ninguna costura -->
+            <Grid.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#2A63B8" Offset="0.0" />
+                    <GradientStop Color="{StaticResource ColorPrimary}" Offset="0.45" />
+                    <GradientStop Color="{StaticResource ColorPrimaryDark}" Offset="1.0" />
+                </LinearGradientBrush>
+            </Grid.Background>
+
+
+            <!-- Encabezado de marca -->
+            <Grid x:Name="Encabezado" Grid.Row="0" SafeAreaEdges="None">
+
+                <Ellipse x:Name="CirculoA" Fill="#14FFFFFF" WidthRequest="260" HeightRequest="260"
+                         HorizontalOptions="End" VerticalOptions="Start" Margin="0,-100,-100,0" />
+                <Ellipse x:Name="CirculoB" Fill="#0FFFFFFF" WidthRequest="180" HeightRequest="180"
+                         HorizontalOptions="Start" VerticalOptions="End" Margin="-70,0,0,40" />
+
+                <!-- Contenido del encabezado: respeta la barra de estado -->
+                <Grid x:Name="ContenidoEncabezado">
+                    <!-- Selector de idioma compacto en la esquina -->
+                    <loc:SelectorIdioma x:Name="SelectorIdiomaLogin" Opacity="0" Compacto="True" HorizontalOptions="End" VerticalOptions="Start" Margin="0,8,16,0" ZIndex="1" />
+
+                    <Border x:Name="LogoBadge" Opacity="0" Scale="0.92" BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 30"
+                            WidthRequest="116" HeightRequest="116"
+                            HorizontalOptions="Center" VerticalOptions="Center" Margin="0,0,0,36">
+                        <Border.Shadow>
+                            <Shadow Brush="#051A2A" Offset="0,12" Radius="26" Opacity="0.3" />
+                        </Border.Shadow>
+                        <Image Source="logo_cuidapp.png" Aspect="AspectFit" Margin="15" />
+                    </Border>
+                </Grid>
             </Grid>
 
-            <!-- Saludo -->
-            <VerticalStackLayout Spacing="5" HorizontalOptions="Center" Margin="0, 15, 0, 15">
-                <Label Text="{loc:T hola_de_nuevo}" FontFamily="OpenSansSemibold" FontSize="28" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Center" />
-                <Label Text="{loc:T ingresa_tus_datos_para_continuar}" FontFamily="OpenSansRegular" FontSize="15" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center" />
-            </VerticalStackLayout>
+            <!-- Hoja del formulario -->
+            <Border x:Name="FormSheet" Grid.Row="1" Margin="0,-36,0,0"
+                    BackgroundColor="{StaticResource ColorSurface}" StrokeThickness="0"
+                    StrokeShape="RoundRectangle 32,32,0,0" Padding="24,32,24,24">
 
-            <!-- Input Correo -->
-            <VerticalStackLayout Spacing="6">
-                <Label Text="{loc:T correo_electronico_o_telefono}" FontFamily="OpenSansSemibold" FontSize="13" TextColor="{StaticResource ColorTextStrong}" />
-                <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1" StrokeShape="RoundRectangle 12" BackgroundColor="{StaticResource ColorSurface}" Padding="15,2">
-                    <Entry x:Name="EntryEmail" Placeholder="{loc:T ejemplo_correo_com}" FontFamily="OpenSansRegular" PlaceholderColor="{StaticResource ColorTextMuted}" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" ClearButtonVisibility="WhileEditing" HeightRequest="45" Keyboard="Email" />
-                </Border>
-            </VerticalStackLayout>
+                <VerticalStackLayout x:Name="FormContenido" Spacing="20">
 
-            <!-- Input Contraseña -->
-            <VerticalStackLayout Spacing="6">
-                <Label Text="{loc:T contrasena}" FontFamily="OpenSansSemibold" FontSize="13" TextColor="{StaticResource ColorTextStrong}" />
-                <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1" StrokeShape="RoundRectangle 12" BackgroundColor="{StaticResource ColorSurface}" Padding="15,2">
-                    <Grid ColumnDefinitions="*, Auto">
-                        <Entry x:Name="EntryPassword" Placeholder="••••••••" FontFamily="OpenSansRegular" PlaceholderColor="{StaticResource ColorTextMuted}" TextColor="{StaticResource ColorTextStrong}" FontSize="15" IsPassword="True" BackgroundColor="Transparent" Grid.Column="0" HeightRequest="45" />
-                        <!-- Icono Ojo (Path) -->
-                        <Path Grid.Column="1" Data="M12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5C17 19.5 21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5ZM12 17C9.24 17 7 14.76 7 12C7 9.24 9.24 7 12 7C14.76 7 17 9.24 17 12C17 14.76 14.76 17 12 17ZM12 9C10.34 9 9 10.34 9 12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12C15 10.34 13.66 9 12 9Z" 
-                              Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" VerticalOptions="Center" Margin="0,0,5,0">
-                            <Path.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnTogglePasswordVisibility" />
-                            </Path.GestureRecognizers>
-                        </Path>
+                    <!-- Saludo -->
+                    <VerticalStackLayout Spacing="6" Margin="0,0,0,6">
+                        <Label Text="{loc:T hola_de_nuevo}" FontFamily="OpenSansSemibold" FontSize="28" TextColor="{StaticResource ColorTextStrong}" />
+                        <Label Text="{loc:T ingresa_tus_datos_para_continuar}" FontFamily="OpenSansRegular" FontSize="15" TextColor="{StaticResource ColorTextMuted}" />
+                    </VerticalStackLayout>
+
+                    <!-- Input Correo -->
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="{loc:T correo_electronico_o_telefono}" FontFamily="OpenSansSemibold" FontSize="13" TextColor="{StaticResource ColorTextStrong}" />
+                        <Border x:Name="BorderEmail" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorBackground}" Padding="14,0">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <!-- Icono sobre -->
+                                <Path Data="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z"
+                                      Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center" />
+                                <Entry x:Name="EntryEmail" Grid.Column="1" Placeholder="{loc:T ejemplo_correo_com}" FontFamily="OpenSansRegular" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" ClearButtonVisibility="WhileEditing" HeightRequest="52" Keyboard="Email"
+                                       Focused="OnEntryFocused" Unfocused="OnEntryUnfocused" />
+                            </Grid>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <!-- Input Contraseña -->
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="{loc:T contrasena}" FontFamily="OpenSansSemibold" FontSize="13" TextColor="{StaticResource ColorTextStrong}" />
+                        <Border x:Name="BorderPassword" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorBackground}" Padding="14,0">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                <!-- Icono candado -->
+                                <Path Data="M18 8H17V6C17 3.24 14.76 1 12 1C9.24 1 7 3.24 7 6V8H6C4.9 8 4 8.9 4 10V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10C20 8.9 19.1 8 18 8ZM12 17C10.9 17 10 16.1 10 15C10 13.9 10.9 13 12 13C13.1 13 14 13.9 14 15C14 16.1 13.1 17 12 17ZM15.1 8H8.9V6C8.9 4.29 10.29 2.9 12 2.9C13.71 2.9 15.1 4.29 15.1 6V8Z"
+                                      Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center" />
+                                <Entry x:Name="EntryPassword" Grid.Column="1" Placeholder="••••••••" FontFamily="OpenSansRegular" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" FontSize="15" IsPassword="True" BackgroundColor="Transparent" HeightRequest="52"
+                                       Focused="OnEntryFocused" Unfocused="OnEntryUnfocused" />
+                                <!-- Icono Ojo: área táctil de 44pt -->
+                                <Grid Grid.Column="2" WidthRequest="44" HeightRequest="44" VerticalOptions="Center" Margin="0,0,-10,0">
+                                    <Path Data="M12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5C17 19.5 21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5ZM12 17C9.24 17 7 14.76 7 12C7 9.24 9.24 7 12 7C14.76 7 17 9.24 17 12C17 14.76 14.76 17 12 17ZM12 9C10.34 9 9 10.34 9 12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12C15 10.34 13.66 9 12 9Z"
+                                          Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnTogglePasswordVisibility" />
+                                    </Grid.GestureRecognizers>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <!-- Olvidaste contraseña -->
+                    <Label Text="{loc:T olvidaste_tu_contrasena}" FontFamily="OpenSansSemibold" FontSize="13" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="End" Padding="4,6" Margin="0,-10,-4,0">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnForgotPasswordTapped" />
+                        </Label.GestureRecognizers>
+                    </Label>
+
+                    <!-- Boton Login -->
+                    <Grid Margin="0,4,0,0">
+                        <Button x:Name="BtnLogin" Text="{loc:T iniciar_sesion}" FontFamily="OpenSansSemibold" BackgroundColor="{StaticResource ColorPrimary}" TextColor="{StaticResource ColorSurface}" FontSize="16" CornerRadius="16" HeightRequest="56"
+                            Clicked="OnLoginClicked" Pressed="OnBotonPresionado" Released="OnBotonSoltado">
+                        <Button.Shadow>
+                            <Shadow Brush="{StaticResource ColorPrimary}" Offset="0,8" Radius="16" Opacity="0.28" />
+                        </Button.Shadow>
+                    </Button>
+                        <!-- Spinner mientras inicia sesión (reemplaza al texto) -->
+                        <ActivityIndicator x:Name="SpinnerLogin" Color="White" IsRunning="False" IsVisible="False"
+                                           WidthRequest="24" HeightRequest="24" HorizontalOptions="Center" VerticalOptions="Center" InputTransparent="True"/>
                     </Grid>
-                </Border>
-            </VerticalStackLayout>
 
-            <!-- Olvidaste contraseña -->
-            <Label Text="{loc:T olvidaste_tu_contrasena}" FontFamily="OpenSansSemibold" FontSize="13" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="End" Margin="0, -10, 0, 15">
-                <Label.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnForgotPasswordTapped" />
-                </Label.GestureRecognizers>
-            </Label>
+                    <!-- Link Registro -->
+                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="4" Margin="0,8,0,0">
+                        <Label Text="{loc:T no_tienes_cuenta}" FontFamily="OpenSansRegular" FontSize="14" TextColor="{StaticResource ColorTextMuted}" VerticalOptions="Center" />
+                        <Label Text="{loc:T registrate_aqui}" FontFamily="OpenSansSemibold" FontSize="14" TextColor="{StaticResource ColorPrimary}" Padding="0,8" VerticalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnRegisterTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </HorizontalStackLayout>
 
-            <!-- Boton Login -->
-            <Button x:Name="BtnLogin" Text="{loc:T iniciar_sesion}" FontFamily="OpenSansSemibold" BackgroundColor="{StaticResource ColorPrimary}" TextColor="{StaticResource ColorSurface}" FontSize="16" CornerRadius="12" HeightRequest="55" Margin="0, 5, 0, 15" Clicked="OnLoginClicked">
-                <Button.Shadow>
-                    <Shadow Brush="{StaticResource ColorPrimaryDark}" Offset="0,5" Radius="10" Opacity="0.3" />
-                </Button.Shadow>
-            </Button>
-
-            <!-- Link Registro -->
-            <HorizontalStackLayout HorizontalOptions="Center" Spacing="4" Margin="0, 10, 0, 0">
-                <Label Text="{loc:T no_tienes_cuenta}" FontFamily="OpenSansRegular" FontSize="14" TextColor="{StaticResource ColorTextMuted}" />
-                <Label Text="{loc:T registrate_aqui}" FontFamily="OpenSansSemibold" FontSize="14" TextColor="{StaticResource ColorPrimary}">
-                    <Label.GestureRecognizers>
-                        <TapGestureRecognizer Tapped="OnRegisterTapped" />
-                    </Label.GestureRecognizers>
-                </Label>
-            </HorizontalStackLayout>
-
-            <loc:SelectorIdioma Margin="0,6,0,6"/>
-
-        </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
     </ScrollView>
 </ContentPage>

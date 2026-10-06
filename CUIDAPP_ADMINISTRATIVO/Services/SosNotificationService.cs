@@ -49,7 +49,11 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
                     Longitud = GetDouble(alerta, "Longitud"),
                     Motivo = GetString(alerta, "Motivo"),
                     Estado = GetString(alerta, "Estado") ?? "Pendiente",
-                    FechaCreacion = GetDateTime(alerta, "FechaCreacion")
+                    FechaCreacion = GetDateTime(alerta, "FechaCreacion"),
+                    Origen = GetString(alerta, "Origen") ?? "Manual",
+                    ContactoNombre = GetString(alerta, "ContactoNombre"),
+                    ContactoTelefono = GetString(alerta, "ContactoTelefono"),
+                    ContactoEmail = GetString(alerta, "ContactoEmail")
                 };
 
                 _alertasPendientes.Add(sos);
@@ -98,17 +102,39 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
             }
         }
 
+        // El evento llega como JsonElement (SignalR deserializa "object" así); se lee sin distinguir
+        // mayúsculas. Si fuera otro tipo de objeto, se usa reflexión como respaldo.
+        private static object? Leer(object obj, string name)
+        {
+            if (obj is System.Text.Json.JsonElement json)
+            {
+                foreach (var p in json.EnumerateObject())
+                {
+                    if (!string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    return p.Value.ValueKind switch
+                    {
+                        System.Text.Json.JsonValueKind.Null => null,
+                        System.Text.Json.JsonValueKind.Number => p.Value.GetDouble(),
+                        _ => p.Value.ToString()
+                    };
+                }
+                return null;
+            }
+            return obj.GetType().GetProperty(name)?.GetValue(obj);
+        }
+
         private static int GetInt(object obj, string name) =>
-            Convert.ToInt32(obj.GetType().GetProperty(name)?.GetValue(obj) ?? 0);
+            Convert.ToInt32(Leer(obj, name) ?? 0);
 
         private static double GetDouble(object obj, string name) =>
-            Convert.ToDouble(obj.GetType().GetProperty(name)?.GetValue(obj) ?? 0.0);
+            Convert.ToDouble(Leer(obj, name) ?? 0.0, System.Globalization.CultureInfo.InvariantCulture);
 
         private static string? GetString(object obj, string name) =>
-            obj.GetType().GetProperty(name)?.GetValue(obj)?.ToString();
+            Leer(obj, name)?.ToString();
 
         private static DateTime GetDateTime(object obj, string name) =>
-            Convert.ToDateTime(obj.GetType().GetProperty(name)?.GetValue(obj) ?? DateTime.MinValue);
+            Leer(obj, name) is { } v && DateTime.TryParse(v.ToString(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var fecha) ? fecha : DateTime.MinValue;
     }
 
     public class SosAlerta
@@ -124,5 +150,10 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
         public string? Motivo { get; set; }
         public string Estado { get; set; } = "Pendiente";
         public DateTime FechaCreacion { get; set; }
+        public string Origen { get; set; } = "Manual";
+        public string? ContactoNombre { get; set; }
+        public string? ContactoTelefono { get; set; }
+        public string? ContactoEmail { get; set; }
+        public bool EsAutomatica => Origen == "Automatica";
     }
 }

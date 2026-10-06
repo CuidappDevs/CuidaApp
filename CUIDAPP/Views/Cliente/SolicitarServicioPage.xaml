@@ -4,109 +4,157 @@
              xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Cliente.SolicitarServicioPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#FFFFFF">
+             BackgroundColor="{StaticResource ColorBackground}"
+             SafeAreaEdges="None">
 
-    <Grid RowDefinitions="Auto, *, Auto">
 
-        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" Padding="20,15,20,10" BackgroundColor="White">
-            <ContentView x:Name="BtnBack" VerticalOptions="Center">
-                <ContentView.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnBackTapped" />
-                </ContentView.GestureRecognizers>
-                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
-            </ContentView>
-            <Label Grid.Column="1" Text="{loc:T solicitar_servicio}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
-        </Grid>
+    <Grid SafeAreaEdges="None">
 
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="20,15,20,30" Spacing="18">
+        <ScrollView SafeAreaEdges="None">
+            <VerticalStackLayout Spacing="0">
 
-                <Border Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="#FAFAFA" StrokeShape="RoundRectangle 16" Padding="15">
-                    <Grid ColumnDefinitions="Auto, *">
-                        <Border Grid.Column="0" Stroke="Transparent" StrokeShape="RoundRectangle 25" BackgroundColor="#E5E7EB" WidthRequest="50" HeightRequest="50" Margin="0,0,15,0">
-                            <Image x:Name="ImgFoto" Aspect="AspectFill" />
-                        </Border>
-                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
-                            <Label x:Name="LblNombre" Text="" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827"/>
-                            <Label x:Name="LblEspecialidad" Text="" FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
-                        </VerticalStackLayout>
-                    </Grid>
-                </Border>
+                <!-- ENCABEZADO (borde a borde) -->
+                <Grid Padding="0,0,0,44">
+                    <Grid.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#2A63B8" Offset="0.0" />
+                            <GradientStop Color="{StaticResource ColorPrimary}" Offset="0.6" />
+                            <GradientStop Color="{StaticResource ColorPrimaryDark}" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </Grid.Background>
+                    <Ellipse Fill="#14FFFFFF" WidthRequest="220" HeightRequest="220" HorizontalOptions="End" VerticalOptions="Start" Margin="0,-90,-80,0"/>
 
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="{loc:T fecha}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
-                    <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
-                        <DatePicker x:Name="PickerFecha" FontFamily="OpenSansRegular" FontSize="14"/>
-                    </Border>
-                </VerticalStackLayout>
+                    <VerticalStackLayout x:Name="ContenidoEncabezado" Spacing="14">
+                        <Grid ColumnDefinitions="44,*,44" Padding="12,10">
+                            <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="#26FFFFFF" WidthRequest="44" HeightRequest="44">
+                                <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                                </Border.GestureRecognizers>
+                                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="White" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <Label Grid.Column="1" Text="{loc:T solicitar_servicio}" FontSize="17" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Grid>
 
-                <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
-                    <VerticalStackLayout Grid.Column="0" Spacing="8">
-                        <Label Text="{loc:T hora_inicio}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
-                        <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
-                            <TimePicker x:Name="PickerHoraInicio" FontFamily="OpenSansRegular" FontSize="14"/>
-                        </Border>
-                    </VerticalStackLayout>
-                    <VerticalStackLayout Grid.Column="1" Spacing="8">
-                        <Label Text="{loc:T hora_fin}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
-                        <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
-                            <TimePicker x:Name="PickerHoraFin" FontFamily="OpenSansRegular" FontSize="14"/>
+                        <!-- Cuidador -->
+                        <Border x:Name="TarjetaCuidador" Stroke="Transparent" BackgroundColor="#1FFFFFFF" StrokeShape="RoundRectangle 20" Padding="14" Margin="20,0">
+                            <Grid ColumnDefinitions="Auto, *" ColumnSpacing="14">
+                                <Border Stroke="White" StrokeThickness="2" BackgroundColor="#E5E7EB" WidthRequest="54" HeightRequest="54">
+                                    <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                                    <Image x:Name="ImgFoto" Aspect="AspectFill" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                                    <Label x:Name="LblNombre" Text="" FontSize="16" FontFamily="OpenSansSemibold" TextColor="White" MaxLines="1" LineBreakMode="TailTruncation"/>
+                                    <Label x:Name="LblEspecialidad" Text="" FontSize="13" FontFamily="OpenSansRegular" TextColor="#D9E6F7"/>
+                                </VerticalStackLayout>
+                            </Grid>
                         </Border>
                     </VerticalStackLayout>
                 </Grid>
 
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="{loc:T a_donde_va_el_cuidador}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
-                    <Border Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="#FAFAFA" StrokeShape="RoundRectangle 12" Padding="14">
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnElegirUbicacionTapped"/>
-                        </Border.GestureRecognizers>
-                        <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="12">
-                            <Path Grid.Column="0" Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="#2563EB" Aspect="Uniform" WidthRequest="20" HeightRequest="20" VerticalOptions="Center"/>
-                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
-                                <Label x:Name="LblUbicacionNombre" Text="{loc:T selecciona_una_ubicacion}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
-                                <Label x:Name="LblUbicacionDireccion" Text="{loc:T toca_para_elegir}" FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" LineBreakMode="TailTruncation"/>
+                <!-- Hoja -->
+                <Border Margin="0,-28,0,0" Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 28,28,0,0">
+                    <VerticalStackLayout x:Name="Formulario" Padding="20,24,20,0" Spacing="20">
+
+                        <!-- Cuándo -->
+                        <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="16">
+                            <VerticalStackLayout Spacing="14">
+                                <Label Text="{loc:T fecha}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextMuted}"/>
+                                <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 14" Padding="14,0" Margin="0,-6,0,0">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                        <Path Data="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V10H19V20ZM19 8H5V6H19V8Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
+                                        <DatePicker x:Name="PickerFecha" Grid.Column="1" FontFamily="OpenSansSemibold" FontSize="15" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="50"/>
+                                    </Grid>
+                                </Border>
+
+                                <Grid ColumnDefinitions="*, *" ColumnSpacing="12">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="8">
+                                        <Label Text="{loc:T hora_inicio}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextMuted}"/>
+                                        <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 14" Padding="14,0">
+                                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                                <Path Data="M11.99 2C6.47 2 2 6.48 2 12C2 17.52 6.47 22 11.99 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 11.99 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM12.5 7H11V13L16.25 16.15L17 14.92L12.5 12.25V7Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="17" HeightRequest="17" VerticalOptions="Center"/>
+                                                <TimePicker x:Name="PickerHoraInicio" Grid.Column="1" FontFamily="OpenSansSemibold" FontSize="15" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="50"/>
+                                            </Grid>
+                                        </Border>
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="8">
+                                        <Label Text="{loc:T hora_fin}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextMuted}"/>
+                                        <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 14" Padding="14,0">
+                                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                                <Path Data="M11.99 2C6.47 2 2 6.48 2 12C2 17.52 6.47 22 11.99 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 11.99 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM12.5 7H11V13L16.25 16.15L17 14.92L12.5 12.25V7Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="17" HeightRequest="17" VerticalOptions="Center"/>
+                                                <TimePicker x:Name="PickerHoraFin" Grid.Column="1" FontFamily="OpenSansSemibold" FontSize="15" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="50"/>
+                                            </Grid>
+                                        </Border>
+                                    </VerticalStackLayout>
+                                </Grid>
                             </VerticalStackLayout>
-                            <Path Grid.Column="2" Data="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
-                        </Grid>
-                    </Border>
-                </VerticalStackLayout>
-
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="{loc:T tareas_para_el_cuidador_opcional}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
-                    <Label Text="{loc:T indicale_que_debe_hacer_te}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
-                    <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
-                        <Border Grid.Column="0" Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
-                            <Entry x:Name="EntryTarea" Placeholder="{loc:T ej_preparar_el_almuerzo}" MaxLength="200" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="45" Completed="OnAgregarTareaClicked"/>
                         </Border>
-                        <Button Grid.Column="1" Text="{loc:T agregar}" Clicked="OnAgregarTareaClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="13" CornerRadius="10" WidthRequest="85" HeightRequest="45"/>
-                    </Grid>
-                    <VerticalStackLayout x:Name="ListaTareas" Spacing="8"/>
-                </VerticalStackLayout>
 
-                <Border Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="20">
-                    <VerticalStackLayout Spacing="12">
+                        <!-- Dónde -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{loc:T a_donde_va_el_cuidador}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                            <Border x:Name="TarjetaUbicacion" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="14">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnElegirUbicacionTapped"/>
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="14">
+                                    <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 14" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
+                                        <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                                        <Label x:Name="LblUbicacionNombre" Text="{loc:T selecciona_una_ubicacion}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                                        <Label x:Name="LblUbicacionDireccion" Text="{loc:T toca_para_elegir}" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" LineBreakMode="TailTruncation"/>
+                                    </VerticalStackLayout>
+                                    <Path Grid.Column="2" Data="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" Fill="#B0BEC5" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
+                                </Grid>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Tareas -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{loc:T tareas_para_el_cuidador_opcional}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                            <Label Text="{loc:T indicale_que_debe_hacer_te}" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
+                            <Border x:Name="BordeTarea" Stroke="Transparent" StrokeThickness="1.5" BackgroundColor="White" StrokeShape="RoundRectangle 18" Padding="16,4,6,4" Margin="0,4,0,0">
+                                <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
+                                    <Entry x:Name="EntryTarea" Placeholder="{loc:T ej_preparar_el_almuerzo}" MaxLength="200" FontFamily="OpenSansRegular" FontSize="15" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="48" Completed="OnAgregarTareaClicked"
+                                           Focused="OnTareaFocused" Unfocused="OnTareaUnfocused"/>
+                                    <Border x:Name="BtnAgregarTarea" Grid.Column="1" Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimary}" WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                                        <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnAgregarTareaClicked"/>
+                                        </Border.GestureRecognizers>
+                                        <Path Data="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" Fill="White" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                            <VerticalStackLayout x:Name="ListaTareas" Spacing="8"/>
+                        </VerticalStackLayout>
+
+                        <!-- Total y envío (dentro del contenido: nada queda anclado al borde inferior) -->
+                        <Border x:Name="PieAccion" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="16">
+                            <VerticalStackLayout Spacing="14">
                         <Grid ColumnDefinitions="*, Auto">
-                            <Label Grid.Column="0" Text="{loc:T tarifa_por_hora}" FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" VerticalOptions="Center"/>
-                            <Label x:Name="LblTarifa" Grid.Column="1" Text="" FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" VerticalOptions="Center"/>
+                            <VerticalStackLayout Spacing="1" VerticalOptions="Center">
+                                <Label Text="{loc:T total_a_pagar}" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
+                                <Label x:Name="LblTarifa" Text="" FontSize="12" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextMuted}"/>
+                            </VerticalStackLayout>
+                            <Label x:Name="LblTotal" Grid.Column="1" Text="" FontSize="26" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" VerticalOptions="Center"/>
                         </Grid>
-                        <BoxView HeightRequest="1" BackgroundColor="#F3F4F6"/>
-                        <Grid ColumnDefinitions="*, Auto">
-                            <Label Grid.Column="0" Text="{loc:T total_a_pagar}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827" VerticalOptions="Center"/>
-                            <Label x:Name="LblTotal" Grid.Column="1" Text="" FontSize="22" FontFamily="OpenSansSemibold" TextColor="#2563EB" VerticalOptions="Center"/>
+                        <Grid>
+                            <Button x:Name="BtnEnviar" Text="{loc:T enviar_solicitud}" Clicked="OnEnviarClicked" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="16" HeightRequest="56"
+                                    Pressed="OnBotonPresionado" Released="OnBotonSoltado"/>
+                            <ActivityIndicator x:Name="SpinnerEnviar" Color="White" IsRunning="False" IsVisible="False" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center" VerticalOptions="Center" InputTransparent="True"/>
                         </Grid>
                     </VerticalStackLayout>
-                </Border>
+                        </Border>
 
+                        <!-- Espacio final: deja libre la barra de gestos -->
+                        <ContentView x:Name="EspacioInferior" HeightRequest="40" InputTransparent="True"/>
+                    </VerticalStackLayout>
+                </Border>
             </VerticalStackLayout>
         </ScrollView>
 
-        <VerticalStackLayout Grid.Row="2" Padding="20,10,20,30" Spacing="10" BackgroundColor="White">
-            <Border.Shadow>
-                <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
-            </Border.Shadow>
-            <Button x:Name="BtnEnviar" Text="{loc:T enviar_solicitud}" Clicked="OnEnviarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55"/>
-        </VerticalStackLayout>
 
     </Grid>
 

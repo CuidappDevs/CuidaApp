@@ -9,11 +9,24 @@ namespace CUIDAPP.Views.Soporte
         public MisReportesPage()
         {
             InitializeComponent();
+            // Borde a borde: el encabezado empieza debajo de la barra de estado.
+            ContenidoEncabezado.Margin = new Thickness(0, BarraEstado.Alto(), 0, 0);
         }
+
+        // Entrada: el contenido aparece subiendo con fade.
+        private void Revelar(VisualElement v)
+        {
+            v.Opacity = 0;
+            v.TranslationY = 16;
+            _ = v.FadeTo(1, 300, Easing.CubicOut);
+            _ = v.TranslateTo(0, 0, 360, Easing.CubicOut);
+        }
+
 
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            BarraEstado.Azul();
             await CargarTicketsAsync();
         }
 
@@ -33,11 +46,13 @@ namespace CUIDAPP.Views.Soporte
             if (tickets.Count == 0)
             {
                 PanelVacio.IsVisible = true;
+                Revelar(PanelVacio);
                 return;
             }
 
             ListaTickets.ItemsSource = tickets;
             ListaTickets.IsVisible = true;
+            Revelar(ListaTickets);
         }
 
         private async void OnTicketTapped(object sender, TappedEventArgs e)
@@ -51,6 +66,8 @@ namespace CUIDAPP.Views.Soporte
 
         private async void OnNuevoReporteTapped(object sender, EventArgs e)
         {
+            await BtnNuevo.ScaleTo(0.88, 80, Easing.CubicOut);
+            _ = BtnNuevo.ScaleTo(1, 160, Easing.CubicOut);
             await Shell.Current.GoToAsync("NuevoReportePage");
         }
 

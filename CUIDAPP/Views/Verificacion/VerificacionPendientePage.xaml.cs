@@ -50,7 +50,7 @@ namespace CUIDAPP.Views.Verificacion
             if (estado == null)
             {
                 if (mostrarErrorSiFalla)
-                    await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_consultar_el"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_consultar_el"), Localizador.T("ok"));
                 return;
             }
 

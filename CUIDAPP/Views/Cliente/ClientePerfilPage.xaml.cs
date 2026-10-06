@@ -11,6 +11,46 @@ namespace CUIDAPP.Views.Cliente
         public ClientePerfilPage()
         {
             InitializeComponent();
+
+            // Borde a borde: la barra superior empieza debajo de la barra de estado.
+            var alto = BarraEstado.Alto();
+            BarraSuperior.Margin = new Thickness(0, alto, 0, 0);
+            Encabezado.HeightRequest += alto;
+
+            // Estado inicial de la entrada escalonada (antes del primer frame).
+            foreach (var v in BloquesEntrada())
+            {
+                v.Opacity = 0;
+                v.TranslationY = 16;
+            }
+            BloqueFoto.Scale = 0.9;
+        }
+
+        private VisualElement[] BloquesEntrada() =>
+            new VisualElement[] { BloqueFoto, BloqueNombre, TarjetaInfo, TarjetaMenu, BloqueIdioma, BtnCerrarSesion };
+
+        private bool _entradaHecha;
+
+        private async Task AnimarEntradaAsync()
+        {
+            if (_entradaHecha) return;
+            _entradaHecha = true;
+            try
+            {
+                _ = BloqueFoto.ScaleTo(1, 420, Easing.CubicOut);
+                foreach (var v in BloquesEntrada())
+                {
+                    _ = v.FadeTo(1, 300, Easing.CubicOut);
+                    _ = v.TranslateTo(0, 0, 360, Easing.CubicOut);
+                    await Task.Delay(55);
+                }
+            }
+            finally
+            {
+                await Task.Delay(400);
+                foreach (var v in BloquesEntrada()) { v.Opacity = 1; v.TranslationY = 0; }
+                BloqueFoto.Scale = 1;
+            }
         }
 
         private PerfilCliente? _perfil;
@@ -18,6 +58,7 @@ namespace CUIDAPP.Views.Cliente
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
+            BarraEstado.Blanca();
             Localizador.Instancia.IdiomaCambiado -= AplicarPerfil;
         }
 
@@ -39,6 +80,8 @@ namespace CUIDAPP.Views.Cliente
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            BarraEstado.Azul();
+            _ = AnimarEntradaAsync();
             Localizador.Instancia.IdiomaCambiado -= AplicarPerfil;
             Localizador.Instancia.IdiomaCambiado += AplicarPerfil;
 
@@ -66,7 +109,7 @@ namespace CUIDAPP.Views.Cliente
             if (pendiente == null)
                 return;
 
-            var calificar = await DisplayAlert(
+            var calificar = await Alerta.MostrarAsync(
                 Localizador.T("servicio_completado"),
                 Localizador.F("termino_tu_servicio_y_necesita", pendiente.CuidadorNombre),
                 Localizador.T("calificar_ahora"), Localizador.T("despues"));

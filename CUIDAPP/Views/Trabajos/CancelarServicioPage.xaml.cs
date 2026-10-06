@@ -96,7 +96,7 @@ namespace CUIDAPP.Views.Trabajos
             if (trabajo == null || motivoSeleccionado == null)
                 return;
 
-            var confirmar = await DisplayAlert(Localizador.T("confirmar_cancelacion"), Localizador.T("seguro_que_deseas_cancelar_este"), Localizador.T("si_cancelar"), Localizador.T("no"));
+            var confirmar = await Alerta.MostrarAsync(Localizador.T("confirmar_cancelacion"), Localizador.T("seguro_que_deseas_cancelar_este"), Localizador.T("si_cancelar"), Localizador.T("no"));
             if (!confirmar)
                 return;
 
@@ -110,11 +110,12 @@ namespace CUIDAPP.Views.Trabajos
 
             if (success)
             {
+                DeadManService.Detener();
                 await Shell.Current.GoToAsync("../..");
             }
             else
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_cancelar_el"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_cancelar_el"), Localizador.T("ok"));
                 BtnConfirmar.Text = Localizador.T("confirmar_cancelacion");
                 BtnConfirmar.IsEnabled = true;
             }

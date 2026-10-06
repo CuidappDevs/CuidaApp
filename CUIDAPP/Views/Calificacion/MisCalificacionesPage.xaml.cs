@@ -10,11 +10,24 @@ namespace CUIDAPP.Views.Calificacion
         public MisCalificacionesPage()
         {
             InitializeComponent();
+            // Borde a borde: el encabezado empieza debajo de la barra de estado.
+            ContenidoEncabezado.Margin = new Thickness(0, BarraEstado.Alto(), 0, 0);
         }
+
+        // Entrada: el contenido aparece subiendo con fade.
+        private void Revelar(VisualElement v)
+        {
+            v.Opacity = 0;
+            v.TranslationY = 16;
+            _ = v.FadeTo(1, 300, Easing.CubicOut);
+            _ = v.TranslateTo(0, 0, 360, Easing.CubicOut);
+        }
+
 
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            BarraEstado.Azul();
             await CargarCalificacionesAsync();
         }
 
@@ -43,6 +56,7 @@ namespace CUIDAPP.Views.Calificacion
             if (calificaciones.Count == 0)
             {
                 PanelVacio.IsVisible = true;
+                Revelar(PanelVacio);
                 return;
             }
 
@@ -50,9 +64,11 @@ namespace CUIDAPP.Views.Calificacion
             LblPromedio.Text = promedio.ToString("0.0");
             LblTotal.Text = calificaciones.Count == 1 ? Localizador.T("basado_en_1_calificacion") : Localizador.F("basado_en_n_calificaciones", calificaciones.Count);
             PanelResumen.IsVisible = true;
+            Revelar(PanelResumen);
 
             ListaCalificaciones.ItemsSource = calificaciones;
             ListaCalificaciones.IsVisible = true;
+            Revelar(ListaCalificaciones);
         }
 
         private async void OnBackTapped(object sender, EventArgs e)

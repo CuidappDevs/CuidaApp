@@ -4,31 +4,49 @@
              xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Splash.SplashPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="White">
+             BackgroundColor="{StaticResource ColorPrimary}"
+             SafeAreaEdges="None">
 
-    <Grid>
+    <Grid SafeAreaEdges="None">
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#2A63B8" Offset="0.0" />
+                <GradientStop Color="{StaticResource ColorPrimary}" Offset="0.55" />
+                <GradientStop Color="{StaticResource ColorPrimaryDark}" Offset="1.0" />
+            </LinearGradientBrush>
+        </Grid.Background>
 
-        <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="22">
+        <!-- Círculos decorativos suaves -->
+        <Ellipse Fill="#14FFFFFF" WidthRequest="340" HeightRequest="340"
+                 HorizontalOptions="End" VerticalOptions="Start" Margin="0,-120,-140,0" />
+        <Ellipse Fill="#0FFFFFFF" WidthRequest="260" HeightRequest="260"
+                 HorizontalOptions="Start" VerticalOptions="End" Margin="-110,0,0,-80" />
 
-            <Grid x:Name="LogoCircle" WidthRequest="150" HeightRequest="150" HorizontalOptions="Center" Opacity="0" Scale="0.6">
-                <Image Source="logo_cuidapp.png" Aspect="AspectFit" Margin="15" HorizontalOptions="Center" VerticalOptions="Center">
-                    <Image.Shadow>
-                        <Shadow Brush="#2563EB" Offset="0,10" Radius="25" Opacity="0.3" />
-                    </Image.Shadow>
-                </Image>
+        <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="28">
+
+            <!-- Logo sobre insignia blanca -->
+            <Grid x:Name="LogoCircle" WidthRequest="132" HeightRequest="132" HorizontalOptions="Center" Opacity="0" Scale="0.92">
+                <Border BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 36">
+                    <Border.Shadow>
+                        <Shadow Brush="#051A2A" Offset="0,14" Radius="30" Opacity="0.35" />
+                    </Border.Shadow>
+                    <Image Source="logo_cuidapp.png" Aspect="AspectFit" Margin="18" />
+                </Border>
             </Grid>
 
             <Label x:Name="LblTagline"
                    Text="{loc:T cuidado_en_quien_puedes_confiar}"
-                   FontFamily="OpenSansRegular" FontSize="14"
-                   TextColor="#6B7280"
+                   FontFamily="OpenSansSemibold" FontSize="15"
+                   TextColor="#E6EEF8"
+                   HorizontalTextAlignment="Center"
                    HorizontalOptions="Center"
+                   MaximumWidthRequest="260"
                    Opacity="0"/>
 
-            <HorizontalStackLayout x:Name="DotsPanel" Spacing="10" HorizontalOptions="Center" Margin="0,15,0,0" Opacity="0">
-                <Ellipse x:Name="Dot1" Fill="#2563EB" WidthRequest="10" HeightRequest="10"/>
-                <Ellipse x:Name="Dot2" Fill="#2563EB" WidthRequest="10" HeightRequest="10"/>
-                <Ellipse x:Name="Dot3" Fill="#2563EB" WidthRequest="10" HeightRequest="10"/>
+            <HorizontalStackLayout x:Name="DotsPanel" Spacing="8" HorizontalOptions="Center" Margin="0,8,0,0" Opacity="0">
+                <Ellipse x:Name="Dot1" Fill="White" Opacity="0.9" WidthRequest="8" HeightRequest="8"/>
+                <Ellipse x:Name="Dot2" Fill="White" Opacity="0.9" WidthRequest="8" HeightRequest="8"/>
+                <Ellipse x:Name="Dot3" Fill="White" Opacity="0.9" WidthRequest="8" HeightRequest="8"/>
             </HorizontalStackLayout>
 
         </VerticalStackLayout>
@@ -36,9 +54,9 @@
         <Label x:Name="LblVersion"
                Text=""
                FontFamily="OpenSansRegular" FontSize="12"
-               TextColor="#9CA3AF"
+               TextColor="#99FFFFFF"
                HorizontalOptions="Center" VerticalOptions="End"
-               Margin="0,0,0,30"
+               Margin="0,0,0,32"
                Opacity="0"/>
 
     </Grid>

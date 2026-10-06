@@ -1,3 +1,4 @@
+using CUIDAPP.Helpers;
 using CUIDAPP.Localization;
 using CUIDAPP.Services;
 
@@ -15,7 +16,97 @@ namespace CUIDAPP.Views.Auth
             InitializeComponent();
             _pins = new[] { Pin1, Pin2, Pin3, Pin4, Pin5, Pin6 };
             SetupPinHandlers();
+
+            Hoja.SizeChanged += (_, _) => TransicionHoja.AjustarAlto(Encabezado, Hoja, Height, 240 + BarraEstado.Alto());
+            TransicionHoja.Preparar(Hoja, Insignia, ContenidoHoja);
+            ContenidoEncabezado.Margin = new Thickness(0, BarraEstado.Alto(), 0, 0);
         }
+
+        protected override void OnSizeAllocated(double width, double height)
+        {
+            base.OnSizeAllocated(width, height);
+            TransicionHoja.AjustarAlto(Encabezado, Hoja, height, 240 + BarraEstado.Alto());
+        }
+
+        private bool _saliendo;
+
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+            BarraEstado.Azul();
+            IniciarBucle();
+            await TransicionHoja.EntrarAsync(Hoja, Insignia, ContenidoHoja);
+        }
+
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            this.AbortAnimation("BucleInsignia");
+            this.AbortAnimation("BucleCirculos");
+        }
+
+        // Atrás del sistema: misma transición que la flecha.
+        protected override bool OnBackButtonPressed()
+        {
+            _ = VolverAsync();
+            return true;
+        }
+
+        private async Task VolverAsync()
+        {
+            if (_saliendo) return;
+            _saliendo = true;
+            await TransicionHoja.SalirAsync(Hoja, Insignia, ContenidoHoja);
+            await Shell.Current.GoToAsync("..", animate: false);
+        }
+
+        private void IniciarBucle()
+        {
+            new Animation(t => Insignia.TranslationY = -4 * Math.Sin(t * Math.PI * 2), 0, 1)
+                .Commit(this, "BucleInsignia", length: 4000, easing: Easing.Linear, repeat: () => true);
+
+            new Animation(t =>
+            {
+                var s = Math.Sin(t * Math.PI * 2);
+                CirculoA.Scale = 1 + 0.06 * s;
+                CirculoA.TranslationX = -6 * s;
+                CirculoB.Scale = 1 - 0.05 * s;
+                CirculoB.TranslationY = -8 * s;
+            }, 0, 1).Commit(this, "BucleCirculos", length: 9000, easing: Easing.Linear, repeat: () => true);
+        }
+
+        // Paso 1 → paso 2: el correo sale hacia la izquierda y el código entra desde la derecha.
+        private async Task MostrarPaso2Async()
+        {
+            await Task.WhenAll(Step1.FadeTo(0, 160, Easing.CubicOut), Step1.TranslateTo(-24, 0, 200, Easing.CubicOut));
+            Step1.IsVisible = false;
+            Step2.Opacity = 0;
+            Step2.TranslationX = 24;
+            Step2.IsVisible = true;
+            await Task.WhenAll(Step2.FadeTo(1, 260, Easing.CubicOut), Step2.TranslateTo(0, 0, 300, Easing.CubicOut));
+        }
+
+        private void OnEntryFocused(object? sender, FocusEventArgs e)
+        {
+            if ((sender as Element)?.Parent?.Parent is Border borde)
+            {
+                borde.Stroke = (Color)Application.Current!.Resources["ColorPrimary"];
+                borde.BackgroundColor = (Color)Application.Current!.Resources["ColorSurface"];
+            }
+        }
+
+        private void OnEntryUnfocused(object? sender, FocusEventArgs e)
+        {
+            if ((sender as Element)?.Parent?.Parent is Border borde)
+            {
+                borde.Stroke = (Color)Application.Current!.Resources["ColorBorder"];
+                borde.BackgroundColor = (Color)Application.Current!.Resources["ColorBackground"];
+            }
+        }
+
+        private void OnBotonPresionado(object? sender, EventArgs e) => _ = (sender as VisualElement)?.ScaleTo(0.97, 100, Easing.CubicOut);
+
+        private void OnBotonSoltado(object? sender, EventArgs e) => _ = (sender as VisualElement)?.ScaleTo(1, 160, Easing.CubicOut);
 
         private void SetupPinHandlers()
         {
@@ -62,14 +153,14 @@ namespace CUIDAPP.Views.Auth
 
         private async void OnBackTapped(object sender, EventArgs e)
         {
-            await Shell.Current.GoToAsync("..");
+            await VolverAsync();
         }
 
         private async void OnEnviarClicked(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(EntryEmail.Text))
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("ingresa_tu_correo_electronico"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("ingresa_tu_correo_electronico"), Localizador.T("ok"));
                 return;
             }
 
@@ -83,7 +174,7 @@ namespace CUIDAPP.Views.Auth
 
                 if (result == null)
                 {
-                    await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_conectar_con"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_conectar_con"), Localizador.T("ok"));
                     return;
                 }
 
@@ -98,10 +189,9 @@ namespace CUIDAPP.Views.Auth
                     """;
                 await _apiService.EnviarEmailAsync(_userEmail, asunto, cuerpoHtml);
 
-                await DisplayAlert(Localizador.T("codigo_enviado"), Localizador.F("revisa_tu_correo_electronico_para", _userEmail), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("codigo_enviado"), Localizador.F("revisa_tu_correo_electronico_para", _userEmail), Localizador.T("ok"));
 
-                Step1.IsVisible = false;
-                Step2.IsVisible = true;
+                _ = MostrarPaso2Async();
                 TopTitle.Text = Localizador.T("verificar_codigo");
                 LblEmail.Text = Localizador.F("se_envio_un_codigo_a", _userEmail);
                 
@@ -164,7 +254,7 @@ namespace CUIDAPP.Views.Auth
 
                 if (result == null)
                 {
-                    await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_conectar_con"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_conectar_con"), Localizador.T("ok"));
                     return;
                 }
 
@@ -179,7 +269,7 @@ namespace CUIDAPP.Views.Auth
                     """;
                 await _apiService.EnviarEmailAsync(_userEmail, asunto, cuerpoHtml);
 
-                await DisplayAlert(Localizador.T("codigo_reenviado"), Localizador.F("se_envio_un_nuevo_codigo", _userEmail), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("codigo_reenviado"), Localizador.F("se_envio_un_nuevo_codigo", _userEmail), Localizador.T("ok"));
 
                 StartTimer();
                 _pins[0].Focus();
@@ -196,7 +286,7 @@ namespace CUIDAPP.Views.Auth
             var code = GetCode();
             if (code.Length != 6)
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("ingresa_el_codigo_de_6"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("ingresa_el_codigo_de_6"), Localizador.T("ok"));
                 return;
             }
 

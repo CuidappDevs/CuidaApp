@@ -30,6 +30,7 @@ namespace CUIDAPP.Views.Dashboard
             }
 
             _ = RealtimeService.ConectarAsync(cuidadorId);
+            _ = DeadManService.SincronizarAsync(cuidadorId);
 
             // Evita suscripciones duplicadas si OnAppearing se dispara más de una vez
             // sin un OnDisappearing intermedio (puede pasar con navegación "//").
@@ -106,7 +107,7 @@ namespace CUIDAPP.Views.Dashboard
                 // corre dentro de un OnAppearing "async void", donde una excepción sin
                 // capturar mata el proceso en Android en vez de solo mostrar un error.
                 Console.WriteLine($"[CuidadorDashboardPage] Error cargando dashboard: {ex}");
-                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_cargar_tu"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_cargar_tu"), Localizador.T("ok"));
             }
         }
 
@@ -229,7 +230,7 @@ namespace CUIDAPP.Views.Dashboard
             }
             else
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_actualizar_tu"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_actualizar_tu"), Localizador.T("ok"));
                 // Revertir visualmente sin volver a llamar a la API.
                 suprimirEventoToggle = true;
                 SwitchDisponible.IsToggled = disponibleActual;
@@ -264,10 +265,11 @@ namespace CUIDAPP.Views.Dashboard
 
         private async void OnCerrarSesionTapped(object sender, EventArgs e)
         {
-            var confirmar = await DisplayAlert(Localizador.T("cerrar_sesion"), Localizador.T("estas_seguro_de_que_deseas"), Localizador.T("si"), Localizador.T("cancelar"));
+            var confirmar = await Alerta.MostrarAsync(Localizador.T("cerrar_sesion"), Localizador.T("estas_seguro_de_que_deseas"), Localizador.T("si"), Localizador.T("cancelar"));
             if (!confirmar)
                 return;
 
+            DeadManService.Detener();
             Preferences.Default.Clear();
             await RealtimeService.DesconectarAsync();
             ConexionServiceManager.Detener();

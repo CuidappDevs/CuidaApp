@@ -56,7 +56,7 @@ namespace CUIDAPP.Views.Chat
             var conversacion = await _apiService.ObtenerOCrearConversacionAsync(trabajoId);
             if (conversacion == null)
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_abrir_el"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_abrir_el"), Localizador.T("ok"));
                 await Shell.Current.GoToAsync("..");
                 return;
             }
@@ -335,7 +335,7 @@ namespace CUIDAPP.Views.Chat
             }
             catch (Exception ex)
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.F("no_se_pudo_reproducir_la", ex.Message), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.F("no_se_pudo_reproducir_la", ex.Message), Localizador.T("ok"));
             }
         }
 
@@ -366,7 +366,7 @@ namespace CUIDAPP.Views.Chat
                 var (url, error) = await _apiService.UploadFileConDiagnosticoAsync(foto.FullPath, $"chat/{miUsuarioId}");
                 if (url == null)
                 {
-                    await DisplayAlert(Localizador.T("no_se_pudo_subir_la"), error ?? Localizador.T("error_desconocido"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("no_se_pudo_subir_la"), error ?? Localizador.T("error_desconocido"), Localizador.T("ok"));
                     return;
                 }
 
@@ -376,7 +376,7 @@ namespace CUIDAPP.Views.Chat
             }
             catch (Exception ex)
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.F("no_se_pudo_adjuntar_la", ex.Message), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.F("no_se_pudo_adjuntar_la", ex.Message), Localizador.T("ok"));
             }
         }
 
@@ -390,7 +390,7 @@ namespace CUIDAPP.Views.Chat
                 var permiso = await Permissions.RequestAsync<Permissions.Microphone>();
                 if (permiso != PermissionStatus.Granted)
                 {
-                    await DisplayAlert(Localizador.T("permiso_necesario"), Localizador.T("necesitamos_acceso_al_microfono_para"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("permiso_necesario"), Localizador.T("necesitamos_acceso_al_microfono_para"), Localizador.T("ok"));
                     return;
                 }
 
@@ -423,14 +423,14 @@ namespace CUIDAPP.Views.Chat
 
                 if (duracionSegundos < 1)
                 {
-                    await DisplayAlert(Localizador.T("nota_muy_corta"), Localizador.T("manten_presionado_un_poco_mas"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("nota_muy_corta"), Localizador.T("manten_presionado_un_poco_mas"), Localizador.T("ok"));
                     return;
                 }
 
                 var (url, error) = await _apiService.UploadFileConDiagnosticoAsync(_rutaGrabacionActual, $"chat/{miUsuarioId}");
                 if (url == null)
                 {
-                    await DisplayAlert(Localizador.T("no_se_pudo_subir_la_2"), error ?? Localizador.T("error_desconocido"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("no_se_pudo_subir_la_2"), error ?? Localizador.T("error_desconocido"), Localizador.T("ok"));
                     return;
                 }
 

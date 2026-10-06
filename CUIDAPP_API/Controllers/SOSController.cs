@@ -32,6 +32,24 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        /// <summary>La app del cuidador la llama sola cuando detecta impacto + inmovilidad y no hay confirmación en 30 s.</summary>
+        [HttpPost("dead-man-triggered")]
+        public async Task<IActionResult> DeadManTriggered([FromBody] DeadManTriggeredDto dto)
+        {
+            try
+            {
+                var (alerta, error) = await _sosService.CrearAlertaDeadManAsync(dto);
+                if (alerta == null)
+                    return BadRequest(new { Message = error ?? "No se pudo crear la alerta automática" });
+
+                return Ok(new { Message = "Alerta automática enviada", Alerta = alerta });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
         [HttpGet("pendientes")]
         public async Task<IActionResult> ObtenerAlertasPendientes()
         {

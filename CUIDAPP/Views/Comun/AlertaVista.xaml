@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CUIDAPP.Views.Comun.AlertaVista"
+             BackgroundColor="Transparent">
+
+    <Grid>
+        <!-- Fondo oscurecido -->
+        <BoxView x:Name="Velo" Color="#0A2F41" Opacity="0" />
+
+        <!-- Tarjeta -->
+        <Border x:Name="Tarjeta" BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 28"
+                Padding="24,28,24,20" Margin="28,0" MaximumWidthRequest="380"
+                HorizontalOptions="Fill" VerticalOptions="Center" Opacity="0" Scale="0.94">
+            <Border.Shadow>
+                <Shadow Brush="#0A2F41" Offset="0,16" Radius="40" Opacity="0.25" />
+            </Border.Shadow>
+
+            <VerticalStackLayout Spacing="0">
+                <!-- Ícono según el tipo -->
+                <Grid HorizontalOptions="Center" Margin="0,0,0,18">
+                    <Ellipse x:Name="IconoHalo" WidthRequest="76" HeightRequest="76" Opacity="0.35" />
+                    <Border x:Name="IconoCirculo" WidthRequest="56" HeightRequest="56" StrokeThickness="0" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                        <Path x:Name="Icono" Fill="White" Aspect="Uniform" WidthRequest="26" HeightRequest="26" HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                </Grid>
+
+                <Label x:Name="LblTitulo" FontFamily="OpenSansSemibold" FontSize="20" TextColor="{StaticResource ColorTextStrong}"
+                       HorizontalTextAlignment="Center" Margin="0,0,0,8" />
+                <Label x:Name="LblMensaje" FontFamily="OpenSansRegular" FontSize="15" TextColor="{StaticResource ColorTextMuted}"
+                       HorizontalTextAlignment="Center" LineHeight="1.35" Margin="0,0,0,24" />
+
+                <!-- Botones: uno a lo ancho, o cancelar | aceptar -->
+                <Grid x:Name="Botones" ColumnDefinitions="*,*" ColumnSpacing="12">
+                    <Button x:Name="BtnCancelar" Grid.Column="0" BackgroundColor="White" TextColor="{StaticResource ColorTextStrong}"
+                            BorderColor="{StaticResource ColorBorder}" BorderWidth="1.5" FontFamily="OpenSansSemibold" FontSize="15"
+                            CornerRadius="16" HeightRequest="52" Clicked="OnCancelar" Pressed="OnPresionado" Released="OnSoltado" />
+                    <Button x:Name="BtnAceptar" Grid.Column="1" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White"
+                            FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="16" HeightRequest="52"
+                            Clicked="OnAceptar" Pressed="OnPresionado" Released="OnSoltado" />
+                </Grid>
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+</ContentView>

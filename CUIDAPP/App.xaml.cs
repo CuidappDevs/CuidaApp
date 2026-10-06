@@ -146,6 +146,10 @@ namespace CUIDAPP
 
         private void OnTrabajoActualizadoGlobal(int trabajoId, int estado)
         {
+            // Cuidador: el monitoreo de caídas solo corre mientras haya un servicio En Progreso.
+            if (Preferences.Default.Get("RolId", 0) == 3)
+                _ = DeadManService.SincronizarAsync(Preferences.Default.Get("UserId", 0));
+
             var texto = estado switch
             {
                 2 => Localizador.T("est_aceptada"),
@@ -165,10 +169,41 @@ namespace CUIDAPP
             // refresca sola y mostrar un banner encima sería redundante con eso.
         }
 
+        /// <summary>
+        /// Tras el splash: si hay una sesión guardada (y hay internet) va directo al panel del
+        /// usuario; si no, muestra el login. "Cerrar sesión" borra la sesión guardada.
+        /// </summary>
+        private static async Task AbrirAppAsync(Window window)
+        {
+            var ruta = Helpers.SesionGuardada.RutaDeInicio();
+            CUIDAPP.MainPage.OcultarAlAbrir = ruta != null; // evita que el login se vea un instante
+
+            var shell = new AppShell();
+            window.Page = shell;
+
+            if (ruta == null)
+                return;
+
+            try
+            {
+                Helpers.SesionGuardada.IniciarServicios();
+                await shell.GoToAsync(ruta, animate: false);
+            }
+            catch (Exception ex)
+            {
+                // Si algo falla al restaurar la sesión, se queda en el login.
+                Console.WriteLine($"[App] No se pudo abrir la sesión guardada: {ex}");
+            }
+            finally
+            {
+                CUIDAPP.MainPage.OcultarAlAbrir = false;
+            }
+        }
+
         protected override Window CreateWindow(IActivationState? activationState)
         {
             var window = new Window();
-            window.Page = new SplashPage(() => window.Page = new AppShell());
+            window.Page = new SplashPage(() => _ = AbrirAppAsync(window));
 
             window.Activated += (s, e) => EstaEnPrimerPlano = true;
             window.Deactivated += (s, e) => EstaEnPrimerPlano = false;
@@ -183,6 +218,7 @@ namespace CUIDAPP
                 var usuarioId = Preferences.Default.Get("UserId", 0);
                 if (usuarioId != 0)
                     _ = RealtimeService.ConectarAsync(usuarioId);
+                DeadManService.MostrarSiPendiente();
             };
 
             window.Stopped += (s, e) => EstaEnPrimerPlano = false;

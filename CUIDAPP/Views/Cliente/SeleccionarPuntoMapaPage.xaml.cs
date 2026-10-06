@@ -135,7 +135,7 @@ namespace CUIDAPP.Views.Cliente
 
             if (string.IsNullOrWhiteSpace(EntryDireccion.Text))
             {
-                await DisplayAlert(Localizador.T("falta_la_direccion"), Localizador.T("escribe_la_direccion_de_referencia"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("falta_la_direccion"), Localizador.T("escribe_la_direccion_de_referencia"), Localizador.T("ok"));
                 return;
             }
 
@@ -155,14 +155,14 @@ namespace CUIDAPP.Views.Cliente
 
             if (string.IsNullOrWhiteSpace(EntryNombre.Text))
             {
-                await DisplayAlert(Localizador.T("falta_el_nombre"), Localizador.T("ponle_un_nombre_a_esta"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("falta_el_nombre"), Localizador.T("ponle_un_nombre_a_esta"), Localizador.T("ok"));
                 return;
             }
 
             var clienteId = Preferences.Default.Get("UserId", 0);
             if (clienteId == 0)
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("tu_sesion_expiro_vuelve_a"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("tu_sesion_expiro_vuelve_a"), Localizador.T("ok"));
                 return;
             }
 
@@ -193,7 +193,7 @@ namespace CUIDAPP.Views.Cliente
                 }
                 else
                 {
-                    await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_guardar_la"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_guardar_la"), Localizador.T("ok"));
                 }
             }
             finally

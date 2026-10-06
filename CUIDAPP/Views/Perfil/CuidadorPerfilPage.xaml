@@ -149,6 +149,24 @@
                         </Grid>
                     </Border>
 
+                    <!-- Contacto de emergencia: a quién avisamos si detectamos una caída y no respondes -->
+                    <Border Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="20">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="{loc:T contacto_de_emergencia}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                            <Label Text="{loc:T contacto_ayuda}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
+                            <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
+                                <Entry x:Name="EntryContactoNombre" Placeholder="{loc:T nombre_del_contacto}" MaxLength="100" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="44"/>
+                            </Border>
+                            <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
+                                <Entry x:Name="EntryContactoTelefono" Placeholder="{loc:T numero_de_telefono}" Keyboard="Telephone" MaxLength="30" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="44"/>
+                            </Border>
+                            <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
+                                <Entry x:Name="EntryContactoEmail" Placeholder="{loc:T contacto_email_ph}" Keyboard="Email" MaxLength="150" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="44"/>
+                            </Border>
+                            <Button x:Name="BtnGuardarContacto" Text="{loc:T guardar_contacto}" Clicked="OnGuardarContactoClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="12" HeightRequest="46"/>
+                        </VerticalStackLayout>
+                    </Border>
+
                     <loc:SelectorIdioma Margin="0,6,0,6"/>
 
                 </VerticalStackLayout>

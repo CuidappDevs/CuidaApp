@@ -4,70 +4,136 @@
              xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Cliente.CuidadorDetallePage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#FFFFFF">
+             BackgroundColor="{StaticResource ColorBackground}"
+             SafeAreaEdges="None">
 
-    <Grid RowDefinitions="Auto, *, Auto">
 
-        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" Padding="20,15,20,10" BackgroundColor="White">
-            <ContentView x:Name="BtnBack" VerticalOptions="Center">
-                <ContentView.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnBackTapped" />
-                </ContentView.GestureRecognizers>
-                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
-            </ContentView>
-            <Label Grid.Column="1" Text="{loc:T perfil_del_cuidador}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
-        </Grid>
+    <Grid SafeAreaEdges="None">
 
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="20,20,20,30" Spacing="20">
+        <ScrollView SafeAreaEdges="None">
+            <VerticalStackLayout Spacing="0">
 
-                <Border Stroke="White" StrokeThickness="4" StrokeShape="RoundRectangle 55" BackgroundColor="#E5E7EB" WidthRequest="110" HeightRequest="110" HorizontalOptions="Center">
-                    <Border.Shadow>
-                        <Shadow Brush="#000000" Offset="0,4" Opacity="0.1" Radius="10"/>
-                    </Border.Shadow>
-                    <Image x:Name="ImgFoto" Aspect="AspectFill" />
-                </Border>
+                <!-- ENCABEZADO (borde a borde, una sola fila) -->
+                <Grid x:Name="Encabezado" HeightRequest="170">
+                    <Grid.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#2A63B8" Offset="0.0" />
+                            <GradientStop Color="{StaticResource ColorPrimary}" Offset="0.6" />
+                            <GradientStop Color="{StaticResource ColorPrimaryDark}" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </Grid.Background>
+                    <Ellipse Fill="#14FFFFFF" WidthRequest="220" HeightRequest="220" HorizontalOptions="End" VerticalOptions="Start" Margin="0,-90,-80,0"/>
+                    <Ellipse Fill="#0FFFFFFF" WidthRequest="140" HeightRequest="140" HorizontalOptions="Start" VerticalOptions="End" Margin="-50,0,0,-40"/>
 
-                <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
-                    <Label x:Name="LblNombre" Text="" FontSize="22" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
-                    <Label x:Name="LblEspecialidad" Text="" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#2563EB" HorizontalOptions="Center"/>
-                    <Label x:Name="LblDistancia" Text="" FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
-                    <HorizontalStackLayout x:Name="ContenedorRating" Spacing="5" HorizontalOptions="Center" Margin="0,4,0,0" IsVisible="False">
-                        <Label Text="★" FontSize="15" TextColor="#F59E0B"/>
-                        <Label x:Name="LblRating" Text="" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#374151"/>
-                    </HorizontalStackLayout>
-                </VerticalStackLayout>
+                    <Grid x:Name="BarraSuperior" ColumnDefinitions="44,*,44" Padding="12,10" VerticalOptions="Start">
+                        <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="#26FFFFFF" WidthRequest="44" HeightRequest="44">
+                            <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnBackTapped" />
+                            </Border.GestureRecognizers>
+                            <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="White" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Grid.Column="1" Text="{loc:T perfil_del_cuidador}" FontSize="17" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Grid>
+                </Grid>
 
-                <Border Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="20">
-                    <Grid ColumnDefinitions="*, Auto">
-                        <VerticalStackLayout Grid.Column="0" VerticalOptions="Center">
-                            <Label Text="{loc:T tarifa_por_hora}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                <!-- Hoja: la foto se monta sobre el encabezado -->
+                <Grid Margin="0,-64,0,0">
+                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 32,32,0,0" Margin="0,52,0,0"/>
+
+                    <VerticalStackLayout Padding="20,0,20,24" Spacing="16">
+
+                        <!-- Foto + insignia verificado -->
+                        <Grid x:Name="BloqueFoto" WidthRequest="124" HeightRequest="124" HorizontalOptions="Center">
+                            <Ellipse Fill="White" WidthRequest="124" HeightRequest="124">
+                                <Ellipse.Shadow>
+                                    <Shadow Brush="#0A2F41" Offset="0,8" Opacity="0.18" Radius="20"/>
+                                </Ellipse.Shadow>
+                            </Ellipse>
+                            <Border Stroke="Transparent" BackgroundColor="#E5E7EB" WidthRequest="112" HeightRequest="112" HorizontalOptions="Center" VerticalOptions="Center">
+                                <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                                <Image x:Name="ImgFoto" Aspect="AspectFill" />
+                            </Border>
+                            <Border Stroke="White" StrokeThickness="3" BackgroundColor="#2E7D32" WidthRequest="34" HeightRequest="34" HorizontalOptions="End" VerticalOptions="End" Margin="0,0,4,4">
+                                <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                                <Path Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="White" Aspect="Uniform" WidthRequest="14" HeightRequest="14" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- Nombre y especialidad -->
+                        <VerticalStackLayout x:Name="BloqueNombre" Spacing="8" HorizontalOptions="Center">
+                            <Label x:Name="LblNombre" Text="" FontSize="24" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                            <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 14" Padding="12,5" HorizontalOptions="Center">
+                                <Label x:Name="LblEspecialidad" Text="" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}"/>
+                            </Border>
                         </VerticalStackLayout>
-                        <Label x:Name="LblTarifa" Grid.Column="1" Text="" FontSize="20" FontFamily="OpenSansSemibold" TextColor="#2563EB" VerticalOptions="Center"/>
-                    </Grid>
-                </Border>
 
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="{loc:T sobre_mi}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827"/>
-                    <Label x:Name="LblBio" Text="" FontSize="14" FontFamily="OpenSansRegular" TextColor="#4B5563" LineHeight="1.5"/>
-                </VerticalStackLayout>
+                        <!-- Estadísticas: calificación · distancia · tarifa -->
+                        <Border x:Name="TarjetaStats" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="8,16">
+                            <Grid ColumnDefinitions="*,1,*,1,*">
+                                <VerticalStackLayout Grid.Column="0" Spacing="3" HorizontalOptions="Center">
+                                    <HorizontalStackLayout Spacing="4" HorizontalOptions="Center">
+                                        <Path Data="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z" Fill="#E09A1A" Aspect="Uniform" WidthRequest="16" HeightRequest="16" VerticalOptions="Center"/>
+                                        <Label x:Name="LblRatingValor" Text="—" FontSize="18" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
+                                    </HorizontalStackLayout>
+                                    <!-- Se conserva para el código existente (promedio y total) -->
+                                    <HorizontalStackLayout x:Name="ContenedorRating" IsVisible="False" HorizontalOptions="Center">
+                                        <Label x:Name="LblRating" Text="" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
+                                    </HorizontalStackLayout>
+                                    <Label x:Name="LblRatingEtiqueta" Text="{loc:T stat_calificacion}" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center"/>
+                                </VerticalStackLayout>
+                                <BoxView Grid.Column="1" Color="{StaticResource ColorBorder}" WidthRequest="1" Margin="0,4"/>
+                                <VerticalStackLayout Grid.Column="2" Spacing="3" HorizontalOptions="Center">
+                                    <HorizontalStackLayout Spacing="4" HorizontalOptions="Center">
+                                        <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="15" HeightRequest="15" VerticalOptions="Center"/>
+                                        <Label x:Name="LblDistanciaValor" Text="" FontSize="18" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
+                                    </HorizontalStackLayout>
+                                    <Label x:Name="LblDistancia" Text="{loc:T stat_distancia}" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center"/>
+                                </VerticalStackLayout>
+                                <BoxView Grid.Column="3" Color="{StaticResource ColorBorder}" WidthRequest="1" Margin="0,4"/>
+                                <VerticalStackLayout Grid.Column="4" Spacing="3" HorizontalOptions="Center">
+                                    <Label x:Name="LblTarifa" Text="" FontSize="18" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center"/>
+                                    <Label Text="{loc:T stat_tarifa}" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center"/>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
 
-                <Border Stroke="#D1FAE5" StrokeThickness="1" BackgroundColor="#ECFDF5" StrokeShape="RoundRectangle 12" Padding="15">
-                    <Grid ColumnDefinitions="Auto, *">
-                        <Path Grid.Column="0" Data="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" Fill="#10B981" Aspect="Uniform" WidthRequest="20" HeightRequest="20" VerticalOptions="Center" Margin="0,0,12,0"/>
-                        <Label Grid.Column="1" Text="{loc:T documentos_verificados_por_cuidapp}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#065F46" VerticalOptions="Center"/>
-                    </Grid>
-                </Border>
+                        <!-- Sobre mí -->
+                        <Border x:Name="TarjetaBio" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="18">
+                            <VerticalStackLayout Spacing="8">
+                                <HorizontalStackLayout Spacing="8">
+                                    <Path Data="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="16" HeightRequest="16" VerticalOptions="Center"/>
+                                    <Label Text="{loc:T sobre_mi}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
+                                </HorizontalStackLayout>
+                                <Label x:Name="LblBio" Text="" FontSize="14" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" LineHeight="1.5"/>
+                            </VerticalStackLayout>
+                        </Border>
 
+                        <!-- Verificación -->
+                        <Border x:Name="TarjetaVerificado" Stroke="Transparent" BackgroundColor="#E3F4E8" StrokeShape="RoundRectangle 18" Padding="14">
+                            <Grid ColumnDefinitions="Auto, *" ColumnSpacing="12">
+                                <Border Stroke="Transparent" BackgroundColor="#2E7D32" StrokeShape="RoundRectangle 12" WidthRequest="38" HeightRequest="38" VerticalOptions="Center">
+                                    <Path Data="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" Fill="White" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </Border>
+                                <Label Grid.Column="1" Text="{loc:T documentos_verificados_por_cuidapp}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#1B5E20" VerticalOptions="Center"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Acción principal (dentro del contenido: nada queda anclado al borde inferior) -->
+                        <Border x:Name="PieAccion" Stroke="Transparent" BackgroundColor="Transparent" Padding="0,8,0,0">
+                            <Button x:Name="BtnSolicitar" Text="{loc:T solicitar_servicio}" Clicked="OnSolicitarTapped" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="16" HeightRequest="56"
+                                    Pressed="OnBotonPresionado" Released="OnBotonSoltado"/>
+                        </Border>
+
+                        <!-- Espacio final: deja libre la barra de gestos -->
+                        <ContentView x:Name="EspacioInferior" HeightRequest="40" InputTransparent="True"/>
+
+                    </VerticalStackLayout>
+                </Grid>
             </VerticalStackLayout>
         </ScrollView>
 
-        <VerticalStackLayout Grid.Row="2" Padding="20,10,20,30" Spacing="10" BackgroundColor="White">
-            <Border.Shadow>
-                <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
-            </Border.Shadow>
-            <Button Text="{loc:T solicitar_servicio}" Clicked="OnSolicitarTapped" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55"/>
-        </VerticalStackLayout>
+
 
     </Grid>
 

@@ -72,14 +72,14 @@ namespace CUIDAPP.Views.Trabajos
         {
             if (trabajo == null)
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_encontro_la_informacion"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_encontro_la_informacion"), Localizador.T("ok"));
                 return;
             }
 
             var pin = ObtenerPin();
             if (pin.Length != 4)
             {
-                await DisplayAlert(Localizador.T("codigo_incompleto"), Localizador.T("ingresa_los_4_digitos_del"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("codigo_incompleto"), Localizador.T("ingresa_los_4_digitos_del"), Localizador.T("ok"));
                 return;
             }
 
@@ -93,7 +93,11 @@ namespace CUIDAPP.Views.Trabajos
 
                 if (success)
                 {
+                    DeadManService.Iniciar(trabajo.Id);
+                    var irAPerfil = await DeadManService.MostrarAvisoCelularAsync(this);
                     await Shell.Current.GoToAsync("../..");
+                    if (irAPerfil)
+                        await Shell.Current.GoToAsync("CuidadorPerfilPage");
                     return;
                 }
 
@@ -106,7 +110,7 @@ namespace CUIDAPP.Views.Trabajos
             }
             catch (Exception ex)
             {
-                await DisplayAlert(Localizador.T("error_inesperado"), Localizador.F("no_se_pudo_verificar_el", ex.Message), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error_inesperado"), Localizador.F("no_se_pudo_verificar_el", ex.Message), Localizador.T("ok"));
             }
             finally
             {

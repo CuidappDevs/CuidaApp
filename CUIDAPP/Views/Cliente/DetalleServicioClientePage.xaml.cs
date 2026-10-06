@@ -49,7 +49,7 @@ namespace CUIDAPP.Views.Cliente
             if (idTrabajo != trabajoId)
                 return;
 
-            await DisplayAlert(Localizador.T("tu_cuidador_se_alejo_del"), Localizador.F("se_alejo_m_del_domicilio", distanciaMetros), Localizador.T("entendido"));
+            await Alerta.MostrarAsync(Localizador.T("tu_cuidador_se_alejo_del"), Localizador.F("se_alejo_m_del_domicilio", distanciaMetros), Localizador.T("entendido"));
         }
 
         private async void OnTrabajoActualizadoTiempoReal(int idActualizado, int estado)
@@ -419,7 +419,7 @@ namespace CUIDAPP.Views.Cliente
 
             if (propinaOtroMonto && (propina <= 0 || propina > MaxPropina))
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("propina_invalida"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("propina_invalida"), Localizador.T("ok"));
                 return;
             }
 
@@ -440,11 +440,11 @@ namespace CUIDAPP.Views.Cliente
                 await CargarTrabajo();
 
                 if (propinaEnviada > 0)
-                    await DisplayAlert(Localizador.T("gracias"), Localizador.F("gracias_propina", propinaEnviada), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("gracias"), Localizador.F("gracias_propina", propinaEnviada), Localizador.T("ok"));
             }
             else
             {
-                await DisplayAlert(Localizador.T("error"), error ?? Localizador.T("no_se_pudo_confirmar_intenta"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), error ?? Localizador.T("no_se_pudo_confirmar_intenta"), Localizador.T("ok"));
                 BtnConfirmarFinalizacion.IsEnabled = true;
                 BtnConfirmarFinalizacion.Text = Localizador.T("si_termino");
             }
@@ -455,7 +455,7 @@ namespace CUIDAPP.Views.Cliente
             if (trabajo == null)
                 return;
 
-            var confirmar = await DisplayAlert(Localizador.T("el_trabajo_no_ha_terminado"), Localizador.T("le_avisaremos_a_tu_cuidador"), Localizador.T("si_avisar"), Localizador.T("cancelar"));
+            var confirmar = await Alerta.MostrarAsync(Localizador.T("el_trabajo_no_ha_terminado"), Localizador.T("le_avisaremos_a_tu_cuidador"), Localizador.T("si_avisar"), Localizador.T("cancelar"));
             if (!confirmar)
                 return;
 
@@ -465,7 +465,7 @@ namespace CUIDAPP.Views.Cliente
             if (success)
                 await CargarTrabajo();
             else
-                await DisplayAlert(Localizador.T("error"), error ?? Localizador.T("no_se_pudo_registrar_tu"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), error ?? Localizador.T("no_se_pudo_registrar_tu"), Localizador.T("ok"));
         }
 
         private async void OnCancelarClicked(object sender, EventArgs e)
@@ -473,7 +473,7 @@ namespace CUIDAPP.Views.Cliente
             if (trabajo == null)
                 return;
 
-            var confirmar = await DisplayAlert(Localizador.T("cancelar_solicitud"), Localizador.T("seguro_que_deseas_cancelar_esta"), Localizador.T("si_cancelar"), Localizador.T("no"));
+            var confirmar = await Alerta.MostrarAsync(Localizador.T("cancelar_solicitud"), Localizador.T("seguro_que_deseas_cancelar_esta"), Localizador.T("si_cancelar"), Localizador.T("no"));
             if (!confirmar)
                 return;
 
@@ -488,7 +488,7 @@ namespace CUIDAPP.Views.Cliente
             }
             else
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_cancelar_la"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_cancelar_la"), Localizador.T("ok"));
                 BtnCancelar.IsEnabled = true;
                 BtnCancelar.Text = Localizador.T("cancelar_solicitud");
             }
@@ -499,7 +499,7 @@ namespace CUIDAPP.Views.Cliente
             if (trabajo == null)
                 return;
 
-            var confirmar = await DisplayAlert(
+            var confirmar = await Alerta.MostrarAsync(
                 Localizador.T("sos_pedir_auxilio_2"),
                 Localizador.T("se_enviara_una_alerta_de"),
                 Localizador.T("si_enviar_alerta"), Localizador.T("cancelar"));
@@ -522,11 +522,11 @@ namespace CUIDAPP.Views.Cliente
 
                 if (success)
                 {
-                    await DisplayAlert(Localizador.T("alerta_enviada"), Localizador.T("nuestro_equipo_de_administracion_ha"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("alerta_enviada"), Localizador.T("nuestro_equipo_de_administracion_ha"), Localizador.T("ok"));
                 }
                 else
                 {
-                    await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_enviar_la_2"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_enviar_la_2"), Localizador.T("ok"));
                 }
             }
             finally

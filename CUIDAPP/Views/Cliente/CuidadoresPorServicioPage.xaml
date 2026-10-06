@@ -4,29 +4,73 @@
              xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Cliente.CuidadoresPorServicioPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#F9FAFB">
+             BackgroundColor="{StaticResource ColorBackground}"
+             SafeAreaEdges="None">
 
-    <Grid RowDefinitions="Auto, *">
+    <Grid RowDefinitions="Auto, *" SafeAreaEdges="None">
 
-        <!-- HEADER -->
-        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" Padding="20,15,20,10" BackgroundColor="White">
-            <ContentView x:Name="BtnBack" VerticalOptions="Center">
-                <ContentView.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnBackTapped" />
-                </ContentView.GestureRecognizers>
-                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
-            </ContentView>
+        <!-- ENCABEZADO (borde a borde) -->
+        <Grid x:Name="Encabezado" Grid.Row="0" SafeAreaEdges="None" Padding="0,0,0,40">
+            <Grid.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#2A63B8" Offset="0.0" />
+                    <GradientStop Color="{StaticResource ColorPrimary}" Offset="0.6" />
+                    <GradientStop Color="{StaticResource ColorPrimaryDark}" Offset="1.0" />
+                </LinearGradientBrush>
+            </Grid.Background>
+            <Ellipse Fill="#14FFFFFF" WidthRequest="220" HeightRequest="220" HorizontalOptions="End" VerticalOptions="Start" Margin="0,-90,-80,0"/>
 
-            <Label Grid.Column="1" x:Name="LblTituloServicio" Text="{loc:T cuidadores}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <!-- Una sola fila: atrás · ícono · título y conteo -->
+            <Grid x:Name="ContenidoEncabezado" ColumnDefinitions="44,*" ColumnSpacing="12" Padding="12,10,20,0">
+                <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="#26FFFFFF" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
+                    <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackTapped" />
+                    </Border.GestureRecognizers>
+                    <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="White" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+
+                <Grid x:Name="BloqueServicio" Grid.Column="1" ColumnDefinitions="Auto,*" ColumnSpacing="12" VerticalOptions="Center">
+                    <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 14" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
+                        <Path x:Name="IconoServicio" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Border>
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="1">
+                        <Label x:Name="LblTituloServicio" Text="{loc:T cuidadores}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="White" MaxLines="1" LineBreakMode="TailTruncation"/>
+                        <HorizontalStackLayout Spacing="6">
+                            <Ellipse x:Name="PuntoEnVivo" Fill="#7CE495" WidthRequest="7" HeightRequest="7" VerticalOptions="Center"/>
+                            <Label x:Name="LblConteo" Text="" FontSize="12" FontFamily="OpenSansRegular" TextColor="#D9E6F7" VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </Grid>
+            </Grid>
         </Grid>
 
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="20,15,20,30" Spacing="15">
-                <ActivityIndicator x:Name="LoadingIndicator" IsRunning="True" Color="#2563EB" />
-                <Label x:Name="LblSinCuidadores" Text="{loc:T no_hay_cuidadores_disponibles_para}" FontSize="14" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center" IsVisible="False" Margin="0,30,0,0" />
-                <VerticalStackLayout x:Name="ListaCuidadores" Spacing="15" />
-            </VerticalStackLayout>
-        </ScrollView>
+        <!-- Hoja con la lista (se monta sobre el encabezado) -->
+        <Border Grid.Row="1" Margin="0,-28,0,0" Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 28,28,0,0">
+            <ScrollView>
+                <VerticalStackLayout Padding="20,24,20,30" Spacing="12">
+
+                    <!-- Esqueleto de carga -->
+                    <VerticalStackLayout x:Name="LoadingIndicator" Spacing="12" IsVisible="False">
+                        <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 22" HeightRequest="112"/>
+                        <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 22" HeightRequest="112" Opacity="0.7"/>
+                        <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 22" HeightRequest="112" Opacity="0.45"/>
+                    </VerticalStackLayout>
+
+                    <!-- Estado vacío -->
+                    <VerticalStackLayout x:Name="LblSinCuidadores" Spacing="12" IsVisible="False" Margin="0,40,0,0" HorizontalOptions="Center">
+                        <Border Stroke="Transparent" BackgroundColor="#EAF1FB" WidthRequest="84" HeightRequest="84" HorizontalOptions="Center">
+                            <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                            <Path Data="M16 11C17.66 11 18.99 9.66 18.99 8C18.99 6.34 17.66 5 16 5C14.34 5 13 6.34 13 8C13 9.66 14.34 11 16 11ZM8 11C9.66 11 10.99 9.66 10.99 8C10.99 6.34 9.66 5 8 5C6.34 5 5 6.34 5 8C5 9.66 6.34 11 8 11ZM8 13C5.67 13 1 14.17 1 16.5V19H15V16.5C15 14.17 10.33 13 8 13ZM16 13C15.71 13 15.38 13.02 15.03 13.05C16.19 13.89 17 15.02 17 16.5V19H23V16.5C23 14.17 18.33 13 16 13Z"
+                                  Fill="{StaticResource ColorPrimaryLight}" Aspect="Uniform" WidthRequest="38" HeightRequest="38" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
+                        <Label Text="{loc:T no_hay_cuidadores_disponibles_para}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalTextAlignment="Center" MaximumWidthRequest="280"/>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout x:Name="ListaCuidadores" Spacing="12" />
+                </VerticalStackLayout>
+            </ScrollView>
+        </Border>
 
     </Grid>
 

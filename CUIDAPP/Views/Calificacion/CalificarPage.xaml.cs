@@ -88,7 +88,7 @@ namespace CUIDAPP.Views.Calificacion
 
             if (success)
             {
-                await DisplayAlert(Localizador.T("gracias"), Localizador.T("tu_calificacion_fue_enviada"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("gracias"), Localizador.T("tu_calificacion_fue_enviada"), Localizador.T("ok"));
                 try
                 {
                     await Shell.Current.GoToAsync(string.IsNullOrWhiteSpace(RutaSalida) ? ".." : RutaSalida);
@@ -102,7 +102,7 @@ namespace CUIDAPP.Views.Calificacion
             }
             else
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_enviar_la"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_enviar_la"), Localizador.T("ok"));
                 BtnEnviar.Text = Localizador.T("enviar_calificacion");
                 BtnEnviar.IsEnabled = true;
             }

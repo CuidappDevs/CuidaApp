@@ -76,7 +76,7 @@ namespace CUIDAPP.Views.Trabajos
 
             if (estadoAnterior == 7 && trabajo.Estado == 3 && trabajo.RechazadoPorCliente)
             {
-                await DisplayAlert(Localizador.T("el_cliente_indico_que_el_2"),
+                await Alerta.MostrarAsync(Localizador.T("el_cliente_indico_que_el_2"),
                     Localizador.T("puedes_volver_a_intentar_finalizarlo"), Localizador.T("entendido"));
             }
         }
@@ -120,7 +120,7 @@ namespace CUIDAPP.Views.Trabajos
                 {
                     fueraDeGeocerca = true;
                     await _apiService.AlertarGeocercaAsync(trabajo.Id, distanciaKm * 1000);
-                    await DisplayAlert(Localizador.T("estas_lejos_del_sitio_del"), Localizador.F("te_alejaste_m_del_domicilio", distanciaKm * 1000), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("estas_lejos_del_sitio_del"), Localizador.F("te_alejaste_m_del_domicilio", distanciaKm * 1000), Localizador.T("ok"));
                 }
             }
             else
@@ -171,7 +171,7 @@ namespace CUIDAPP.Views.Trabajos
                     {
                         check.IsChecked = false;
                         check.IsEnabled = true;
-                        await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_marcar_la"), Localizador.T("ok"));
+                        await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_marcar_la"), Localizador.T("ok"));
                     }
                 };
 
@@ -237,7 +237,7 @@ namespace CUIDAPP.Views.Trabajos
                 }
                 else
                 {
-                    await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_enviar_el"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_enviar_el"), Localizador.T("ok"));
                 }
             }
             finally
@@ -331,7 +331,7 @@ namespace CUIDAPP.Views.Trabajos
             if (trabajo == null)
                 return;
 
-            var confirmar = await DisplayAlert(
+            var confirmar = await Alerta.MostrarAsync(
                 Localizador.T("insistir_sin_cobro"),
                 Localizador.T("el_trabajo_se_marcara_como"),
                 Localizador.T("si_insistir"), Localizador.T("cancelar"));
@@ -344,7 +344,7 @@ namespace CUIDAPP.Views.Trabajos
             if (success)
                 await Shell.Current.GoToAsync("..");
             else
-                await DisplayAlert(Localizador.T("error"), error ?? Localizador.T("no_se_pudo_forzar_la"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), error ?? Localizador.T("no_se_pudo_forzar_la"), Localizador.T("ok"));
         }
 
         private async void OnChatClicked(object sender, EventArgs e)
@@ -401,13 +401,13 @@ namespace CUIDAPP.Views.Trabajos
                 var mensaje = trabajo.Fecha.Date > ServerClock.Today
                     ? Localizador.F("servicio_programado_futuro", Localizador.DiaMes(trabajo.Fecha))
                     : Localizador.F("servicio_programado_pasado", Localizador.DiaMes(trabajo.Fecha));
-                await DisplayAlert(Localizador.T("no_es_la_fecha_del"), mensaje, Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("no_es_la_fecha_del"), mensaje, Localizador.T("ok"));
                 return;
             }
 
             if (ServerClock.Now.TimeOfDay > trabajo.HoraFin)
             {
-                var continuar = await DisplayAlert(
+                var continuar = await Alerta.MostrarAsync(
                     Localizador.T("el_horario_programado_ya_paso"),
                     Localizador.F("este_servicio_estaba_programado_de", FormatearHora(trabajo.HoraInicio), FormatearHora(trabajo.HoraFin)),
                     Localizador.T("si_iniciar"), Localizador.T("cancelar"));
@@ -420,7 +420,7 @@ namespace CUIDAPP.Views.Trabajos
                 var ubicacionActual = await LocationService.ObtenerUbicacionActualAsync();
                 if (ubicacionActual == null)
                 {
-                    await DisplayAlert(Localizador.T("ubicacion_no_disponible"), Localizador.T("no_pudimos_verificar_tu_ubicacion"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("ubicacion_no_disponible"), Localizador.T("no_pudimos_verificar_tu_ubicacion"), Localizador.T("ok"));
                     return;
                 }
 
@@ -429,7 +429,7 @@ namespace CUIDAPP.Views.Trabajos
 
                 if (distanciaKm > DistanciaMaximaKm)
                 {
-                    await DisplayAlert(Localizador.T("estas_muy_lejos"), Localizador.F("debes_estar_en_la_direccion", distanciaKm * 1000), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("estas_muy_lejos"), Localizador.F("debes_estar_en_la_direccion", distanciaKm * 1000), Localizador.T("ok"));
                     return;
                 }
             }
@@ -461,7 +461,7 @@ namespace CUIDAPP.Views.Trabajos
             if (trabajo == null)
                 return;
 
-            var confirmar = await DisplayAlert(
+            var confirmar = await Alerta.MostrarAsync(
                 Localizador.T("sos_pedir_auxilio_2"),
                 Localizador.T("se_enviara_una_alerta_de"),
                 Localizador.T("si_enviar_alerta"), Localizador.T("cancelar"));
@@ -484,11 +484,11 @@ namespace CUIDAPP.Views.Trabajos
 
                 if (success)
                 {
-                    await DisplayAlert(Localizador.T("alerta_enviada"), Localizador.T("nuestro_equipo_de_administracion_ha"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("alerta_enviada"), Localizador.T("nuestro_equipo_de_administracion_ha"), Localizador.T("ok"));
                 }
                 else
                 {
-                    await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_enviar_la_2"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_enviar_la_2"), Localizador.T("ok"));
                 }
             }
             finally
@@ -643,11 +643,15 @@ namespace CUIDAPP.Views.Trabajos
 
             if (success)
             {
+                // Al aceptar un servicio se recuerda llevar siempre el celular (detección de caídas).
+                var irAPerfil = nuevoEstado == 2 && await DeadManService.MostrarAvisoCelularAsync(this);
                 await Shell.Current.GoToAsync("..");
+                if (irAPerfil)
+                    await Shell.Current.GoToAsync("CuidadorPerfilPage");
             }
             else
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_actualizar_el"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_actualizar_el"), Localizador.T("ok"));
             }
         }
     }

@@ -67,7 +67,7 @@ namespace CUIDAPP.Views.Cliente
             if (e.Parameter is not UbicacionCliente ubicacion)
                 return;
 
-            var confirmar = await DisplayAlert(Localizador.T("eliminar_ubicacion"), Localizador.F("eliminar", ubicacion.Nombre), Localizador.T("si_eliminar"), Localizador.T("cancelar"));
+            var confirmar = await Alerta.MostrarAsync(Localizador.T("eliminar_ubicacion"), Localizador.F("eliminar", ubicacion.Nombre), Localizador.T("si_eliminar"), Localizador.T("cancelar"));
             if (!confirmar)
                 return;
 
@@ -77,7 +77,7 @@ namespace CUIDAPP.Views.Cliente
             if (success)
                 await CargarUbicaciones();
             else
-                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_eliminar_la"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_eliminar_la"), Localizador.T("ok"));
         }
 
         private async void OnAgregarClicked(object sender, EventArgs e)

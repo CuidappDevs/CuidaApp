@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:CUIDAPP.Localization"
+             x:Class="CUIDAPP.Views.Seguridad.ConfirmarBienestarPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#B91C1C">
+
+    <Grid RowDefinitions="*, Auto" Padding="28,40,28,36">
+
+        <!-- Estado: cuenta regresiva -->
+        <VerticalStackLayout x:Name="PanelCuenta" Grid.Row="0" VerticalOptions="Center" Spacing="18">
+            <Label Text="⚠️" FontSize="56" HorizontalOptions="Center"/>
+            <Label Text="{loc:T dm_confirm_titulo}" FontSize="30" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center"/>
+            <Label Text="{loc:T dm_confirm_texto}" FontSize="15" FontFamily="OpenSansRegular" TextColor="#FEE2E2" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+
+            <Border Stroke="White" StrokeThickness="4" BackgroundColor="Transparent" StrokeShape="RoundRectangle 90" WidthRequest="180" HeightRequest="180" HorizontalOptions="Center" Margin="0,10">
+                <VerticalStackLayout VerticalOptions="Center" Spacing="0">
+                    <Label x:Name="LblSegundos" Text="30" FontSize="78" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center"/>
+                    <Label Text="{loc:T dm_segundos}" FontSize="13" FontFamily="OpenSansRegular" TextColor="#FEE2E2" HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+
+        <!-- Estado: resultado (alerta enviada / error) -->
+        <VerticalStackLayout x:Name="PanelResultado" Grid.Row="0" VerticalOptions="Center" Spacing="16" IsVisible="False">
+            <Label x:Name="LblIconoResultado" Text="🚨" FontSize="56" HorizontalOptions="Center"/>
+            <Label x:Name="LblTituloResultado" FontSize="26" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+            <Label x:Name="LblTextoResultado" FontSize="15" FontFamily="OpenSansRegular" TextColor="#FEE2E2" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+        </VerticalStackLayout>
+
+        <Button x:Name="BtnBien" Grid.Row="1" Text="{loc:T dm_estoy_bien}" Clicked="OnEstoyBienClicked" BackgroundColor="White" TextColor="#B91C1C" FontFamily="OpenSansSemibold" FontSize="20" CornerRadius="16" HeightRequest="68"/>
+    </Grid>
+</ContentPage>

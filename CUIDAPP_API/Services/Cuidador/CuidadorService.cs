@@ -156,6 +156,40 @@ namespace CUIDAPP_API.Services.Cuidador
             return new GananciasDto();
         }
 
+        public async Task<ContactoEmergenciaDto?> ObtenerContactoEmergenciaAsync(int cuidadorId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_ObtenerContactoEmergenciaCuidador", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@UsuarioId", cuidadorId);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                return null;
+
+            return new ContactoEmergenciaDto
+            {
+                Nombre = reader["Nombre"] as string,
+                Telefono = reader["Telefono"] as string,
+                Email = reader["Email"] as string
+            };
+        }
+
+        public async Task<bool> GuardarContactoEmergenciaAsync(int cuidadorId, ContactoEmergenciaDto dto)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_GuardarContactoEmergenciaCuidador", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@UsuarioId", cuidadorId);
+            command.Parameters.AddWithValue("@Nombre", dto.Nombre!.Trim());
+            command.Parameters.AddWithValue("@Telefono", string.IsNullOrWhiteSpace(dto.Telefono) ? DBNull.Value : dto.Telefono.Trim());
+            command.Parameters.AddWithValue("@Email", string.IsNullOrWhiteSpace(dto.Email) ? DBNull.Value : dto.Email.Trim());
+
+            await connection.OpenAsync();
+            return Convert.ToInt32(await command.ExecuteScalarAsync()) > 0;
+        }
+
         public async Task<IEnumerable<PagoDto>> ObtenerPagosAsync(int cuidadorId)
         {
             var pagos = new List<PagoDto>();

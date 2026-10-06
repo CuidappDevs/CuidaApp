@@ -15,6 +15,41 @@ namespace CUIDAPP_API.Controllers
             _cuidadorService = cuidadorService;
         }
 
+        [HttpGet("{cuidadorId}/contacto-emergencia")]
+        public async Task<IActionResult> ObtenerContactoEmergencia(int cuidadorId)
+        {
+            try
+            {
+                var contacto = await _cuidadorService.ObtenerContactoEmergenciaAsync(cuidadorId);
+                return contacto == null ? NotFound() : Ok(contacto);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
+        [HttpPut("{cuidadorId}/contacto-emergencia")]
+        public async Task<IActionResult> GuardarContactoEmergencia(int cuidadorId, [FromBody] ContactoEmergenciaDto dto)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(dto.Nombre))
+                    return BadRequest(new { Message = "El nombre del contacto es obligatorio." });
+                if (string.IsNullOrWhiteSpace(dto.Telefono) && string.IsNullOrWhiteSpace(dto.Email))
+                    return BadRequest(new { Message = "Indica un teléfono o un correo del contacto." });
+                if (!string.IsNullOrWhiteSpace(dto.Email) && !System.Net.Mail.MailAddress.TryCreate(dto.Email.Trim(), out _))
+                    return BadRequest(new { Message = "El correo del contacto no es válido." });
+
+                var ok = await _cuidadorService.GuardarContactoEmergenciaAsync(cuidadorId, dto);
+                return ok ? Ok(new { Message = "Contacto guardado" }) : NotFound(new { Message = "Cuidador no encontrado" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
         [HttpGet("estado-verificacion/{cuidadorId}")]
         public async Task<IActionResult> ObtenerEstadoVerificacion(int cuidadorId)
         {

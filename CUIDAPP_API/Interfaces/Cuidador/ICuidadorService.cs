@@ -11,5 +11,7 @@ namespace CUIDAPP_API.Interfaces.Cuidador
         Task<bool> ActualizarUbicacionAsync(ActualizarUbicacionDto dto);
         Task<GananciasDto> ObtenerGananciasAsync(int cuidadorId);
         Task<IEnumerable<PagoDto>> ObtenerPagosAsync(int cuidadorId);
+        Task<ContactoEmergenciaDto?> ObtenerContactoEmergenciaAsync(int cuidadorId);
+        Task<bool> GuardarContactoEmergenciaAsync(int cuidadorId, ContactoEmergenciaDto dto);
     }
 }

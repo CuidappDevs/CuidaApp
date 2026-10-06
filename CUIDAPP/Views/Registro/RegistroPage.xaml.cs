@@ -62,6 +62,136 @@ namespace CUIDAPP.Views.Registro
             _ = UpdateStepUI(false);
         }
 
+        // ---- Términos y Condiciones (antes del paso 1) ----
+        private bool terminosLeidos;
+
+        private void OnTerminosScrolled(object? sender, ScrolledEventArgs e)
+        {
+            ActualizarBarraLectura();
+            EvaluarFinalTerminos();
+        }
+
+        // Barra fina bajo el título que avanza con el scroll.
+        private void ActualizarBarraLectura()
+        {
+            var recorrido = ScrollTerminos.ContentSize.Height - ScrollTerminos.Height;
+            var progreso = recorrido <= 0 ? 1 : Math.Clamp(ScrollTerminos.ScrollY / recorrido, 0, 1);
+            BarraLecturaTerminos.WidthRequest = PanelTerminos.Width * progreso;
+        }
+
+        private void OnBotonTerminosPresionado(object? sender, EventArgs e) => _ = (sender as VisualElement)?.ScaleTo(0.97, 100, Easing.CubicOut);
+
+        private void OnBotonTerminosSoltado(object? sender, EventArgs e) => _ = (sender as VisualElement)?.ScaleTo(1, 160, Easing.CubicOut);
+
+        private void OnTerminosLayoutChanged(object? sender, EventArgs e) => EvaluarFinalTerminos();
+
+        // Aceptar y Rechazar se habilitan solo cuando el usuario llegó al final (o si todo cabe sin scroll).
+        private void EvaluarFinalTerminos()
+        {
+            if (terminosLeidos)
+                return;
+
+            var visible = ScrollTerminos.Height;
+            var contenido = ScrollTerminos.ContentSize.Height;
+            if (visible <= 0 || contenido <= 0)
+                return;
+
+            if (ScrollTerminos.ScrollY + visible < contenido - 24)
+                return;
+
+            terminosLeidos = true;
+            BtnAceptarTerminos.IsEnabled = true;
+            BtnRechazarTerminos.IsEnabled = true;
+            ActualizarBarraLectura();
+
+            // Los botones se "encienden" y la pista se desvanece.
+            _ = BtnAceptarTerminos.FadeTo(1, 220, Easing.CubicOut);
+            _ = BtnRechazarTerminos.FadeTo(1, 220, Easing.CubicOut);
+            _ = LblHintTerminos.FadeTo(0, 160, Easing.CubicOut).ContinueWith(_ =>
+                MainThread.BeginInvokeOnMainThread(() => LblHintTerminos.IsVisible = false));
+        }
+
+        private void OnAceptarTerminosTapped(object sender, EventArgs e)
+        {
+            if (!terminosLeidos)
+                return;
+
+            PanelTerminos.IsVisible = false; // se muestra el paso 1 (Hello!)
+        }
+
+        // Rechazar (o la flecha atrás de esta pantalla) devuelve al login.
+        private async void OnRechazarTerminosTapped(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync("..");
+        }
+
+        // El paso de bienvenida ocupa todo el alto visible: el botón queda abajo y la ilustración al centro.
+        private void OnScrollRegistroSizeChanged(object? sender, EventArgs e)
+        {
+            if (ScrollRegistro.Height > 0)
+            {
+                // padding 10 + 20 del contenedor
+                foreach (var paso in new VisualElement[] { PasoBienvenida, PasoRol, PasoCredenciales, PasoNombre, PasoFoto, PasoTrabajo, PasoDocumentos, PasoDireccion, PasoCobro })
+                    paso.MinimumHeightRequest = ScrollRegistro.Height - 30;
+            }
+        }
+
+        // ---- Ilustración de bienvenida (bucle sutil mientras la página está visible) ----
+        protected override void OnAppearing()
+        {
+            base.OnAppearing();
+            IniciarAnimacionBienvenida();
+        }
+
+        protected override void OnDisappearing()
+        {
+            base.OnDisappearing();
+            foreach (var n in new[] { "HolaSaludo", "HolaFlotar", "HolaParpadeo" })
+                this.AbortAnimation(n);
+        }
+
+        private void IniciarAnimacionBienvenida()
+        {
+            // Saludo: dos sacudidas rápidas de la mano y una pausa.
+            new Animation(t =>
+            {
+                var fase = t < 0.45 ? Math.Sin(t / 0.45 * Math.PI * 4) : 0;
+                HolaBrazo.Rotation = -8 + 18 * fase;
+            }, 0, 1).Commit(this, "HolaSaludo", length: 2600, easing: Easing.Linear, repeat: () => true);
+
+            // Corazón, destellos y anillo: flotan y respiran.
+            new Animation(t =>
+            {
+                var s = Math.Sin(t * Math.PI * 2);
+                HolaCorazon.TranslationY = -6 * s;
+                HolaCorazon.Scale = 1 + 0.08 * s;
+                HolaDestello1.Opacity = 0.55 + 0.45 * s;
+                HolaDestello1.Rotation = 20 * s;
+                HolaDestello2.Opacity = 0.55 - 0.45 * s;
+                HolaDestello2.Scale = 1 - 0.2 * s;
+                HolaAnillo.Scale = 1 + 0.03 * s;
+                HolaAnillo.Opacity = 0.3 + 0.12 * s;
+            }, 0, 1).Commit(this, "HolaFlotar", length: 3200, easing: Easing.Linear, repeat: () => true);
+
+            // Parpadeo breve cada ~3.5 s.
+            new Animation(t =>
+            {
+                var cierre = t > 0.94 ? Math.Sin((t - 0.94) / 0.06 * Math.PI) : 0;
+                HolaOjoIzq.ScaleY = HolaOjoDer.ScaleY = 1 - 0.9 * cierre;
+            }, 0, 1).Commit(this, "HolaParpadeo", length: 3500, easing: Easing.Linear, repeat: () => true);
+        }
+
+        protected override bool OnBackButtonPressed()
+        {
+            if (PanelTerminos.IsVisible)
+            {
+                OnRechazarTerminosTapped(this, EventArgs.Empty);
+                return true;
+            }
+
+            return base.OnBackButtonPressed();
+        }
+
         private async void OnBackTapped(object sender, EventArgs e)
         {
             if (currentStepIndex > 0)
@@ -100,12 +230,12 @@ namespace CUIDAPP.Views.Registro
             {
                 if (string.IsNullOrWhiteSpace(EntryEmail.Text) || !EntryEmail.Text.Contains("@"))
                 {
-                    await DisplayAlert(Localizador.T("error"), Localizador.T("por_favor_ingresa_un_correo"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("por_favor_ingresa_un_correo"), Localizador.T("ok"));
                     return false;
                 }
                 if (string.IsNullOrWhiteSpace(EntryPassword.Text) || EntryPassword.Text.Length < 6)
                 {
-                    await DisplayAlert(Localizador.T("error"), Localizador.T("la_contrasena_debe_tener_al_2"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("la_contrasena_debe_tener_al_2"), Localizador.T("ok"));
                     return false;
                 }
             }
@@ -113,7 +243,7 @@ namespace CUIDAPP.Views.Registro
             {
                 if (string.IsNullOrWhiteSpace(EntryNombre.Text))
                 {
-                    await DisplayAlert(Localizador.T("error"), Localizador.T("el_nombre_completo_es_obligatorio"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("el_nombre_completo_es_obligatorio"), Localizador.T("ok"));
                     return false;
                 }
             }
@@ -121,7 +251,7 @@ namespace CUIDAPP.Views.Registro
             {
                 if (string.IsNullOrWhiteSpace(EntryTarifa.Text) || !decimal.TryParse(EntryTarifa.Text, out decimal tarifa) || tarifa <= 0)
                 {
-                    await DisplayAlert(Localizador.T("error"), Localizador.T("por_favor_ingresa_una_tarifa"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("por_favor_ingresa_una_tarifa"), Localizador.T("ok"));
                     return false;
                 }
             }
@@ -129,13 +259,13 @@ namespace CUIDAPP.Views.Registro
             {
                 if (string.IsNullOrWhiteSpace(EntryDireccion.Text))
                 {
-                    await DisplayAlert(Localizador.T("error"), Localizador.T("selecciona_tu_direccion_en_el"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("selecciona_tu_direccion_en_el"), Localizador.T("ok"));
                     return false;
                 }
                 if (string.IsNullOrWhiteSpace(EntryEmergenciaNombre.Text) ||
                     string.IsNullOrWhiteSpace(EntryEmergenciaTelefono.Text))
                 {
-                    await DisplayAlert(Localizador.T("error"), Localizador.T("por_favor_completa_todos_los"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("por_favor_completa_todos_los"), Localizador.T("ok"));
                     return false;
                 }
             }
@@ -143,7 +273,7 @@ namespace CUIDAPP.Views.Registro
             {
                 if (fotoFile == null)
                 {
-                    await DisplayAlert(Localizador.T("error"), Localizador.T("selecciona_tu_foto_de_perfil"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("selecciona_tu_foto_de_perfil"), Localizador.T("ok"));
                     return false;
                 }
             }
@@ -151,7 +281,7 @@ namespace CUIDAPP.Views.Registro
             {
                 if (cedulaFile == null || antecedentesFile == null)
                 {
-                    await DisplayAlert(Localizador.T("error"), Localizador.T("selecciona_ambos_documentos"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("selecciona_ambos_documentos"), Localizador.T("ok"));
                     return false;
                 }
             }
@@ -272,7 +402,7 @@ namespace CUIDAPP.Views.Registro
             {
                 await OverlayExito.FadeTo(0, 200);
                 OverlayExito.IsVisible = false;
-                await DisplayAlert(Localizador.T("error"), Localizador.T("ocurrio_un_error_al_conectar"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("ocurrio_un_error_al_conectar"), Localizador.T("ok"));
             }
         }
 
@@ -280,7 +410,7 @@ namespace CUIDAPP.Views.Registro
         {
             await OverlayExito.FadeTo(0, 200);
             OverlayExito.IsVisible = false;
-            await DisplayAlert(Localizador.T("error"), Localizador.F("verifica_tu_conexion_e_intenta", mensaje), Localizador.T("ok"));
+            await Alerta.MostrarAsync(Localizador.T("error"), Localizador.F("verifica_tu_conexion_e_intenta", mensaje), Localizador.T("ok"));
         }
 
         private async void OnElegirDireccionMapaTapped(object sender, EventArgs e)
@@ -315,12 +445,16 @@ namespace CUIDAPP.Views.Registro
                 {
                     fotoFile = result;
                     LblFotoFileName.Text = result.FileName;
-                    LblFotoFileName.TextColor = Color.FromArgb("#10B981");
+                    LblFotoFileName.TextColor = Color.FromArgb("#2E7D32");
+                    ImgFotoPreview.Source = ImageSource.FromFile(result.FullPath);
+                    ImgFotoPreview.IsVisible = true;
+                    CirculoFoto.StrokeDashArray = null;
+                    CirculoFoto.Stroke = (Color)Application.Current!.Resources["ColorPrimary"];
                 }
             }
             catch (Exception ex)
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.F("no_se_pudo_seleccionar_la", ex.Message), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.F("no_se_pudo_seleccionar_la", ex.Message), Localizador.T("ok"));
             }
         }
 
@@ -337,12 +471,13 @@ namespace CUIDAPP.Views.Registro
                 {
                     cedulaFile = result;
                     LblCedulaFileName.Text = result.FileName;
-                    LblCedulaFileName.TextColor = Color.FromArgb("#10B981");
+                    LblCedulaFileName.TextColor = Color.FromArgb("#2E7D32");
+                    MarcarDocumentoListo(BtnPickCedula, CedulaEstadoCaja, CedulaEstado);
                 }
             }
             catch (Exception ex)
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.F("no_se_pudo_seleccionar_el", ex.Message), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.F("no_se_pudo_seleccionar_el", ex.Message), Localizador.T("ok"));
             }
         }
 
@@ -359,12 +494,13 @@ namespace CUIDAPP.Views.Registro
                 {
                     antecedentesFile = result;
                     LblAntecedentesFileName.Text = result.FileName;
-                    LblAntecedentesFileName.TextColor = Color.FromArgb("#10B981");
+                    LblAntecedentesFileName.TextColor = Color.FromArgb("#2E7D32");
+                    MarcarDocumentoListo(BtnPickAntecedentes, AntecedentesEstadoCaja, AntecedentesEstado);
                 }
             }
             catch (Exception ex)
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.F("no_se_pudo_seleccionar_el", ex.Message), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.F("no_se_pudo_seleccionar_el", ex.Message), Localizador.T("ok"));
             }
         }
 
@@ -400,84 +536,90 @@ namespace CUIDAPP.Views.Registro
 
         private void UpdateRoleOptionsUI()
         {
-            RoleOptionCliente.Stroke = RoleOptionCuidador.Stroke = Color.FromArgb("#E5E7EB");
-            RoleOptionCliente.BackgroundColor = RoleOptionCuidador.BackgroundColor = Colors.White;
-            RoleIconCliente.Fill = RoleIconCuidador.Fill = Color.FromArgb("#374151");
-            RoleTextCliente.TextColor = RoleTextCuidador.TextColor = Color.FromArgb("#374151");
+            PintarOpcionRol(RoleOptionCliente, RoleIconBoxCliente, RoleIconCliente, RoleTextCliente, RoleCheckCliente, RoleCheckMarkCliente, selectedRole == "Cliente");
+            PintarOpcionRol(RoleOptionCuidador, RoleIconBoxCuidador, RoleIconCuidador, RoleTextCuidador, RoleCheckCuidador, RoleCheckMarkCuidador, selectedRole == "Cuidador");
+        }
 
-            var activeStroke = Color.FromArgb("#1D4ED8");
-            var activeBg = Color.FromArgb("#EFF6FF");
+        private static void PintarOpcionRol(Border tarjeta, Border cajaIcono, Microsoft.Maui.Controls.Shapes.Path icono, Label titulo,
+                                            Border check, Microsoft.Maui.Controls.Shapes.Path marca, bool activo)
+        {
+            Color R(string k) => (Color)Application.Current!.Resources[k];
+            var primario = R("ColorPrimary");
 
-            if (selectedRole == "Cliente")
+            tarjeta.Stroke = activo ? primario : R("ColorBorder");
+            tarjeta.StrokeThickness = activo ? 2 : 1.5;
+            tarjeta.BackgroundColor = activo ? Color.FromArgb("#EAF1FB") : Colors.White;
+            cajaIcono.BackgroundColor = activo ? primario : R("ColorBackground");
+            icono.Fill = activo ? Colors.White : R("ColorTextMuted");
+            titulo.TextColor = activo ? primario : R("ColorTextStrong");
+            check.Stroke = activo ? primario : R("ColorBorder");
+            check.BackgroundColor = activo ? primario : Colors.White;
+
+            var estabaActivo = marca.Opacity > 0.5;
+            marca.Opacity = activo ? 1 : 0;
+            if (activo && !estabaActivo)
             {
-                RoleOptionCliente.Stroke = activeStroke; RoleOptionCliente.BackgroundColor = activeBg;
-                RoleIconCliente.Fill = activeStroke; RoleTextCliente.TextColor = activeStroke;
-            }
-            else
-            {
-                RoleOptionCuidador.Stroke = activeStroke; RoleOptionCuidador.BackgroundColor = activeBg;
-                RoleIconCuidador.Fill = activeStroke; RoleTextCuidador.TextColor = activeStroke;
+                // Respuesta al seleccionar: la tarjeta "late" y el check aparece.
+                marca.Scale = 0.6;
+                _ = marca.ScaleTo(1, 220, Easing.CubicOut);
+                _ = tarjeta.ScaleTo(0.98, 90, Easing.CubicOut).ContinueWith(_ =>
+                    MainThread.BeginInvokeOnMainThread(() => tarjeta.ScaleTo(1, 160, Easing.CubicOut)));
             }
         }
 
         private void UpdateJobOptionsUI()
         {
-            JobOption1.Stroke = JobOption3.Stroke = Color.FromArgb("#E5E7EB");
-            JobOption1.BackgroundColor = JobOption3.BackgroundColor = Colors.White;
-            JobIcon1.Fill = JobIcon3.Fill = JobText1.TextColor = JobText3.TextColor = Color.FromArgb("#374151");
-
-            JobOption2.Stroke = Color.FromArgb("#E5E7EB");
-            JobOption2.BackgroundColor = Colors.White;
-            JobIcon2.Fill = JobText2.TextColor = Color.FromArgb("#374151");
-
-            var activeStroke = Color.FromArgb("#1D4ED8");
-            var activeBg = Color.FromArgb("#EFF6FF");
-
-            switch (selectedJob)
-            {
-                case 1:
-                    JobOption1.Stroke = activeStroke; JobOption1.BackgroundColor = activeBg;
-                    JobIcon1.Fill = activeStroke; JobText1.TextColor = activeStroke;
-                    break;
-                case 2:
-                    JobOption2.Stroke = activeStroke; JobOption2.BackgroundColor = activeBg;
-                    JobIcon2.Fill = activeStroke; JobText2.TextColor = activeStroke;
-                    break;
-                case 3:
-                    JobOption3.Stroke = activeStroke; JobOption3.BackgroundColor = activeBg;
-                    JobIcon3.Fill = activeStroke; JobText3.TextColor = activeStroke;
-                    break;
-            }
+            PintarOpcionRol(JobOption1, JobIconBox1, JobIcon1, JobText1, JobCheck1, JobCheckMark1, selectedJob == 1);
+            PintarOpcionRol(JobOption2, JobIconBox2, JobIcon2, JobText2, JobCheck2, JobCheckMark2, selectedJob == 2);
+            PintarOpcionRol(JobOption3, JobIconBox3, JobIcon3, JobText3, JobCheck3, JobCheckMark3, selectedJob == 3);
         }
 
         private void UpdatePayOptionsUI()
         {
-            PayOption1.Stroke = PayOption3.Stroke = Color.FromArgb("#E5E7EB");
-            PayOption1.BackgroundColor = PayOption3.BackgroundColor = Colors.White;
-            PayIcon1.Fill = PayIcon3.Fill = PayText1.TextColor = PayText3.TextColor = Color.FromArgb("#374151");
+            PintarOpcionRol(PayOption1, PayIconBox1, PayIcon1, PayText1, PayCheck1, PayCheckMark1, selectedPay == 1);
+            PintarOpcionRol(PayOption2, PayIconBox2, PayIcon2, PayText2, PayCheck2, PayCheckMark2, selectedPay == 2);
+            PintarOpcionRol(PayOption3, PayIconBox3, PayIcon3, PayText3, PayCheck3, PayCheckMark3, selectedPay == 3);
+        }
 
-            PayOption2.Stroke = Color.FromArgb("#E5E7EB");
-            PayOption2.BackgroundColor = Colors.White;
-            PayIcon2.Fill = PayText2.TextColor = Color.FromArgb("#374151");
+        // ---- Campos: borde resaltado al enfocar ----
+        private static Border? BordeDe(object? sender)
+        {
+            var e = (sender as Element)?.Parent;
+            while (e != null && e is not Border) e = e.Parent;
+            return e as Border;
+        }
 
-            var activeStroke = Color.FromArgb("#1D4ED8");
-            var activeBg = Color.FromArgb("#EFF6FF");
-
-            switch (selectedPay)
+        private void OnCampoFocused(object? sender, FocusEventArgs e)
+        {
+            if (BordeDe(sender) is Border b)
             {
-                case 1:
-                    PayOption1.Stroke = activeStroke; PayOption1.BackgroundColor = activeBg;
-                    PayIcon1.Fill = activeStroke; PayText1.TextColor = activeStroke;
-                    break;
-                case 2:
-                    PayOption2.Stroke = activeStroke; PayOption2.BackgroundColor = activeBg;
-                    PayIcon2.Fill = activeStroke; PayText2.TextColor = activeStroke;
-                    break;
-                case 3:
-                    PayOption3.Stroke = activeStroke; PayOption3.BackgroundColor = activeBg;
-                    PayIcon3.Fill = activeStroke; PayText3.TextColor = activeStroke;
-                    break;
+                b.Stroke = (Color)Application.Current!.Resources["ColorPrimary"];
+                b.BackgroundColor = Colors.White;
             }
+        }
+
+        private void OnCampoUnfocused(object? sender, FocusEventArgs e)
+        {
+            if (BordeDe(sender) is Border b)
+            {
+                b.Stroke = (Color)Application.Current!.Resources["ColorBorder"];
+                b.BackgroundColor = (Color)Application.Current!.Resources["ColorBackground"];
+            }
+        }
+
+        private void OnToggleRegistroPassword(object? sender, EventArgs e) => EntryPassword.IsPassword = !EntryPassword.IsPassword;
+
+        // Documento elegido: la tarjeta pasa a verde con un check.
+        private static void MarcarDocumentoListo(Border tarjeta, Border estadoCaja, Microsoft.Maui.Controls.Shapes.Path estado)
+        {
+            var verde = Color.FromArgb("#2E7D32");
+            tarjeta.Stroke = verde;
+            tarjeta.BackgroundColor = Color.FromArgb("#F1F8F2");
+            estadoCaja.BackgroundColor = verde;
+            estado.Data = (Microsoft.Maui.Controls.Shapes.Geometry)new Microsoft.Maui.Controls.Shapes.PathGeometryConverter().ConvertFromInvariantString("M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z")!;
+            estado.Fill = Colors.White;
+            estadoCaja.Scale = 0.7;
+            _ = estadoCaja.ScaleTo(1, 220, Easing.CubicOut);
         }
 
         private async Task UpdateStepUI(bool animate)
@@ -494,7 +636,8 @@ namespace CUIDAPP.Views.Registro
                 {
                     if (animate)
                     {
-                        await view.FadeTo(0, 150);
+                        await Task.WhenAll(view.FadeTo(0, 120, Easing.CubicOut), view.TranslateTo(-16, 0, 120, Easing.CubicOut));
+                        view.TranslationX = 0;
                     }
                     view.IsVisible = false;
                 }
@@ -507,7 +650,10 @@ namespace CUIDAPP.Views.Registro
 
                 if (animate)
                 {
-                    await targetView.FadeTo(1, 150);
+                    targetView.TranslationX = 24;
+                    await Task.WhenAll(
+                        targetView.FadeTo(1, 220, Easing.CubicOut),
+                        targetView.TranslateTo(0, 0, 260, Easing.CubicOut));
                 }
             }
         }

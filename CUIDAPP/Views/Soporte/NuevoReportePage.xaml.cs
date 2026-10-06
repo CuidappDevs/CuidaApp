@@ -21,13 +21,13 @@ namespace CUIDAPP.Views.Soporte
         {
             if (PickerCategoria.SelectedIndex < 0)
             {
-                await DisplayAlert(Localizador.T("falta_informacion"), Localizador.T("selecciona_una_categoria_2"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("falta_informacion"), Localizador.T("selecciona_una_categoria_2"), Localizador.T("ok"));
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(EntryAsunto.Text) || string.IsNullOrWhiteSpace(EditorDescripcion.Text))
             {
-                await DisplayAlert(Localizador.T("falta_informacion"), Localizador.T("completa_el_asunto_y_la"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("falta_informacion"), Localizador.T("completa_el_asunto_y_la"), Localizador.T("ok"));
                 return;
             }
 
@@ -51,12 +51,12 @@ namespace CUIDAPP.Views.Soporte
 
             if (ticketId != null)
             {
-                await DisplayAlert(Localizador.T("reporte_enviado"), Localizador.T("nuestro_equipo_lo_revisara_pronto"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("reporte_enviado"), Localizador.T("nuestro_equipo_lo_revisara_pronto"), Localizador.T("ok"));
                 await Shell.Current.GoToAsync("..");
             }
             else
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_pudo_enviar_el"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_enviar_el"), Localizador.T("ok"));
                 BtnEnviar.Text = Localizador.T("enviar_reporte");
                 BtnEnviar.IsEnabled = true;
             }

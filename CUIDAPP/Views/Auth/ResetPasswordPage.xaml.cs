@@ -62,13 +62,13 @@ namespace CUIDAPP.Views.Auth
         {
             if (string.IsNullOrWhiteSpace(EntryNewPass.Text) || EntryNewPass.Text.Length < 6)
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("la_contrasena_debe_tener_al_2"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("la_contrasena_debe_tener_al_2"), Localizador.T("ok"));
                 return;
             }
 
             if (EntryNewPass.Text != EntryConfirmPass.Text)
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("las_contrasenas_no_coinciden"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("las_contrasenas_no_coinciden"), Localizador.T("ok"));
                 return;
             }
 
@@ -81,18 +81,18 @@ namespace CUIDAPP.Views.Auth
 
                 if (success)
                 {
-                    await DisplayAlert(Localizador.T("exito"), Localizador.T("tu_contrasena_ha_sido_actualizada"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("exito"), Localizador.T("tu_contrasena_ha_sido_actualizada"), Localizador.T("ok"));
                     await Shell.Current.GoToAsync("//MainPage");
                 }
                 else
                 {
-                    await DisplayAlert(Localizador.T("error"), Localizador.T("codigo_invalido_o_expirado_intenta"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("codigo_invalido_o_expirado_intenta"), Localizador.T("ok"));
                     await Shell.Current.GoToAsync("//MainPage");
                 }
             }
             catch (Exception ex)
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.F("ocurrio_un_error", ex.Message), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.F("ocurrio_un_error", ex.Message), Localizador.T("ok"));
             }
             finally
             {

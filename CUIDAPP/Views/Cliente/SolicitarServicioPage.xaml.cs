@@ -22,12 +22,15 @@ namespace CUIDAPP.Views.Cliente
 
             if (tareas.Count >= MaxTareas)
             {
-                _ = DisplayAlert(Localizador.T("limite_alcanzado"), Localizador.F("puedes_agregar_hasta_tareas", MaxTareas), Localizador.T("ok"));
+                _ = Alerta.MostrarAsync(Localizador.T("limite_alcanzado"), Localizador.F("puedes_agregar_hasta_tareas", MaxTareas), Localizador.T("ok"));
                 return;
             }
 
             tareas.Add(texto);
             EntryTarea.Text = "";
+            agregadaRecien = true;
+            _ = BtnAgregarTarea.ScaleTo(0.85, 80, Easing.CubicOut).ContinueWith(_ =>
+                MainThread.BeginInvokeOnMainThread(() => BtnAgregarTarea.ScaleTo(1, 160, Easing.CubicOut)));
             RenderizarTareas();
         }
 
@@ -36,30 +39,120 @@ namespace CUIDAPP.Views.Cliente
             ListaTareas.Clear();
             foreach (var tarea in tareas.ToList())
             {
-                var quitar = new Label { Text = "✕", FontSize = 16, TextColor = Color.FromArgb("#9CA3AF"), VerticalOptions = LayoutOptions.Center, Padding = new Thickness(8, 0) };
+                var quitar = new Border
+                {
+                    Stroke = Colors.Transparent,
+                    BackgroundColor = (Color)Application.Current!.Resources["ColorBackground"],
+                    StrokeShape = new Microsoft.Maui.Controls.Shapes.Ellipse(),
+                    WidthRequest = 32,
+                    HeightRequest = 32,
+                    VerticalOptions = LayoutOptions.Center,
+                    Content = new Microsoft.Maui.Controls.Shapes.Path
+                    {
+                        Data = Geo("M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z"),
+                        Fill = (Color)Application.Current!.Resources["ColorTextMuted"],
+                        Aspect = Stretch.Uniform, WidthRequest = 12, HeightRequest = 12,
+                        HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center
+                    }
+                };
+
+                var check = new Border
+                {
+                    Stroke = (Color)Application.Current!.Resources["ColorPrimaryLight"],
+                    StrokeThickness = 2,
+                    BackgroundColor = Colors.White,
+                    StrokeShape = new Microsoft.Maui.Controls.Shapes.Ellipse(),
+                    WidthRequest = 22,
+                    HeightRequest = 22,
+                    VerticalOptions = LayoutOptions.Center
+                };
+
+                var fila = new Grid { ColumnSpacing = 12, ColumnDefinitions = { new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) } };
+                fila.Add(check, 0);
+                fila.Add(new Label { Text = tarea, FontSize = 14, FontFamily = "OpenSansRegular", TextColor = (Color)Application.Current!.Resources["ColorTextStrong"], VerticalOptions = LayoutOptions.Center }, 1);
+                fila.Add(quitar, 2);
+
+                var tarjeta = new Border
+                {
+                    Stroke = Colors.Transparent,
+                    BackgroundColor = Colors.White,
+                    StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 },
+                    Padding = new Thickness(14, 8, 8, 8),
+                    Content = fila
+                };
+
                 quitar.GestureRecognizers.Add(new TapGestureRecognizer
                 {
-                    Command = new Command(() =>
+                    Command = new Command(async () =>
                     {
+                        // Sale deslizándose antes de quitarse de la lista
+                        await Task.WhenAll(tarjeta.FadeTo(0, 140, Easing.CubicOut), tarjeta.TranslateTo(24, 0, 140, Easing.CubicOut));
                         tareas.Remove(tarea);
                         RenderizarTareas();
                     })
                 });
 
-                var fila = new Grid { ColumnDefinitions = { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) } };
-                fila.Add(new Label { Text = "☐  " + tarea, FontSize = 14, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#111827"), VerticalOptions = LayoutOptions.Center });
-                fila.Add(quitar, 1);
+                ListaTareas.Add(tarjeta);
+            }
 
-                ListaTareas.Add(new Border
-                {
-                    Stroke = Colors.Transparent,
-                    BackgroundColor = Color.FromArgb("#F8FAFC"),
-                    StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
-                    Padding = new Thickness(12, 10),
-                    Content = fila
-                });
+            // La última tarea agregada entra con animación
+            if (ListaTareas.Count > 0 && ListaTareas[^1] is VisualElement ultima && agregadaRecien)
+            {
+                ultima.Opacity = 0;
+                ultima.TranslationY = -8;
+                _ = ultima.FadeTo(1, 220, Easing.CubicOut);
+                _ = ultima.TranslateTo(0, 0, 260, Easing.CubicOut);
+            }
+            agregadaRecien = false;
+        }
+
+        private bool agregadaRecien;
+
+        private static Microsoft.Maui.Controls.Shapes.Geometry Geo(string d) =>
+            (Microsoft.Maui.Controls.Shapes.Geometry)new Microsoft.Maui.Controls.Shapes.PathGeometryConverter().ConvertFromInvariantString(d)!;
+
+        private void OnTareaFocused(object? sender, FocusEventArgs e) => BordeTarea.Stroke = (Color)Application.Current!.Resources["ColorPrimary"];
+
+        private void OnTareaUnfocused(object? sender, FocusEventArgs e) => BordeTarea.Stroke = Colors.Transparent;
+
+        private void OnBotonPresionado(object? sender, EventArgs e) => _ = BtnEnviar.ScaleTo(0.97, 100, Easing.CubicOut);
+
+        private void OnBotonSoltado(object? sender, EventArgs e) => _ = BtnEnviar.ScaleTo(1, 160, Easing.CubicOut);
+
+        // Estado de envío: botón gris azulado con spinner en lugar del texto.
+        private void MostrarEnviando(bool enviando)
+        {
+            BtnEnviar.IsEnabled = !enviando;
+            BtnEnviar.Text = enviando ? "" : Localizador.T("enviar_solicitud");
+            BtnEnviar.BackgroundColor = enviando ? Color.FromArgb("#7F97BC") : (Color)Application.Current!.Resources["ColorPrimary"];
+            SpinnerEnviar.IsVisible = SpinnerEnviar.IsRunning = enviando;
+            SemanticProperties.SetDescription(SpinnerEnviar, Localizador.T("enviando"));
+        }
+
+
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+            BarraEstado.Azul();
+            if (entradaHecha) return;
+            entradaHecha = true;
+            try
+            {
+                _ = TarjetaCuidador.FadeTo(1, 300, Easing.CubicOut);
+                _ = TarjetaCuidador.TranslateTo(0, 0, 360, Easing.CubicOut);
+                await Task.Delay(80);
+                _ = Formulario.FadeTo(1, 300, Easing.CubicOut);
+                await Formulario.TranslateTo(0, 0, 360, Easing.CubicOut);
+            }
+            finally
+            {
+                TarjetaCuidador.Opacity = 1; TarjetaCuidador.TranslationY = 0;
+                Formulario.Opacity = 1; Formulario.TranslationY = 0;
+                PieAccion.TranslationY = 0;
             }
         }
+
+        private bool entradaHecha;
 
         public void ApplyQueryAttributes(IDictionary<string, object> query)
         {
@@ -73,6 +166,18 @@ namespace CUIDAPP.Views.Cliente
         public SolicitarServicioPage()
         {
             InitializeComponent();
+
+            // Borde a borde: el encabezado empieza debajo de la barra de estado y el contenido
+            // termina con espacio para la barra de gestos.
+            ContenidoEncabezado.Margin = new Thickness(0, BarraEstado.Alto(), 0, 0);
+            EspacioInferior.HeightRequest = 24 + BarraEstado.AltoInferior();
+
+
+            // Estado inicial de la entrada (antes del primer frame).
+            TarjetaCuidador.Opacity = 0;
+            TarjetaCuidador.TranslationY = 12;
+            Formulario.Opacity = 0;
+            Formulario.TranslationY = 20;
             PickerFecha.MinimumDate = ServerClock.Today;
             PickerFecha.Date = ServerClock.Today;
             PickerHoraInicio.Time = new TimeSpan(9, 0, 0);
@@ -86,7 +191,7 @@ namespace CUIDAPP.Views.Cliente
         {
             LblNombre.Text = c.NombreCompleto;
             LblEspecialidad.Text = Localizador.D(c.Especialidad);
-            LblTarifa.Text = Localizador.F("rd_hr", c.TarifaHora);
+            LblTarifa.Text = $"{Localizador.F("rd_monto", c.TarifaHora)} {Localizador.T("sufijo_por_hora")}";
 
             if (!string.IsNullOrWhiteSpace(c.FotoUrl))
                 ImgFoto.Source = $"{ApiService.ServerOrigin}{c.FotoUrl}";
@@ -104,7 +209,7 @@ namespace CUIDAPP.Views.Cliente
             var horas = (decimal)(horaFin - horaInicio).TotalHours;
 
             LblTotal.Text = horas > 0
-                ? Localizador.F("rd", (cuidador.TarifaHora * horas))
+                ? Localizador.F("rd_monto", (cuidador.TarifaHora * horas))
                 : "--";
         }
 
@@ -138,32 +243,31 @@ namespace CUIDAPP.Views.Cliente
 
             if (ubicacionElegida == null)
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("selecciona_a_donde_debe_ir"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("selecciona_a_donde_debe_ir"), Localizador.T("ok"));
                 return;
             }
 
             if (PickerHoraFin.Time <= PickerHoraInicio.Time)
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("la_hora_de_fin_debe"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("la_hora_de_fin_debe"), Localizador.T("ok"));
                 return;
             }
 
             var fechaSeleccionada = (PickerFecha.Date ?? ServerClock.Today).Date;
             if (fechaSeleccionada == ServerClock.Today && PickerHoraInicio.Time <= ServerClock.Now.TimeOfDay)
             {
-                await DisplayAlert(Localizador.T("horario_invalido"), Localizador.F("ya_son_las_elige_una", ServerClock.Now), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("horario_invalido"), Localizador.F("ya_son_las_elige_una", ServerClock.Now), Localizador.T("ok"));
                 return;
             }
 
             var clienteId = Preferences.Default.Get("UserId", 0);
             if (clienteId == 0)
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("tu_sesion_expiro_vuelve_a"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("tu_sesion_expiro_vuelve_a"), Localizador.T("ok"));
                 return;
             }
 
-            BtnEnviar.IsEnabled = false;
-            BtnEnviar.Text = Localizador.T("enviando");
+            MostrarEnviando(true);
 
             try
             {
@@ -173,7 +277,7 @@ namespace CUIDAPP.Views.Cliente
                 var serviciosActivos = await _apiService.ObtenerTrabajosActivosPorClienteAsync(clienteId);
                 if (serviciosActivos.Any(t => t.CuidadorId == cuidador.Id && t.Estado is 1 or 2 or 3))
                 {
-                    await DisplayAlert(Localizador.T("ya_tienes_una_solicitud_con"), Localizador.T("ya_tienes_un_servicio_pendiente"), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("ya_tienes_una_solicitud_con"), Localizador.T("ya_tienes_un_servicio_pendiente"), Localizador.T("ok"));
                     return;
                 }
 
@@ -201,22 +305,21 @@ namespace CUIDAPP.Views.Cliente
 
                 if (success)
                 {
-                    await DisplayAlert(Localizador.T("solicitud_enviada"), Localizador.F("le_avisamos_a_te_notificaremos", cuidador.NombreCompleto), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("solicitud_enviada"), Localizador.F("le_avisamos_a_te_notificaremos", cuidador.NombreCompleto), Localizador.T("ok"));
                     await Shell.Current.GoToAsync("../../..");
                 }
                 else
                 {
-                    await DisplayAlert(Localizador.T("error"), Localizador.F("no_se_pudo_enviar_la_3", error), Localizador.T("ok"));
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.F("no_se_pudo_enviar_la_3", error), Localizador.T("ok"));
                 }
             }
             catch (Exception ex)
             {
-                await DisplayAlert(Localizador.T("error_inesperado"), ex.ToString(), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error_inesperado"), ex.ToString(), Localizador.T("ok"));
             }
             finally
             {
-                BtnEnviar.IsEnabled = true;
-                BtnEnviar.Text = Localizador.T("enviar_solicitud");
+                MostrarEnviando(false);
             }
         }
     }

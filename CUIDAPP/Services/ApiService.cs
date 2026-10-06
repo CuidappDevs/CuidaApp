@@ -973,6 +973,63 @@ namespace CUIDAPP.Services
             }
         }
 
+        public async Task<ContactoEmergencia?> ObtenerContactoEmergenciaCuidadorAsync(int cuidadorId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"cuidador/{cuidadorId}/contacto-emergencia");
+                if (!response.IsSuccessStatusCode)
+                    return null;
+                return await response.Content.ReadFromJsonAsync<ContactoEmergencia>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo contacto de emergencia: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<(bool Success, string? Error)> GuardarContactoEmergenciaCuidadorAsync(int cuidadorId, ContactoEmergencia contacto)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"cuidador/{cuidadorId}/contacto-emergencia", contacto);
+                if (response.IsSuccessStatusCode)
+                    return (true, null);
+
+                var error = await response.Content.ReadFromJsonAsync<IniciarTrabajoErrorDto>();
+                return (false, error?.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error guardando contacto de emergencia: {ex.Message}");
+                return (false, ex.Message);
+            }
+        }
+
+        /// <summary>Alerta automática de "hombre muerto": el cuidador no confirmó que estaba bien tras una posible caída.</summary>
+        public async Task<bool> EnviarDeadManAsync(int trabajoId, int usuarioId, double latitud, double longitud, double? impactoG, int? segundosInmovil)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("sos/dead-man-triggered", new
+                {
+                    TrabajoId = trabajoId,
+                    UsuarioId = usuarioId,
+                    Latitud = latitud,
+                    Longitud = longitud,
+                    ImpactoG = impactoG,
+                    SegundosInmovil = segundosInmovil
+                });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error enviando alerta dead-man: {ex.Message}");
+                return false;
+            }
+        }
+
         public async Task<bool> EnviarSOSAsync(int trabajoId, int usuarioId, string tipoUsuario, double latitud, double longitud, string? motivo = null)
         {
             try

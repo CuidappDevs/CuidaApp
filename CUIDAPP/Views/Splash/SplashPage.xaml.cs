@@ -1,3 +1,4 @@
+using CUIDAPP.Helpers;
 using CUIDAPP.Localization;
 using Microsoft.Maui.Controls.Shapes;
 
@@ -16,21 +17,37 @@ namespace CUIDAPP.Views.Splash
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            BarraEstado.Azul();
 
             var version = AppInfo.Current.VersionString;
             var build = AppInfo.Current.BuildString;
             LblVersion.Text = Localizador.F("version", version, build);
 
+            LblTagline.TranslationY = 8;
+
             await Task.WhenAll(
-                LogoCircle.FadeTo(1, 550, Easing.CubicOut),
-                LogoCircle.ScaleTo(1, 550, Easing.SpringOut)
+                LogoCircle.FadeTo(1, 450, Easing.CubicOut),
+                LogoCircle.ScaleTo(1, 500, Easing.CubicOut)
             );
 
-            await LblTagline.FadeTo(1, 400, Easing.CubicOut);
-            await DotsPanel.FadeTo(1, 300, Easing.CubicOut);
+            await Task.WhenAll(
+                LblTagline.FadeTo(1, 350, Easing.CubicOut),
+                LblTagline.TranslateTo(0, 0, 350, Easing.CubicOut)
+            );
+            await DotsPanel.FadeTo(1, 250, Easing.CubicOut);
             _ = LblVersion.FadeTo(1, 500, Easing.CubicOut);
 
             await AnimarPuntosCargandoAsync();
+
+            // Salida: el contenido se desvanece y queda solo el fondo azul,
+            // que continúa en el encabezado del login.
+            await Task.WhenAll(
+                LogoCircle.FadeTo(0, 220, Easing.CubicOut),
+                LogoCircle.ScaleTo(0.96, 220, Easing.CubicOut),
+                LblTagline.FadeTo(0, 180, Easing.CubicOut),
+                DotsPanel.FadeTo(0, 180, Easing.CubicOut),
+                LblVersion.FadeTo(0, 180, Easing.CubicOut)
+            );
 
             _alTerminar?.Invoke();
         }
@@ -52,8 +69,8 @@ namespace CUIDAPP.Views.Splash
 
         private static async Task PulsarPuntoAsync(Ellipse punto)
         {
-            await punto.ScaleTo(1.5, 200, Easing.CubicOut);
-            await punto.ScaleTo(1, 200, Easing.CubicIn);
+            await Task.WhenAll(punto.ScaleTo(1.4, 200, Easing.CubicOut), punto.FadeTo(1, 200, Easing.CubicOut));
+            await Task.WhenAll(punto.ScaleTo(1, 220, Easing.CubicInOut), punto.FadeTo(0.6, 220, Easing.CubicInOut));
         }
     }
 }

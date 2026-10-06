@@ -69,6 +69,8 @@ Each domain has its own folder in Controllers/, Interfaces/, Services/, DTOs/:
 - Mapbox + Leaflet for maps (WebView)
 - Plugin.Maui.Audio for voice messages
 - Colors defined in `Resources/Styles/Colors.xaml` as StaticResource
+- Never anchor a button/footer to the bottom edge of a page (overlay with `VerticalOptions="End"`, or a bottom grid row): in this app it ends up under the gesture bar, whatever the safe-area mode. Put the main action inside the scroll content (a card at the end), followed by an empty `ContentView` spacer of `24 + BarraEstado.AltoInferior()`. Pages with a blue header stay edge-to-edge (`SafeAreaEdges="None"` + header margin `BarraEstado.Alto()`), like `CuidadoresPorServicioPage`/`SolicitarServicioPage`. Never use a transparent `BoxView` as a spacer (it renders dark on Android)
+- Alerts: never use `DisplayAlert`; use `Alerta.MostrarAsync(titulo, mensaje, boton)` or `Alerta.MostrarAsync(titulo, mensaje, aceptar, cancelar)` → `bool` (`Helpers/Alerta.cs`, custom design, optional `TipoAlerta`). On Android it is a native transparent dialog, so it does not trigger OnAppearing/OnDisappearing on the page below
 
 ## Multi-idioma (MAUI)
 

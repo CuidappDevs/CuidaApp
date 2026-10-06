@@ -34,5 +34,13 @@ namespace CUIDAPP
             Routing.RegisterRoute("NuevoReportePage", typeof(Views.Soporte.NuevoReportePage));
             Routing.RegisterRoute("DetalleReportePage", typeof(Views.Soporte.DetalleReportePage));
         }
+    
+        // La barra de estado acompaña al encabezado azul del login y recuperar contraseña; en el resto, blanca.
+        protected override void OnNavigated(ShellNavigatedEventArgs args)
+        {
+            base.OnNavigated(args);
+            if (CurrentPage is MainPage or Views.Auth.ForgotPasswordPage or Views.Cliente.ClientePerfilPage or Views.Cliente.CuidadoresPorServicioPage or Views.Cliente.CuidadorDetallePage or Views.Calificacion.MisCalificacionesPage or Views.Soporte.MisReportesPage or Views.Cliente.SolicitarServicioPage) Helpers.BarraEstado.Azul();
+            else Helpers.BarraEstado.Blanca();
+        }
     }
 }

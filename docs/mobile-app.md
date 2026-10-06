@@ -46,3 +46,17 @@ Todos los cambios de la app móvil son aditivos o de corrección de bugs — nin
 - Cliente (`DetalleServicioClientePage`): en la tarjeta "¿Confirmas que el trabajo fue completado?" aparecen chips *Sin propina / RD$100 / RD$150 / RD$200 / Otro monto*; muestra el total con propina y la envía al confirmar.
 - Cuidador: recibe un aviso en tiempo real (`PropinaRecibida`) y en *Mi dinero* cada pago muestra el total y "incl. propina".
 - Los montos sugeridos están fijos en la app (`PropinasSugeridas`); el tope (RD$50,000) debe coincidir con `MaxPropina` en `TrabajoController`.
+
+
+## Detección de caídas ("hombre muerto")
+
+- `Services/DetectorCaidas.cs` (lógica pura) lee el **acelerómetro y giroscopio nativos** (`Accelerometer`/`Gyroscope` de MAUI → `SensorManager` en Android). Impacto ≥ 3 g y luego 60 s de quietud continua (≈1 g y giro bajo) → pide confirmación. Los umbrales están en esa clase y conviene calibrarlos con pruebas reales.
+- `Services/DeadManService.cs` solo escucha mientras el cuidador tiene un servicio **En Progreso** (se sincroniza al abrir el dashboard, al iniciar/finalizar/cancelar y con `TrabajoActualizado`). Cuenta regresiva de 30 s (`ConfirmarBienestarPage`, con vibración); si no confirma envía `POST /api/sos/dead-man-triggered` (3 intentos).
+- Al **aceptar** y al **iniciar** un servicio se muestra el aviso de llevar siempre el celular, y si el cuidador no tiene contacto de emergencia se le ofrece agregarlo (Perfil → Contacto de emergencia).
+- Los sensores solo entregan datos con el proceso vivo: en Android lo mantiene `ConexionForegroundService`. Con la app en segundo plano se avisa con una notificación; la pantalla se abre al volver a la app.
+
+## Términos y Condiciones en el registro
+
+- `RegistroPage` muestra primero la pantalla de **Términos y Condiciones** (`PanelTerminos`), antes del paso 1 ("Hello!"). *Aceptar* y *Rechazar* se habilitan solo al llegar al final del texto (o si cabe sin scroll). *Rechazar* (o la flecha/botón atrás) vuelve al login; *Aceptar* muestra el paso 1.
+- El texto está en las claves `tyc_*` de `es.json`/`en.json` y es **de referencia**: debe revisarlo un abogado antes de publicar.
+- Pendiente: la aceptación hoy no se guarda en el servidor (versión y fecha); conviene registrarla junto con el usuario.

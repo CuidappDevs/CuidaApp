@@ -69,20 +69,20 @@ namespace CUIDAPP.Views.Trabajos
         {
             if (trabajo == null)
             {
-                await DisplayAlert(Localizador.T("error"), Localizador.T("no_se_encontro_la_informacion"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_encontro_la_informacion"), Localizador.T("ok"));
                 return;
             }
 
             var pin = ObtenerPin();
             if (pin.Length != 4)
             {
-                await DisplayAlert(Localizador.T("codigo_incompleto"), Localizador.T("ingresa_los_4_digitos_del"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("codigo_incompleto"), Localizador.T("ingresa_los_4_digitos_del"), Localizador.T("ok"));
                 return;
             }
 
             if (CardJustificacion.IsVisible && string.IsNullOrWhiteSpace(EditorJustificacion.Text))
             {
-                await DisplayAlert(Localizador.T("falta_la_justificacion"), Localizador.T("explicale_al_cliente_por_que"), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("falta_la_justificacion"), Localizador.T("explicale_al_cliente_por_que"), Localizador.T("ok"));
                 return;
             }
 
@@ -97,7 +97,8 @@ namespace CUIDAPP.Views.Trabajos
 
                 if (success)
                 {
-                    await DisplayAlert(Localizador.T("enviado"), Localizador.T("le_avisamos_al_cliente_para"), Localizador.T("ok"));
+                    DeadManService.Detener();
+                    await Alerta.MostrarAsync(Localizador.T("enviado"), Localizador.T("le_avisamos_al_cliente_para"), Localizador.T("ok"));
                     await Shell.Current.GoToAsync("../..");
                     return;
                 }
@@ -111,7 +112,7 @@ namespace CUIDAPP.Views.Trabajos
             }
             catch (Exception ex)
             {
-                await DisplayAlert(Localizador.T("error_inesperado"), Localizador.F("no_se_pudo_verificar_el", ex.Message), Localizador.T("ok"));
+                await Alerta.MostrarAsync(Localizador.T("error_inesperado"), Localizador.F("no_se_pudo_verificar_el", ex.Message), Localizador.T("ok"));
             }
             finally
             {

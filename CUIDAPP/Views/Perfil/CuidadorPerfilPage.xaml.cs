@@ -22,6 +22,44 @@ namespace CUIDAPP.Views.Perfil
             Localizador.Instancia.IdiomaCambiado -= RepintarTextos;
             Localizador.Instancia.IdiomaCambiado += RepintarTextos;
             await CargarPerfil();
+            await CargarContactoAsync();
+        }
+
+        private async Task CargarContactoAsync()
+        {
+            var cuidadorId = Preferences.Default.Get("UserId", 0);
+            var contacto = await _apiService.ObtenerContactoEmergenciaCuidadorAsync(cuidadorId);
+            if (contacto == null)
+                return;
+
+            EntryContactoNombre.Text = contacto.Nombre;
+            EntryContactoTelefono.Text = contacto.Telefono;
+            EntryContactoEmail.Text = contacto.Email;
+        }
+
+        private async void OnGuardarContactoClicked(object sender, EventArgs e)
+        {
+            var cuidadorId = Preferences.Default.Get("UserId", 0);
+            if (cuidadorId == 0)
+                return;
+
+            BtnGuardarContacto.IsEnabled = false;
+            BtnGuardarContacto.Text = Localizador.T("guardando");
+
+            var (success, error) = await _apiService.GuardarContactoEmergenciaCuidadorAsync(cuidadorId, new Models.Cuidador.ContactoEmergencia
+            {
+                Nombre = EntryContactoNombre.Text?.Trim(),
+                Telefono = EntryContactoTelefono.Text?.Trim(),
+                Email = EntryContactoEmail.Text?.Trim()
+            });
+
+            BtnGuardarContacto.IsEnabled = true;
+            BtnGuardarContacto.Text = Localizador.T("guardar_contacto");
+
+            if (success)
+                await Alerta.MostrarAsync(Localizador.T("contacto_guardado"), Localizador.T("contacto_guardado_texto"), Localizador.T("ok"));
+            else
+                await Alerta.MostrarAsync(Localizador.T("error"), error ?? Localizador.T("contacto_error"), Localizador.T("ok"));
         }
 
         protected override void OnDisappearing()

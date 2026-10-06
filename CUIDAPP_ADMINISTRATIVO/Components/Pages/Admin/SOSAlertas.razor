@@ -37,6 +37,12 @@
                         </div>
                         <div>
                             <div style="font-size:16px; font-weight:600; color:#111827;">@alerta.NombreUsuario</div>
+                            @if (alerta.EsAutomatica)
+                            {
+                                <div style="margin-top:4px;">
+                                    <span style="background:#C62828; color:white; padding:2px 8px; border-radius:10px; font-weight:700; font-size:11px;">⚠ DETECCIÓN AUTOMÁTICA · Posible caída</span>
+                                </div>
+                            }
                             <div style="font-size:13px; color:#6B7280; margin-top:2px;">
                                 <span style="background:#FEF3C7; color:#92400E; padding:2px 8px; border-radius:10px; font-weight:600; font-size:11px;">@alerta.TipoUsuario</span>
                                 &nbsp;· Trabajo #@alerta.TrabajoId
@@ -45,6 +51,18 @@
                             @if (!string.IsNullOrEmpty(alerta.EmailUsuario))
                             {
                                 <div style="font-size:12px; color:#6B7280; margin-top:4px;">📧 @alerta.EmailUsuario</div>
+                            }
+                            @if (!string.IsNullOrEmpty(alerta.ContactoNombre) || !string.IsNullOrEmpty(alerta.ContactoTelefono))
+                            {
+                                <div style="font-size:12px; color:#374151; margin-top:4px;">
+                                    👪 Contacto de emergencia: <b>@alerta.ContactoNombre</b>
+                                    @if (!string.IsNullOrEmpty(alerta.ContactoTelefono)) { <span>· 📞 @alerta.ContactoTelefono</span> }
+                                    @if (!string.IsNullOrEmpty(alerta.ContactoEmail)) { <span>· ✉ @alerta.ContactoEmail</span> }
+                                </div>
+                            }
+                            else if (alerta.EsAutomatica)
+                            {
+                                <div style="font-size:12px; color:#B45309; margin-top:4px;">👪 Este cuidador no tiene contacto de emergencia registrado.</div>
                             }
                             @if (!string.IsNullOrEmpty(alerta.Motivo))
                             {
