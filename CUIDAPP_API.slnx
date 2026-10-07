@@ -4,4 +4,5 @@
   </Project>
   <Project Path="CUIDAPP_ADMINISTRATIVO/CUIDAPP_ADMINISTRATIVO.csproj" Id="aa6fd4e9-29d9-4bcb-82c5-cc431fdf319a" />
   <Project Path="CUIDAPP_API/CUIDAPP_API.csproj" />
+  <Project Path="CUIDAPP_API.Tests/CUIDAPP_API.Tests.csproj" />
 </Solution>

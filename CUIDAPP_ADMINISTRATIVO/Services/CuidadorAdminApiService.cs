@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using CUIDAPP_ADMINISTRATIVO.Models.Common;
 using CUIDAPP_ADMINISTRATIVO.Models.Cuidador;
 
 namespace CUIDAPP_ADMINISTRATIVO.Services
@@ -84,31 +85,32 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
             }
         }
 
-        public async Task<bool> SuspenderAsync(int usuarioId, int adminId, string motivo)
+        public async Task<AdminActionResult> SuspenderAsync(int usuarioId, int adminId, string motivo, DateTimeOffset? fechaFinUtc = null)
         {
             try
             {
-                var response = await _httpClient.PutAsJsonAsync($"admin/cuidadores/{usuarioId}/suspender", new { AdminId = adminId, Motivo = motivo });
-                return response.IsSuccessStatusCode;
+                var response = await _httpClient.PutAsJsonAsync($"admin/cuidadores/{usuarioId}/suspender",
+                    new { AdminId = adminId, Motivo = motivo, FechaFinUtc = fechaFinUtc });
+                return await AdminActionResult.DesdeRespuestaAsync(response);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error suspendiendo cuenta: {ex.Message}");
-                return false;
+                return AdminActionResult.Falla("NETWORK_ERROR", "No se pudo contactar con el servidor.");
             }
         }
 
-        public async Task<bool> ReactivarAsync(int usuarioId, int adminId)
+        public async Task<AdminActionResult> ReactivarAsync(int usuarioId, int adminId)
         {
             try
             {
                 var response = await _httpClient.PutAsJsonAsync($"admin/cuidadores/{usuarioId}/reactivar", new { AdminId = adminId });
-                return response.IsSuccessStatusCode;
+                return await AdminActionResult.DesdeRespuestaAsync(response);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error reactivando cuenta: {ex.Message}");
-                return false;
+                return AdminActionResult.Falla("NETWORK_ERROR", "No se pudo contactar con el servidor.");
             }
         }
 

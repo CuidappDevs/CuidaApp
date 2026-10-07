@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using CUIDAPP_API.DTOs.Admin;
+using CUIDAPP_API.DTOs.Common;
 using CUIDAPP_API.Interfaces.Admin;
 
 namespace CUIDAPP_API.Controllers
@@ -9,10 +10,40 @@ namespace CUIDAPP_API.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IAdminService _adminService;
+        private readonly ILogger<AdminController> _logger;
 
-        public AdminController(IAdminService adminService)
+        public AdminController(IAdminService adminService, ILogger<AdminController> logger)
         {
             _adminService = adminService;
+            _logger = logger;
+        }
+
+        // Nunca expone ex.Message, stack ni texto SQL; el detalle va al log estructurado.
+        private IActionResult ErrorInterno(Exception ex, string operacion, int? usuarioId = null, int? adminId = null)
+        {
+            _logger.LogError(ex, "Error interno en {Operacion}. UsuarioId={UsuarioId} AdminId={AdminId}", operacion, usuarioId, adminId);
+            return StatusCode(500, new ApiErrorDto("INTERNAL_ERROR", "Error interno del servidor."));
+        }
+
+        private IActionResult ErrorValidacion(Dictionary<string, string[]> errores)
+            => BadRequest(new ApiErrorDto("VALIDATION_ERROR", "Hay datos inválidos en la solicitud.", errores));
+
+        public static IActionResult TraducirResultado(AdminActionResult r)
+        {
+            ObjectResult Error(int status, string code) => new(new ApiErrorDto(code, r.Message)) { StatusCode = status };
+
+            return r.Code switch
+            {
+                "APPLIED" or "ALREADY_COMPLETED" => new OkObjectResult(r),
+                "INVALID_REASON" => Error(400, "INVALID_REASON"),
+                "INVALID_END_DATE" => Error(400, "INVALID_END_DATE"),
+                "ADMIN_ROLE_REQUIRED" => Error(403, "ADMIN_ROLE_REQUIRED"),
+                "USER_NOT_FOUND" => Error(404, "USER_NOT_FOUND"),
+                "ALREADY_SUSPENDED" => Error(409, "ALREADY_SUSPENDED"),
+                "ALREADY_ACTIVE" => Error(409, "ALREADY_ACTIVE"),
+                "STATE_CONFLICT" => Error(409, "SANCTION_STATE_CONFLICT"),
+                _ => Error(500, "INTERNAL_ERROR")
+            };
         }
 
         [HttpGet("cuidadores-pendientes")]
@@ -25,7 +56,7 @@ namespace CUIDAPP_API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "AdminOperacion");
             }
         }
 
@@ -39,7 +70,7 @@ namespace CUIDAPP_API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "AdminOperacion");
             }
         }
 
@@ -56,7 +87,7 @@ namespace CUIDAPP_API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "AdminOperacion");
             }
         }
 
@@ -70,7 +101,7 @@ namespace CUIDAPP_API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "AdminOperacion");
             }
         }
 
@@ -86,41 +117,43 @@ namespace CUIDAPP_API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "AdminOperacion");
             }
         }
 
         [HttpPut("cuidadores/{usuarioId}/suspender")]
         public async Task<IActionResult> SuspenderCuidador(int usuarioId, [FromBody] SuspenderCuidadorDto dto)
         {
+            var errores = dto.Validar(usuarioId, DateTimeOffset.UtcNow);
+            if (errores.Count > 0)
+                return ErrorValidacion(errores);
+
             try
             {
-                var success = await _adminService.SuspenderCuidadorAsync(usuarioId, dto);
-                if (!success)
-                    return BadRequest("No se pudo suspender. Verifica el ID.");
-
-                return Ok(new { Message = "Cuenta suspendida" });
+                var resultado = await _adminService.SuspenderUsuarioAsync(usuarioId, dto);
+                return TraducirResultado(resultado);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "SuspenderUsuario", usuarioId, dto.AdminId);
             }
         }
 
         [HttpPut("cuidadores/{usuarioId}/reactivar")]
         public async Task<IActionResult> ReactivarCuidador(int usuarioId, [FromBody] ReactivarCuidadorDto dto)
         {
+            var errores = dto.Validar(usuarioId);
+            if (errores.Count > 0)
+                return ErrorValidacion(errores);
+
             try
             {
-                var success = await _adminService.ReactivarCuidadorAsync(usuarioId, dto);
-                if (!success)
-                    return BadRequest("No se pudo reactivar. Verifica el ID.");
-
-                return Ok(new { Message = "Cuenta reactivada" });
+                var resultado = await _adminService.ReactivarUsuarioAsync(usuarioId, dto);
+                return TraducirResultado(resultado);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "ReactivarUsuario", usuarioId, dto.AdminId);
             }
         }
 
@@ -134,7 +167,7 @@ namespace CUIDAPP_API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "AdminOperacion");
             }
         }
 
@@ -151,7 +184,7 @@ namespace CUIDAPP_API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "AdminOperacion");
             }
         }
 
@@ -165,7 +198,7 @@ namespace CUIDAPP_API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "AdminOperacion");
             }
         }
 
@@ -182,7 +215,7 @@ namespace CUIDAPP_API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "AdminOperacion");
             }
         }
 
@@ -199,7 +232,7 @@ namespace CUIDAPP_API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "AdminOperacion");
             }
         }
 
@@ -233,7 +266,7 @@ namespace CUIDAPP_API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "AdminOperacion");
             }
         }
 
@@ -247,7 +280,7 @@ namespace CUIDAPP_API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "AdminOperacion");
             }
         }
 
@@ -271,7 +304,7 @@ namespace CUIDAPP_API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "AdminOperacion");
             }
         }
     }

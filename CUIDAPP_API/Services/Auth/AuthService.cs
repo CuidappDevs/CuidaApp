@@ -34,47 +34,107 @@ namespace CUIDAPP_API.Services.Auth
             }
         }
 
-        public async Task<AuthResponseDto?> LoginAsync(LoginRequestDto loginDto)
+        public async Task<LoginResult> LoginAsync(LoginRequestDto loginDto)
         {
+            int id, rolId;
+            bool isActive;
+            int? estadoAprobacion;
+            string? nombre, foto;
+            int? sancionId = null;
+            string? sancionMotivo = null, sancionTipo = null;
+            DateTime? sancionFin = null;
+
             using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand("sp_ObtenerUsuarioPorEmail", connection);
-            command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.AddWithValue("@Email", loginDto.Email);
-
             await connection.OpenAsync();
-            using var reader = await command.ExecuteReaderAsync();
 
-            if (await reader.ReadAsync())
+            // Fase 1: solo lectura (credenciales, estado y sanción vigente).
+            using (var command = new SqlCommand("sp_ObtenerUsuarioPorEmail", connection))
             {
-                var storedHash = reader["PasswordHash"].ToString();
-                
-                // Verificación de contraseña usando el hash
-                if (storedHash == HashPassword(loginDto.Password)) 
+                command.CommandType = CommandType.StoredProcedure;
+                command.Parameters.Add("@Email", SqlDbType.NVarChar, 150).Value = loginDto.Email;
+
+                using var reader = await command.ExecuteReaderAsync();
+                if (!await reader.ReadAsync())
+                    return new LoginResult(LoginStatus.InvalidCredentials);
+
+                // La contraseña se verifica ANTES de revelar cualquier dato de la sanción.
+                if (reader["PasswordHash"].ToString() != HashPassword(loginDto.Password))
+                    return new LoginResult(LoginStatus.InvalidCredentials);
+
+                id = Convert.ToInt32(reader["Id"]);
+                rolId = Convert.ToInt32(reader["RolId"]);
+                isActive = Convert.ToBoolean(reader["IsActive"]);
+                nombre = reader["NombreCompleto"] as string;
+                foto = reader["FotoUrl"] as string;
+                estadoAprobacion = reader["EstadoAprobacion"] == DBNull.Value
+                    ? null
+                    : Convert.ToInt32(reader["EstadoAprobacion"]);
+
+                if (reader["SancionId"] != DBNull.Value)
                 {
-                    var id = Convert.ToInt32(reader["Id"]);
-                    var rolId = Convert.ToInt32(reader["RolId"]);
-                    var isActive = Convert.ToBoolean(reader["IsActive"]);
-                    var estadoAprobacion = reader["EstadoAprobacion"] == DBNull.Value
-                        ? (int?)null
-                        : Convert.ToInt32(reader["EstadoAprobacion"]);
-
-                    if (!isActive) return null;
-
-                    var token = GenerateJwtToken(loginDto.Email, rolId.ToString(), id.ToString());
-
-                    return new AuthResponseDto
-                    {
-                        Token = token,
-                        Email = loginDto.Email,
-                        NombreCompleto = reader["NombreCompleto"] as string,
-                        FotoUrl = reader["FotoUrl"] as string,
-                        UserId = id,
-                        RolId = rolId,
-                        EstadoAprobacion = estadoAprobacion
-                    };
+                    sancionId = Convert.ToInt32(reader["SancionId"]);
+                    sancionMotivo = reader["SancionMotivo"] as string;
+                    sancionTipo = reader["SancionTipo"] as string;
+                    sancionFin = reader["SancionFechaFinUtc"] == DBNull.Value
+                        ? null
+                        : DateTime.SpecifyKind((DateTime)reader["SancionFechaFinUtc"], DateTimeKind.Utc);
                 }
             }
-            return null;
+
+            if (sancionId == null)
+            {
+                // Activo y sin sanción: operativo. Inactivo sin sanción: estado sin explicación.
+                if (!isActive)
+                    return new LoginResult(LoginStatus.AccountInactive);
+            }
+            else if (isActive)
+            {
+                // Sanción vigente con usuario activo: incoherencia; no se emite token.
+                return new LoginResult(LoginStatus.AccountInactive);
+            }
+            else if (sancionTipo == "TEMPORAL" && sancionFin <= DateTime.UtcNow)
+            {
+                // Fase 2: la sanción temporal parece vencida; la base decide con su propio reloj.
+                var codigo = await FinalizarSuspensionVencidaAsync(connection, id);
+                if (codigo != "APPLIED" && codigo != "ALREADY_ACTIVE")
+                    return codigo == "NOT_DUE"
+                        ? SuspendidoResult(sancionMotivo, sancionTipo, sancionFin)
+                        : new LoginResult(LoginStatus.AccountInactive);
+            }
+            else
+            {
+                return SuspendidoResult(sancionMotivo, sancionTipo, sancionFin);
+            }
+
+            var token = GenerateJwtToken(loginDto.Email, rolId.ToString(), id.ToString());
+
+            return new LoginResult(LoginStatus.Success, new AuthResponseDto
+            {
+                Token = token,
+                Email = loginDto.Email,
+                NombreCompleto = nombre,
+                FotoUrl = foto,
+                UserId = id,
+                RolId = rolId,
+                EstadoAprobacion = estadoAprobacion
+            });
+        }
+
+        private static LoginResult SuspendidoResult(string? motivo, string? tipo, DateTime? finUtc)
+            => new(LoginStatus.AccountSuspended, null,
+                new SuspensionInfoDto(motivo ?? "", tipo ?? "INDEFINIDA",
+                    finUtc.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(finUtc.Value, DateTimeKind.Utc)) : null));
+
+        private static async Task<string> FinalizarSuspensionVencidaAsync(SqlConnection connection, int usuarioId)
+        {
+            using var command = new SqlCommand("sp_FinalizarSuspensionTemporalVencida", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+
+            using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                throw new InvalidOperationException("sp_FinalizarSuspensionTemporalVencida no devolvió resultado.");
+            return (string)reader["ResultadoCodigo"];
         }
 
         public async Task<int> RegisterClientAsync(RegisterClientDto registerDto)

@@ -163,42 +163,74 @@ namespace CUIDAPP_API.Services.Admin
             return Convert.ToInt32(filasAfectadas) > 0;
         }
 
-        public async Task<bool> SuspenderCuidadorAsync(int usuarioId, SuspenderCuidadorDto dto)
+        public async Task<AdminActionResult> SuspenderUsuarioAsync(int usuarioId, SuspenderCuidadorDto dto)
         {
             using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand("sp_SuspenderCuidador", connection);
+            using var command = new SqlCommand("sp_SuspenderUsuario", connection);
             command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.AddWithValue("@UsuarioId", usuarioId);
-            command.Parameters.AddWithValue("@AdminId", dto.AdminId);
-            command.Parameters.AddWithValue("@Motivo", dto.Motivo);
-            command.Parameters.AddWithValue("@FechaHora", HoraLocalRD.Ahora);
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+            command.Parameters.Add("@AdminId", SqlDbType.Int).Value = dto.AdminId;
+            command.Parameters.Add("@Motivo", SqlDbType.NVarChar, 500).Value = dto.Motivo.Trim();
+            var fechaFin = command.Parameters.Add("@FechaFinUtc", SqlDbType.DateTime2);
+            fechaFin.Scale = 7;
+            fechaFin.Value = dto.FechaFinUtc.HasValue ? dto.FechaFinUtc.Value.UtcDateTime : DBNull.Value;
 
-            await connection.OpenAsync();
-            var filasAfectadas = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(filasAfectadas) > 0;
+            return await LeerResultadoAsync(connection, command);
         }
 
-        public async Task<bool> ReactivarCuidadorAsync(int usuarioId, ReactivarCuidadorDto dto)
+        public async Task<AdminActionResult> ReactivarUsuarioAsync(int usuarioId, ReactivarCuidadorDto dto)
         {
             using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand("sp_ReactivarCuidador", connection);
+            using var command = new SqlCommand("sp_ReactivarUsuario", connection);
             command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.AddWithValue("@UsuarioId", usuarioId);
-            command.Parameters.AddWithValue("@AdminId", dto.AdminId);
-            command.Parameters.AddWithValue("@FechaHora", HoraLocalRD.Ahora);
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
+            command.Parameters.Add("@AdminId", SqlDbType.Int).Value = dto.AdminId;
 
-            await connection.OpenAsync();
-            var filasAfectadas = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(filasAfectadas) > 0;
+            return await LeerResultadoAsync(connection, command);
         }
+
+        private static async Task<AdminActionResult> LeerResultadoAsync(SqlConnection connection, SqlCommand command)
+        {
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+                throw new InvalidOperationException("El procedimiento no devolvió resultado.");
+
+            var codigo = (string)reader["ResultadoCodigo"];
+            return new AdminActionResult(
+                codigo,
+                MensajeResultado(codigo),
+                Convert.ToInt32(reader["UsuarioId"]),
+                reader["SancionId"] == DBNull.Value ? null : Convert.ToInt32(reader["SancionId"]),
+                reader["IsActive"] == DBNull.Value ? null : Convert.ToBoolean(reader["IsActive"]),
+                reader["EstadoSancion"] as string,
+                reader["FechaFinUtc"] == DBNull.Value
+                    ? null
+                    : new DateTimeOffset(DateTime.SpecifyKind((DateTime)reader["FechaFinUtc"], DateTimeKind.Utc)));
+        }
+
+        public static string MensajeResultado(string codigo) => codigo switch
+        {
+            "APPLIED" => "Operación aplicada.",
+            "ALREADY_COMPLETED" => "La suspensión temporal ya había vencido; la cuenta quedó activa.",
+            "INVALID_REASON" => "El motivo debe tener entre 10 y 500 caracteres.",
+            "INVALID_END_DATE" => "La fecha de fin debe ser futura.",
+            "ADMIN_ROLE_REQUIRED" => "El autor de la operación debe ser un administrador.",
+            "USER_NOT_FOUND" => "No existe el usuario indicado.",
+            "ALREADY_SUSPENDED" => "La cuenta ya tiene una suspensión vigente.",
+            "ALREADY_ACTIVE" => "La cuenta ya está activa.",
+            "STATE_CONFLICT" => "El estado de la cuenta y sus sanciones es incoherente; requiere revisión.",
+            _ => "Resultado no reconocido."
+        };
 
         public async Task<IEnumerable<SancionCuidadorDto>> ObtenerSancionesAsync(int usuarioId)
         {
             var sanciones = new List<SancionCuidadorDto>();
             using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand("sp_ObtenerSancionesCuidador", connection);
+            using var command = new SqlCommand("sp_ObtenerSancionesUsuario", connection);
             command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.AddWithValue("@UsuarioId", usuarioId);
+            command.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = usuarioId;
 
             await connection.OpenAsync();
             using var reader = await command.ExecuteReaderAsync();
@@ -208,15 +240,27 @@ namespace CUIDAPP_API.Services.Admin
                 sanciones.Add(new SancionCuidadorDto
                 {
                     Id = Convert.ToInt32(reader["Id"]),
+                    UsuarioId = Convert.ToInt32(reader["UsuarioId"]),
+                    AdminId = Convert.ToInt32(reader["AdminId"]),
+                    AdminNombre = reader["AdminNombre"] as string ?? "",
                     Accion = reader["Accion"] as string ?? "",
-                    Motivo = reader["Motivo"] as string,
-                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
-                    AdminNombre = reader["AdminNombre"] as string ?? ""
+                    Motivo = reader["Motivo"] as string ?? "",
+                    Tipo = reader["Tipo"] as string ?? "",
+                    Estado = reader["Estado"] as string ?? "",
+                    FechaInicioUtc = ComoUtc(reader["FechaInicioUtc"]),
+                    FechaFinUtc = reader["FechaFinUtc"] == DBNull.Value ? null : ComoUtc(reader["FechaFinUtc"]),
+                    RevocadaPorAdminId = reader["RevocadaPorAdminId"] == DBNull.Value ? null : Convert.ToInt32(reader["RevocadaPorAdminId"]),
+                    RevocadaPorAdminNombre = reader["RevocadaPorAdminNombre"] as string,
+                    FechaRevocacionUtc = reader["FechaRevocacionUtc"] == DBNull.Value ? null : ComoUtc(reader["FechaRevocacionUtc"]),
+                    EstaVigente = Convert.ToBoolean(reader["EstaVigente"])
                 });
             }
 
             return sanciones;
         }
+
+        private static DateTimeOffset ComoUtc(object valor)
+            => new(DateTime.SpecifyKind((DateTime)valor, DateTimeKind.Utc));
 
         public async Task<bool> ActualizarInfoCuidadorAsync(int usuarioId, ActualizarInfoCuidadorDto dto)
         {

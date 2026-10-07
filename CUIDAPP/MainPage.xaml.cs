@@ -170,13 +170,16 @@ namespace CUIDAPP
                     Password = EntryPassword.Text
                 };
 
-                var result = await _apiService.LoginAsync(request);
+                var loginResult = await _apiService.LoginAsync(request);
 
-                if (result == null)
-                {
-                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("credenciales_invalidas_o_no_se"), Localizador.T("ok"));
+                if (loginResult.Status != LoginStatus.Success || loginResult.Auth == null)
+                {   
+                    await MostrarFalloLoginAsync(loginResult);
                     return;
                 }
+
+
+                var result = loginResult.Auth;
 
                 Preferences.Default.Set("AuthToken", result.Token);
                 Preferences.Default.Set("UserEmail", result.Email);
@@ -218,6 +221,28 @@ namespace CUIDAPP
             finally
             {
                 MostrarCargandoLogin(false);
+            }
+        }
+
+        private Task MostrarFalloLoginAsync(LoginResult resultado)
+        {
+            switch (resultado.Status)
+            {
+                case LoginStatus.AccountSuspended when resultado.Suspension is { } suspension:
+                    var fin = suspension.Tipo == "TEMPORAL" && suspension.FechaFinUtc.HasValue
+                        ? $"Podrás volver a iniciar sesión el {suspension.FechaFinUtc.Value.ToLocalTime():dd/MM/yyyy HH:mm}."
+                        : "Suspensión indefinida: un administrador debe reactivar tu cuenta.";
+                    return DisplayAlert("Cuenta suspendida", $"Motivo: {suspension.Motivo}\n{fin}", "OK");
+                case LoginStatus.AccountInactive:
+                    return DisplayAlert("Cuenta no disponible", "Tu cuenta no está activa. Contacta a soporte.", "OK");
+                case LoginStatus.InvalidCredentials:
+                    return DisplayAlert("Error", "Correo o contraseña incorrectos.", "OK");
+                case LoginStatus.Validation:
+                    return DisplayAlert("Error", "Ingresa tu correo y contraseña.", "OK");
+                case LoginStatus.Network:
+                    return DisplayAlert("Sin conexión", "No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo.", "OK");
+                default:
+                    return DisplayAlert("Error", "El servidor no pudo procesar la solicitud. Intenta más tarde.", "OK");
             }
         }
     }
