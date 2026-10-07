@@ -58,14 +58,14 @@ namespace CUIDAPP.Views.Soporte
             var burbuja = new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = esMio ? R("ColorPrimary") : Colors.White,
+                BackgroundColor = esMio ? R("ColorPrimary") : Tema.C("ColorSurface"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle
                 {
                     CornerRadius = esMio ? new CornerRadius(20, 20, 20, 6) : new CornerRadius(20, 20, 6, 20)
                 },
                 Padding = new Thickness(14, 10),
                 MaximumWidthRequest = 270,
-                Shadow = esMio ? null! : new Shadow { Brush = Color.FromArgb("#0A2F41"), Offset = new Point(0, 2), Radius = 6, Opacity = 0.05f }
+                Shadow = esMio ? null! : new Shadow { Brush = Tema.C("ColorShadow"), Offset = new Point(0, 2), Radius = 6, Opacity = 0.05f }
             };
 
             var contenido = new VerticalStackLayout { Spacing = 4 };
@@ -113,7 +113,7 @@ namespace CUIDAPP.Views.Soporte
                 fila.Add(new Border
                 {
                     Stroke = Colors.Transparent,
-                    BackgroundColor = Color.FromArgb("#EAF1FB"),
+                    BackgroundColor = Tema.C("ColorPrimarySoft"),
                     StrokeShape = new Microsoft.Maui.Controls.Shapes.Ellipse(),
                     WidthRequest = 30,
                     HeightRequest = 30,
@@ -133,7 +133,7 @@ namespace CUIDAPP.Views.Soporte
         private void OnMensajeFocused(object? sender, FocusEventArgs e)
         {
             ContenedorEntry.Stroke = (Color)Application.Current!.Resources["ColorPrimary"];
-            ContenedorEntry.BackgroundColor = Colors.White;
+            ContenedorEntry.BackgroundColor = Tema.C("ColorSurface");
         }
 
         private void OnMensajeUnfocused(object? sender, FocusEventArgs e)

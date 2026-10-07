@@ -9,7 +9,7 @@
     <Grid RowDefinitions="Auto, *, Auto">
 
         <Grid Grid.Row="0" ColumnDefinitions="44, *, 44" Padding="12,8,16,8" BackgroundColor="{StaticResource ColorBackground}">
-            <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="White" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
+            <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
                 <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnBackTapped" />
@@ -22,12 +22,12 @@
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="20,15,20,20" Spacing="18">
 
-                <Border Stroke="Transparent" BackgroundColor="#FDECEC" StrokeShape="RoundRectangle 20" Padding="16">
+                <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorDangerSoft}" StrokeShape="RoundRectangle 20" Padding="16">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                         <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorDanger}" StrokeShape="RoundRectangle 12" WidthRequest="38" HeightRequest="38" VerticalOptions="Center">
                             <Path Data="M1 21H23L12 2L1 21ZM13 18H11V16H13V18ZM13 14H11V10H13V14Z" Fill="White" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </Border>
-                        <Label Grid.Column="1" Text="{loc:T cancelar_un_servicio_ya_aceptado}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#8E1F1F" VerticalOptions="Center"/>
+                        <Label Grid.Column="1" Text="{loc:T cancelar_un_servicio_ya_aceptado}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorDanger}" VerticalOptions="Center"/>
                     </Grid>
                 </Border>
 
@@ -37,8 +37,8 @@
 
                 <VerticalStackLayout x:Name="ContenedorOtro" Spacing="8" IsVisible="False">
                     <Label Text="{loc:T cuentanos_brevemente}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
-                    <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="14,0">
-                        <Entry x:Name="EntryOtroMotivo" Placeholder="{loc:T escribe_el_motivo}" FontFamily="OpenSansRegular" FontSize="15" BackgroundColor="Transparent" PlaceholderColor="#8A97A6" HeightRequest="50" TextChanged="OnOtroMotivoTextChanged"/>
+                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 16" Padding="14,0">
+                        <Entry x:Name="EntryOtroMotivo" Placeholder="{loc:T escribe_el_motivo}" FontFamily="OpenSansRegular" FontSize="15" BackgroundColor="Transparent" PlaceholderColor="{StaticResource ColorPlaceholder}" HeightRequest="50" TextChanged="OnOtroMotivoTextChanged"/>
                     </Border>
                 </VerticalStackLayout>
 

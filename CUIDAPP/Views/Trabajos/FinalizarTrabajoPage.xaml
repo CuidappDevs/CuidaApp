@@ -9,7 +9,7 @@
     <Grid RowDefinitions="Auto, *, Auto">
 
         <Grid Grid.Row="0" ColumnDefinitions="44, *, 44" Padding="12,8,16,8" BackgroundColor="{StaticResource ColorBackground}">
-            <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="White" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
+            <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
                 <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnBackTapped" />
@@ -22,9 +22,9 @@
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="25,30,25,20" Spacing="25">
 
-                <Border x:Name="Insignia" Stroke="Transparent" BackgroundColor="#2E7D32" StrokeShape="RoundRectangle 28" WidthRequest="88" HeightRequest="88" HorizontalOptions="Center">
+                <Border x:Name="Insignia" Stroke="Transparent" BackgroundColor="{StaticResource ColorSuccess}" StrokeShape="RoundRectangle 28" WidthRequest="88" HeightRequest="88" HorizontalOptions="Center">
                     <Border.Shadow>
-                        <Shadow Brush="#2E7D32" Offset="0,10" Radius="22" Opacity="0.3" />
+                        <Shadow Brush="{StaticResource ColorSuccess}" Offset="0,10" Radius="22" Opacity="0.3" />
                     </Border.Shadow>
                     <Path Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="White" Aspect="Uniform" WidthRequest="38" HeightRequest="38" HorizontalOptions="Center" VerticalOptions="Center"/>
                 </Border>
@@ -35,19 +35,19 @@
                 </VerticalStackLayout>
 
                 <VerticalStackLayout Spacing="14">
-                    <Label x:Name="LblCliente" Text="" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#2E7D32" HorizontalOptions="Center"/>
+                    <Label x:Name="LblCliente" Text="" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorSuccess}" HorizontalOptions="Center"/>
 
                     <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
-                        <Border Stroke="Transparent" StrokeThickness="2" StrokeShape="RoundRectangle 18" BackgroundColor="White" WidthRequest="62" HeightRequest="74">
+                        <Border Stroke="Transparent" StrokeThickness="2" StrokeShape="RoundRectangle 18" BackgroundColor="{StaticResource ColorSurface}" WidthRequest="62" HeightRequest="74">
                             <Entry x:Name="EntryPin1" MaxLength="1" Keyboard="Numeric" FontSize="28" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Fill" BackgroundColor="Transparent" Focused="OnPinFocused" Unfocused="OnPinUnfocused" TextChanged="OnPin1Changed"/>
                         </Border>
-                        <Border Stroke="Transparent" StrokeThickness="2" StrokeShape="RoundRectangle 18" BackgroundColor="White" WidthRequest="62" HeightRequest="74">
+                        <Border Stroke="Transparent" StrokeThickness="2" StrokeShape="RoundRectangle 18" BackgroundColor="{StaticResource ColorSurface}" WidthRequest="62" HeightRequest="74">
                             <Entry x:Name="EntryPin2" MaxLength="1" Keyboard="Numeric" FontSize="28" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Fill" BackgroundColor="Transparent" Focused="OnPinFocused" Unfocused="OnPinUnfocused" TextChanged="OnPin2Changed"/>
                         </Border>
-                        <Border Stroke="Transparent" StrokeThickness="2" StrokeShape="RoundRectangle 18" BackgroundColor="White" WidthRequest="62" HeightRequest="74">
+                        <Border Stroke="Transparent" StrokeThickness="2" StrokeShape="RoundRectangle 18" BackgroundColor="{StaticResource ColorSurface}" WidthRequest="62" HeightRequest="74">
                             <Entry x:Name="EntryPin3" MaxLength="1" Keyboard="Numeric" FontSize="28" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Fill" BackgroundColor="Transparent" Focused="OnPinFocused" Unfocused="OnPinUnfocused" TextChanged="OnPin3Changed"/>
                         </Border>
-                        <Border Stroke="Transparent" StrokeThickness="2" StrokeShape="RoundRectangle 18" BackgroundColor="White" WidthRequest="62" HeightRequest="74">
+                        <Border Stroke="Transparent" StrokeThickness="2" StrokeShape="RoundRectangle 18" BackgroundColor="{StaticResource ColorSurface}" WidthRequest="62" HeightRequest="74">
                             <Entry x:Name="EntryPin4" MaxLength="1" Keyboard="Numeric" FontSize="28" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Fill" BackgroundColor="Transparent" Focused="OnPinFocused" Unfocused="OnPinUnfocused" TextChanged="OnPin4Changed"/>
                         </Border>
                     </HorizontalStackLayout>
@@ -57,8 +57,8 @@
 
                 <!-- Solo visible si se está terminando antes de la hora acordada -->
                 <VerticalStackLayout x:Name="CardJustificacion" Spacing="8" IsVisible="False">
-                    <Label Text="{loc:T estas_terminando_antes_de_lo}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#8A4B00"/>
-                    <Border Stroke="Transparent" BackgroundColor="#FFF4DC" StrokeShape="RoundRectangle 16" Padding="12,8">
+                    <Label Text="{loc:T estas_terminando_antes_de_lo}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorWarning}"/>
+                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorWarningSoft}" StrokeShape="RoundRectangle 16" Padding="12,8">
                         <Editor x:Name="EditorJustificacion" Placeholder="{loc:T ej_el_cliente_me_pidio}" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="80" AutoSize="TextChanges"/>
                     </Border>
                 </VerticalStackLayout>
@@ -68,7 +68,7 @@
 
         <!-- Acción: fila propia de la cuadrícula (zona segura por defecto, sobre la barra de gestos) -->
         <VerticalStackLayout Grid.Row="2" Padding="20,12,20,14" Spacing="10" BackgroundColor="{StaticResource ColorBackground}">
-            <Button x:Name="BtnConfirmar" Text="{loc:T confirmar_finalizacion}" Clicked="OnConfirmarClicked" BackgroundColor="#2E7D32" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="16" HeightRequest="56" IsEnabled="False"/>
+            <Button x:Name="BtnConfirmar" Text="{loc:T confirmar_finalizacion}" Clicked="OnConfirmarClicked" BackgroundColor="{StaticResource ColorSuccess}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="16" HeightRequest="56" IsEnabled="False"/>
         </VerticalStackLayout>
 
     </Grid>

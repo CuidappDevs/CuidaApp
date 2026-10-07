@@ -3,15 +3,15 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="CUIDAPP.Views.Trabajos.MapaCompletoPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#FFFFFF">
+             BackgroundColor="{StaticResource ColorSurface}">
 
     <Grid>
         <WebView x:Name="MapaWebView" />
 
-        <Border VerticalOptions="Start" HorizontalOptions="Start" Margin="16,48,0,0" Stroke="Transparent" WidthRequest="46" HeightRequest="46" BackgroundColor="White">
+        <Border VerticalOptions="Start" HorizontalOptions="Start" Margin="16,48,0,0" Stroke="Transparent" WidthRequest="46" HeightRequest="46" BackgroundColor="{StaticResource ColorSurface}">
             <Border.StrokeShape><Ellipse/></Border.StrokeShape>
             <Border.Shadow>
-                <Shadow Brush="#0A2F41" Offset="0,4" Opacity="0.18" Radius="10"/>
+                <Shadow Brush="{StaticResource ColorShadow}" Offset="0,4" Opacity="0.18" Radius="10"/>
             </Border.Shadow>
             <Border.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnBackTapped" />

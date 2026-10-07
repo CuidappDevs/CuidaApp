@@ -60,7 +60,7 @@ namespace CUIDAPP.Views.Cliente
                 {
                     Stroke = (Color)Application.Current!.Resources["ColorPrimaryLight"],
                     StrokeThickness = 2,
-                    BackgroundColor = Colors.White,
+                    BackgroundColor = Tema.C("ColorSurface"),
                     StrokeShape = new Microsoft.Maui.Controls.Shapes.Ellipse(),
                     WidthRequest = 22,
                     HeightRequest = 22,
@@ -75,7 +75,7 @@ namespace CUIDAPP.Views.Cliente
                 var tarjeta = new Border
                 {
                     Stroke = Colors.Transparent,
-                    BackgroundColor = Colors.White,
+                    BackgroundColor = Tema.C("ColorSurface"),
                     StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 },
                     Padding = new Thickness(14, 8, 8, 8),
                     Content = fila

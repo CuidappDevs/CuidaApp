@@ -4,7 +4,7 @@
              xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Registro.RegistroPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#FFFFFF">
+             BackgroundColor="{StaticResource ColorSurface}">
 
     <Grid>
         <Grid RowDefinitions="Auto, *">
@@ -19,7 +19,7 @@
                 </ContentView>
                 
                 <Label x:Name="TopTitle" Grid.Column="1" Text="{loc:T registro}" FontSize="17" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Center" VerticalOptions="Center" IsVisible="False"/>
-                <Label x:Name="StepIndicator" Grid.Column="2" Text="{loc:T 1_de_x}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#6B7280" VerticalOptions="Center"/>
+                <Label x:Name="StepIndicator" Grid.Column="2" Text="{loc:T 1_de_x}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextMuted}" VerticalOptions="Center"/>
             </Grid>
 
             <ScrollView x:Name="ScrollRegistro" Grid.Row="1" SizeChanged="OnScrollRegistroSizeChanged">
@@ -67,7 +67,7 @@
                                     <!-- Cuello -->
                                     <Border AbsoluteLayout.LayoutBounds="96,132,24,24" BackgroundColor="#E5B08A" StrokeThickness="0" StrokeShape="RoundRectangle 8"/>
                                     <!-- Logo de la app en el uniforme -->
-                                    <Border AbsoluteLayout.LayoutBounds="94,168,28,28" BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 8">
+                                    <Border AbsoluteLayout.LayoutBounds="94,168,28,28" BackgroundColor="{StaticResource ColorSurface}" StrokeThickness="0" StrokeShape="RoundRectangle 8">
                                         <Image Source="logo_cuidapp.png" Aspect="AspectFit" Margin="3"/>
                                     </Border>
 
@@ -79,13 +79,13 @@
                                     <Border AbsoluteLayout.LayoutBounds="66,46,84,34" BackgroundColor="#3B2A22" StrokeThickness="0" StrokeShape="RoundRectangle 42,42,8,30"/>
 
                                     <!-- Ojos -->
-                                    <Ellipse x:Name="HolaOjoIzq" AbsoluteLayout.LayoutBounds="90,96,8,10" Fill="#1F2937"/>
-                                    <Ellipse x:Name="HolaOjoDer" AbsoluteLayout.LayoutBounds="118,96,8,10" Fill="#1F2937"/>
+                                    <Ellipse x:Name="HolaOjoIzq" AbsoluteLayout.LayoutBounds="90,96,8,10" Fill="{StaticResource ColorTextStrong}"/>
+                                    <Ellipse x:Name="HolaOjoDer" AbsoluteLayout.LayoutBounds="118,96,8,10" Fill="{StaticResource ColorTextStrong}"/>
                                     <!-- Mejillas -->
                                     <Ellipse AbsoluteLayout.LayoutBounds="80,110,12,7" Fill="#F28B82" Opacity="0.45"/>
                                     <Ellipse AbsoluteLayout.LayoutBounds="124,110,12,7" Fill="#F28B82" Opacity="0.45"/>
                                     <!-- Sonrisa -->
-                                    <Path AbsoluteLayout.LayoutBounds="97,114,22,10" Data="M1 1 Q11 10 21 1" Stroke="#1F2937" StrokeThickness="2.5" StrokeLineCap="Round" Aspect="None"/>
+                                    <Path AbsoluteLayout.LayoutBounds="97,114,22,10" Data="M1 1 Q11 10 21 1" Stroke="{StaticResource ColorTextStrong}" StrokeThickness="2.5" StrokeLineCap="Round" Aspect="None"/>
                                 </AbsoluteLayout>
                             </Border>
 
@@ -118,7 +118,7 @@
                         </VerticalStackLayout>
 
                         <VerticalStackLayout Grid.Row="1" Spacing="14">
-                            <Border x:Name="RoleOptionCliente" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 20" Padding="16" BackgroundColor="White">
+                            <Border x:Name="RoleOptionCliente" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 20" Padding="16" BackgroundColor="{StaticResource ColorSurface}">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnRoleOptionTapped" CommandParameter="Cliente" />
                                 </Border.GestureRecognizers>
@@ -131,13 +131,13 @@
                                         <Label Text="{loc:T necesito_contratar_servicios}" FontFamily="OpenSansRegular" FontSize="13" TextColor="{StaticResource ColorTextMuted}"/>
                                     </VerticalStackLayout>
                                     <!-- Indicador de selección -->
-                                    <Border x:Name="RoleCheckCliente" Grid.Column="2" WidthRequest="24" HeightRequest="24" StrokeThickness="1.5" Stroke="{StaticResource ColorBorder}" BackgroundColor="White" VerticalOptions="Center">
+                                    <Border x:Name="RoleCheckCliente" Grid.Column="2" WidthRequest="24" HeightRequest="24" StrokeThickness="1.5" Stroke="{StaticResource ColorBorder}" BackgroundColor="{StaticResource ColorSurface}" VerticalOptions="Center">
                                         <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                                         <Path x:Name="RoleCheckMarkCliente" Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="White" Aspect="Uniform" WidthRequest="14" HeightRequest="14" HorizontalOptions="Center" VerticalOptions="Center" Opacity="0"/>
                                     </Border>
                                 </Grid>
                             </Border>
-                            <Border x:Name="RoleOptionCuidador" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 20" Padding="16" BackgroundColor="White">
+                            <Border x:Name="RoleOptionCuidador" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 20" Padding="16" BackgroundColor="{StaticResource ColorSurface}">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnRoleOptionTapped" CommandParameter="Cuidador" />
                                 </Border.GestureRecognizers>
@@ -150,14 +150,14 @@
                                         <Label Text="{loc:T ofrecer_mis_servicios_como_profesional}" FontFamily="OpenSansRegular" FontSize="13" TextColor="{StaticResource ColorTextMuted}"/>
                                     </VerticalStackLayout>
                                     <!-- Indicador de selección -->
-                                    <Border x:Name="RoleCheckCuidador" Grid.Column="2" WidthRequest="24" HeightRequest="24" StrokeThickness="1.5" Stroke="{StaticResource ColorBorder}" BackgroundColor="White" VerticalOptions="Center">
+                                    <Border x:Name="RoleCheckCuidador" Grid.Column="2" WidthRequest="24" HeightRequest="24" StrokeThickness="1.5" Stroke="{StaticResource ColorBorder}" BackgroundColor="{StaticResource ColorSurface}" VerticalOptions="Center">
                                         <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                                         <Path x:Name="RoleCheckMarkCuidador" Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="White" Aspect="Uniform" WidthRequest="14" HeightRequest="14" HorizontalOptions="Center" VerticalOptions="Center" Opacity="0"/>
                                     </Border>
                                 </Grid>
                             </Border>
                             <!-- Recurrente (RolId 4): contratación formal tipo empleado. Desactivada hasta que exista su flujo. -->
-                            <Border x:Name="RoleOptionRecurrente" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 20" Padding="16" BackgroundColor="White" Opacity="0.6" IsEnabled="False">
+                            <Border x:Name="RoleOptionRecurrente" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 20" Padding="16" BackgroundColor="{StaticResource ColorSurface}" Opacity="0.6" IsEnabled="False">
                                 <Grid ColumnDefinitions="Auto, *" ColumnSpacing="14">
                                     <Border WidthRequest="52" HeightRequest="52" StrokeThickness="0" StrokeShape="RoundRectangle 16" BackgroundColor="{StaticResource ColorBackground}" VerticalOptions="Center">
                                         <!-- Calendario con repetición -->
@@ -166,8 +166,8 @@
                                     <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="4">
                                         <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
                                             <Label Text="{loc:T rol_recurrente}" FontFamily="OpenSansSemibold" FontSize="16" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
-                                            <Border Grid.Column="1" Stroke="Transparent" BackgroundColor="#FFF4DC" StrokeShape="RoundRectangle 10" Padding="8,3" VerticalOptions="Center">
-                                                <Label Text="{loc:T en_desarrollo}" FontSize="10" FontFamily="OpenSansSemibold" TextColor="#8A4B00"/>
+                                            <Border Grid.Column="1" Stroke="Transparent" BackgroundColor="{StaticResource ColorWarningSoft}" StrokeShape="RoundRectangle 10" Padding="8,3" VerticalOptions="Center">
+                                                <Label Text="{loc:T en_desarrollo}" FontSize="10" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorWarning}"/>
                                             </Border>
                                         </Grid>
                                         <Label Text="{loc:T rol_recurrente_desc}" FontFamily="OpenSansRegular" FontSize="13" TextColor="{StaticResource ColorTextMuted}"/>
@@ -197,7 +197,7 @@
                                 <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorBackground}" Padding="14,0">
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                                     <Path Data="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
-                                    <Entry x:Name="EntryEmail" Grid.Column="1" Keyboard="Email" Placeholder="{loc:T ejemplo_correo_com}" ClearButtonVisibility="WhileEditing" FontFamily="OpenSansRegular" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
+                                    <Entry x:Name="EntryEmail" Grid.Column="1" Keyboard="Email" Placeholder="{loc:T ejemplo_correo_com}" ClearButtonVisibility="WhileEditing" FontFamily="OpenSansRegular" PlaceholderColor="{StaticResource ColorPlaceholder}" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
                                 </Grid>
                             </Border>
                             </VerticalStackLayout>
@@ -206,7 +206,7 @@
                                 <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorBackground}" Padding="14,0">
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                                     <Path Data="M18 8H17V6C17 3.24 14.76 1 12 1C9.24 1 7 3.24 7 6V8H6C4.9 8 4 8.9 4 10V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10C20 8.9 19.1 8 18 8ZM12 17C10.9 17 10 16.1 10 15C10 13.9 10.9 13 12 13C13.1 13 14 13.9 14 15C14 16.1 13.1 17 12 17ZM15.1 8H8.9V6C8.9 4.29 10.29 2.9 12 2.9C13.71 2.9 15.1 4.29 15.1 6V8Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
-                                    <Entry x:Name="EntryPassword" Grid.Column="1" IsPassword="True" TextChanged="OnPasswordCambiado" Placeholder="{loc:T crea_una_contrasena_segura}" FontFamily="OpenSansRegular" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
+                                    <Entry x:Name="EntryPassword" Grid.Column="1" IsPassword="True" TextChanged="OnPasswordCambiado" Placeholder="{loc:T crea_una_contrasena_segura}" FontFamily="OpenSansRegular" PlaceholderColor="{StaticResource ColorPlaceholder}" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
                                     <Grid Grid.Column="2" WidthRequest="44" HeightRequest="44" VerticalOptions="Center" Margin="0,0,-10,0">
                                         <Path Data="M12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5C17 19.5 21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5ZM12 17C9.24 17 7 14.76 7 12C7 9.24 9.24 7 12 7C14.76 7 17 9.24 17 12C17 14.76 14.76 17 12 17ZM12 9C10.34 9 9 10.34 9 12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12C15 10.34 13.66 9 12 9Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
                                         <Grid.GestureRecognizers><TapGestureRecognizer Tapped="OnToggleRegistroPassword"/></Grid.GestureRecognizers>
@@ -243,7 +243,7 @@
                                 <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorBackground}" Padding="14,0">
                                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                                         <Path Data="M18 8H17V6C17 3.24 14.76 1 12 1C9.24 1 7 3.24 7 6V8H6C4.9 8 4 8.9 4 10V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V10C20 8.9 19.1 8 18 8ZM12 17C10.9 17 10 16.1 10 15C10 13.9 10.9 13 12 13C13.1 13 14 13.9 14 15C14 16.1 13.1 17 12 17ZM15.1 8H8.9V6C8.9 4.29 10.29 2.9 12 2.9C13.71 2.9 15.1 4.29 15.1 6V8Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
-                                        <Entry x:Name="EntryPasswordConfirmar" Grid.Column="1" IsPassword="True" TextChanged="OnPasswordCambiado" Placeholder="{loc:T repite_tu_contrasena}" FontFamily="OpenSansRegular" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
+                                        <Entry x:Name="EntryPasswordConfirmar" Grid.Column="1" IsPassword="True" TextChanged="OnPasswordCambiado" Placeholder="{loc:T repite_tu_contrasena}" FontFamily="OpenSansRegular" PlaceholderColor="{StaticResource ColorPlaceholder}" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
                                         <Grid Grid.Column="2" WidthRequest="44" HeightRequest="44" VerticalOptions="Center" Margin="0,0,-10,0">
                                             <Path Data="M12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5C17 19.5 21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5ZM12 17C9.24 17 7 14.76 7 12C7 9.24 9.24 7 12 7C14.76 7 17 9.24 17 12C17 14.76 14.76 17 12 17ZM12 9C10.34 9 9 10.34 9 12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12C15 10.34 13.66 9 12 9Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
                                             <Grid.GestureRecognizers><TapGestureRecognizer Tapped="OnToggleRegistroPasswordConfirmar"/></Grid.GestureRecognizers>
@@ -273,7 +273,7 @@
                                 <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorBackground}" Padding="14,0">
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                                     <Path Data="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
-                                    <Entry x:Name="EntryNombre" Grid.Column="1" Placeholder="{loc:T escribe_tu_nombre}" Keyboard="Text" FontFamily="OpenSansRegular" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
+                                    <Entry x:Name="EntryNombre" Grid.Column="1" Placeholder="{loc:T escribe_tu_nombre}" Keyboard="Text" FontFamily="OpenSansRegular" PlaceholderColor="{StaticResource ColorPlaceholder}" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
                                 </Grid>
                             </Border>
                             </VerticalStackLayout>
@@ -282,7 +282,7 @@
                                 <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorBackground}" Padding="14,0">
                                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                                         <Path Data="M6.62 10.79C8.06 13.62 10.38 15.94 13.21 17.38L15.41 15.18C15.69 14.9 16.08 14.82 16.43 14.93C17.55 15.3 18.75 15.5 20 15.5C20.55 15.5 21 15.95 21 16.5V20C21 20.55 20.55 21 20 21C10.61 21 3 13.39 3 4C3 3.45 3.45 3 4 3H7.5C8.05 3 8.5 3.45 8.5 4C8.5 5.25 8.7 6.45 9.07 7.57C9.18 7.92 9.1 8.31 8.82 8.59L6.62 10.79Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
-                                        <Entry x:Name="EntryTelefono" Grid.Column="1" Placeholder="{loc:T escribe_tu_telefono}" Keyboard="Telephone" MaxLength="20" FontFamily="OpenSansRegular" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
+                                        <Entry x:Name="EntryTelefono" Grid.Column="1" Placeholder="{loc:T escribe_tu_telefono}" Keyboard="Telephone" MaxLength="20" FontFamily="OpenSansRegular" PlaceholderColor="{StaticResource ColorPlaceholder}" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
                                     </Grid>
                                 </Border>
                             </VerticalStackLayout>
@@ -291,7 +291,7 @@
                                 <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorBackground}" Padding="14,0">
                                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                                         <Path Data="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM11 19.93C7.05 19.44 4 16.08 4 12C4 11.38 4.08 10.79 4.21 10.21L9 15V16C9 17.1 9.9 18 11 18V19.93ZM17.9 17.39C17.64 16.58 16.9 16 16 16H15V13C15 12.45 14.55 12 14 12H8V10H10C10.55 10 11 9.55 11 9V7H13C14.1 7 15 6.1 15 5V4.59C17.93 5.78 20 8.65 20 12C20 14.08 19.2 15.97 17.9 17.39Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
-                                        <Picker x:Name="PickerNacionalidad" SelectedIndexChanged="OnNacionalidadCambiada" Grid.Column="1" Title="{loc:T selecciona_tu_nacionalidad}" TitleColor="#8A97A6" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
+                                        <Picker x:Name="PickerNacionalidad" SelectedIndexChanged="OnNacionalidadCambiada" Grid.Column="1" Title="{loc:T selecciona_tu_nacionalidad}" TitleColor="{StaticResource ColorPlaceholder}" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
                                         <ActivityIndicator x:Name="CargandoNacionalidades" Grid.Column="2" Color="{StaticResource ColorPrimary}" WidthRequest="18" HeightRequest="18" IsVisible="False" VerticalOptions="Center"/>
                                         <Path x:Name="FlechaNacionalidad" Grid.Column="2" Data="M7 10L12 15L17 10H7Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="12" HeightRequest="12" VerticalOptions="Center" InputTransparent="True"/>
                                     </Grid>
@@ -303,7 +303,7 @@
                                 <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorBackground}" Padding="14,0">
                                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                                         <Path Data="M20 4H4C2.89 4 2 4.89 2 6V18C2 19.11 2.89 20 4 20H20C21.11 20 22 19.11 22 18V6C22 4.89 21.11 4 20 4ZM8 7.5C9.38 7.5 10.5 8.62 10.5 10S9.38 12.5 8 12.5 5.5 11.38 5.5 10 6.62 7.5 8 7.5ZM13 16.5H3V15.75C3 14.09 6.34 13.25 8 13.25S13 14.09 13 15.75V16.5ZM21 15H15V13H21V15ZM21 11H15V9H21V11Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
-                                        <Entry x:Name="EntryDocumento" Grid.Column="1" Placeholder="{loc:T escribe_tu_cedula}" Keyboard="Telephone" MaxLength="13" FontFamily="OpenSansRegular" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" TextChanged="OnDocumentoCambiado" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
+                                        <Entry x:Name="EntryDocumento" Grid.Column="1" Placeholder="{loc:T escribe_tu_cedula}" Keyboard="Telephone" MaxLength="13" FontFamily="OpenSansRegular" PlaceholderColor="{StaticResource ColorPlaceholder}" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" TextChanged="OnDocumentoCambiado" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
                                     </Grid>
                                 </Border>
                                 <Label x:Name="AyudaDocumento" Text="{loc:T ayuda_cedula}" FontFamily="OpenSansRegular" FontSize="12" TextColor="{StaticResource ColorTextMuted}"/>
@@ -311,7 +311,7 @@
                             <VerticalStackLayout x:Name="BioContainer" Spacing="8">
                                 <Label Text="{loc:T sobre_ti_breve_biografia}" FontFamily="OpenSansSemibold" FontSize="13" TextColor="{StaticResource ColorTextStrong}"/>
                                 <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorBackground}" Padding="12,6">
-                                    <Editor x:Name="EntryBio" Placeholder="{loc:T cuentanos_un_poco_sobre_tu}" FontFamily="OpenSansRegular" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="110" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
+                                    <Editor x:Name="EntryBio" Placeholder="{loc:T cuentanos_un_poco_sobre_tu}" FontFamily="OpenSansRegular" PlaceholderColor="{StaticResource ColorPlaceholder}" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="110" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
                                 </Border>
                             </VerticalStackLayout>
                         </VerticalStackLayout>
@@ -347,7 +347,7 @@
                                 <Grid.GestureRecognizers><TapGestureRecognizer Tapped="OnPickFotoTapped"/></Grid.GestureRecognizers>
                             </Grid>
 
-                            <Border x:Name="BtnPickFoto" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="White" HorizontalOptions="Center" Padding="20,12">
+                            <Border x:Name="BtnPickFoto" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorSurface}" HorizontalOptions="Center" Padding="20,12">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnPickFotoTapped" />
                                 </Border.GestureRecognizers>
@@ -358,62 +358,62 @@
                             </Border>
                             <Label x:Name="LblFotoFileName" Text="{loc:T ningun_archivo_seleccionado}" FontFamily="OpenSansRegular" FontSize="12" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center" LineBreakMode="MiddleTruncation" Margin="24,-6,24,0"/>
                             <!-- Recomendaciones para la foto de perfil (cliente y cuidador) -->
-                            <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="16" Margin="0,6,0,0">
+                            <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="16" Margin="0,6,0,0">
                                 <VerticalStackLayout Spacing="10">
                                     <HorizontalStackLayout Spacing="8">
-                                        <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 10" WidthRequest="30" HeightRequest="30">
+                                        <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 10" WidthRequest="30" HeightRequest="30">
                                             <Path Data="M11 7H13V9H11V7ZM11 11H13V17H11V11ZM12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="16" HeightRequest="16" HorizontalOptions="Center" VerticalOptions="Center"/>
                                         </Border>
                                         <Label Text="{loc:T foto_reco_titulo}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
                                     </HorizontalStackLayout>
                                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                                        <Border Stroke="Transparent" BackgroundColor="#E3F4E8" WidthRequest="20" HeightRequest="20" VerticalOptions="Start" Margin="0,1,0,0">
+                                        <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSuccessSoft}" WidthRequest="20" HeightRequest="20" VerticalOptions="Start" Margin="0,1,0,0">
                                             <Border.StrokeShape><Ellipse/></Border.StrokeShape>
-                                            <Path Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="#2E7D32" Aspect="Uniform" WidthRequest="10" HeightRequest="10" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                            <Path Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="{StaticResource ColorSuccess}" Aspect="Uniform" WidthRequest="10" HeightRequest="10" HorizontalOptions="Center" VerticalOptions="Center"/>
                                         </Border>
                                         <Label Grid.Column="1" Text="{loc:T foto_reco_si_1}" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextStrong}"/>
                                     </Grid>
                                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                                        <Border Stroke="Transparent" BackgroundColor="#E3F4E8" WidthRequest="20" HeightRequest="20" VerticalOptions="Start" Margin="0,1,0,0">
+                                        <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSuccessSoft}" WidthRequest="20" HeightRequest="20" VerticalOptions="Start" Margin="0,1,0,0">
                                             <Border.StrokeShape><Ellipse/></Border.StrokeShape>
-                                            <Path Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="#2E7D32" Aspect="Uniform" WidthRequest="10" HeightRequest="10" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                            <Path Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="{StaticResource ColorSuccess}" Aspect="Uniform" WidthRequest="10" HeightRequest="10" HorizontalOptions="Center" VerticalOptions="Center"/>
                                         </Border>
                                         <Label Grid.Column="1" Text="{loc:T foto_reco_si_2}" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextStrong}"/>
                                     </Grid>
                                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                                        <Border Stroke="Transparent" BackgroundColor="#E3F4E8" WidthRequest="20" HeightRequest="20" VerticalOptions="Start" Margin="0,1,0,0">
+                                        <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSuccessSoft}" WidthRequest="20" HeightRequest="20" VerticalOptions="Start" Margin="0,1,0,0">
                                             <Border.StrokeShape><Ellipse/></Border.StrokeShape>
-                                            <Path Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="#2E7D32" Aspect="Uniform" WidthRequest="10" HeightRequest="10" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                            <Path Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="{StaticResource ColorSuccess}" Aspect="Uniform" WidthRequest="10" HeightRequest="10" HorizontalOptions="Center" VerticalOptions="Center"/>
                                         </Border>
                                         <Label Grid.Column="1" Text="{loc:T foto_reco_si_3}" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextStrong}"/>
                                     </Grid>
                                     <BoxView HeightRequest="1" Color="{StaticResource ColorBorder}" Margin="0,2"/>
                                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                                        <Border Stroke="Transparent" BackgroundColor="#FDECEC" WidthRequest="20" HeightRequest="20" VerticalOptions="Start" Margin="0,1,0,0">
+                                        <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorDangerSoft}" WidthRequest="20" HeightRequest="20" VerticalOptions="Start" Margin="0,1,0,0">
                                             <Border.StrokeShape><Ellipse/></Border.StrokeShape>
-                                            <Path Data="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" Fill="#C62828" Aspect="Uniform" WidthRequest="10" HeightRequest="10" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                            <Path Data="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" Fill="{StaticResource ColorDanger}" Aspect="Uniform" WidthRequest="10" HeightRequest="10" HorizontalOptions="Center" VerticalOptions="Center"/>
                                         </Border>
                                         <Label Grid.Column="1" Text="{loc:T foto_reco_no_1}" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextStrong}"/>
                                     </Grid>
                                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                                        <Border Stroke="Transparent" BackgroundColor="#FDECEC" WidthRequest="20" HeightRequest="20" VerticalOptions="Start" Margin="0,1,0,0">
+                                        <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorDangerSoft}" WidthRequest="20" HeightRequest="20" VerticalOptions="Start" Margin="0,1,0,0">
                                             <Border.StrokeShape><Ellipse/></Border.StrokeShape>
-                                            <Path Data="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" Fill="#C62828" Aspect="Uniform" WidthRequest="10" HeightRequest="10" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                            <Path Data="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" Fill="{StaticResource ColorDanger}" Aspect="Uniform" WidthRequest="10" HeightRequest="10" HorizontalOptions="Center" VerticalOptions="Center"/>
                                         </Border>
                                         <Label Grid.Column="1" Text="{loc:T foto_reco_no_2}" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextStrong}"/>
                                     </Grid>
                                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                                        <Border Stroke="Transparent" BackgroundColor="#FDECEC" WidthRequest="20" HeightRequest="20" VerticalOptions="Start" Margin="0,1,0,0">
+                                        <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorDangerSoft}" WidthRequest="20" HeightRequest="20" VerticalOptions="Start" Margin="0,1,0,0">
                                             <Border.StrokeShape><Ellipse/></Border.StrokeShape>
-                                            <Path Data="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" Fill="#C62828" Aspect="Uniform" WidthRequest="10" HeightRequest="10" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                            <Path Data="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" Fill="{StaticResource ColorDanger}" Aspect="Uniform" WidthRequest="10" HeightRequest="10" HorizontalOptions="Center" VerticalOptions="Center"/>
                                         </Border>
                                         <Label Grid.Column="1" Text="{loc:T foto_reco_no_3}" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextStrong}"/>
                                     </Grid>
                                     <!-- Aviso de suspensión -->
-                                    <Border Stroke="Transparent" BackgroundColor="#FFF4DC" StrokeShape="RoundRectangle 14" Padding="12,10" Margin="0,4,0,0">
+                                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorWarningSoft}" StrokeShape="RoundRectangle 14" Padding="12,10" Margin="0,4,0,0">
                                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                                             <Path Data="M1 21H23L12 2L1 21ZM13 18H11V16H13V18ZM13 14H11V10H13V14Z" Fill="#E09A1A" Aspect="Uniform" WidthRequest="16" HeightRequest="16" VerticalOptions="Start" Margin="0,1,0,0"/>
-                                            <Label Grid.Column="1" Text="{loc:T foto_reco_aviso}" FontSize="12" FontFamily="OpenSansSemibold" TextColor="#8A4B00"/>
+                                            <Label Grid.Column="1" Text="{loc:T foto_reco_aviso}" FontSize="12" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorWarning}"/>
                                         </Grid>
                                     </Border>
                                 </VerticalStackLayout>
@@ -443,7 +443,7 @@
                                 <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorBackground}" Padding="16,0">
                                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
                                         <Label Text="$" FontFamily="OpenSansSemibold" FontSize="20" TextColor="{StaticResource ColorPrimary}" VerticalOptions="Center"/>
-                                        <Entry x:Name="EntryTarifa" Grid.Column="1" Keyboard="Numeric" Placeholder="{loc:T ej_15_00}" FontFamily="OpenSansSemibold" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" FontSize="18" BackgroundColor="Transparent" HeightRequest="56" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
+                                        <Entry x:Name="EntryTarifa" Grid.Column="1" Keyboard="Numeric" Placeholder="{loc:T ej_15_00}" FontFamily="OpenSansSemibold" PlaceholderColor="{StaticResource ColorPlaceholder}" TextColor="{StaticResource ColorTextStrong}" FontSize="18" BackgroundColor="Transparent" HeightRequest="56" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
                                         <Label Grid.Column="2" Text="{loc:T sufijo_por_hora}" FontFamily="OpenSansSemibold" FontSize="14" TextColor="{StaticResource ColorTextMuted}" VerticalOptions="Center"/>
                                     </Grid>
                                 </Border>
@@ -464,12 +464,12 @@
                             <Label Text="{loc:T sube_fotos_claras_de_estos}" FontSize="15" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Row="1" Spacing="12">
-                            <Border x:Name="BtnPickCedula" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 20" Padding="16" BackgroundColor="White">
+                            <Border x:Name="BtnPickCedula" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 20" Padding="16" BackgroundColor="{StaticResource ColorSurface}">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnPickCedulaTapped" />
                                 </Border.GestureRecognizers>
                                 <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="14">
-                                    <Border WidthRequest="48" HeightRequest="48" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="#EAF1FB" VerticalOptions="Center">
+                                    <Border WidthRequest="48" HeightRequest="48" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Center">
                                         <Path Data="M20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM8 7C9.66 7 11 8.34 11 10C11 11.66 9.66 13 8 13C6.34 13 5 11.66 5 10C5 8.34 6.34 7 8 7ZM14 17H2V16C2 14 6 13 8 13C10 13 14 14 14 16V17ZM20 15H15V13H20V15ZM20 11H15V9H20V11Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center"/>
                                     </Border>
                                     <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="3">
@@ -484,12 +484,12 @@
                                 </Grid>
                                 
                             </Border>
-                            <Border x:Name="BtnPickAntecedentes" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 20" Padding="16" BackgroundColor="White">
+                            <Border x:Name="BtnPickAntecedentes" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 20" Padding="16" BackgroundColor="{StaticResource ColorSurface}">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnPickAntecedentesTapped" />
                                 </Border.GestureRecognizers>
                                 <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="14">
-                                    <Border WidthRequest="48" HeightRequest="48" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="#EAF1FB" VerticalOptions="Center">
+                                    <Border WidthRequest="48" HeightRequest="48" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Center">
                                         <Path Data="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM16 18H8V16H16V18ZM16 14H8V12H16V14ZM13 9V3.5L18.5 9H13Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center"/>
                                     </Border>
                                     <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="3">
@@ -510,7 +510,7 @@
                                 <Label Text="{loc:T documentos_opcionales}" FontFamily="OpenSansSemibold" FontSize="17" TextColor="{StaticResource ColorTextStrong}"/>
                                 <Label Text="{loc:T documentos_opcionales_desc}" FontFamily="OpenSansRegular" FontSize="13" TextColor="{StaticResource ColorTextMuted}"/>
                             </VerticalStackLayout>
-                            <Border StrokeThickness="0" StrokeShape="RoundRectangle 16" BackgroundColor="#EAF1FB" Padding="14,12">
+                            <Border StrokeThickness="0" StrokeShape="RoundRectangle 16" BackgroundColor="{StaticResource ColorPrimarySoft}" Padding="14,12">
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                                     <Path Data="M9 21C9 21.55 9.45 22 10 22H14C14.55 22 15 21.55 15 21V20H9V21ZM12 2C8.14 2 5 5.14 5 9C5 11.38 6.19 13.47 8 14.74V17C8 17.55 8.45 18 9 18H15C15.55 18 16 17.55 16 17V14.74C17.81 13.47 19 11.38 19 9C19 5.14 15.86 2 12 2Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" VerticalOptions="Start" Margin="0,1,0,0"/>
                                     <Label Grid.Column="1" Text="{loc:T mientras_mas_evidencias}" FontFamily="OpenSansRegular" FontSize="13" TextColor="{StaticResource ColorPrimary}"/>
@@ -541,10 +541,10 @@
                                         <TapGestureRecognizer Tapped="OnElegirDireccionMapaTapped"/>
                                     </Border.GestureRecognizers>
                                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
-                                        <Border WidthRequest="38" HeightRequest="38" StrokeThickness="0" StrokeShape="RoundRectangle 12" BackgroundColor="#EAF1FB" VerticalOptions="Center">
+                                        <Border WidthRequest="38" HeightRequest="38" StrokeThickness="0" StrokeShape="RoundRectangle 12" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Center">
                                             <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                                         </Border>
-                                        <Entry x:Name="EntryDireccion" Grid.Column="1" IsReadOnly="True" Placeholder="{loc:T toca_para_elegir_en_el}" FontFamily="OpenSansRegular" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52">
+                                        <Entry x:Name="EntryDireccion" Grid.Column="1" IsReadOnly="True" Placeholder="{loc:T toca_para_elegir_en_el}" FontFamily="OpenSansRegular" PlaceholderColor="{StaticResource ColorPlaceholder}" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52">
                                             <Entry.GestureRecognizers>
                                                 <TapGestureRecognizer Tapped="OnElegirDireccionMapaTapped"/>
                                             </Entry.GestureRecognizers>
@@ -568,13 +568,13 @@
                                 <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorBackground}" Padding="14,0">
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                                     <Path Data="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
-                                    <Entry x:Name="EntryEmergenciaNombre" Grid.Column="1" Placeholder="{loc:T nombre_del_contacto}" FontFamily="OpenSansRegular" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
+                                    <Entry x:Name="EntryEmergenciaNombre" Grid.Column="1" Placeholder="{loc:T nombre_del_contacto}" FontFamily="OpenSansRegular" PlaceholderColor="{StaticResource ColorPlaceholder}" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
                                 </Grid>
                             </Border>
                                 <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorBackground}" Padding="14,0">
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                                     <Path Data="M6.62 10.79C8.06 13.62 10.38 15.93 13.21 17.38L15.41 15.18C15.68 14.91 16.08 14.82 16.43 14.94C17.55 15.31 18.76 15.51 20 15.51C20.55 15.51 21 15.96 21 16.51V20C21 20.55 20.55 21 20 21C10.61 21 3 13.39 3 4C3 3.45 3.45 3 4 3H7.5C8.05 3 8.5 3.45 8.5 4C8.5 5.25 8.7 6.45 9.07 7.57C9.18 7.92 9.1 8.31 8.82 8.59L6.62 10.79Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
-                                    <Entry x:Name="EntryEmergenciaTelefono" Grid.Column="1" Keyboard="Telephone" Placeholder="{loc:T numero_de_telefono}" FontFamily="OpenSansRegular" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
+                                    <Entry x:Name="EntryEmergenciaTelefono" Grid.Column="1" Keyboard="Telephone" Placeholder="{loc:T numero_de_telefono}" FontFamily="OpenSansRegular" PlaceholderColor="{StaticResource ColorPlaceholder}" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52" Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
                                 </Grid>
                             </Border>
                             </VerticalStackLayout>
@@ -594,7 +594,7 @@
                             <Label Text="{loc:T puedes_cambiarlo_despues}" FontSize="15" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Row="1" Spacing="12">
-                            <Border x:Name="PayOption1" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 20" Padding="16" BackgroundColor="White">
+                            <Border x:Name="PayOption1" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 20" Padding="16" BackgroundColor="{StaticResource ColorSurface}">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnPayOptionTapped" CommandParameter="1" />
                                 </Border.GestureRecognizers>
@@ -606,13 +606,13 @@
                                         <Label x:Name="PayText1" Text="{loc:T cuenta_bancaria}" FontFamily="OpenSansSemibold" FontSize="16" TextColor="{StaticResource ColorTextStrong}"/>
                                         <Label Text="{loc:T transfiere_a_tu_cuenta}" FontFamily="OpenSansRegular" FontSize="13" TextColor="{StaticResource ColorTextMuted}"/>
                                     </VerticalStackLayout>
-                                    <Border x:Name="PayCheck1" Grid.Column="2" WidthRequest="24" HeightRequest="24" StrokeThickness="1.5" Stroke="{StaticResource ColorBorder}" BackgroundColor="White" VerticalOptions="Center">
+                                    <Border x:Name="PayCheck1" Grid.Column="2" WidthRequest="24" HeightRequest="24" StrokeThickness="1.5" Stroke="{StaticResource ColorBorder}" BackgroundColor="{StaticResource ColorSurface}" VerticalOptions="Center">
                                         <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                                         <Path x:Name="PayCheckMark1" Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="White" Aspect="Uniform" WidthRequest="14" HeightRequest="14" HorizontalOptions="Center" VerticalOptions="Center" Opacity="0"/>
                                     </Border>
                                 </Grid>
                             </Border>
-                            <Border x:Name="PayOption2" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 20" Padding="16" BackgroundColor="White">
+                            <Border x:Name="PayOption2" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 20" Padding="16" BackgroundColor="{StaticResource ColorSurface}">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnPayOptionTapped" CommandParameter="2" />
                                 </Border.GestureRecognizers>
@@ -624,13 +624,13 @@
                                         <Label x:Name="PayText2" Text="{loc:T billetera_cuidapp}" FontFamily="OpenSansSemibold" FontSize="16" TextColor="{StaticResource ColorTextStrong}"/>
                                         <Label Text="{loc:T retira_cuando_quieras}" FontFamily="OpenSansRegular" FontSize="13" TextColor="{StaticResource ColorTextMuted}"/>
                                     </VerticalStackLayout>
-                                    <Border x:Name="PayCheck2" Grid.Column="2" WidthRequest="24" HeightRequest="24" StrokeThickness="1.5" Stroke="{StaticResource ColorBorder}" BackgroundColor="White" VerticalOptions="Center">
+                                    <Border x:Name="PayCheck2" Grid.Column="2" WidthRequest="24" HeightRequest="24" StrokeThickness="1.5" Stroke="{StaticResource ColorBorder}" BackgroundColor="{StaticResource ColorSurface}" VerticalOptions="Center">
                                         <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                                         <Path x:Name="PayCheckMark2" Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="White" Aspect="Uniform" WidthRequest="14" HeightRequest="14" HorizontalOptions="Center" VerticalOptions="Center" Opacity="0"/>
                                     </Border>
                                 </Grid>
                             </Border>
-                            <Border x:Name="PayOption3" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 20" Padding="16" BackgroundColor="White">
+                            <Border x:Name="PayOption3" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 20" Padding="16" BackgroundColor="{StaticResource ColorSurface}">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnPayOptionTapped" CommandParameter="3" />
                                 </Border.GestureRecognizers>
@@ -642,14 +642,14 @@
                                         <Label x:Name="PayText3" Text="{loc:T efectivo}" FontFamily="OpenSansSemibold" FontSize="16" TextColor="{StaticResource ColorTextStrong}"/>
                                         <Label Text="{loc:T punto_de_retiro_fisico}" FontFamily="OpenSansRegular" FontSize="13" TextColor="{StaticResource ColorTextMuted}"/>
                                     </VerticalStackLayout>
-                                    <Border x:Name="PayCheck3" Grid.Column="2" WidthRequest="24" HeightRequest="24" StrokeThickness="1.5" Stroke="{StaticResource ColorBorder}" BackgroundColor="White" VerticalOptions="Center">
+                                    <Border x:Name="PayCheck3" Grid.Column="2" WidthRequest="24" HeightRequest="24" StrokeThickness="1.5" Stroke="{StaticResource ColorBorder}" BackgroundColor="{StaticResource ColorSurface}" VerticalOptions="Center">
                                         <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                                         <Path x:Name="PayCheckMark3" Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="White" Aspect="Uniform" WidthRequest="14" HeightRequest="14" HorizontalOptions="Center" VerticalOptions="Center" Opacity="0"/>
                                     </Border>
                                 </Grid>
                             </Border>
                             <!-- Aviso: el método de cobro requiere validación extra (texto distinto si es efectivo) -->
-                            <Border x:Name="AvisoCobro" StrokeThickness="0" StrokeShape="RoundRectangle 16" BackgroundColor="#EAF1FB" Padding="14,12" Margin="0,6,0,0">
+                            <Border x:Name="AvisoCobro" StrokeThickness="0" StrokeShape="RoundRectangle 16" BackgroundColor="{StaticResource ColorPrimarySoft}" Padding="14,12" Margin="0,6,0,0">
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
                                     <Path x:Name="AvisoCobroIcono" Data="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM13 17H11V11H13V17ZM13 9H11V7H13V9Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" VerticalOptions="Start" Margin="0,1,0,0"/>
                                     <Label x:Name="AvisoCobroTexto" Grid.Column="1" Text="{loc:T aviso_cobro_validacion}" FontFamily="OpenSansRegular" FontSize="13" TextColor="{StaticResource ColorPrimary}"/>
@@ -691,7 +691,7 @@
                 <VerticalStackLayout x:Name="ContenidoTerminos" Padding="20,20,20,32" Spacing="26" SizeChanged="OnTerminosLayoutChanged">
 
                     <!-- Introducción -->
-                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 18" BackgroundColor="#EAF1FB" Padding="16">
+                    <Border StrokeThickness="0" StrokeShape="RoundRectangle 18" BackgroundColor="{StaticResource ColorPrimarySoft}" Padding="16">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
                             <Border WidthRequest="44" HeightRequest="44" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimary}" VerticalOptions="Center">
                                 <!-- Escudo con check -->
@@ -703,7 +703,7 @@
                     </Border>
 
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="#EAF1FB" VerticalOptions="Start" Margin="0,1,0,0">
+                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
                             <Label Text="1" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </Border>
                         <VerticalStackLayout Grid.Column="1" Spacing="6">
@@ -712,7 +712,7 @@
                         </VerticalStackLayout>
                     </Grid>
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="#EAF1FB" VerticalOptions="Start" Margin="0,1,0,0">
+                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
                             <Label Text="2" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </Border>
                         <VerticalStackLayout Grid.Column="1" Spacing="6">
@@ -721,7 +721,7 @@
                         </VerticalStackLayout>
                     </Grid>
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="#EAF1FB" VerticalOptions="Start" Margin="0,1,0,0">
+                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
                             <Label Text="3" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </Border>
                         <VerticalStackLayout Grid.Column="1" Spacing="6">
@@ -730,7 +730,7 @@
                         </VerticalStackLayout>
                     </Grid>
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="#EAF1FB" VerticalOptions="Start" Margin="0,1,0,0">
+                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
                             <Label Text="4" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </Border>
                         <VerticalStackLayout Grid.Column="1" Spacing="6">
@@ -739,7 +739,7 @@
                         </VerticalStackLayout>
                     </Grid>
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="#EAF1FB" VerticalOptions="Start" Margin="0,1,0,0">
+                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
                             <Label Text="5" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </Border>
                         <VerticalStackLayout Grid.Column="1" Spacing="6">
@@ -748,7 +748,7 @@
                         </VerticalStackLayout>
                     </Grid>
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="#EAF1FB" VerticalOptions="Start" Margin="0,1,0,0">
+                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
                             <Label Text="6" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </Border>
                         <VerticalStackLayout Grid.Column="1" Spacing="6">
@@ -757,7 +757,7 @@
                         </VerticalStackLayout>
                     </Grid>
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="#EAF1FB" VerticalOptions="Start" Margin="0,1,0,0">
+                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
                             <Label Text="7" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </Border>
                         <VerticalStackLayout Grid.Column="1" Spacing="6">
@@ -766,7 +766,7 @@
                         </VerticalStackLayout>
                     </Grid>
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="#EAF1FB" VerticalOptions="Start" Margin="0,1,0,0">
+                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
                             <Label Text="8" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </Border>
                         <VerticalStackLayout Grid.Column="1" Spacing="6">
@@ -775,7 +775,7 @@
                         </VerticalStackLayout>
                     </Grid>
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="#EAF1FB" VerticalOptions="Start" Margin="0,1,0,0">
+                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
                             <Label Text="9" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </Border>
                         <VerticalStackLayout Grid.Column="1" Spacing="6">
@@ -784,7 +784,7 @@
                         </VerticalStackLayout>
                     </Grid>
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="#EAF1FB" VerticalOptions="Start" Margin="0,1,0,0">
+                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
                             <Label Text="10" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </Border>
                         <VerticalStackLayout Grid.Column="1" Spacing="6">
@@ -798,7 +798,7 @@
             <!-- Pie con acciones -->
             <Border Grid.Row="3" StrokeThickness="0" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 24,24,0,0" Padding="20,14,20,24">
                 <Border.Shadow>
-                    <Shadow Brush="#0A2F41" Offset="0,-6" Radius="18" Opacity="0.08" />
+                    <Shadow Brush="{StaticResource ColorShadow}" Offset="0,-6" Radius="18" Opacity="0.08" />
                 </Border.Shadow>
                 <VerticalStackLayout Spacing="12">
                     <HorizontalStackLayout x:Name="LblHintTerminos" HorizontalOptions="Center" Spacing="6">
@@ -825,11 +825,11 @@
 
         <!-- Overlay Exito -->
         <ContentView x:Name="OverlayExito" BackgroundColor="#80000000" Opacity="0" IsVisible="False" InputTransparent="False">
-            <Border Stroke="Transparent" StrokeShape="RoundRectangle 20" BackgroundColor="White" Padding="30" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="300">
+            <Border Stroke="Transparent" StrokeShape="RoundRectangle 20" BackgroundColor="{StaticResource ColorSurface}" Padding="30" HorizontalOptions="Center" VerticalOptions="Center" WidthRequest="300">
                 <VerticalStackLayout Spacing="15" HorizontalOptions="Center">
                     <Path x:Name="OverlayIcon" Data="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" Fill="#065F46" Aspect="Uniform" WidthRequest="60" HeightRequest="60" HorizontalOptions="Center"/>
-                    <Label x:Name="OverlayTitle" Text="{loc:T exito_2}" FontSize="24" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
-                    <Label x:Name="OverlayMessage" Text="{loc:T registro_completado}" FontSize="16" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                    <Label x:Name="OverlayTitle" Text="{loc:T exito_2}" FontSize="24" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Center"/>
+                    <Label x:Name="OverlayMessage" Text="{loc:T registro_completado}" FontSize="16" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
                 </VerticalStackLayout>
             </Border>
         </ContentView>

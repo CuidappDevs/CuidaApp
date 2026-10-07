@@ -144,3 +144,22 @@ Todos se envían al grupo `user-{usuarioId}`, y si falla el envío no se interru
 - `TicketActualizado` `{ ticketId, respuesta, estado, asunto }`: se envía al dueño del reporte cuando el admin responde (`respuesta = true`) o cambia el estado.
 
 No hay SPs ni tablas nuevas. Hay que publicar el API.
+
+## Recibos por correo al completar un servicio
+
+- Cuando el cliente **confirma** que el servicio terminó (`PUT api/trabajo/confirmar-finalizacion` con `confirmado = true`), el servidor envía en segundo plano dos correos (`Services/Recibo/ReciboService.cs`):
+  - **Cliente:** total pagado (servicio + propina), tareas hechas y no hechas, detalles (horario programado, inicio y fin reales con PIN, duración, dirección, cuidador), nota de finalización, invitación a calificar y ayuda.
+  - **Cuidador:** lo que ganó (pago por el servicio + propina), aviso de que el pago queda pendiente de aprobación, tareas completadas y detalles del servicio.
+- No se envían si el servicio termina forzado o sin cobro, ni si se cancela.
+- SP `sp_ObtenerDatosReciboTrabajo` (`docs/sql/recibo-servicio.sql`), de solo lectura.
+- Los íconos son PNG servidos por el API en `wwwroot/email/` (Gmail y Outlook no muestran SVG). Su URL base sale de `UrlPublica` en `appsettings.json`.
+- Si el envío falla, no afecta la confirmación: solo queda en el log.
+
+## Correo de bienvenida al registrarse
+
+- Al crear la cuenta (`POST api/auth/register/cliente` y `/register/cuidador`), el servidor envía en segundo plano un correo de bienvenida (`Services/Email/BienvenidaService.cs`), con el mismo diseño de los recibos:
+  - **Cliente:** cuenta lista, "así de fácil funciona" en 4 pasos, por qué es seguro (verificación y PIN), y tarjetas de direcciones y soporte.
+  - **Cuidador:** registro recibido, una línea de progreso (cuenta creada ✔ → documentos en revisión, *en curso* → cuenta aprobada → empieza a trabajar) y cómo seguir el estado de cada documento en la app y volver a subir los rechazados.
+- El diseño común está en `Services/Email/PlantillaCorreo.cs`, del que heredan `ReciboService` y `BienvenidaService`.
+- Los íconos nuevos están en `wwwroot/email/`: `hero_hogar`, `hero_revision`, `pendiente` y `paso`.
+- No hay tablas ni SPs nuevos. Si el envío falla, no afecta el registro.

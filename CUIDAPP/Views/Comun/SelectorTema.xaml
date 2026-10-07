@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:CUIDAPP.Localization"
+             x:Class="CUIDAPP.Views.Comun.SelectorTema">
+
+    <!-- Tarjeta: ícono + "Apariencia" / modo actual + control segmentado (sol | luna | automático) -->
+    <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 16" Padding="14,12">
+        <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="12">
+            <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                <Path Data="M12 22C17.52 22 22 17.52 22 12S17.52 2 12 2 2 6.48 2 12 6.48 22 12 22ZM12 4V20C16.42 20 20 16.42 20 12S16.42 4 12 4Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+            </Border>
+
+            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="1">
+                <Label Text="{loc:T apariencia}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                <Label x:Name="LblModoActual" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" LineBreakMode="TailTruncation"/>
+            </VerticalStackLayout>
+
+            <Border Grid.Column="2" Stroke="Transparent" BackgroundColor="{StaticResource ColorSubtle}" StrokeShape="RoundRectangle 10" Padding="3" VerticalOptions="Center">
+                <HorizontalStackLayout x:Name="Segmentos" Spacing="2"/>
+            </Border>
+        </Grid>
+    </Border>
+</ContentView>

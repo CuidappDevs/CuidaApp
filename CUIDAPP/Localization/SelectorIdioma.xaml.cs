@@ -1,3 +1,4 @@
+using CUIDAPP.Services;
 using System.ComponentModel;
 
 namespace CUIDAPP.Localization
@@ -28,17 +29,17 @@ namespace CUIDAPP.Localization
             var c = Compacto;
             Textos.IsVisible = !c;
             Contenido.ColumnSpacing = c ? 2 : 12;
-            Tarjeta.Stroke = c ? Color.FromArgb("#33FFFFFF") : Color.FromArgb("#E5E7EB");
-            Tarjeta.BackgroundColor = c ? Color.FromArgb("#26FFFFFF") : Colors.White;
+            Tarjeta.Stroke = c ? Color.FromArgb("#33FFFFFF") : Tema.C("ColorBorder");
+            Tarjeta.BackgroundColor = c ? Color.FromArgb("#26FFFFFF") : Tema.C("ColorSurface");
             Tarjeta.StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = c ? 18 : 16 };
             Tarjeta.Padding = c ? new Thickness(8, 3, 3, 3) : new Thickness(14, 12);
-            IconoCaja.BackgroundColor = c ? Colors.Transparent : Color.FromArgb("#EFF6FF");
+            IconoCaja.BackgroundColor = c ? Colors.Transparent : Tema.C("ColorPrimarySoft");
             IconoCaja.WidthRequest = IconoCaja.HeightRequest = c ? 22 : 40;
-            IconoGlobo.Fill = c ? Colors.White : Color.FromArgb("#2563EB");
+            IconoGlobo.Fill = c ? Colors.White : Tema.C("ColorPrimary");
             IconoGlobo.WidthRequest = IconoGlobo.HeightRequest = c ? 16 : 20;
             Pista.BackgroundColor = Colors.Transparent;
             Pista.Padding = c ? 0 : 3;
-            if (!c) Pista.BackgroundColor = Color.FromArgb("#F3F4F6");
+            if (!c) Pista.BackgroundColor = Tema.C("ColorSubtle");
 
             foreach (var (segmento, texto) in _segmentos.Values)
             {
@@ -112,12 +113,12 @@ namespace CUIDAPP.Localization
             foreach (var (codigo, (segmento, texto)) in _segmentos)
             {
                 var esActivo = codigo == activo;
-                segmento.BackgroundColor = esActivo ? Colors.White : Colors.Transparent;
+                segmento.BackgroundColor = esActivo ? Tema.C("ColorSurface") : Colors.Transparent;
                 segmento.Shadow = esActivo
                     ? new Shadow { Brush = Colors.Black, Offset = new Point(0, 1), Radius = 3, Opacity = 0.12f }
                     : null!;
-                texto.TextColor = esActivo ? Color.FromArgb("#2563EB")
-                    : Compacto ? Color.FromArgb("#D9E6F7") : Color.FromArgb("#6B7280");
+                texto.TextColor = esActivo ? Tema.C("ColorPrimary")
+                    : Compacto ? Color.FromArgb("#D9E6F7") : Tema.C("ColorTextMuted");
                 SemanticProperties.SetDescription(segmento, Localizador.Idiomas.First(i => i.Codigo == codigo).Nombre);
             }
 

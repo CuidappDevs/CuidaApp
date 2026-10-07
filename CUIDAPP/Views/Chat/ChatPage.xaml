@@ -11,9 +11,9 @@
     <Grid RowDefinitions="Auto, *, Auto">
 
         <!-- Encabezado -->
-        <Border Grid.Row="0" Stroke="Transparent" BackgroundColor="White" Padding="12,8,16,10">
+        <Border Grid.Row="0" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" Padding="12,8,16,10">
             <Border.Shadow>
-                <Shadow Brush="#0A2F41" Offset="0,4" Opacity="0.06" Radius="12"/>
+                <Shadow Brush="{StaticResource ColorShadow}" Offset="0,4" Opacity="0.06" Radius="12"/>
             </Border.Shadow>
             <Grid ColumnDefinitions="44, Auto, *" ColumnSpacing="10">
                 <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
@@ -24,11 +24,11 @@
                     <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="{StaticResource ColorTextStrong}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />
                 </Border>
                 <Grid Grid.Column="1" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
-                    <Border Stroke="Transparent" BackgroundColor="#E5E7EB" WidthRequest="44" HeightRequest="44">
+                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSubtle}" WidthRequest="44" HeightRequest="44">
                         <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                         <Image x:Name="ImgOtro" Aspect="AspectFill" />
                     </Border>
-                    <Border Stroke="White" StrokeThickness="2" BackgroundColor="#2E7D32" WidthRequest="13" HeightRequest="13" HorizontalOptions="End" VerticalOptions="End">
+                    <Border Stroke="White" StrokeThickness="2" BackgroundColor="{StaticResource ColorSuccess}" WidthRequest="13" HeightRequest="13" HorizontalOptions="End" VerticalOptions="End">
                         <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                     </Border>
                 </Grid>
@@ -43,9 +43,9 @@
 
         <!-- "Fulano está escribiendo…": burbuja con tres puntos animados, abajo de los mensajes -->
         <HorizontalStackLayout x:Name="IndicadorEscribiendo" Grid.Row="1" Spacing="8" Padding="14,0,14,8" HorizontalOptions="Start" VerticalOptions="End" IsVisible="False" InputTransparent="True">
-            <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20,20,6,20" Padding="14,12" VerticalOptions="Center">
+            <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20,20,6,20" Padding="14,12" VerticalOptions="Center">
                 <Border.Shadow>
-                    <Shadow Brush="#0A2F41" Offset="0,2" Radius="6" Opacity="0.06"/>
+                    <Shadow Brush="{StaticResource ColorShadow}" Offset="0,2" Radius="6" Opacity="0.06"/>
                 </Border.Shadow>
                 <HorizontalStackLayout Spacing="5">
                     <Ellipse x:Name="PuntoEscribiendo1" Fill="{StaticResource ColorTextMuted}" WidthRequest="7" HeightRequest="7"/>
@@ -57,10 +57,10 @@
         </HorizontalStackLayout>
 
         <!-- Barra de escritura -->
-        <Grid x:Name="GridEnvio" Grid.Row="2" ColumnDefinitions="Auto, *, Auto" Padding="10,10,12,12" ColumnSpacing="8" BackgroundColor="White">
+        <Grid x:Name="GridEnvio" Grid.Row="2" ColumnDefinitions="Auto, *, Auto" Padding="10,10,12,12" ColumnSpacing="8" BackgroundColor="{StaticResource ColorSurface}">
 
             <!-- Adjuntar imagen -->
-            <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="#EAF1FB" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
+            <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
                 <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnAdjuntarImagenTapped"/>
@@ -71,7 +71,7 @@
             <!-- Campo de texto con el micrófono dentro -->
             <Border x:Name="ContenedorEntry" Grid.Column="1" Stroke="Transparent" StrokeThickness="1.5" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 24" Padding="16,0,4,0">
                 <Grid ColumnDefinitions="*, Auto">
-                    <Entry x:Name="EntryMensaje" TextChanged="OnMensajeTextChanged" Placeholder="{loc:T escribe_un_mensaje}" FontFamily="OpenSansRegular" FontSize="15" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="48" Completed="OnEnviarClicked"
+                    <Entry x:Name="EntryMensaje" TextChanged="OnMensajeTextChanged" Placeholder="{loc:T escribe_un_mensaje}" FontFamily="OpenSansRegular" FontSize="15" PlaceholderColor="{StaticResource ColorPlaceholder}" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="48" Completed="OnEnviarClicked"
                            Focused="OnMensajeFocused" Unfocused="OnMensajeUnfocused"/>
                     <Border x:Name="BtnMicrofono" Grid.Column="1" Stroke="Transparent" BackgroundColor="Transparent" WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
                         <Border.StrokeShape><Ellipse/></Border.StrokeShape>
@@ -84,7 +84,7 @@
             </Border>
 
             <!-- Grabando -->
-            <Border x:Name="PildoraGrabando" Grid.Column="1" Stroke="Transparent" BackgroundColor="#FDECEC" StrokeShape="RoundRectangle 24" Padding="16,0" IsVisible="{Binding Source={x:Reference LblGrabando}, Path=IsVisible}" InputTransparent="True" HeightRequest="48">
+            <Border x:Name="PildoraGrabando" Grid.Column="1" Stroke="Transparent" BackgroundColor="{StaticResource ColorDangerSoft}" StrokeShape="RoundRectangle 24" Padding="16,0" IsVisible="{Binding Source={x:Reference LblGrabando}, Path=IsVisible}" InputTransparent="True" HeightRequest="48">
                 <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
                     <Ellipse x:Name="PuntoGrabando" Fill="{StaticResource ColorDanger}" WidthRequest="9" HeightRequest="9" VerticalOptions="Center"/>
                     <Label x:Name="LblGrabando" Text="{loc:T grabando_toca_el_microfono_para}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorDanger}" VerticalOptions="Center" IsVisible="False"/>

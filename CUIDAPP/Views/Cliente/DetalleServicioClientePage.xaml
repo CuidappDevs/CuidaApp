@@ -40,7 +40,7 @@
                         <!-- Cuidador + chat -->
                         <Border Stroke="Transparent" BackgroundColor="#1FFFFFFF" StrokeShape="RoundRectangle 20" Padding="14" Margin="20,0">
                             <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="14">
-                                <Border Stroke="White" StrokeThickness="2" BackgroundColor="#E5E7EB" WidthRequest="56" HeightRequest="56">
+                                <Border Stroke="White" StrokeThickness="2" BackgroundColor="{StaticResource ColorSubtle}" WidthRequest="56" HeightRequest="56">
                                     <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                                     <Image x:Name="ImgCuidador" Aspect="AspectFill" />
                                 </Border>
@@ -49,7 +49,7 @@
                                     <Label x:Name="LblTipoServicio" Text="" FontSize="13" FontFamily="OpenSansRegular" TextColor="#D9E6F7"/>
                                 </VerticalStackLayout>
                                 <!-- Chat (visible mientras Aceptado / En progreso / Por confirmar) -->
-                                <Border x:Name="BtnChatCirculo" Grid.Column="2" Stroke="Transparent" BackgroundColor="White" WidthRequest="44" HeightRequest="44" VerticalOptions="Center" IsVisible="{Binding Source={x:Reference BtnChat}, Path=IsVisible}">
+                                <Border x:Name="BtnChatCirculo" Grid.Column="2" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" WidthRequest="44" HeightRequest="44" VerticalOptions="Center" IsVisible="{Binding Source={x:Reference BtnChat}, Path=IsVisible}">
                                     <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                                     <Border.GestureRecognizers>
                                         <TapGestureRecognizer Tapped="OnChatClicked"/>
@@ -89,36 +89,36 @@
                         </Border>
 
                         <!-- Servicio en progreso: tiempo transcurrido + PIN de salida -->
-                        <Border x:Name="CardEnProgreso" Stroke="Transparent" BackgroundColor="#E3F4E8" StrokeShape="RoundRectangle 20" Padding="18" IsVisible="False">
+                        <Border x:Name="CardEnProgreso" Stroke="Transparent" BackgroundColor="{StaticResource ColorSuccessSoft}" StrokeShape="RoundRectangle 20" Padding="18" IsVisible="False">
                             <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
                                 <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
-                                    <Ellipse x:Name="PuntoTrabajando" Fill="#2E7D32" WidthRequest="8" HeightRequest="8" VerticalOptions="Center"/>
-                                    <Label Text="{loc:T tu_cuidador_esta_trabajando}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#1B5E20" VerticalOptions="Center"/>
+                                    <Ellipse x:Name="PuntoTrabajando" Fill="{StaticResource ColorSuccess}" WidthRequest="8" HeightRequest="8" VerticalOptions="Center"/>
+                                    <Label Text="{loc:T tu_cuidador_esta_trabajando}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorSuccess}" VerticalOptions="Center"/>
                                 </HorizontalStackLayout>
-                                <Label x:Name="LblTiempoTranscurrido" Text="00:00:00" FontSize="34" FontFamily="OpenSansSemibold" TextColor="#2E7D32" HorizontalOptions="Center" CharacterSpacing="2"/>
-                                <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 14" Padding="14,10" Margin="0,4,0,0">
+                                <Label x:Name="LblTiempoTranscurrido" Text="00:00:00" FontSize="34" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorSuccess}" HorizontalOptions="Center" CharacterSpacing="2"/>
+                                <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 14" Padding="14,10" Margin="0,4,0,0">
                                     <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
-                                        <Label Text="{loc:T dale_este_codigo_cuando_termine}" FontSize="12" FontFamily="OpenSansSemibold" TextColor="#1B5E20" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
-                                        <Label x:Name="LblPinFin" Text="----" FontSize="28" FontFamily="OpenSansSemibold" TextColor="#2E7D32" HorizontalOptions="Center" CharacterSpacing="8"/>
+                                        <Label Text="{loc:T dale_este_codigo_cuando_termine}" FontSize="12" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorSuccess}" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                                        <Label x:Name="LblPinFin" Text="----" FontSize="28" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorSuccess}" HorizontalOptions="Center" CharacterSpacing="8"/>
                                     </VerticalStackLayout>
                                 </Border>
                             </VerticalStackLayout>
                         </Border>
 
                         <!-- Estado 7: el cuidador dice que terminó, hay que confirmarlo -->
-                        <Border x:Name="CardConfirmarFinalizacion" Stroke="Transparent" BackgroundColor="#FFF4DC" StrokeShape="RoundRectangle 20" Padding="18" IsVisible="False">
+                        <Border x:Name="CardConfirmarFinalizacion" Stroke="Transparent" BackgroundColor="{StaticResource ColorWarningSoft}" StrokeShape="RoundRectangle 20" Padding="18" IsVisible="False">
                             <VerticalStackLayout Spacing="10">
-                                <Label Text="{loc:T tu_cuidador_indico_que_el}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#8A4B00" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
-                                <Label x:Name="LblJustificacionFinalizacion" Text="" FontSize="13" FontFamily="OpenSansRegular" TextColor="#8A4B00" IsVisible="False"/>
-                                <Label Text="{loc:T confirmas_que_el_trabajo_fue}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#8A4B00" HorizontalOptions="Center"/>
+                                <Label Text="{loc:T tu_cuidador_indico_que_el}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorWarning}" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                                <Label x:Name="LblJustificacionFinalizacion" Text="" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorWarning}" IsVisible="False"/>
+                                <Label Text="{loc:T confirmas_que_el_trabajo_fue}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorWarning}" HorizontalOptions="Center"/>
 
                                 <!-- Propina opcional (tipo Uber): montos en tarjetas iguales + "Sin propina" / "Otro monto" -->
-                                <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 18" Padding="16" Margin="0,4,0,0">
+                                <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 18" Padding="16" Margin="0,4,0,0">
                                     <VerticalStackLayout Spacing="14">
                                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                            <Border WidthRequest="40" HeightRequest="40" StrokeThickness="0" BackgroundColor="#E3F4E8" VerticalOptions="Center">
+                                            <Border WidthRequest="40" HeightRequest="40" StrokeThickness="0" BackgroundColor="{StaticResource ColorSuccessSoft}" VerticalOptions="Center">
                                                 <Border.StrokeShape><Ellipse/></Border.StrokeShape>
-                                                <Path Data="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" Fill="#2E7D32" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                                <Path Data="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" Fill="{StaticResource ColorSuccess}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                                             </Border>
                                             <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
                                                 <Label Text="{loc:T propina_titulo_corto}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
@@ -126,30 +126,30 @@
                                             </VerticalStackLayout>
                                         </Grid>
                                         <VerticalStackLayout x:Name="ChipsPropina" Spacing="8"/>
-                                        <Border x:Name="BoxPropinaOtro" IsVisible="False" Stroke="#2E7D32" StrokeThickness="1.5" BackgroundColor="White" StrokeShape="RoundRectangle 14" Padding="14,0">
+                                        <Border x:Name="BoxPropinaOtro" IsVisible="False" Stroke="{StaticResource ColorSuccess}" StrokeThickness="1.5" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 14" Padding="14,0">
                                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                                                 <Label Text="RD$" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextMuted}" VerticalOptions="Center"/>
                                                 <Entry x:Name="EntryPropina" Grid.Column="1" Placeholder="{loc:T monto_propina_rd}" Keyboard="Numeric" MaxLength="8" FontFamily="OpenSansSemibold" FontSize="16" HeightRequest="50" TextChanged="OnPropinaTextChanged"/>
                                             </Grid>
                                         </Border>
-                                        <Border x:Name="CajaResumenPropina" IsVisible="False" StrokeThickness="0" BackgroundColor="#F1F8F2" StrokeShape="RoundRectangle 12" Padding="14,10">
-                                            <Label x:Name="LblResumenPropina" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#2E7D32" HorizontalOptions="Center"/>
+                                        <Border x:Name="CajaResumenPropina" IsVisible="False" StrokeThickness="0" BackgroundColor="{StaticResource ColorSuccessSoft}" StrokeShape="RoundRectangle 12" Padding="14,10">
+                                            <Label x:Name="LblResumenPropina" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorSuccess}" HorizontalOptions="Center"/>
                                         </Border>
                                     </VerticalStackLayout>
                                 </Border>
 
                                 <Grid ColumnDefinitions="*, *" ColumnSpacing="10" Margin="0,6,0,0">
-                                    <Button Grid.Column="0" Text="{loc:T no_aun_no}" Clicked="OnRechazarFinalizacionClicked" BackgroundColor="White" TextColor="#8A4B00" BorderColor="#E09A1A" BorderWidth="1.5" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="14" HeightRequest="50"/>
-                                    <Button Grid.Column="1" x:Name="BtnConfirmarFinalizacion" Text="{loc:T si_termino}" Clicked="OnConfirmarFinalizacionClicked" BackgroundColor="#2E7D32" TextColor="White" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="14" HeightRequest="50"/>
+                                    <Button Grid.Column="0" Text="{loc:T no_aun_no}" Clicked="OnRechazarFinalizacionClicked" BackgroundColor="{StaticResource ColorSurface}" TextColor="{StaticResource ColorWarning}" BorderColor="#E09A1A" BorderWidth="1.5" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="14" HeightRequest="50"/>
+                                    <Button Grid.Column="1" x:Name="BtnConfirmarFinalizacion" Text="{loc:T si_termino}" Clicked="OnConfirmarFinalizacionClicked" BackgroundColor="{StaticResource ColorSuccess}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="14" HeightRequest="50"/>
                                 </Grid>
                             </VerticalStackLayout>
                         </Border>
 
                         <!-- Detalles -->
-                        <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="16">
+                        <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="16">
                             <VerticalStackLayout Spacing="14">
                                 <Grid ColumnDefinitions="Auto, *" ColumnSpacing="14">
-                                    <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 12" WidthRequest="42" HeightRequest="42" VerticalOptions="Center">
+                                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 12" WidthRequest="42" HeightRequest="42" VerticalOptions="Center">
                                         <Path Data="M19 3H18V1H16V3H8V1H6V3H5C3.89 3 3.01 3.9 3.01 5L3 19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V9H19V19ZM19 7H5V5H19V7Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                                     </Border>
                                     <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
@@ -159,7 +159,7 @@
                                 </Grid>
                                 <BoxView HeightRequest="1" Color="{StaticResource ColorBorder}" Margin="56,0,0,0"/>
                                 <Grid ColumnDefinitions="Auto, *" ColumnSpacing="14">
-                                    <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 12" WidthRequest="42" HeightRequest="42" VerticalOptions="Center">
+                                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 12" WidthRequest="42" HeightRequest="42" VerticalOptions="Center">
                                         <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                                     </Border>
                                     <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
@@ -169,7 +169,7 @@
                                 </Grid>
                                 <BoxView HeightRequest="1" Color="{StaticResource ColorBorder}" Margin="56,0,0,0"/>
                                 <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="14">
-                                    <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 12" WidthRequest="42" HeightRequest="42" VerticalOptions="Center">
+                                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 12" WidthRequest="42" HeightRequest="42" VerticalOptions="Center">
                                         <Path Data="M11.8 10.9C9.53 10.31 8.8 9.7 8.8 8.75C8.8 7.66 9.81 6.9 11.5 6.9C13.28 6.9 13.94 7.75 14 9H16.21C16.14 7.28 15.09 5.7 13 5.19V3H10V5.16C8.06 5.58 6.5 6.84 6.5 8.77C6.5 11.08 8.41 12.23 11.2 12.9C13.7 13.5 14.2 14.38 14.2 15.31C14.2 16 13.71 17.1 11.5 17.1C9.44 17.1 8.63 16.18 8.52 15H6.32C6.44 17.19 8.08 18.42 10 18.83V21H13V18.85C14.95 18.48 16.5 17.35 16.5 15.3C16.5 12.46 14.07 11.49 11.8 10.9Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                                     </Border>
                                     <Label Grid.Column="1" Text="{loc:T pago_total}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
@@ -179,7 +179,7 @@
                         </Border>
 
                         <!-- Chat (fila; el botón original se conserva para el código) -->
-                        <Button x:Name="BtnChat" Text="{loc:T chatear_con_tu_cuidador}" Clicked="OnChatClicked" BackgroundColor="White" TextColor="{StaticResource ColorPrimary}" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="16" HeightRequest="52" IsVisible="False"/>
+                        <Button x:Name="BtnChat" Text="{loc:T chatear_con_tu_cuidador}" Clicked="OnChatClicked" BackgroundColor="{StaticResource ColorSurface}" TextColor="{StaticResource ColorPrimary}" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="16" HeightRequest="52" IsVisible="False"/>
 
                         <!-- Tareas que el cliente pidió; se tachan en tiempo real -->
                         <VerticalStackLayout x:Name="CardTareasCliente" Spacing="10" IsVisible="False">
@@ -195,7 +195,7 @@
                         </VerticalStackLayout>
 
                         <!-- Línea de tiempo del servicio -->
-                        <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="18">
+                        <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="18">
                             <VerticalStackLayout Spacing="10">
                                 <Label Text="{loc:T estado_del_servicio}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
                                 <VerticalStackLayout x:Name="ListaPasos" Spacing="0" />
@@ -208,7 +208,7 @@
                         <!-- SOS - Pedir auxilio (visible si aceptado o en progreso) -->
                         <Button x:Name="BtnSOS" Text="{loc:T sos_pedir_auxilio}" Clicked="OnSOSClicked" BackgroundColor="{StaticResource ColorDanger}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="16" HeightRequest="56" IsVisible="False"/>
 
-                        <Button x:Name="BtnCancelar" Text="{loc:T cancelar_solicitud}" Clicked="OnCancelarClicked" BackgroundColor="White" TextColor="{StaticResource ColorDanger}" BorderColor="#F3C1C1" BorderWidth="1.5" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="16" HeightRequest="52" IsVisible="False"/>
+                        <Button x:Name="BtnCancelar" Text="{loc:T cancelar_solicitud}" Clicked="OnCancelarClicked" BackgroundColor="{StaticResource ColorSurface}" TextColor="{StaticResource ColorDanger}" BorderColor="#F3C1C1" BorderWidth="1.5" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="16" HeightRequest="52" IsVisible="False"/>
 
                         <ContentView x:Name="EspacioInferior" HeightRequest="40" InputTransparent="True"/>
                     </VerticalStackLayout>
@@ -217,14 +217,14 @@
         </ScrollView>
 
         <!-- Anuncio de "trabajo terminado" -->
-        <Grid x:Name="OverlayTerminado" IsVisible="False" Opacity="0" BackgroundColor="#2E7D32">
+        <Grid x:Name="OverlayTerminado" IsVisible="False" Opacity="0" BackgroundColor="{StaticResource ColorSuccess}">
             <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="16" Padding="40,0">
-                <Border Stroke="Transparent" WidthRequest="110" HeightRequest="110" BackgroundColor="White" HorizontalOptions="Center">
+                <Border Stroke="Transparent" WidthRequest="110" HeightRequest="110" BackgroundColor="{StaticResource ColorSurface}" HorizontalOptions="Center">
                     <Border.StrokeShape><Ellipse/></Border.StrokeShape>
-                    <Path Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="#2E7D32" Aspect="Uniform" WidthRequest="54" HeightRequest="54" HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Path Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="{StaticResource ColorSuccess}" Aspect="Uniform" WidthRequest="54" HeightRequest="54" HorizontalOptions="Center" VerticalOptions="Center" />
                 </Border>
                 <Label Text="{loc:T trabajo_terminado}" FontSize="26" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
-                <Label Text="{loc:T gracias_por_confiar_en_cuidapp}" FontSize="14" FontFamily="OpenSansRegular" TextColor="#DCFCE7" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                <Label Text="{loc:T gracias_por_confiar_en_cuidapp}" FontSize="14" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorSuccessSoft}" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
             </VerticalStackLayout>
         </Grid>
 

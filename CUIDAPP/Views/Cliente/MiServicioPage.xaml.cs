@@ -91,12 +91,12 @@ namespace CUIDAPP.Views.Cliente
         {
             var (colorFondo, colorTexto, texto) = t.Estado switch
             {
-                1 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("esperando_respuesta")),
+                1 => (Tema.C("ColorWarningSoft"), Tema.C("ColorWarning"), Localizador.T("esperando_respuesta")),
                 2 => (Color.FromArgb("#DBEAFE"), Color.FromArgb("#1E40AF"), Localizador.T("aceptado")),
                 3 => (Color.FromArgb("#EDE9FE"), Color.FromArgb("#5B21B6"), Localizador.T("en_progreso")),
-                4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), Localizador.T("completado_califica")),
-                7 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("requiere_tu_confirmacion")),
-                _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), Localizador.T("en_curso"))
+                4 => (Tema.C("ColorSuccessSoft"), Tema.C("ColorSuccess"), Localizador.T("completado_califica")),
+                7 => (Tema.C("ColorWarningSoft"), Tema.C("ColorWarning"), Localizador.T("requiere_tu_confirmacion")),
+                _ => (Tema.C("ColorSubtle"), Tema.C("ColorTextStrong"), Localizador.T("en_curso"))
             };
 
             Color R(string k) => (Color)Application.Current!.Resources[k];
@@ -123,7 +123,7 @@ namespace CUIDAPP.Views.Cliente
             {
                 Stroke = Colors.Transparent,
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.Ellipse(),
-                BackgroundColor = Color.FromArgb("#E5E7EB"),
+                BackgroundColor = Tema.C("ColorSubtle"),
                 WidthRequest = 56,
                 HeightRequest = 56,
                 VerticalOptions = LayoutOptions.Center,
@@ -149,7 +149,7 @@ namespace CUIDAPP.Views.Cliente
             var flecha = new Microsoft.Maui.Controls.Shapes.Path
             {
                 Data = (Microsoft.Maui.Controls.Shapes.Geometry)new Microsoft.Maui.Controls.Shapes.PathGeometryConverter().ConvertFromInvariantString("M10 6L8.59 7.41L13.17 12L8.59 16.59L10 18L16 12L10 6Z")!,
-                Fill = Color.FromArgb("#B0BEC5"), Aspect = Stretch.Uniform, WidthRequest = 18, HeightRequest = 18, VerticalOptions = LayoutOptions.Center
+                Fill = Tema.C("ColorChevron"), Aspect = Stretch.Uniform, WidthRequest = 18, HeightRequest = 18, VerticalOptions = LayoutOptions.Center
             };
 
             var grid = new Grid { ColumnSpacing = 14, ColumnDefinitions = new ColumnDefinitionCollection { new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) } };
@@ -160,7 +160,7 @@ namespace CUIDAPP.Views.Cliente
             var card = new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = Colors.White,
+                BackgroundColor = Tema.C("ColorSurface"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 20 },
                 Padding = new Thickness(14),
                 Content = grid

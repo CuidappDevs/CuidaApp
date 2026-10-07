@@ -32,7 +32,7 @@
                         <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="White" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />
                     </Border>
                     <Label Grid.Column="1" Text="{loc:T mis_reportes}" FontSize="17" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center"/>
-                    <Border x:Name="BtnNuevo" Grid.Column="2" Stroke="Transparent" BackgroundColor="White" WidthRequest="44" HeightRequest="44">
+                    <Border x:Name="BtnNuevo" Grid.Column="2" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" WidthRequest="44" HeightRequest="44">
                         <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnNuevoReporteTapped" />
@@ -57,7 +57,7 @@
                 <ActivityIndicator x:Name="LoadingIndicator" IsRunning="True" IsVisible="True" Color="{StaticResource ColorPrimary}" VerticalOptions="Center" HorizontalOptions="Center"/>
 
                 <VerticalStackLayout x:Name="PanelVacio" IsVisible="False" VerticalOptions="Center" HorizontalOptions="Center" Spacing="16" Padding="40">
-                    <Border Stroke="Transparent" BackgroundColor="#EAF1FB" WidthRequest="88" HeightRequest="88" HorizontalOptions="Center">
+                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" WidthRequest="88" HeightRequest="88" HorizontalOptions="Center">
                         <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                         <Path Data="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z" Fill="{StaticResource ColorPrimaryLight}" Aspect="Uniform" WidthRequest="36" HeightRequest="36" HorizontalOptions="Center" VerticalOptions="Center"/>
                     </Border>
@@ -74,18 +74,18 @@
                     </CollectionView.Footer>
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:Ticket">
-                            <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Margin="20,0" Padding="16">
+                            <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Margin="20,0" Padding="16">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Tapped="OnTicketTapped" CommandParameter="{Binding Id}"/>
                                 </Border.GestureRecognizers>
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
-                                    <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 14" WidthRequest="44" HeightRequest="44" VerticalOptions="Start">
+                                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 14" WidthRequest="44" HeightRequest="44" VerticalOptions="Start">
                                         <Path Data="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM13 14H11V12H13V14ZM13 10H11V6H13V10Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
                                     </Border>
                                     <VerticalStackLayout Grid.Column="1" Spacing="5">
                                         <Label Text="{Binding Asunto}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" MaxLines="2" LineBreakMode="TailTruncation"/>
                                         <HorizontalStackLayout Spacing="8">
-                                            <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 10" Padding="8,3">
+                                            <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 10" Padding="8,3">
                                                 <Label Text="{Binding EstadoTexto}" FontSize="11" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}"/>
                                             </Border>
                                             <Label Text="{Binding Categoria}" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" VerticalOptions="Center"/>
@@ -99,7 +99,7 @@
                                             </Label.FormattedText>
                                         </Label>
                                     </VerticalStackLayout>
-                                    <Path Grid.Column="2" Data="M10 6L8.59 7.41L13.17 12L8.59 16.59L10 18L16 12L10 6Z" Fill="#B0BEC5" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
+                                    <Path Grid.Column="2" Data="M10 6L8.59 7.41L13.17 12L8.59 16.59L10 18L16 12L10 6Z" Fill="{StaticResource ColorChevron}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
                                 </Grid>
                             </Border>
                         </DataTemplate>

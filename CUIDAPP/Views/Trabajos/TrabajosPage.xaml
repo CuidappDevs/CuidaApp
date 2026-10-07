@@ -12,7 +12,7 @@
         <!-- ENCABEZADO + PESTAÑAS -->
         <VerticalStackLayout Grid.Row="0" Padding="12,8,16,10" Spacing="14" BackgroundColor="{StaticResource ColorBackground}">
             <Grid ColumnDefinitions="44, *, 44">
-                <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="White" WidthRequest="44" HeightRequest="44">
+                <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" WidthRequest="44" HeightRequest="44">
                     <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnBackTapped" />
@@ -25,7 +25,7 @@
             <!-- Control segmentado -->
             <Border Stroke="Transparent" BackgroundColor="#E6ECF4" StrokeShape="RoundRectangle 16" Padding="4" Margin="4,0,0,0">
                 <Grid ColumnDefinitions="*, *, *" ColumnSpacing="4">
-                    <Border x:Name="IndicadorTabNuevos" Grid.Column="0" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="0,9">
+                    <Border x:Name="IndicadorTabNuevos" Grid.Column="0" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 12" Padding="0,9">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnTabNuevosTapped" />
                         </Border.GestureRecognizers>
@@ -52,7 +52,7 @@
             <VerticalStackLayout Padding="20,6,20,28" Spacing="12">
                 <VerticalStackLayout x:Name="ListaTrabajos" Spacing="12" />
                 <VerticalStackLayout x:Name="LblSinTrabajosTab" Spacing="12" IsVisible="False" Margin="0,40,0,0" HorizontalOptions="Center">
-                    <Border Stroke="Transparent" BackgroundColor="#EAF1FB" WidthRequest="84" HeightRequest="84" HorizontalOptions="Center">
+                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" WidthRequest="84" HeightRequest="84" HorizontalOptions="Center">
                         <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                         <Path Data="M20 6H16V4C16 2.9 15.1 2 14 2H10C8.9 2 8 2.9 8 4V6H4C2.9 6 2.01 6.9 2.01 8L2 19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6ZM10 4H14V6H10V4ZM20 19H4V8H20V19Z" Fill="{StaticResource ColorPrimaryLight}" Aspect="Uniform" WidthRequest="34" HeightRequest="34" HorizontalOptions="Center" VerticalOptions="Center"/>
                     </Border>
@@ -63,9 +63,9 @@
         </ScrollView>
 
         <!-- BARRA DE PESTAÑAS -->
-        <Border Grid.Row="2" Stroke="Transparent" BackgroundColor="White" Padding="12,8,12,8" StrokeShape="RoundRectangle 24,24,0,0">
+        <Border Grid.Row="2" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" Padding="12,8,12,8" StrokeShape="RoundRectangle 24,24,0,0">
             <Border.Shadow>
-                <Shadow Brush="#0A2F41" Offset="0,-6" Opacity="0.07" Radius="16"/>
+                <Shadow Brush="{StaticResource ColorShadow}" Offset="0,-6" Opacity="0.07" Radius="16"/>
             </Border.Shadow>
             <Grid ColumnDefinitions="*,*,*,*">
                 <VerticalStackLayout Grid.Column="0" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center" Padding="12,6">
@@ -77,7 +77,7 @@
                 </VerticalStackLayout>
 
                 <!-- Trabajos (activa) -->
-                <Border Grid.Column="1" Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 18" Padding="0,6" Margin="6,0">
+                <Border Grid.Column="1" Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 18" Padding="0,6" Margin="6,0">
                     <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
                         <Path Data="M20 6H16V4C16 2.9 15.1 2 14 2H10C8.9 2 8 2.9 8 4V6H4C2.9 6 2.01 6.9 2.01 8L2 19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6ZM10 4H14V6H10V4ZM20 19H4V8H20V19Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center"/>
                         <Label Text="{loc:T trabajos}" FontSize="10" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center"/>

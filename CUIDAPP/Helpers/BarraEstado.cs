@@ -10,7 +10,8 @@ namespace CUIDAPP.Helpers
 
         public static void Azul() => Establecer(AzulEncabezado, iconosOscuros: false);
 
-        public static void Blanca() => Establecer(Colors.White, iconosOscuros: true);
+        // "Blanca" = color de superficie del tema (blanca en claro, oscura en oscuro).
+        public static void Blanca() => Establecer(Services.Tema.C("ColorSurface"), iconosOscuros: !Services.Tema.EsOscuro);
 
         /// <summary>Alto de la barra de estado en unidades MAUI (0 fuera de Android).</summary>
         public static double Alto() => DimensionSistema("status_bar_height");

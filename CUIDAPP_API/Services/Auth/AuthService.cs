@@ -1,3 +1,4 @@
+using CUIDAPP_API.Services.Email;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -95,7 +96,11 @@ namespace CUIDAPP_API.Services.Auth
 
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(result);
+            var nuevoId = Convert.ToInt32(result);
+            // Correo de bienvenida en segundo plano (no demora ni afecta el registro).
+            if (nuevoId > 0)
+                _ = Task.Run(() => new BienvenidaService(_config).EnviarClienteAsync(registerDto.Email, registerDto.NombreCompleto));
+            return nuevoId;
         }
 
         public async Task<int> RegisterCaregiverAsync(RegisterCaregiverDto registerDto)
@@ -127,7 +132,11 @@ namespace CUIDAPP_API.Services.Auth
 
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(result);
+            var nuevoId = Convert.ToInt32(result);
+            // Correo de bienvenida en segundo plano (no demora ni afecta el registro).
+            if (nuevoId > 0)
+                _ = Task.Run(() => new BienvenidaService(_config).EnviarCuidadorAsync(registerDto.Email, registerDto.NombreCompleto));
+            return nuevoId;
         }
 
         public async Task<(bool Success, Guid ResetToken, string Message)> ForgotPasswordAsync(ForgotPasswordDto dto)

@@ -507,7 +507,7 @@ namespace CUIDAPP.Views.Registro
                 {
                     fotoFile = result;
                     LblFotoFileName.Text = result.FileName;
-                    LblFotoFileName.TextColor = Color.FromArgb("#2E7D32");
+                    LblFotoFileName.TextColor = Tema.C("ColorSuccess");
                     ImgFotoPreview.Source = ImageSource.FromFile(result.FullPath);
                     ImgFotoPreview.IsVisible = true;
                     CirculoFoto.StrokeDashArray = null;
@@ -533,7 +533,7 @@ namespace CUIDAPP.Views.Registro
                 {
                     cedulaFile = result;
                     LblCedulaFileName.Text = result.FileName;
-                    LblCedulaFileName.TextColor = Color.FromArgb("#2E7D32");
+                    LblCedulaFileName.TextColor = Tema.C("ColorSuccess");
                     MarcarDocumentoListo(BtnPickCedula, CedulaEstadoCaja, CedulaEstado);
                 }
             }
@@ -556,7 +556,7 @@ namespace CUIDAPP.Views.Registro
                 {
                     antecedentesFile = result;
                     LblAntecedentesFileName.Text = result.FileName;
-                    LblAntecedentesFileName.TextColor = Color.FromArgb("#2E7D32");
+                    LblAntecedentesFileName.TextColor = Tema.C("ColorSuccess");
                     MarcarDocumentoListo(BtnPickAntecedentes, AntecedentesEstadoCaja, AntecedentesEstado);
                 }
             }
@@ -601,12 +601,12 @@ namespace CUIDAPP.Views.Registro
 
             tarjeta.Stroke = activo ? primario : R("ColorBorder");
             tarjeta.StrokeThickness = activo ? 2 : 1.5;
-            tarjeta.BackgroundColor = activo ? Color.FromArgb("#EAF1FB") : Colors.White;
+            tarjeta.BackgroundColor = activo ? Tema.C("ColorPrimarySoft") : Tema.C("ColorSurface");
             cajaIcono.BackgroundColor = activo ? primario : R("ColorBackground");
             icono.Fill = activo ? Colors.White : R("ColorTextMuted");
             titulo.TextColor = activo ? primario : R("ColorTextStrong");
             check.Stroke = activo ? primario : R("ColorBorder");
-            check.BackgroundColor = activo ? primario : Colors.White;
+            check.BackgroundColor = activo ? primario : Tema.C("ColorSurface");
 
             var estabaActivo = marca.Opacity > 0.5;
             marca.Opacity = activo ? 1 : 0;
@@ -788,7 +788,7 @@ namespace CUIDAPP.Views.Registro
                     StrokeThickness = 1.5,
                     StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 20 },
                     Padding = new Thickness(16),
-                    BackgroundColor = Colors.White,
+                    BackgroundColor = Tema.C("ColorSurface"),
                     Content = grid
                 };
 
@@ -873,7 +873,7 @@ namespace CUIDAPP.Views.Registro
             if (BordeDe(sender) is Border b)
             {
                 b.Stroke = (Color)Application.Current!.Resources["ColorPrimary"];
-                b.BackgroundColor = Colors.White;
+                b.BackgroundColor = Tema.C("ColorSurface");
             }
         }
 
@@ -907,12 +907,12 @@ namespace CUIDAPP.Views.Registro
             LblCoincideClave.IsVisible = confirmacion.Length > 0;
             bool coinciden = confirmacion == clave;
             LblCoincideClave.Text = Localizador.T(coinciden ? "las_claves_coinciden" : "las_claves_no_coinciden");
-            LblCoincideClave.TextColor = coinciden ? Color.FromArgb("#2E7D32") : (Color)Application.Current!.Resources["ColorDanger"];
+            LblCoincideClave.TextColor = coinciden ? Tema.C("ColorSuccess") : (Color)Application.Current!.Resources["ColorDanger"];
         }
 
         private static void PintarRegla(Border caja, Label texto, bool cumple)
         {
-            var verde = Color.FromArgb("#2E7D32");
+            var verde = Tema.C("ColorSuccess");
             var antes = caja.BackgroundColor;
             caja.BackgroundColor = cumple ? verde : (Color)Application.Current!.Resources["ColorBorder"];
             texto.TextColor = cumple ? verde : (Color)Application.Current!.Resources["ColorTextMuted"];
@@ -934,7 +934,7 @@ namespace CUIDAPP.Views.Registro
             var color = efectivo ? Color.FromArgb("#8A5A00") : (Color)Application.Current!.Resources["ColorPrimary"];
             AvisoCobroTexto.TextColor = color;
             AvisoCobroIcono.Fill = color;
-            AvisoCobro.BackgroundColor = efectivo ? Color.FromArgb("#FFF4DC") : Color.FromArgb("#EAF1FB");
+            AvisoCobro.BackgroundColor = efectivo ? Tema.C("ColorWarningSoft") : Tema.C("ColorPrimarySoft");
             AvisoCobro.Opacity = 0;
             AvisoCobro.TranslationY = 6;
             _ = AvisoCobro.FadeTo(1, 200, Easing.CubicOut);
@@ -1016,12 +1016,12 @@ namespace CUIDAPP.Views.Registro
             {
                 Text = doc.Archivo?.FileName ?? Localizador.T(doc.ClaveDesc),
                 FontFamily = "OpenSansRegular", FontSize = 12, LineBreakMode = LineBreakMode.MiddleTruncation,
-                TextColor = doc.Archivo != null ? Color.FromArgb("#2E7D32") : (Color)Application.Current!.Resources["ColorTextMuted"]
+                TextColor = doc.Archivo != null ? Tema.C("ColorSuccess") : (Color)Application.Current!.Resources["ColorTextMuted"]
             };
 
             var chip = new Border
             {
-                StrokeThickness = 0, BackgroundColor = Color.FromArgb("#EEF2F6"), Padding = new Thickness(8, 2),
+                StrokeThickness = 0, BackgroundColor = Tema.C("ColorSubtle"), Padding = new Thickness(8, 2),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 8 }, VerticalOptions = LayoutOptions.Center,
                 Content = new Label { Text = Localizador.T("opcional"), FontFamily = "OpenSansSemibold", FontSize = 10, TextColor = (Color)Application.Current!.Resources["ColorTextMuted"] }
             };
@@ -1035,7 +1035,7 @@ namespace CUIDAPP.Views.Registro
 
             var icono = new Border
             {
-                WidthRequest = 42, HeightRequest = 42, StrokeThickness = 0, BackgroundColor = Color.FromArgb("#EAF1FB"), VerticalOptions = LayoutOptions.Center,
+                WidthRequest = 42, HeightRequest = 42, StrokeThickness = 0, BackgroundColor = Tema.C("ColorPrimarySoft"), VerticalOptions = LayoutOptions.Center,
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 12 },
                 Content = new Microsoft.Maui.Controls.Shapes.Path
                 {
@@ -1053,7 +1053,7 @@ namespace CUIDAPP.Views.Registro
             var tarjeta = new Border
             {
                 Stroke = (Color)Application.Current!.Resources["ColorBorder"], StrokeThickness = 1.5, Padding = new Thickness(14),
-                BackgroundColor = Colors.White, StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 18 },
+                BackgroundColor = Tema.C("ColorSurface"), StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 18 },
                 Content = fila
             };
             if (doc.Archivo != null)
@@ -1068,7 +1068,7 @@ namespace CUIDAPP.Views.Registro
                     if (result == null) return;
                     doc.Archivo = result;
                     archivo.Text = result.FileName;
-                    archivo.TextColor = Color.FromArgb("#2E7D32");
+                    archivo.TextColor = Tema.C("ColorSuccess");
                     MarcarDocumentoListo(tarjeta, estadoCaja, estado);
                 }
                 catch (Exception ex)
@@ -1083,9 +1083,9 @@ namespace CUIDAPP.Views.Registro
         // Documento elegido: la tarjeta pasa a verde con un check.
         private static void MarcarDocumentoListo(Border tarjeta, Border estadoCaja, Microsoft.Maui.Controls.Shapes.Path estado)
         {
-            var verde = Color.FromArgb("#2E7D32");
+            var verde = Tema.C("ColorSuccess");
             tarjeta.Stroke = verde;
-            tarjeta.BackgroundColor = Color.FromArgb("#F1F8F2");
+            tarjeta.BackgroundColor = Tema.C("ColorSuccessSoft");
             estadoCaja.BackgroundColor = verde;
             estado.Data = (Microsoft.Maui.Controls.Shapes.Geometry)new Microsoft.Maui.Controls.Shapes.PathGeometryConverter().ConvertFromInvariantString("M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z")!;
             estado.Fill = Colors.White;

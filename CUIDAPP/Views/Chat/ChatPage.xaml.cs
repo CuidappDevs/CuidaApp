@@ -106,7 +106,7 @@ namespace CUIDAPP.Views.Chat
             var aviso = new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = Color.FromArgb("#FEF3C7"),
+                BackgroundColor = Tema.C("ColorWarningSoft"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 12 },
                 Padding = new Thickness(14, 10),
                 HorizontalOptions = LayoutOptions.Fill,
@@ -115,7 +115,7 @@ namespace CUIDAPP.Views.Chat
                     Text = Localizador.T("por_tu_seguridad_no_compartas"),
                     FontSize = 12,
                     FontFamily = "OpenSansRegular",
-                    TextColor = Color.FromArgb("#92400E"),
+                    TextColor = Tema.C("ColorWarning"),
                     HorizontalTextAlignment = TextAlignment.Center
                 }
             };
@@ -154,7 +154,7 @@ namespace CUIDAPP.Views.Chat
             var burbuja = new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = esMio ? (Color)Application.Current!.Resources["ColorPrimary"] : Colors.White,
+                BackgroundColor = esMio ? (Color)Application.Current!.Resources["ColorPrimary"] : Tema.C("ColorSurface"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle
                 {
                     CornerRadius = esMio ? new CornerRadius(20, 20, 20, 6) : new CornerRadius(20, 20, 6, 20)
@@ -162,7 +162,7 @@ namespace CUIDAPP.Views.Chat
                 Padding = mensaje.Tipo == "imagen" ? new Thickness(6) : new Thickness(14, 10),
                 MaximumWidthRequest = 270,
                 HorizontalOptions = esMio ? LayoutOptions.End : LayoutOptions.Start,
-                Shadow = esMio ? null! : new Shadow { Brush = Color.FromArgb("#0A2F41"), Offset = new Point(0, 2), Radius = 6, Opacity = 0.05f },
+                Shadow = esMio ? null! : new Shadow { Brush = Tema.C("ColorShadow"), Offset = new Point(0, 2), Radius = 6, Opacity = 0.05f },
                 Content = contenidoBurbuja
             };
 
@@ -186,7 +186,7 @@ namespace CUIDAPP.Views.Chat
                 Spacing = 3,
                 Children =
                 {
-                    new Label { Text = mensaje.Contenido, FontSize = 14, FontFamily = "OpenSansRegular", TextColor = esMio ? Colors.White : Color.FromArgb("#111827") },
+                    new Label { Text = mensaje.Contenido, FontSize = 14, FontFamily = "OpenSansRegular", TextColor = esMio ? Colors.White : Tema.C("ColorTextStrong") },
                     CrearLabelHora(mensaje, esMio)
                 }
             };
@@ -221,13 +221,13 @@ namespace CUIDAPP.Views.Chat
 
         private View CrearContenidoAudio(Mensaje mensaje, bool esMio)
         {
-            var colorAcento = esMio ? Colors.White : Color.FromArgb("#2563EB");
+            var colorAcento = esMio ? Colors.White : Tema.C("ColorPrimary");
 
             var iconoPlay = new Label
             {
                 Text = "▶",
                 FontSize = 13,
-                TextColor = esMio ? Color.FromArgb("#2563EB") : Colors.White,
+                TextColor = esMio ? Tema.C("ColorPrimary") : Colors.White,
                 HorizontalOptions = LayoutOptions.Center,
                 VerticalOptions = LayoutOptions.Center,
                 HorizontalTextAlignment = TextAlignment.Center,
@@ -238,7 +238,7 @@ namespace CUIDAPP.Views.Chat
             var botonPlay = new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = esMio ? Colors.White : Color.FromArgb("#2563EB"),
+                BackgroundColor = esMio ? Tema.C("ColorSurface") : Tema.C("ColorPrimary"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 18 },
                 WidthRequest = 36,
                 HeightRequest = 36,
@@ -278,7 +278,7 @@ namespace CUIDAPP.Views.Chat
                 {
                     botonPlay,
                     espectro,
-                    new Label { Text = duracionTexto, FontSize = 12, FontFamily = "OpenSansRegular", TextColor = esMio ? Color.FromArgb("#C7D2FE") : Color.FromArgb("#6B7280"), VerticalOptions = LayoutOptions.Center }
+                    new Label { Text = duracionTexto, FontSize = 12, FontFamily = "OpenSansRegular", TextColor = esMio ? Color.FromArgb("#C7D2FE") : Tema.C("ColorTextMuted"), VerticalOptions = LayoutOptions.Center }
                 }
             };
 
@@ -299,7 +299,7 @@ namespace CUIDAPP.Views.Chat
                 Text = mensaje.FechaEnvio.ToString("h:mm tt"),
                 FontSize = 10,
                 FontFamily = "OpenSansRegular",
-                TextColor = esMio ? Color.FromArgb("#C9D9F0") : Color.FromArgb("#8A97A6"),
+                TextColor = esMio ? Color.FromArgb("#C9D9F0") : Tema.C("ColorPlaceholder"),
                 HorizontalOptions = LayoutOptions.End,
                 Margin = margenExtra ? new Thickness(0, 0, 6, 4) : new Thickness(0)
             };
@@ -471,7 +471,7 @@ namespace CUIDAPP.Views.Chat
         private void OnMensajeFocused(object? sender, FocusEventArgs e)
         {
             ContenedorEntry.Stroke = (Color)Application.Current!.Resources["ColorPrimary"];
-            ContenedorEntry.BackgroundColor = Colors.White;
+            ContenedorEntry.BackgroundColor = Tema.C("ColorSurface");
         }
 
         private void OnMensajeUnfocused(object? sender, FocusEventArgs e)

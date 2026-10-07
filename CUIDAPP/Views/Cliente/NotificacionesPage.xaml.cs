@@ -60,10 +60,10 @@ namespace CUIDAPP.Views.Cliente
             // Ícono vectorial y color según el tipo de aviso
             var (colorFondo, icono, colorIcono) = n.Tipo switch
             {
-                "mensaje" => (Color.FromArgb("#EAF1FB"), "M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM6 9H18V11H6V9ZM14 14H6V12H14V14ZM18 8H6V6H18V8Z", R("ColorPrimary")),
-                "solicitud" => (Color.FromArgb("#FFF4DC"), "M19 3H14.82C14.4 1.84 13.3 1 12 1C10.7 1 9.6 1.84 9.18 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM12 3C12.55 3 13 3.45 13 4C13 4.55 12.55 5 12 5C11.45 5 11 4.55 11 4C11 3.45 11.45 3 12 3ZM14 17H7V15H14V17ZM17 13H7V11H17V13ZM17 9H7V7H17V9Z", Color.FromArgb("#E09A1A")),
-                "trabajo" => (Color.FromArgb("#E3F4E8"), "M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 16V11C18 7.93 16.36 5.36 13.5 4.68V4C13.5 3.17 12.83 2.5 12 2.5C11.17 2.5 10.5 3.17 10.5 4V4.68C7.63 5.36 6 7.92 6 11V16L4 18V19H20V18L18 16Z", Color.FromArgb("#2E7D32")),
-                "geocerca" => (Color.FromArgb("#FDECEC"), "M1 21H23L12 2L1 21ZM13 18H11V16H13V18ZM13 14H11V10H13V14Z", R("ColorDanger")),
+                "mensaje" => (Tema.C("ColorPrimarySoft"), "M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM6 9H18V11H6V9ZM14 14H6V12H14V14ZM18 8H6V6H18V8Z", R("ColorPrimary")),
+                "solicitud" => (Tema.C("ColorWarningSoft"), "M19 3H14.82C14.4 1.84 13.3 1 12 1C10.7 1 9.6 1.84 9.18 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM12 3C12.55 3 13 3.45 13 4C13 4.55 12.55 5 12 5C11.45 5 11 4.55 11 4C11 3.45 11.45 3 12 3ZM14 17H7V15H14V17ZM17 13H7V11H17V13ZM17 9H7V7H17V9Z", Color.FromArgb("#E09A1A")),
+                "trabajo" => (Tema.C("ColorSuccessSoft"), "M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 16V11C18 7.93 16.36 5.36 13.5 4.68V4C13.5 3.17 12.83 2.5 12 2.5C11.17 2.5 10.5 3.17 10.5 4V4.68C7.63 5.36 6 7.92 6 11V16L4 18V19H20V18L18 16Z", Tema.C("ColorSuccess")),
+                "geocerca" => (Tema.C("ColorDangerSoft"), "M1 21H23L12 2L1 21ZM13 18H11V16H13V18ZM13 14H11V10H13V14Z", R("ColorDanger")),
                 _ => (R("ColorBackground"), "M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 16V11C18 7.93 16.36 5.36 13.5 4.68V4C13.5 3.17 12.83 2.5 12 2.5C11.17 2.5 10.5 3.17 10.5 4V4.68C7.63 5.36 6 7.92 6 11V16L4 18V19H20V18L18 16Z", R("ColorTextMuted"))
             };
 
@@ -103,7 +103,7 @@ namespace CUIDAPP.Views.Cliente
             var card = new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = Colors.White,
+                BackgroundColor = Tema.C("ColorSurface"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 20 },
                 Padding = new Thickness(14),
                 Content = grid

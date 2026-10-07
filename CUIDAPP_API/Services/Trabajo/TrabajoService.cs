@@ -11,10 +11,12 @@ namespace CUIDAPP_API.Services.Trabajo
     {
         private readonly string _connectionString;
         private readonly ITrabajoNotifier _notifier;
+        private readonly IConfiguration _config;
 
         public TrabajoService(IConfiguration config, ITrabajoNotifier notifier)
         {
             _connectionString = config.GetConnectionString("DefaultConnection") ?? "";
+            _config = config;
             _notifier = notifier;
         }
 
@@ -303,6 +305,11 @@ namespace CUIDAPP_API.Services.Trabajo
                         if (confirmado && propina > 0)
                             await _notifier.NotificarAsync(participantes.Value.CuidadorId, "PropinaRecibida", new { TrabajoId = trabajoId, Monto = propina });
                     }
+
+                    // Servicio terminado sin problemas: recibo por correo al cliente y al cuidador.
+                    // En segundo plano para no demorar la respuesta (el envío por SMTP tarda unos segundos).
+                    if (confirmado)
+                        _ = Task.Run(() => new Recibo.ReciboService(_config).EnviarRecibosAsync(trabajoId));
                 }
 
                 return (success, motivo);

@@ -6,14 +6,14 @@
 
     <Grid>
         <!-- Fondo oscurecido -->
-        <BoxView x:Name="Velo" Color="#0A2F41" Opacity="0" />
+        <BoxView x:Name="Velo" Color="{StaticResource ColorShadow}" Opacity="0" />
 
         <!-- Tarjeta -->
-        <Border x:Name="Tarjeta" BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 28"
+        <Border x:Name="Tarjeta" BackgroundColor="{StaticResource ColorSurface}" StrokeThickness="0" StrokeShape="RoundRectangle 28"
                 Padding="24,28,24,20" Margin="28,0" MaximumWidthRequest="380"
                 HorizontalOptions="Fill" VerticalOptions="Center" Opacity="0" Scale="0.94">
             <Border.Shadow>
-                <Shadow Brush="#0A2F41" Offset="0,16" Radius="40" Opacity="0.25" />
+                <Shadow Brush="{StaticResource ColorShadow}" Offset="0,16" Radius="40" Opacity="0.25" />
             </Border.Shadow>
 
             <VerticalStackLayout Spacing="0">
@@ -36,7 +36,7 @@
 
                 <!-- Botones: uno a lo ancho, o cancelar | aceptar -->
                 <Grid x:Name="Botones" ColumnDefinitions="*,*" ColumnSpacing="12">
-                    <Button x:Name="BtnCancelar" Grid.Column="0" BackgroundColor="White" TextColor="{StaticResource ColorTextStrong}"
+                    <Button x:Name="BtnCancelar" Grid.Column="0" BackgroundColor="{StaticResource ColorSurface}" TextColor="{StaticResource ColorTextStrong}"
                             BorderColor="{StaticResource ColorBorder}" BorderWidth="1.5" FontFamily="OpenSansSemibold" FontSize="15"
                             CornerRadius="16" HeightRequest="52" Clicked="OnCancelar" Pressed="OnPresionado" Released="OnSoltado" />
                     <Button x:Name="BtnAceptar" Grid.Column="1" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White"

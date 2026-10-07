@@ -176,7 +176,7 @@ namespace CUIDAPP.Views.Cliente
             var foto = new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = Color.FromArgb("#E5E7EB"),
+                BackgroundColor = Tema.C("ColorSubtle"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.Ellipse(),
                 WidthRequest = 64,
                 HeightRequest = 64
@@ -195,7 +195,7 @@ namespace CUIDAPP.Views.Cliente
             {
                 Stroke = Colors.White,
                 StrokeThickness = 3,
-                BackgroundColor = Color.FromArgb("#2E7D32"),
+                BackgroundColor = Tema.C("ColorSuccess"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.Ellipse(),
                 WidthRequest = 18,
                 HeightRequest = 18,
@@ -284,7 +284,7 @@ namespace CUIDAPP.Views.Cliente
             var card = new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = Colors.White,
+                BackgroundColor = Tema.C("ColorSurface"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 22 },
                 Padding = new Thickness(14),
                 Content = grid

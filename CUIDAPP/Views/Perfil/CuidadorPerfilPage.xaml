@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:loc="clr-namespace:CUIDAPP.Localization"
+             xmlns:comun="clr-namespace:CUIDAPP.Views.Comun"
              x:Class="CUIDAPP.Views.Perfil.CuidadorPerfilPage"
              Shell.NavBarIsVisible="False"
              BackgroundColor="{StaticResource ColorBackground}">
@@ -37,28 +38,28 @@
                     </Border>
                     
                     <!-- Tarjeta Principal del Perfil superpuesta -->
-                    <Border x:Name="TarjetaPerfil" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 24" Margin="20,108,20,0" Padding="20,54,20,22">
+                    <Border x:Name="TarjetaPerfil" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 24" Margin="20,108,20,0" Padding="20,54,20,22">
                         <VerticalStackLayout Spacing="10" HorizontalOptions="Center">
                             <!-- Nombre y Especialidad -->
                             <Label x:Name="LblNombre" Text="" FontSize="26" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
-                            <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 14" Padding="12,5" HorizontalOptions="Center">
+                            <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 14" Padding="12,5" HorizontalOptions="Center">
                                 <Label x:Name="LblEspecialidad" Text="" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
                             </Border>
                         </VerticalStackLayout>
                     </Border>
 
                     <!-- Foto de Perfil Absoluta -->
-                    <Border x:Name="FotoPerfil" Stroke="White" StrokeThickness="5" BackgroundColor="#E5E7EB" WidthRequest="120" HeightRequest="120" HorizontalOptions="Center" VerticalOptions="Start" Margin="0,48,0,0">
+                    <Border x:Name="FotoPerfil" Stroke="White" StrokeThickness="5" BackgroundColor="{StaticResource ColorSubtle}" WidthRequest="120" HeightRequest="120" HorizontalOptions="Center" VerticalOptions="Start" Margin="0,48,0,0">
                         <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                         <Border.Shadow>
-                            <Shadow Brush="#0A2F41" Offset="0,8" Opacity="0.18" Radius="20"/>
+                            <Shadow Brush="{StaticResource ColorShadow}" Offset="0,8" Opacity="0.18" Radius="20"/>
                         </Border.Shadow>
                         <Image x:Name="ImgFotoPerfilGrande" Aspect="AspectFill" />
                     </Border>
                 </Grid>
 
                 <!-- STATS ROW -->
-                <Border x:Name="TarjetaStats" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Margin="20,14,20,0" Padding="8,16">
+                <Border x:Name="TarjetaStats" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Margin="20,14,20,0" Padding="8,16">
                 <Grid ColumnDefinitions="*, 1, *">
                     <VerticalStackLayout Grid.Column="0" Spacing="5" HorizontalOptions="Center">
                         <Label x:Name="LblTrabajosCompletados" Text="0" FontSize="20" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Center"/>
@@ -78,15 +79,15 @@
                     
                     <!-- CARNET DIGITAL (NUEVO) -->
                     <Label Text="{loc:T carnet_digital}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
-                    <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="0,15,0,0">
+                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="0,15,0,0">
                         <VerticalStackLayout>
                             <!-- Hueco superior del gafete -->
-                            <Border Stroke="Transparent" BackgroundColor="#F3F4F6" StrokeShape="RoundRectangle 10" WidthRequest="40" HeightRequest="8" HorizontalOptions="Center" Margin="0,0,0,10"/>
+                            <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSubtle}" StrokeShape="RoundRectangle 10" WidthRequest="40" HeightRequest="8" HorizontalOptions="Center" Margin="0,0,0,10"/>
                             
                             <Grid ColumnDefinitions="*, *" Padding="15,0,15,10">
                                 <!-- Lado Izquierdo (Foto y Nombre) -->
                                 <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center" VerticalOptions="Center" Spacing="5">
-                                    <Border Stroke="#EAF1FB" StrokeThickness="3" StrokeShape="RoundRectangle 40" BackgroundColor="#E5E7EB" WidthRequest="72" HeightRequest="72" HorizontalOptions="Center">
+                                    <Border Stroke="{StaticResource ColorPrimarySoft}" StrokeThickness="3" StrokeShape="RoundRectangle 40" BackgroundColor="{StaticResource ColorSubtle}" WidthRequest="72" HeightRequest="72" HorizontalOptions="Center">
                                         <Image x:Name="ImgFotoCarnet" Aspect="AspectFill" />
                                     </Border>
                                     <Label x:Name="LblNombreCarnet" Text="" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Center"/>
@@ -113,7 +114,7 @@
                     </Border>
 
                     <!-- Tarjeta de Verificaciones (Confianza) -->
-                    <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="20">
+                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="20">
                         <VerticalStackLayout Spacing="15">
                             <Label Text="{loc:T verificaciones_de_seguridad}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
                             <VerticalStackLayout x:Name="ListaVerificaciones" Spacing="15" />
@@ -127,7 +128,7 @@
                     </VerticalStackLayout>
 
                     <!-- Tarifa por hora -->
-                    <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="20">
+                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="20">
                         <Grid ColumnDefinitions="*, Auto">
                             <VerticalStackLayout Grid.Column="0" VerticalOptions="Center">
                                 <Label Text="{loc:T tarifa_base}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
@@ -138,64 +139,65 @@
                     </Border>
 
                     <!-- Mis calificaciones -->
-                    <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="14,12">
+                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="14,12">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnMisCalificacionesTapped" />
                         </Border.GestureRecognizers>
                         <Grid ColumnDefinitions="*, Auto">
                             <HorizontalStackLayout Grid.Column="0" Spacing="14">
-                                <Border Stroke="Transparent" BackgroundColor="#FFF4DC" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40">
+                                <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorWarningSoft}" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40">
                                     <Path Data="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z" Fill="#E09A1A" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                                 </Border>
                                 <Label Text="{loc:T mis_calificaciones}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
                             </HorizontalStackLayout>
-                            <Path Grid.Column="1" Data="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" Fill="#B0BEC5" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
+                            <Path Grid.Column="1" Data="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" Fill="{StaticResource ColorChevron}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
                         </Grid>
                     </Border>
 
                     <!-- Soporte -->
-                    <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="14,12">
+                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="14,12">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnSoporteTapped" />
                         </Border.GestureRecognizers>
                         <Grid ColumnDefinitions="*, Auto">
                             <HorizontalStackLayout Grid.Column="0" Spacing="14">
-                                <Border Stroke="Transparent" BackgroundColor="#E3F4E8" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40">
-                                    <Path Data="M12 1C7.03 1 3 5.03 3 10V17C3 18.66 4.34 20 6 20H9V12H5V10C5 6.13 8.13 3 12 3C15.87 3 19 6.13 19 10V12H15V20H19V21H12V23H18C19.66 23 21 21.66 21 20V10C21 5.03 16.97 1 12 1Z" Fill="#2E7D32" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSuccessSoft}" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40">
+                                    <Path Data="M12 1C7.03 1 3 5.03 3 10V17C3 18.66 4.34 20 6 20H9V12H5V10C5 6.13 8.13 3 12 3C15.87 3 19 6.13 19 10V12H15V20H19V21H12V23H18C19.66 23 21 21.66 21 20V10C21 5.03 16.97 1 12 1Z" Fill="{StaticResource ColorSuccess}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                                 </Border>
                                 <Label Text="{loc:T soporte_reportar_un_problema}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
                             </HorizontalStackLayout>
-                            <Path Grid.Column="1" Data="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" Fill="#B0BEC5" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
+                            <Path Grid.Column="1" Data="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" Fill="{StaticResource ColorChevron}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
                         </Grid>
                     </Border>
 
                     <!-- Contacto de emergencia: fila compacta; el formulario se abre en una ventana al tocarla -->
-                    <Border x:Name="FilaContacto" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="14,12">
+                    <Border x:Name="FilaContacto" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="14,12">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnContactoTapped" />
                         </Border.GestureRecognizers>
                         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
-                            <Border Stroke="Transparent" BackgroundColor="#FDECEC" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
-                                <Path Data="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" Fill="#C62828" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorDangerSoft}" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                                <Path Data="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" Fill="{StaticResource ColorDanger}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                             </Border>
                             <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
                                 <Label Text="{loc:T contacto_de_emergencia}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
-                                <Label x:Name="LblContactoResumen" Text="{loc:T contacto_sin_configurar}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#B26A00" LineBreakMode="TailTruncation"/>
+                                <Label x:Name="LblContactoResumen" Text="{loc:T contacto_sin_configurar}" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorWarning}" LineBreakMode="TailTruncation"/>
                             </VerticalStackLayout>
-                            <Path Grid.Column="2" Data="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" Fill="#B0BEC5" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
+                            <Path Grid.Column="2" Data="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z" Fill="{StaticResource ColorChevron}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
                         </Grid>
                     </Border>
 
-                    <loc:SelectorIdioma Margin="0,6,0,6"/>
+                    <loc:SelectorIdioma Margin="0,6,0,0"/>
+                    <comun:SelectorTema VolverA="CuidadorPerfilPage" Margin="0,0,0,6"/>
 
                 </VerticalStackLayout>
             </VerticalStackLayout>
         </ScrollView>
 
         <!-- BARRA DE PESTAÑAS (fila propia de la cuadrícula) -->
-        <Border Grid.Row="1" Stroke="Transparent" BackgroundColor="White" Padding="12,8,12,8" StrokeShape="RoundRectangle 24,24,0,0">
+        <Border Grid.Row="1" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" Padding="12,8,12,8" StrokeShape="RoundRectangle 24,24,0,0">
             <Border.Shadow>
-                <Shadow Brush="#0A2F41" Offset="0,-6" Opacity="0.07" Radius="16"/>
+                <Shadow Brush="{StaticResource ColorShadow}" Offset="0,-6" Opacity="0.07" Radius="16"/>
             </Border.Shadow>
             <Grid ColumnDefinitions="*,*,*,*">
                 <VerticalStackLayout Grid.Column="0" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center" Padding="12,6">
@@ -223,7 +225,7 @@
                 </VerticalStackLayout>
 
                 <!-- Perfil (activa) -->
-                <Border Grid.Column="3" Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 18" Padding="0,6" Margin="6,0">
+                <Border Grid.Column="3" Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 18" Padding="0,6" Margin="6,0">
                     <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
                         <Path Data="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center"/>
                         <Label Text="{loc:T perfil}" FontSize="10" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center"/>
@@ -235,15 +237,15 @@
 
         <!-- Ventana del contacto de emergencia (encima de todo, centrada) -->
         <Grid x:Name="VentanaContacto" Grid.RowSpan="2" IsVisible="False">
-            <BoxView x:Name="VeloContacto" Color="#0A2F41" Opacity="0">
+            <BoxView x:Name="VeloContacto" Color="{StaticResource ColorShadow}" Opacity="0">
                 <BoxView.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnCerrarContactoTapped"/>
                 </BoxView.GestureRecognizers>
             </BoxView>
             <ScrollView VerticalOptions="Center">
-                <Border x:Name="TarjetaContacto" BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 28" Padding="20,22,20,20" Margin="20,24" MaximumWidthRequest="420" Opacity="0" Scale="0.94">
+                <Border x:Name="TarjetaContacto" BackgroundColor="{StaticResource ColorSurface}" StrokeThickness="0" StrokeShape="RoundRectangle 28" Padding="20,22,20,20" Margin="20,24" MaximumWidthRequest="420" Opacity="0" Scale="0.94">
                     <Border.Shadow>
-                        <Shadow Brush="#0A2F41" Offset="0,16" Radius="40" Opacity="0.25" />
+                        <Shadow Brush="{StaticResource ColorShadow}" Offset="0,16" Radius="40" Opacity="0.25" />
                     </Border.Shadow>
                     <VerticalStackLayout Spacing="10">
                         <Grid ColumnDefinitions="*,Auto">
@@ -255,13 +257,13 @@
                         </Grid>
                         <Label Text="{loc:T contacto_ayuda}" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" Margin="0,0,0,4"/>
                             <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 14" Padding="14,0">
-                                <Entry x:Name="EntryContactoNombre" Placeholder="{loc:T nombre_del_contacto}" MaxLength="100" FontFamily="OpenSansRegular" FontSize="15" BackgroundColor="Transparent" PlaceholderColor="#8A97A6" HeightRequest="48"/>
+                                <Entry x:Name="EntryContactoNombre" Placeholder="{loc:T nombre_del_contacto}" MaxLength="100" FontFamily="OpenSansRegular" FontSize="15" BackgroundColor="Transparent" PlaceholderColor="{StaticResource ColorPlaceholder}" HeightRequest="48"/>
                             </Border>
                             <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 14" Padding="14,0">
-                                <Entry x:Name="EntryContactoTelefono" Placeholder="{loc:T numero_de_telefono}" Keyboard="Telephone" MaxLength="30" FontFamily="OpenSansRegular" FontSize="15" BackgroundColor="Transparent" PlaceholderColor="#8A97A6" HeightRequest="48"/>
+                                <Entry x:Name="EntryContactoTelefono" Placeholder="{loc:T numero_de_telefono}" Keyboard="Telephone" MaxLength="30" FontFamily="OpenSansRegular" FontSize="15" BackgroundColor="Transparent" PlaceholderColor="{StaticResource ColorPlaceholder}" HeightRequest="48"/>
                             </Border>
                             <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 14" Padding="14,0">
-                                <Entry x:Name="EntryContactoEmail" Placeholder="{loc:T contacto_email_ph}" Keyboard="Email" MaxLength="150" FontFamily="OpenSansRegular" FontSize="15" BackgroundColor="Transparent" PlaceholderColor="#8A97A6" HeightRequest="48"/>
+                                <Entry x:Name="EntryContactoEmail" Placeholder="{loc:T contacto_email_ph}" Keyboard="Email" MaxLength="150" FontFamily="OpenSansRegular" FontSize="15" BackgroundColor="Transparent" PlaceholderColor="{StaticResource ColorPlaceholder}" HeightRequest="48"/>
                             </Border>
                         <Button x:Name="BtnGuardarContacto" Text="{loc:T guardar_contacto}" Clicked="OnGuardarContactoClicked" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="16" HeightRequest="50" Margin="0,6,0,0"/>
                     </VerticalStackLayout>

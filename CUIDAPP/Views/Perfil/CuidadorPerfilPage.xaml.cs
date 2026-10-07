@@ -64,7 +64,7 @@ namespace CUIDAPP.Views.Perfil
             LblContactoResumen.Text = configurado
                 ? string.IsNullOrWhiteSpace(contacto) ? nombre : $"{nombre} · {contacto}"
                 : Localizador.T("contacto_sin_configurar");
-            LblContactoResumen.TextColor = configurado ? (Color)Application.Current!.Resources["ColorTextMuted"] : Color.FromArgb("#B26A00");
+            LblContactoResumen.TextColor = configurado ? (Color)Application.Current!.Resources["ColorTextMuted"] : Tema.C("ColorWarning");
         }
 
         private async void OnContactoTapped(object? sender, TappedEventArgs e)
@@ -215,9 +215,9 @@ namespace CUIDAPP.Views.Perfil
         {
             var (colorFondo, colorTexto, titulo, subtitulo) = doc.Estado switch
             {
-                2 => (Color.FromArgb("#E3F4E8"), Color.FromArgb("#2E7D32"), Localizador.T("verificado"), Localizador.T("documento_aprobado_por_administracion")),
-                3 => (Color.FromArgb("#FDECEC"), Color.FromArgb("#C62828"), Localizador.T("rechazado"), doc.ObservacionesAdmin ?? Localizador.T("debes_volver_a_subir_este")),
-                _ => (Color.FromArgb("#FFF4DC"), Color.FromArgb("#E09A1A"), Localizador.T("en_revision"), Localizador.T("aun_no_ha_sido_revisado"))
+                2 => (Tema.C("ColorSuccessSoft"), Tema.C("ColorSuccess"), Localizador.T("verificado"), Localizador.T("documento_aprobado_por_administracion")),
+                3 => (Tema.C("ColorDangerSoft"), Tema.C("ColorDanger"), Localizador.T("rechazado"), doc.ObservacionesAdmin ?? Localizador.T("debes_volver_a_subir_este")),
+                _ => (Tema.C("ColorWarningSoft"), Color.FromArgb("#E09A1A"), Localizador.T("en_revision"), Localizador.T("aun_no_ha_sido_revisado"))
             };
 
             var nombreDocumento = doc.TipoDocumento switch

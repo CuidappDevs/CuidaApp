@@ -161,7 +161,7 @@ namespace CUIDAPP.Views.Verificacion
             {
                 LblTituloEstado.Text = Localizador.T("documentos_aprobados_titulo");
                 LblDescripcionEstado.Text = Localizador.T("documentos_aprobados_desc");
-                IconEstadoGeneral.Fill = Color.FromArgb("#2E7D32");
+                IconEstadoGeneral.Fill = Tema.C("ColorSuccess");
                 AnilloEstado.Fill = Color.FromArgb("#332E7D32");
             }
             else
@@ -195,9 +195,9 @@ namespace CUIDAPP.Views.Verificacion
         {
             var (colorFondo, colorTexto, textoEstado) = doc.Estado switch
             {
-                2 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), Localizador.T("aprobado")),
-                3 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#991B1B"), Localizador.T("rechazado")),
-                _ => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("pendiente"))
+                2 => (Tema.C("ColorSuccessSoft"), Tema.C("ColorSuccess"), Localizador.T("aprobado")),
+                3 => (Tema.C("ColorDangerSoft"), Tema.C("ColorDanger"), Localizador.T("rechazado")),
+                _ => (Tema.C("ColorWarningSoft"), Tema.C("ColorWarning"), Localizador.T("pendiente"))
             };
 
             var nombreDocumento = doc.TipoDocumento switch
@@ -244,7 +244,7 @@ namespace CUIDAPP.Views.Verificacion
                     Text = Localizador.T("toca_para_ver_detalles"),
                     FontFamily = "OpenSansSemibold",
                     FontSize = 12,
-                    TextColor = Color.FromArgb("#991B1B")
+                    TextColor = Tema.C("ColorDanger")
                 });
             }
 
@@ -255,10 +255,10 @@ namespace CUIDAPP.Views.Verificacion
 
             var tarjeta = new Border
             {
-                Stroke = doc.Estado == 3 ? Color.FromArgb("#FECACA") : Colors.Transparent,
+                Stroke = doc.Estado == 3 ? Tema.C("ColorDangerSoft") : Colors.Transparent,
                 StrokeThickness = 1,
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 12 },
-                BackgroundColor = Colors.White,
+                BackgroundColor = Tema.C("ColorSurface"),
                 Padding = new Thickness(15),
                 Content = grid
             };

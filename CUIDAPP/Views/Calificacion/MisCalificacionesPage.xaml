@@ -50,7 +50,7 @@
                 <ActivityIndicator x:Name="LoadingIndicator" IsRunning="True" IsVisible="True" Color="{StaticResource ColorPrimary}" VerticalOptions="Center" HorizontalOptions="Center"/>
 
                 <VerticalStackLayout x:Name="PanelVacio" IsVisible="False" VerticalOptions="Center" HorizontalOptions="Center" Spacing="14" Padding="40">
-                    <Border Stroke="Transparent" BackgroundColor="#FFF4DC" WidthRequest="88" HeightRequest="88" HorizontalOptions="Center">
+                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorWarningSoft}" WidthRequest="88" HeightRequest="88" HorizontalOptions="Center">
                         <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                         <Path Data="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.45 13.97L5.82 21L12 17.27Z" Fill="#E09A1A" Aspect="Uniform" WidthRequest="40" HeightRequest="40" HorizontalOptions="Center" VerticalOptions="Center"/>
                     </Border>
@@ -66,18 +66,18 @@
                     </CollectionView.Footer>
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:CalificacionRecibida">
-                            <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Margin="20,0" Padding="16">
+                            <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Margin="20,0" Padding="16">
                                 <VerticalStackLayout Spacing="10">
                                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
                                         <!-- Ícono de cita -->
-                                        <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                                        <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
                                             <Path Data="M6 17H9L11 13V7H5V13H8L6 17ZM14 17H17L19 13V7H13V13H16L14 17Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                                         </Border>
                                         <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
                                             <Label Text="{Binding CalificadorNombre}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" MaxLines="1" LineBreakMode="TailTruncation"/>
                                             <Label Text="{Binding TipoServicio}" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
                                         </VerticalStackLayout>
-                                        <Border Grid.Column="2" Stroke="Transparent" BackgroundColor="#FFF4DC" StrokeShape="RoundRectangle 12" Padding="10,4" VerticalOptions="Start">
+                                        <Border Grid.Column="2" Stroke="Transparent" BackgroundColor="{StaticResource ColorWarningSoft}" StrokeShape="RoundRectangle 12" Padding="10,4" VerticalOptions="Start">
                                             <Label Text="{Binding EstrellasTexto}" FontSize="13" TextColor="#E09A1A"/>
                                         </Border>
                                     </Grid>

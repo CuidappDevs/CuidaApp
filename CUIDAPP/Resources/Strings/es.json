@@ -809,5 +809,9 @@
   "dato_ya_calificaste_este_trabajo": "Ya calificaste este trabajo.",
   "dato_ya_existe_una_cuenta_con_ese_correo": "Ya existe una cuenta con ese correo.",
   "dato_el_ticket_no_existe": "El ticket no existe.",
-  "err_subir_archivo_servidor": "El servidor no pudo guardar el archivo. Inténtalo de nuevo en un momento."
+  "err_subir_archivo_servidor": "El servidor no pudo guardar el archivo. Inténtalo de nuevo en un momento.",
+  "apariencia": "Apariencia",
+  "tema_claro": "Claro",
+  "tema_oscuro": "Oscuro",
+  "tema_sistema": "Automático (como el teléfono)"
 }

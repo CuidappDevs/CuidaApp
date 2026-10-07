@@ -14,10 +14,10 @@
                 <!-- Insignia con anillo que respira -->
                 <Grid WidthRequest="130" HeightRequest="130" HorizontalOptions="Center">
                     <Ellipse x:Name="AnilloEstado" Fill="#331C4D96" WidthRequest="130" HeightRequest="130"/>
-                    <Border Stroke="Transparent" WidthRequest="100" HeightRequest="100" HorizontalOptions="Center" VerticalOptions="Center" BackgroundColor="White">
+                    <Border Stroke="Transparent" WidthRequest="100" HeightRequest="100" HorizontalOptions="Center" VerticalOptions="Center" BackgroundColor="{StaticResource ColorSurface}">
                         <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                         <Border.Shadow>
-                            <Shadow Brush="#0A2F41" Offset="0,8" Radius="20" Opacity="0.12" />
+                            <Shadow Brush="{StaticResource ColorShadow}" Offset="0,8" Radius="20" Opacity="0.12" />
                         </Border.Shadow>
                     <Path x:Name="IconEstadoGeneral" Data="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM12 12C13.66 12 15 10.66 15 9C15 7.34 13.66 6 12 6C10.34 6 9 7.34 9 9C9 10.66 10.34 12 12 12ZM12 13.9C9.97 13.9 6 14.9 6 16.9V18H18V16.9C18 14.9 14.03 13.9 12 13.9Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="44" HeightRequest="44" HorizontalOptions="Center" VerticalOptions="Center" />
                     </Border>
@@ -42,8 +42,8 @@
 
         <Grid x:Name="OverlayExito" Grid.RowSpan="2" IsVisible="False" Opacity="0" BackgroundColor="{StaticResource ColorPrimary}">
             <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="18" Padding="40,0">
-                <Border x:Name="CirculoExito" Stroke="Transparent" StrokeShape="RoundRectangle 60" WidthRequest="120" HeightRequest="120" BackgroundColor="#FFFFFF" HorizontalOptions="Center" Scale="0.5">
-                    <Path Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="#2E7D32" Aspect="Uniform" WidthRequest="60" HeightRequest="60" HorizontalOptions="Center" VerticalOptions="Center" />
+                <Border x:Name="CirculoExito" Stroke="Transparent" StrokeShape="RoundRectangle 60" WidthRequest="120" HeightRequest="120" BackgroundColor="{StaticResource ColorSurface}" HorizontalOptions="Center" Scale="0.5">
+                    <Path Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="{StaticResource ColorSuccess}" Aspect="Uniform" WidthRequest="60" HeightRequest="60" HorizontalOptions="Center" VerticalOptions="Center" />
                 </Border>
                 <Label Text="{loc:T felicidades}" FontSize="26" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
                 <Label Text="{loc:T todos_tus_documentos_fueron_validados}" FontSize="15" FontFamily="OpenSansRegular" TextColor="#DBEAFE" HorizontalOptions="Center" HorizontalTextAlignment="Center" />

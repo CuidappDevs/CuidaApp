@@ -9,7 +9,7 @@
     <Grid RowDefinitions="Auto, *, Auto">
 
         <Grid Grid.Row="0" ColumnDefinitions="44, *, 44" Padding="12,8,16,8" BackgroundColor="{StaticResource ColorBackground}">
-            <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="White" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
+            <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
                 <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnBackTapped" />
@@ -38,16 +38,16 @@
                     <Label x:Name="LblCliente" Text="" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center"/>
 
                     <HorizontalStackLayout Spacing="12" HorizontalOptions="Center">
-                        <Border Stroke="Transparent" StrokeThickness="2" StrokeShape="RoundRectangle 18" BackgroundColor="White" WidthRequest="62" HeightRequest="74">
+                        <Border Stroke="Transparent" StrokeThickness="2" StrokeShape="RoundRectangle 18" BackgroundColor="{StaticResource ColorSurface}" WidthRequest="62" HeightRequest="74">
                             <Entry x:Name="EntryPin1" MaxLength="1" Keyboard="Numeric" FontSize="28" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Fill" BackgroundColor="Transparent" Focused="OnPinFocused" Unfocused="OnPinUnfocused" TextChanged="OnPin1Changed"/>
                         </Border>
-                        <Border Stroke="Transparent" StrokeThickness="2" StrokeShape="RoundRectangle 18" BackgroundColor="White" WidthRequest="62" HeightRequest="74">
+                        <Border Stroke="Transparent" StrokeThickness="2" StrokeShape="RoundRectangle 18" BackgroundColor="{StaticResource ColorSurface}" WidthRequest="62" HeightRequest="74">
                             <Entry x:Name="EntryPin2" MaxLength="1" Keyboard="Numeric" FontSize="28" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Fill" BackgroundColor="Transparent" Focused="OnPinFocused" Unfocused="OnPinUnfocused" TextChanged="OnPin2Changed"/>
                         </Border>
-                        <Border Stroke="Transparent" StrokeThickness="2" StrokeShape="RoundRectangle 18" BackgroundColor="White" WidthRequest="62" HeightRequest="74">
+                        <Border Stroke="Transparent" StrokeThickness="2" StrokeShape="RoundRectangle 18" BackgroundColor="{StaticResource ColorSurface}" WidthRequest="62" HeightRequest="74">
                             <Entry x:Name="EntryPin3" MaxLength="1" Keyboard="Numeric" FontSize="28" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Fill" BackgroundColor="Transparent" Focused="OnPinFocused" Unfocused="OnPinUnfocused" TextChanged="OnPin3Changed"/>
                         </Border>
-                        <Border Stroke="Transparent" StrokeThickness="2" StrokeShape="RoundRectangle 18" BackgroundColor="White" WidthRequest="62" HeightRequest="74">
+                        <Border Stroke="Transparent" StrokeThickness="2" StrokeShape="RoundRectangle 18" BackgroundColor="{StaticResource ColorSurface}" WidthRequest="62" HeightRequest="74">
                             <Entry x:Name="EntryPin4" MaxLength="1" Keyboard="Numeric" FontSize="28" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Fill" HorizontalTextAlignment="Center" VerticalOptions="Fill" BackgroundColor="Transparent" Focused="OnPinFocused" Unfocused="OnPinUnfocused" TextChanged="OnPin4Changed"/>
                         </Border>
                     </HorizontalStackLayout>

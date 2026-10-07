@@ -81,7 +81,7 @@ namespace CUIDAPP.Views.Cliente
     <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
     <script>
         var map = L.map('map', {{ zoomControl: true }}).setView([{lat}, {lng}], 16);
-        L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{{z}}/{{x}}/{{y}}{{r}}?access_token={MapboxAccessToken}', {{ maxZoom: 20, tileSize: 512, zoomOffset: -1 }}).addTo(map);
+        L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/{CUIDAPP.Services.Tema.EstiloMapa}/tiles/{{z}}/{{x}}/{{y}}{{r}}?access_token={MapboxAccessToken}', {{ maxZoom: 20, tileSize: 512, zoomOffset: -1 }}).addTo(map);
         var marker = L.marker([{lat}, {lng}], {{ draggable: true }}).addTo(map);
 
         function avisarPunto(lat, lng) {{
@@ -131,7 +131,7 @@ namespace CUIDAPP.Views.Cliente
 
         private void OnCampoFocused(object? sender, FocusEventArgs e)
         {
-            if (BordeDe(sender) is Border b) { b.Stroke = (Color)Application.Current!.Resources["ColorPrimary"]; b.BackgroundColor = Colors.White; }
+            if (BordeDe(sender) is Border b) { b.Stroke = (Color)Application.Current!.Resources["ColorPrimary"]; b.BackgroundColor = Tema.C("ColorSurface"); }
         }
 
         private void OnCampoUnfocused(object? sender, FocusEventArgs e)

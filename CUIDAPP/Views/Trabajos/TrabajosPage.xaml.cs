@@ -75,7 +75,7 @@ namespace CUIDAPP.Views.Trabajos
             })
             {
                 var esActiva = nuevaTab == tab;
-                indicador.BackgroundColor = esActiva ? Colors.White : Colors.Transparent;
+                indicador.BackgroundColor = esActiva ? Tema.C("ColorSurface") : Colors.Transparent;
                 etiqueta.TextColor = esActiva ? activo : inactivo;
                 etiqueta.FontFamily = esActiva ? "OpenSansSemibold" : "OpenSansRegular";
                 if (esActiva)
@@ -125,14 +125,14 @@ namespace CUIDAPP.Views.Trabajos
         {
             var (colorFondo, colorTexto, textoEstado) = trabajo.Estado switch
             {
-                1 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("pendiente")),
+                1 => (Tema.C("ColorWarningSoft"), Tema.C("ColorWarning"), Localizador.T("pendiente")),
                 2 => (Color.FromArgb("#DBEAFE"), Color.FromArgb("#1E40AF"), Localizador.T("aceptado")),
                 3 => (Color.FromArgb("#EDE9FE"), Color.FromArgb("#5B21B6"), Localizador.T("en_progreso")),
-                4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), Localizador.T("completado")),
-                5 => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), Localizador.T("cancelado")),
-                6 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#991B1B"), Localizador.T("rechazado")),
-                7 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("esperando_confirmacion")),
-                _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), Localizador.T("desconocido"))
+                4 => (Tema.C("ColorSuccessSoft"), Tema.C("ColorSuccess"), Localizador.T("completado")),
+                5 => (Tema.C("ColorSubtle"), Tema.C("ColorTextStrong"), Localizador.T("cancelado")),
+                6 => (Tema.C("ColorDangerSoft"), Tema.C("ColorDanger"), Localizador.T("rechazado")),
+                7 => (Tema.C("ColorWarningSoft"), Tema.C("ColorWarning"), Localizador.T("esperando_confirmacion")),
+                _ => (Tema.C("ColorSubtle"), Tema.C("ColorTextStrong"), Localizador.T("desconocido"))
             };
 
             Color R(string k) => (Color)Application.Current!.Resources[k];
@@ -142,7 +142,7 @@ namespace CUIDAPP.Views.Trabajos
             var fecha = new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = Color.FromArgb("#EAF1FB"),
+                BackgroundColor = Tema.C("ColorPrimarySoft"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 },
                 WidthRequest = 56,
                 HeightRequest = 60,
@@ -222,7 +222,7 @@ namespace CUIDAPP.Views.Trabajos
             var card = new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = Colors.White,
+                BackgroundColor = Tema.C("ColorSurface"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 22 },
                 Padding = new Thickness(14),
                 Content = grid

@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:loc="clr-namespace:CUIDAPP.Localization"
+             xmlns:comun="clr-namespace:CUIDAPP.Views.Comun"
              x:Class="CUIDAPP.Views.Cliente.ClientePerfilPage"
              Shell.NavBarIsVisible="False"
              BackgroundColor="{StaticResource ColorBackground}"
@@ -43,10 +44,10 @@
                     <Grid x:Name="BloqueFoto" WidthRequest="124" HeightRequest="124" HorizontalOptions="Center">
                         <Ellipse Fill="White" WidthRequest="124" HeightRequest="124">
                             <Ellipse.Shadow>
-                                <Shadow Brush="#0A2F41" Offset="0,8" Opacity="0.18" Radius="20"/>
+                                <Shadow Brush="{StaticResource ColorShadow}" Offset="0,8" Opacity="0.18" Radius="20"/>
                             </Ellipse.Shadow>
                         </Ellipse>
-                        <Border Stroke="Transparent" BackgroundColor="#E5E7EB" WidthRequest="112" HeightRequest="112" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSubtle}" WidthRequest="112" HeightRequest="112" HorizontalOptions="Center" VerticalOptions="Center">
                             <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                             <Image x:Name="ImgFoto" Aspect="AspectFill" />
                         </Border>
@@ -58,10 +59,10 @@
                     </VerticalStackLayout>
 
                     <!-- Información -->
-                    <Border x:Name="TarjetaInfo" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="16">
+                    <Border x:Name="TarjetaInfo" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="16">
                         <VerticalStackLayout Spacing="14">
                             <Grid ColumnDefinitions="Auto, *" ColumnSpacing="14">
-                                <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 12" WidthRequest="42" HeightRequest="42" VerticalOptions="Center">
+                                <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 12" WidthRequest="42" HeightRequest="42" VerticalOptions="Center">
                                     <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                                 </Border>
                                 <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
@@ -73,7 +74,7 @@
                             <BoxView HeightRequest="1" Color="{StaticResource ColorBorder}" Margin="56,0,0,0"/>
 
                             <Grid ColumnDefinitions="Auto, *" ColumnSpacing="14">
-                                <Border Stroke="Transparent" BackgroundColor="#FDECEC" StrokeShape="RoundRectangle 12" WidthRequest="42" HeightRequest="42" VerticalOptions="Center">
+                                <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorDangerSoft}" StrokeShape="RoundRectangle 12" WidthRequest="42" HeightRequest="42" VerticalOptions="Center">
                                     <Path Data="M6.62 10.79C8.06 13.62 10.38 15.93 13.21 17.38L15.41 15.18C15.68 14.91 16.08 14.82 16.43 14.94C17.55 15.31 18.76 15.51 20 15.51C20.55 15.51 21 15.96 21 16.51V20C21 20.55 20.55 21 20 21C10.61 21 3 13.39 3 4C3 3.45 3.45 3 4 3H7.5C8.05 3 8.5 3.45 8.5 4C8.5 5.25 8.7 6.45 9.07 7.57C9.18 7.92 9.1 8.31 8.82 8.59L6.62 10.79Z" Fill="{StaticResource ColorDanger}" Aspect="Uniform" WidthRequest="17" HeightRequest="17" HorizontalOptions="Center" VerticalOptions="Center"/>
                                 </Border>
                                 <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
@@ -85,41 +86,42 @@
                     </Border>
 
                     <!-- Menú agrupado -->
-                    <Border x:Name="TarjetaMenu" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="6">
+                    <Border x:Name="TarjetaMenu" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="6">
                         <VerticalStackLayout>
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12">
                                 <Grid.GestureRecognizers><TapGestureRecognizer Tapped="OnMisUbicacionesTapped"/></Grid.GestureRecognizers>
-                                <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40">
+                                <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40">
                                     <Path Data="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                                 </Border>
                                 <Label Grid.Column="1" Text="{loc:T mis_ubicaciones}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
-                                <Path Grid.Column="2" Data="M10 6L8.59 7.41L13.17 12L8.59 16.59L10 18L16 12L10 6Z" Fill="#B0BEC5" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
+                                <Path Grid.Column="2" Data="M10 6L8.59 7.41L13.17 12L8.59 16.59L10 18L16 12L10 6Z" Fill="{StaticResource ColorChevron}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
                             </Grid>
                             <BoxView HeightRequest="1" Color="{StaticResource ColorBorder}" Margin="64,0,10,0"/>
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12">
                                 <Grid.GestureRecognizers><TapGestureRecognizer Tapped="OnMisCalificacionesTapped"/></Grid.GestureRecognizers>
-                                <Border Stroke="Transparent" BackgroundColor="#FFF4DC" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40">
+                                <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorWarningSoft}" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40">
                                     <Path Data="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z" Fill="#E09A1A" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                                 </Border>
                                 <Label Grid.Column="1" Text="{loc:T mis_calificaciones}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
-                                <Path Grid.Column="2" Data="M10 6L8.59 7.41L13.17 12L8.59 16.59L10 18L16 12L10 6Z" Fill="#B0BEC5" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
+                                <Path Grid.Column="2" Data="M10 6L8.59 7.41L13.17 12L8.59 16.59L10 18L16 12L10 6Z" Fill="{StaticResource ColorChevron}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
                             </Grid>
                             <BoxView HeightRequest="1" Color="{StaticResource ColorBorder}" Margin="64,0,10,0"/>
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12">
                                 <Grid.GestureRecognizers><TapGestureRecognizer Tapped="OnSoporteTapped"/></Grid.GestureRecognizers>
-                                <Border Stroke="Transparent" BackgroundColor="#E3F4E8" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40">
-                                    <Path Data="M12 1C7.03 1 3 5.03 3 10V17C3 18.66 4.34 20 6 20H9V12H5V10C5 6.13 8.13 3 12 3C15.87 3 19 6.13 19 10V12H15V20H19V21H12V23H18C19.66 23 21 21.66 21 20V10C21 5.03 16.97 1 12 1Z" Fill="#2E7D32" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSuccessSoft}" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40">
+                                    <Path Data="M12 1C7.03 1 3 5.03 3 10V17C3 18.66 4.34 20 6 20H9V12H5V10C5 6.13 8.13 3 12 3C15.87 3 19 6.13 19 10V12H15V20H19V21H12V23H18C19.66 23 21 21.66 21 20V10C21 5.03 16.97 1 12 1Z" Fill="{StaticResource ColorSuccess}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                                 </Border>
                                 <Label Grid.Column="1" Text="{loc:T soporte_reportar_un_problema}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
-                                <Path Grid.Column="2" Data="M10 6L8.59 7.41L13.17 12L8.59 16.59L10 18L16 12L10 6Z" Fill="#B0BEC5" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
+                                <Path Grid.Column="2" Data="M10 6L8.59 7.41L13.17 12L8.59 16.59L10 18L16 12L10 6Z" Fill="{StaticResource ColorChevron}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
                             </Grid>
                         </VerticalStackLayout>
                     </Border>
 
                     <loc:SelectorIdioma x:Name="BloqueIdioma"/>
+                    <comun:SelectorTema x:Name="BloqueTema" VolverA="ClientePerfilPage"/>
 
                     <!-- Cerrar sesión -->
-                    <Border x:Name="BtnCerrarSesion" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="16,14">
+                    <Border x:Name="BtnCerrarSesion" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="16,14">
                         <Border.GestureRecognizers><TapGestureRecognizer Tapped="OnCerrarSesionTapped"/></Border.GestureRecognizers>
                         <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
                             <Path Data="M17 7L15.59 8.41L18.17 11H8V13H18.17L15.59 15.59L17 17L22 12L17 7ZM4 5H12V3H4C2.9 3 2 3.9 2 5V19C2 20.1 2.9 21 4 21H12V19H4V5Z" Fill="{StaticResource ColorDanger}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>

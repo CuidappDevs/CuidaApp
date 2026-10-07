@@ -312,14 +312,14 @@ namespace CUIDAPP.Views.Trabajos
 
             var (colorFondo, colorTexto, texto) = trabajo.Estado switch
             {
-                1 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("pendiente")),
+                1 => (Tema.C("ColorWarningSoft"), Tema.C("ColorWarning"), Localizador.T("pendiente")),
                 2 => (Color.FromArgb("#DBEAFE"), Color.FromArgb("#1E40AF"), Localizador.T("aceptado")),
                 3 => (Color.FromArgb("#EDE9FE"), Color.FromArgb("#5B21B6"), Localizador.T("en_progreso")),
-                4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), Localizador.T("completado")),
-                5 => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), Localizador.T("cancelado")),
-                6 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#991B1B"), Localizador.T("rechazado")),
-                7 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("esperando_confirmacion_del_cliente")),
-                _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), Localizador.T("desconocido"))
+                4 => (Tema.C("ColorSuccessSoft"), Tema.C("ColorSuccess"), Localizador.T("completado")),
+                5 => (Tema.C("ColorSubtle"), Tema.C("ColorTextStrong"), Localizador.T("cancelado")),
+                6 => (Tema.C("ColorDangerSoft"), Tema.C("ColorDanger"), Localizador.T("rechazado")),
+                7 => (Tema.C("ColorWarningSoft"), Tema.C("ColorWarning"), Localizador.T("esperando_confirmacion_del_cliente")),
+                _ => (Tema.C("ColorSubtle"), Tema.C("ColorTextStrong"), Localizador.T("desconocido"))
             };
             BadgeEstado.BackgroundColor = colorFondo;
             LblEstado.TextColor = colorTexto;
@@ -584,7 +584,7 @@ namespace CUIDAPP.Views.Trabajos
     <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
     <script>
         var map = L.map('map', {{ zoomControl: false, attributionControl: false }});
-        L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{{z}}/{{x}}/{{y}}{{r}}?access_token={MapboxAccessToken}', {{ maxZoom: 20, tileSize: 512, zoomOffset: -1 }}).addTo(map);
+        L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/{CUIDAPP.Services.Tema.EstiloMapa}/tiles/{{z}}/{{x}}/{{y}}{{r}}?access_token={MapboxAccessToken}', {{ maxZoom: 20, tileSize: 512, zoomOffset: -1 }}).addTo(map);
 
         {lineaRutaJs}
         {marcadorCuidadorJs}

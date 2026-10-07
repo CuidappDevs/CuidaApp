@@ -809,5 +809,9 @@
   "dato_ya_calificaste_este_trabajo": "You already rated this job.",
   "dato_ya_existe_una_cuenta_con_ese_correo": "An account with that email already exists.",
   "dato_el_ticket_no_existe": "The ticket doesn't exist.",
-  "err_subir_archivo_servidor": "The server couldn't save the file. Please try again in a moment."
+  "err_subir_archivo_servidor": "The server couldn't save the file. Please try again in a moment.",
+  "apariencia": "Appearance",
+  "tema_claro": "Light",
+  "tema_oscuro": "Dark",
+  "tema_sistema": "Automatic (like your phone)"
 }

@@ -202,19 +202,19 @@ namespace CUIDAPP.Views.Dashboard
 
             if (disponibleActual)
             {
-                CardDisponibilidad.BackgroundColor = Color.FromArgb("#E3F4E8");
-                IconoDisponibleFondo.BackgroundColor = Color.FromArgb("#2E7D32");
+                CardDisponibilidad.BackgroundColor = Tema.C("ColorSuccessSoft");
+                IconoDisponibleFondo.BackgroundColor = Tema.C("ColorSuccess");
                 IconoDisponible.Fill = Colors.White;
                 LblDisponible.Text = Localizador.T("disponible_ahora");
                 IniciarPulsoDisponible();
-                LblDisponible.TextColor = Color.FromArgb("#1B5E20");
+                LblDisponible.TextColor = Tema.C("ColorSuccess");
                 LblDisponibleSubtitulo.Text = Localizador.T("los_clientes_pueden_verte_y");
             }
             else
             {
-                CardDisponibilidad.BackgroundColor = Colors.White;
-                IconoDisponibleFondo.BackgroundColor = Color.FromArgb("#E5E7EB");
-                IconoDisponible.Fill = Color.FromArgb("#9CA3AF");
+                CardDisponibilidad.BackgroundColor = Tema.C("ColorSurface");
+                IconoDisponibleFondo.BackgroundColor = Tema.C("ColorSubtle");
+                IconoDisponible.Fill = Tema.C("ColorChevron");
                 LblDisponible.Text = Localizador.T("no_disponible");
                 DetenerPulsoDisponible();
                 LblDisponible.TextColor = (Color)Application.Current!.Resources["ColorTextStrong"];

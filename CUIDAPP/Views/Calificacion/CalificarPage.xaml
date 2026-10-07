@@ -36,7 +36,7 @@
                         </Grid>
 
                         <!-- Insignia con estrella -->
-                        <Border x:Name="InsigniaEstrella" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 26" WidthRequest="84" HeightRequest="84" HorizontalOptions="Center">
+                        <Border x:Name="InsigniaEstrella" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 26" WidthRequest="84" HeightRequest="84" HorizontalOptions="Center">
                             <Border.Shadow>
                                 <Shadow Brush="#051A2A" Offset="0,10" Radius="22" Opacity="0.3" />
                             </Border.Shadow>
@@ -55,7 +55,7 @@
                     <VerticalStackLayout x:Name="Contenido" Padding="20,24,20,0" Spacing="18">
 
                         <!-- Estrellas -->
-                        <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 22" Padding="16,20">
+                        <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 22" Padding="16,20">
                             <VerticalStackLayout Spacing="10">
                                 <HorizontalStackLayout Spacing="6" HorizontalOptions="Center">
                                     <Label x:Name="Estrella1" Text="&#9734;" FontSize="46" TextColor="#D1D5DB" Padding="4,0">
@@ -82,8 +82,8 @@
                         <!-- Comentario -->
                         <VerticalStackLayout Spacing="8">
                             <Label Text="{loc:T comentario_opcional}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
-                            <Border x:Name="BordeComentario" Stroke="Transparent" StrokeThickness="1.5" BackgroundColor="White" StrokeShape="RoundRectangle 18" Padding="12,6">
-                                <Editor x:Name="EditorComentario" Placeholder="{loc:T cuentanos_mas}" FontFamily="OpenSansRegular" FontSize="15" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="110" AutoSize="Disabled"
+                            <Border x:Name="BordeComentario" Stroke="Transparent" StrokeThickness="1.5" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 18" Padding="12,6">
+                                <Editor x:Name="EditorComentario" Placeholder="{loc:T cuentanos_mas}" FontFamily="OpenSansRegular" FontSize="15" PlaceholderColor="{StaticResource ColorPlaceholder}" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="110" AutoSize="Disabled"
                                         Focused="OnComentarioFocused" Unfocused="OnComentarioUnfocused"/>
                             </Border>
                         </VerticalStackLayout>

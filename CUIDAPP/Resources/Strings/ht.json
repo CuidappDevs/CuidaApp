@@ -809,5 +809,9 @@
   "dato_ya_calificaste_este_trabajo": "Ou deja evalye travay sa a.",
   "dato_ya_existe_una_cuenta_con_ese_correo": "Gen yon kont ki egziste deja ak imèl sa a.",
   "dato_el_ticket_no_existe": "Rapò a pa egziste.",
-  "err_subir_archivo_servidor": "Sèvè a pa t ka anrejistre fichye a. Eseye ankò nan yon ti moman."
+  "err_subir_archivo_servidor": "Sèvè a pa t ka anrejistre fichye a. Eseye ankò nan yon ti moman.",
+  "apariencia": "Aparans",
+  "tema_claro": "Klè",
+  "tema_oscuro": "Fonse",
+  "tema_sistema": "Otomatik (tankou telefòn nan)"
 }

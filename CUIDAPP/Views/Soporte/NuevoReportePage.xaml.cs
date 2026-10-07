@@ -96,9 +96,9 @@ namespace CUIDAPP.Views.Soporte
             {
                 var (tarjeta, caja, icono, texto) = tarjetasCategoria[i];
                 var activa = PickerCategoria.SelectedIndex == i;
-                tarjeta.BackgroundColor = activa ? R("ColorPrimary") : Colors.White;
+                tarjeta.BackgroundColor = activa ? R("ColorPrimary") : Tema.C("ColorSurface");
                 tarjeta.Stroke = activa ? R("ColorPrimary") : Colors.Transparent;
-                caja.BackgroundColor = activa ? Color.FromArgb("#33FFFFFF") : Color.FromArgb("#EAF1FB");
+                caja.BackgroundColor = activa ? Color.FromArgb("#33FFFFFF") : Tema.C("ColorPrimarySoft");
                 icono.Fill = activa ? Colors.White : R("ColorPrimary");
                 texto.TextColor = activa ? Colors.White : R("ColorTextStrong");
             }

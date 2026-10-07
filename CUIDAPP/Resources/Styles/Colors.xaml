@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <ResourceDictionary 
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
@@ -24,6 +24,16 @@
     <Color x:Key="ColorSuccess">#2E7D32</Color>
     <Color x:Key="ColorWarning">#8A4B00</Color>
     <Color x:Key="ColorInfo">#156082</Color>
+    <!-- Fondos suaves y neutros. Estos valores son los del tema claro; los del oscuro están en
+         Services/Tema.cs, que los escribe aquí al arrancar o al cambiar de tema. -->
+    <Color x:Key="ColorPrimarySoft">#EAF1FB</Color>
+    <Color x:Key="ColorSuccessSoft">#E3F4E8</Color>
+    <Color x:Key="ColorDangerSoft">#FDECEC</Color>
+    <Color x:Key="ColorWarningSoft">#FFF4DC</Color>
+    <Color x:Key="ColorSubtle">#EEF2F6</Color>
+    <Color x:Key="ColorPlaceholder">#8A97A6</Color>
+    <Color x:Key="ColorChevron">#B0BEC5</Color>
+    <Color x:Key="ColorShadow">#0A2F41</Color>
 
     <!-- Legacy Colors (kept for compatibility) -->
     <Color x:Key="Primary">#1C4D96</Color>

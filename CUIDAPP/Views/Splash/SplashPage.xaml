@@ -26,7 +26,7 @@
 
             <!-- Logo sobre insignia blanca -->
             <Grid x:Name="LogoCircle" WidthRequest="132" HeightRequest="132" HorizontalOptions="Center" Opacity="0" Scale="0.92">
-                <Border BackgroundColor="White" StrokeThickness="0" StrokeShape="RoundRectangle 36">
+                <Border BackgroundColor="{StaticResource ColorSurface}" StrokeThickness="0" StrokeShape="RoundRectangle 36">
                     <Border.Shadow>
                         <Shadow Brush="#051A2A" Offset="0,14" Radius="30" Opacity="0.35" />
                     </Border.Shadow>

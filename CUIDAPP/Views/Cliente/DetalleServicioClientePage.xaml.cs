@@ -102,7 +102,7 @@ namespace CUIDAPP.Views.Cliente
                 {
                     Stroke = hecha ? Colors.Transparent : (Color)Application.Current!.Resources["ColorPrimaryLight"],
                     StrokeThickness = 2,
-                    BackgroundColor = hecha ? Color.FromArgb("#2E7D32") : Colors.White,
+                    BackgroundColor = hecha ? Tema.C("ColorSuccess") : Tema.C("ColorSurface"),
                     StrokeShape = new Microsoft.Maui.Controls.Shapes.Ellipse(),
                     WidthRequest = 22,
                     HeightRequest = 22,
@@ -128,7 +128,7 @@ namespace CUIDAPP.Views.Cliente
                 ListaTareasCliente.Add(new Border
                 {
                     Stroke = Colors.Transparent,
-                    BackgroundColor = Colors.White,
+                    BackgroundColor = Tema.C("ColorSurface"),
                     StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 },
                     Padding = new Thickness(14, 12),
                     Content = fila
@@ -200,14 +200,14 @@ namespace CUIDAPP.Views.Cliente
 
             var (colorFondo, colorTexto, texto) = t.Estado switch
             {
-                1 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("banner_esperando")),
+                1 => (Tema.C("ColorWarningSoft"), Tema.C("ColorWarning"), Localizador.T("banner_esperando")),
                 2 => (Color.FromArgb("#DBEAFE"), Color.FromArgb("#1E40AF"), Localizador.T("aceptado_tu_cuidador_asistira_en")),
                 3 => (Color.FromArgb("#EDE9FE"), Color.FromArgb("#5B21B6"), Localizador.T("en_progreso")),
-                4 => (Color.FromArgb("#DCFCE7"), Color.FromArgb("#166534"), Localizador.T("servicio_completado")),
-                5 => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), Localizador.T("cancelado")),
-                6 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#991B1B"), Localizador.T("rechazado_por_cuidador")),
-                7 => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#92400E"), Localizador.T("esperando_tu_confirmacion")),
-                _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), Localizador.T("desconocido"))
+                4 => (Tema.C("ColorSuccessSoft"), Tema.C("ColorSuccess"), Localizador.T("servicio_completado")),
+                5 => (Tema.C("ColorSubtle"), Tema.C("ColorTextStrong"), Localizador.T("cancelado")),
+                6 => (Tema.C("ColorDangerSoft"), Tema.C("ColorDanger"), Localizador.T("rechazado_por_cuidador")),
+                7 => (Tema.C("ColorWarningSoft"), Tema.C("ColorWarning"), Localizador.T("esperando_tu_confirmacion")),
+                _ => (Tema.C("ColorSubtle"), Tema.C("ColorTextStrong"), Localizador.T("desconocido"))
             };
             BadgeEstado.BackgroundColor = colorFondo;
             DotEstado.BackgroundColor = colorTexto;
@@ -288,7 +288,7 @@ namespace CUIDAPP.Views.Cliente
             return new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = Colors.White,
+                BackgroundColor = Tema.C("ColorSurface"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 },
                 Padding = new Thickness(14, 12),
                 Content = fila
@@ -325,7 +325,7 @@ namespace CUIDAPP.Views.Cliente
                     Stroke = completado ? Colors.Transparent : borde,
                     StrokeThickness = 2,
                     StrokeShape = new Microsoft.Maui.Controls.Shapes.Ellipse(),
-                    BackgroundColor = completado ? primario : Colors.White,
+                    BackgroundColor = completado ? primario : Tema.C("ColorSurface"),
                     WidthRequest = 22,
                     HeightRequest = 22,
                     HorizontalOptions = LayoutOptions.Center,
@@ -436,7 +436,7 @@ namespace CUIDAPP.Views.Cliente
         // Tarjeta de opción: con monto ("RD$" + número) o con texto. Seleccionada = verde lleno.
         private View CrearOpcionPropina(string? texto, string? monto, bool seleccionado, Action alElegir)
         {
-            var verde = Color.FromArgb("#2E7D32");
+            var verde = Tema.C("ColorSuccess");
             var colorTexto = seleccionado ? Colors.White : (Color)Application.Current!.Resources["ColorTextStrong"];
 
             View contenido;
@@ -456,9 +456,9 @@ namespace CUIDAPP.Views.Cliente
 
             var tarjeta = new Border
             {
-                Stroke = seleccionado ? verde : Color.FromArgb("#E3E8EE"),
+                Stroke = seleccionado ? verde : Tema.C("ColorBorder"),
                 StrokeThickness = 1.5,
-                BackgroundColor = seleccionado ? verde : Color.FromArgb("#F7F9FB"),
+                BackgroundColor = seleccionado ? verde : Tema.C("ColorSubtle"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 14 },
                 HeightRequest = monto != null ? 62 : 46,
                 Content = contenido

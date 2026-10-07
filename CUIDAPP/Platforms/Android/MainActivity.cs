@@ -27,10 +27,11 @@ namespace CUIDAPP
             // (invisibles), aunque en el emulador se vea bien con íconos oscuros.
             if (Window != null)
             {
-                Window.SetStatusBarColor(Android.Graphics.Color.White);
+                var oscuro = CUIDAPP.Services.Tema.EsOscuro;
+                Window.SetStatusBarColor(Android.Graphics.Color.ParseColor(oscuro ? "#17202B" : "#FFFFFF"));
                 var controller = WindowCompat.GetInsetsController(Window, Window.DecorView);
                 if (controller != null)
-                    controller.AppearanceLightStatusBars = true;
+                    controller.AppearanceLightStatusBars = !oscuro;
             }
 
             // Android 13+ exige permiso explícito en tiempo de ejecución para mostrar

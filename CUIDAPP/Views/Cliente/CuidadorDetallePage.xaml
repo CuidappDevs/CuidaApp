@@ -47,14 +47,14 @@
                         <Grid x:Name="BloqueFoto" WidthRequest="124" HeightRequest="124" HorizontalOptions="Center">
                             <Ellipse Fill="White" WidthRequest="124" HeightRequest="124">
                                 <Ellipse.Shadow>
-                                    <Shadow Brush="#0A2F41" Offset="0,8" Opacity="0.18" Radius="20"/>
+                                    <Shadow Brush="{StaticResource ColorShadow}" Offset="0,8" Opacity="0.18" Radius="20"/>
                                 </Ellipse.Shadow>
                             </Ellipse>
-                            <Border Stroke="Transparent" BackgroundColor="#E5E7EB" WidthRequest="112" HeightRequest="112" HorizontalOptions="Center" VerticalOptions="Center">
+                            <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSubtle}" WidthRequest="112" HeightRequest="112" HorizontalOptions="Center" VerticalOptions="Center">
                                 <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                                 <Image x:Name="ImgFoto" Aspect="AspectFill" />
                             </Border>
-                            <Border Stroke="White" StrokeThickness="3" BackgroundColor="#2E7D32" WidthRequest="34" HeightRequest="34" HorizontalOptions="End" VerticalOptions="End" Margin="0,0,4,4">
+                            <Border Stroke="White" StrokeThickness="3" BackgroundColor="{StaticResource ColorSuccess}" WidthRequest="34" HeightRequest="34" HorizontalOptions="End" VerticalOptions="End" Margin="0,0,4,4">
                                 <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                                 <Path Data="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z" Fill="White" Aspect="Uniform" WidthRequest="14" HeightRequest="14" HorizontalOptions="Center" VerticalOptions="Center"/>
                             </Border>
@@ -63,13 +63,13 @@
                         <!-- Nombre y especialidad -->
                         <VerticalStackLayout x:Name="BloqueNombre" Spacing="8" HorizontalOptions="Center">
                             <Label x:Name="LblNombre" Text="" FontSize="24" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
-                            <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 14" Padding="12,5" HorizontalOptions="Center">
+                            <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 14" Padding="12,5" HorizontalOptions="Center">
                                 <Label x:Name="LblEspecialidad" Text="" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}"/>
                             </Border>
                         </VerticalStackLayout>
 
                         <!-- Estadísticas: calificación · distancia · tarifa -->
-                        <Border x:Name="TarjetaStats" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="8,16">
+                        <Border x:Name="TarjetaStats" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="8,16">
                             <Grid ColumnDefinitions="*,1,*,1,*">
                                 <VerticalStackLayout Grid.Column="0" Spacing="3" HorizontalOptions="Center">
                                     <HorizontalStackLayout Spacing="4" HorizontalOptions="Center">
@@ -99,7 +99,7 @@
                         </Border>
 
                         <!-- Sobre mí -->
-                        <Border x:Name="TarjetaBio" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="18">
+                        <Border x:Name="TarjetaBio" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="18">
                             <VerticalStackLayout Spacing="8">
                                 <HorizontalStackLayout Spacing="8">
                                     <Path Data="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="16" HeightRequest="16" VerticalOptions="Center"/>
@@ -110,12 +110,12 @@
                         </Border>
 
                         <!-- Verificación -->
-                        <Border x:Name="TarjetaVerificado" Stroke="Transparent" BackgroundColor="#E3F4E8" StrokeShape="RoundRectangle 18" Padding="14">
+                        <Border x:Name="TarjetaVerificado" Stroke="Transparent" BackgroundColor="{StaticResource ColorSuccessSoft}" StrokeShape="RoundRectangle 18" Padding="14">
                             <Grid ColumnDefinitions="Auto, *" ColumnSpacing="12">
-                                <Border Stroke="Transparent" BackgroundColor="#2E7D32" StrokeShape="RoundRectangle 12" WidthRequest="38" HeightRequest="38" VerticalOptions="Center">
+                                <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSuccess}" StrokeShape="RoundRectangle 12" WidthRequest="38" HeightRequest="38" VerticalOptions="Center">
                                     <Path Data="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" Fill="White" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                                 </Border>
-                                <Label Grid.Column="1" Text="{loc:T documentos_verificados_por_cuidapp}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#1B5E20" VerticalOptions="Center"/>
+                                <Label Grid.Column="1" Text="{loc:T documentos_verificados_por_cuidapp}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorSuccess}" VerticalOptions="Center"/>
                             </Grid>
                         </Border>
 

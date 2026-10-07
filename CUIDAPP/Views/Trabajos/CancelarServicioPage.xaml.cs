@@ -43,7 +43,7 @@ namespace CUIDAPP.Views.Trabajos
                 {
                     Stroke = esSeleccionado ? primario : R("ColorBorder"),
                     StrokeThickness = 2,
-                    BackgroundColor = Colors.White,
+                    BackgroundColor = Tema.C("ColorSurface"),
                     StrokeShape = new Microsoft.Maui.Controls.Shapes.Ellipse(),
                     WidthRequest = 22,
                     HeightRequest = 22,
@@ -57,7 +57,7 @@ namespace CUIDAPP.Views.Trabajos
                 {
                     Stroke = esSeleccionado ? primario : Colors.Transparent,
                     StrokeThickness = 2,
-                    BackgroundColor = esSeleccionado ? Color.FromArgb("#EAF1FB") : Colors.White,
+                    BackgroundColor = esSeleccionado ? Tema.C("ColorPrimarySoft") : Tema.C("ColorSurface"),
                     StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 18 },
                     Padding = new Thickness(16, 14),
                     Content = fila

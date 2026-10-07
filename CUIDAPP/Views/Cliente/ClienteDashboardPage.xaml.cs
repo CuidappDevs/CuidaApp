@@ -273,7 +273,7 @@ namespace CUIDAPP.Views.Cliente
     <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
     <script>
         var map = L.map('map', {{ zoomControl: false, attributionControl: false }}).setView([{lat}, {lng}], 14);
-        L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{{z}}/{{x}}/{{y}}{{r}}?access_token={MapboxAccessToken}', {{ maxZoom: 20, tileSize: 512, zoomOffset: -1 }}).addTo(map);
+        L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/{CUIDAPP.Services.Tema.EstiloMapa}/tiles/{{z}}/{{x}}/{{y}}{{r}}?access_token={MapboxAccessToken}', {{ maxZoom: 20, tileSize: 512, zoomOffset: -1 }}).addTo(map);
         var marker = L.circleMarker([{lat}, {lng}], {{ radius: 8, color: '#FFFFFF', weight: 3, fillColor: '#2563EB', fillOpacity: 1 }}).addTo(map);
         var capaCuidadores = L.layerGroup().addTo(map);
 
@@ -438,7 +438,7 @@ namespace CUIDAPP.Views.Cliente
             foreach (var (chip, label, valor) in chips)
             {
                 var activo = categoriaSeleccionada == valor;
-                var fondoDestino = activo ? primario : Color.FromArgb("#EEF1F5");
+                var fondoDestino = activo ? primario : Tema.C("ColorSubtle");
                 if (animado && chip.BackgroundColor != null && chip.BackgroundColor != fondoDestino)
                 {
                     var desde = chip.BackgroundColor;
@@ -555,7 +555,7 @@ namespace CUIDAPP.Views.Cliente
             {
                 Stroke = Colors.White,
                 StrokeThickness = 2,
-                BackgroundColor = Color.FromArgb("#2E7D32"),
+                BackgroundColor = Tema.C("ColorSuccess"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 11 },
                 HeightRequest = 22,
                 MinimumWidthRequest = 22,
@@ -606,15 +606,15 @@ namespace CUIDAPP.Views.Cliente
             {
                 // Escoba
                 "Limpieza del hogar" => ("M19.36 2.72L20.78 4.14L15.06 9.85C16.13 11.39 16.28 13.24 15.38 14.44L9.06 8.12C10.26 7.22 12.11 7.37 13.65 8.44L19.36 2.72ZM5.93 17.57C3.92 15.56 2.69 13.16 2.35 10.92L7.23 8.34L15.16 16.27L12.58 21.15C10.34 20.81 7.94 19.58 5.93 17.57Z",
-                    Color.FromArgb("#EAF1FB"), Color.FromArgb("#1C4D96")),
+                    Tema.C("ColorPrimarySoft"), Tema.C("ColorPrimary")),
                 // Niño
                 "Niñera / Cuidadora" => ("M12 2C13.66 2 15 3.34 15 5C15 6.66 13.66 8 12 8C10.34 8 9 6.66 9 5C9 3.34 10.34 2 12 2ZM16 9H8C7.45 9 7 9.45 7 10V15H9V22H15V15H17V10C17 9.45 16.55 9 16 9Z",
                     Color.FromArgb("#FCE7F3"), Color.FromArgb("#C2185B")),
                 // Corazón
                 "Cuidadora de adultos" => ("M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z",
-                    Color.FromArgb("#E3F4E8"), Color.FromArgb("#2E7D32")),
+                    Tema.C("ColorSuccessSoft"), Tema.C("ColorSuccess")),
                 // Casa
-                _ => ("M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z", Color.FromArgb("#EAF1FB"), Color.FromArgb("#1C4D96"))
+                _ => ("M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z", Tema.C("ColorPrimarySoft"), Tema.C("ColorPrimary"))
             };
         }
 
@@ -864,7 +864,7 @@ namespace CUIDAPP.Views.Cliente
         private void OnBuscarFocused(object? sender, FocusEventArgs e)
         {
             BordeBuscar.Stroke = (Color)Application.Current!.Resources["ColorPrimary"];
-            BordeBuscar.BackgroundColor = Colors.White;
+            BordeBuscar.BackgroundColor = Tema.C("ColorSurface");
             IconoBuscar.Fill = (Color)Application.Current!.Resources["ColorPrimary"];
             _ = IconoBuscar.ScaleTo(1.15, 120, Easing.CubicOut).ContinueWith(_ =>
                 MainThread.BeginInvokeOnMainThread(() => IconoBuscar.ScaleTo(1, 160, Easing.CubicOut)));
@@ -873,7 +873,7 @@ namespace CUIDAPP.Views.Cliente
         private void OnBuscarUnfocused(object? sender, FocusEventArgs e)
         {
             BordeBuscar.Stroke = Colors.Transparent;
-            BordeBuscar.BackgroundColor = Color.FromArgb("#EEF1F5");
+            BordeBuscar.BackgroundColor = Tema.C("ColorSubtle");
             IconoBuscar.Fill = (Color)Application.Current!.Resources["ColorTextStrong"];
         }
 }

@@ -65,7 +65,7 @@ namespace CUIDAPP.Views.Dinero
         private static View CrearTarjetaPago(Pago pago)
         {
             var esPagado = pago.Estado == 2;
-            var colorMonto = esPagado ? Color.FromArgb("#2E7D32") : Color.FromArgb("#B26A00");
+            var colorMonto = esPagado ? Tema.C("ColorSuccess") : Tema.C("ColorWarning");
             var textoEstado = esPagado ? Localizador.T("pagado") : Localizador.T("pendiente");
             var fecha = esPagado && pago.FechaPago.HasValue ? pago.FechaPago.Value : pago.FechaCreacion;
 
@@ -73,7 +73,7 @@ namespace CUIDAPP.Views.Dinero
             var icono = new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = esPagado ? Color.FromArgb("#E3F4E8") : Color.FromArgb("#FFF4DC"),
+                BackgroundColor = esPagado ? Tema.C("ColorSuccessSoft") : Tema.C("ColorWarningSoft"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 14 },
                 WidthRequest = 46,
                 HeightRequest = 46,
@@ -84,7 +84,7 @@ namespace CUIDAPP.Views.Dinero
                     Data = (Microsoft.Maui.Controls.Shapes.Geometry)new Microsoft.Maui.Controls.Shapes.PathGeometryConverter().ConvertFromInvariantString(esPagado
                         ? "M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z"
                         : "M11.99 2C6.47 2 2 6.48 2 12C2 17.52 6.47 22 11.99 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 11.99 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM12.5 7H11V13L16.25 16.15L17 14.92L12.5 12.25V7Z")!,
-                    Fill = esPagado ? Color.FromArgb("#2E7D32") : Color.FromArgb("#E09A1A"),
+                    Fill = esPagado ? Tema.C("ColorSuccess") : Color.FromArgb("#E09A1A"),
                     Aspect = Stretch.Uniform, WidthRequest = 20, HeightRequest = 20,
                     HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center
                 }
@@ -120,7 +120,7 @@ namespace CUIDAPP.Views.Dinero
                     Text = Localizador.F("incluye_propina", pago.Propina),
                     FontSize = 11,
                     FontFamily = "OpenSansSemibold",
-                    TextColor = Color.FromArgb("#2E7D32"),
+                    TextColor = Tema.C("ColorSuccess"),
                     HorizontalTextAlignment = TextAlignment.End
                 });
             }
@@ -133,7 +133,7 @@ namespace CUIDAPP.Views.Dinero
             return new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = Colors.White,
+                BackgroundColor = Tema.C("ColorSurface"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 20 },
                 Padding = new Thickness(14),
                 Content = grid

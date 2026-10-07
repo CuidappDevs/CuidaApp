@@ -4,7 +4,7 @@
              xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Cliente.SeleccionarPuntoMapaPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#FFFFFF">
+             BackgroundColor="{StaticResource ColorSurface}">
 
     <!-- Mapa arriba, formulario en una hoja inferior (fila propia de la cuadrícula: el sistema
          la deja por encima de la barra de gestos). -->
@@ -15,10 +15,10 @@
             <WebView x:Name="MapaWebView" Navigating="OnMapaNavigating"/>
 
             <!-- Atrás -->
-            <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="White" WidthRequest="46" HeightRequest="46" HorizontalOptions="Start" VerticalOptions="Start" Margin="16,14,0,0">
+            <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" WidthRequest="46" HeightRequest="46" HorizontalOptions="Start" VerticalOptions="Start" Margin="16,14,0,0">
                 <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                 <Border.Shadow>
-                    <Shadow Brush="#0A2F41" Offset="0,4" Opacity="0.18" Radius="10"/>
+                    <Shadow Brush="{StaticResource ColorShadow}" Offset="0,4" Opacity="0.18" Radius="10"/>
                 </Border.Shadow>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnBackTapped" />
@@ -36,9 +36,9 @@
         </Grid>
 
         <!-- HOJA INFERIOR con el formulario -->
-        <Border x:Name="HojaFormulario" Grid.Row="1" Margin="0,-24,0,0" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 28,28,0,0" Padding="20,10,20,20">
+        <Border x:Name="HojaFormulario" Grid.Row="1" Margin="0,-24,0,0" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 28,28,0,0" Padding="20,10,20,20">
             <Border.Shadow>
-                <Shadow Brush="#0A2F41" Offset="0,-6" Opacity="0.12" Radius="20"/>
+                <Shadow Brush="{StaticResource ColorShadow}" Offset="0,-6" Opacity="0.12" Radius="20"/>
             </Border.Shadow>
             <VerticalStackLayout Spacing="14">
                 <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorBorder}" StrokeShape="RoundRectangle 3" WidthRequest="40" HeightRequest="5" HorizontalOptions="Center" Margin="0,0,0,2"/>
@@ -49,7 +49,7 @@
                     <Border Stroke="Transparent" StrokeThickness="1.5" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 14" Padding="14,0">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                             <Path Data="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="17" HeightRequest="17" VerticalOptions="Center"/>
-                            <Entry x:Name="EntryNombre" Grid.Column="1" Placeholder="{loc:T ej_casa_casa_de_mama}" FontFamily="OpenSansRegular" FontSize="15" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="50"
+                            <Entry x:Name="EntryNombre" Grid.Column="1" Placeholder="{loc:T ej_casa_casa_de_mama}" FontFamily="OpenSansRegular" FontSize="15" PlaceholderColor="{StaticResource ColorPlaceholder}" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="50"
                                    Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
                         </Grid>
                     </Border>
@@ -60,7 +60,7 @@
                     <Border Stroke="Transparent" StrokeThickness="1.5" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 14" Padding="14,0">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                             <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="17" HeightRequest="17" VerticalOptions="Center"/>
-                            <Entry x:Name="EntryDireccion" Grid.Column="1" Placeholder="{loc:T ej_calle_principal_12_sector}" FontFamily="OpenSansRegular" FontSize="15" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="50"
+                            <Entry x:Name="EntryDireccion" Grid.Column="1" Placeholder="{loc:T ej_calle_principal_12_sector}" FontFamily="OpenSansRegular" FontSize="15" PlaceholderColor="{StaticResource ColorPlaceholder}" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="50"
                                    Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
                         </Grid>
                     </Border>

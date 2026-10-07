@@ -27,7 +27,7 @@ namespace CUIDAPP.Views.Cliente
         }
 
         private VisualElement[] BloquesEntrada() =>
-            new VisualElement[] { BloqueFoto, BloqueNombre, TarjetaInfo, TarjetaMenu, BloqueIdioma, BtnCerrarSesion };
+            new VisualElement[] { BloqueFoto, BloqueNombre, TarjetaInfo, TarjetaMenu, BloqueIdioma, BloqueTema, BtnCerrarSesion };
 
         private bool _entradaHecha;
 
