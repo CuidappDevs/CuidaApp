@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using CUIDAPP_API.DTOs.Auth;
+using CUIDAPP_API.DTOs.Common;
 using CUIDAPP_API.Interfaces.Auth;
 
 namespace CUIDAPP_API.Controllers
@@ -9,26 +10,48 @@ namespace CUIDAPP_API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, ILogger<AuthController> logger)
         {
             _authService = authService;
+            _logger = logger;
         }
+
+        // Nunca expone ex.Message ni texto SQL; el detalle va al log estructurado.
+        private IActionResult ErrorInterno(Exception ex, string operacion)
+        {
+            _logger.LogError(ex, "Error interno en {Operacion}", operacion);
+            return StatusCode(500, new ApiErrorDto("INTERNAL_ERROR", "Error interno del servidor."));
+        }
+
+        public static IActionResult TraducirLogin(LoginResult result) => result.Status switch
+        {
+            LoginStatus.Success => new OkObjectResult(result.AuthResponse),
+            LoginStatus.AccountSuspended => new ObjectResult(new ApiErrorDto(
+                "ACCOUNT_SUSPENDED", "Tu cuenta está suspendida.", null, result.Suspension)) { StatusCode = 423 },
+            LoginStatus.AccountInactive => new ObjectResult(new ApiErrorDto(
+                "ACCOUNT_INACTIVE", "Tu cuenta no está activa.")) { StatusCode = 423 },
+            _ => new ObjectResult(new ApiErrorDto(
+                "INVALID_CREDENTIALS", "Credenciales inválidas.")) { StatusCode = 401 }
+        };
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto loginDto)
         {
+            if (loginDto == null || string.IsNullOrWhiteSpace(loginDto.Email) || string.IsNullOrEmpty(loginDto.Password))
+            {
+                return BadRequest(new ApiErrorDto("VALIDATION_ERROR", "Hay datos inválidos en la solicitud.",
+                    new Dictionary<string, string[]> { ["credenciales"] = new[] { "Correo y contraseña son obligatorios." } }));
+            }
+
             try
             {
-                var result = await _authService.LoginAsync(loginDto);
-                if (result == null)
-                    return Unauthorized("Credenciales inválidas o cuenta inactiva.");
-
-                return Ok(result);
+                return TraducirLogin(await _authService.LoginAsync(loginDto));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "Login");
             }
         }
 
@@ -42,7 +65,7 @@ namespace CUIDAPP_API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error al registrar: {ex.Message}");
+                return ErrorInterno(ex, "Registro");
             }
         }
 
@@ -56,7 +79,7 @@ namespace CUIDAPP_API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error al registrar: {ex.Message}");
+                return ErrorInterno(ex, "Registro");
             }
         }
 
@@ -73,7 +96,7 @@ namespace CUIDAPP_API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "Auth");
             }
         }
 
@@ -90,7 +113,7 @@ namespace CUIDAPP_API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error interno: {ex.Message}");
+                return ErrorInterno(ex, "Auth");
             }
         }
     }

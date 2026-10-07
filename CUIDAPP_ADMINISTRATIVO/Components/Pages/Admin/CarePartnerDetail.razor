@@ -203,26 +203,71 @@ else
                         <span class="adm-card-sub" style="line-height:1.55;">
                             @if (p.IsActive)
                             {
-                                <text>Suspender bloquea el inicio de sesión de inmediato, sin borrar su historial.</text>
+                                <text>Suspender bloquea el inicio de sesión. Puede ser indefinida o temporal; no borra el historial.</text>
+                            }
+                            else if (_vigente is { VencidaPendienteAcceso: true })
+                            {
+                                <text>La suspensión temporal ya venció. La cuenta se reactivará en su próximo inicio de sesión válido.</text>
                             }
                             else
                             {
-                                <text>Esta cuenta está suspendida — no puede iniciar sesión hasta que la reactives.</text>
+                                <text>Esta cuenta está suspendida — no puede iniciar sesión hasta que termine la sanción o la reactives.</text>
                             }
                         </span>
                     </div>
 
+                    @if (_vigente != null)
+                    {
+                        <div class="d-flex flex-column" style="gap:4px;">
+                            <span class="adm-field-k">Sanción actual (@_vigente.EstadoTexto)</span>
+                            <span class="adm-timeline-text">@_vigente.Motivo</span>
+                            <span class="adm-timeline-when">
+                                @(_vigente.Tipo == "TEMPORAL" ? "Temporal" : "Indefinida")
+                                · desde @FechaRD(_vigente.FechaInicioUtc)
+                                @(_vigente.FechaFinUtc.HasValue ? $"· hasta {FechaRD(_vigente.FechaFinUtc.Value)}" : "")
+                            </span>
+                        </div>
+                    }
+
                     @if (p.IsActive)
                     {
-                        <textarea @bind="_motivoSancion" class="adm-textarea" placeholder="Motivo de la suspensión (obligatorio)"></textarea>
+                        <div class="d-flex flex-column" style="gap:6px;">
+                            <span class="adm-field-k">Modalidad</span>
+                            <select class="adm-input" @bind="_tipoSancion">
+                                <option value="INDEFINIDA">Indefinida</option>
+                                <option value="TEMPORAL">Temporal</option>
+                            </select>
+                        </div>
+                        @if (_tipoSancion == "TEMPORAL")
+                        {
+                            <div class="d-flex flex-column" style="gap:6px;">
+                                <span class="adm-field-k">Fin de la suspensión (hora de RD)</span>
+                                <input class="adm-input" type="datetime-local" min="@MinimoFechaFin()" @bind="_fechaFinLocal" />
+                            </div>
+                        }
+                        <textarea @bind="_motivoSancion" class="adm-textarea" placeholder="Motivo de la suspensión (10 a 500 caracteres)"></textarea>
                         <button type="button" class="adm-btn adm-btn-lg adm-btn-danger" disabled="@_procesandoCuenta" @onclick="Suspender">
                             @(_procesandoCuenta ? "Procesando..." : "Suspender cuenta")
                         </button>
                     }
+                    else if (_confirmandoReactivar)
+                    {
+                        <span class="adm-card-sub" style="line-height:1.55;">
+                            Reactivar revocará la sanción vigente y la cuenta podrá iniciar sesión de inmediato. ¿Confirmas?
+                        </span>
+                        <div class="d-flex" style="gap:10px;">
+                            <button type="button" class="adm-btn adm-btn-lg adm-btn-approve" disabled="@_procesandoCuenta" @onclick="Reactivar">
+                                @(_procesandoCuenta ? "Procesando..." : "Confirmar reactivación")
+                            </button>
+                            <button type="button" class="adm-btn adm-btn-lg adm-btn-ghost-line" disabled="@_procesandoCuenta" @onclick="() => _confirmandoReactivar = false">
+                                Cancelar
+                            </button>
+                        </div>
+                    }
                     else
                     {
-                        <button type="button" class="adm-btn adm-btn-lg adm-btn-approve" disabled="@_procesandoCuenta" @onclick="Reactivar">
-                            @(_procesandoCuenta ? "Procesando..." : "Reactivar cuenta")
+                        <button type="button" class="adm-btn adm-btn-lg adm-btn-approve" disabled="@_procesandoCuenta" @onclick="() => _confirmandoReactivar = true">
+                            Reactivar cuenta
                         </button>
                     }
 
@@ -233,10 +278,17 @@ else
                             @foreach (var s in _sanciones)
                             {
                                 <div class="d-flex" style="gap:12px;">
-                                    <span class="adm-timeline-dot" style="background:@(s.Accion == "Suspendido" ? "#DC2626" : "#16A34A");"></span>
+                                    <span class="adm-timeline-dot" style="background:@(s.Estado == "VIGpE" ? "#DC2626" : s.Estado == "REVOCADA" ? "#16A34A" : "#6B7280");"></span>
                                     <div class="d-flex flex-column" style="gap:2px;">
-                                        <span class="adm-timeline-text">@s.Accion @(string.IsNullOrWhiteSpace(s.Motivo) ? "" : $"— {s.Motivo}")</span>
-                                        <span class="adm-timeline-when">@s.AdminNombre · @s.FechaCreacion.ToString("dd MMM yyyy, HH:mm")</span>
+                                        <span class="adm-timeline-text">@s.EstadoTexto · @(s.Tipo == "TEMPORAL" ? "Temporal" : "Indefinida") — @s.Motivo</span>
+                                        <span class="adm-timeline-when">
+                                            @s.AdminNombre · @FechaRD(s.FechaInicioUtc)
+                                            @(s.FechaFinUtc.HasValue ? $"→ {FechaRD(s.FechaFinUtc.Value)}" : "")
+                                        </span>
+                                        @if (s.Estado == "REVOCADA" && s.FechaRevocacionUtc.HasValue)
+                                        {
+                                            <span class="adm-timeline-when">Revocada por @s.RevocadaPorAdminNombre · @FechaRD(s.FechaRevocacionUtc.Value)</span>
+                                        }
                                     </div>
                                 </div>
                             }
@@ -328,6 +380,20 @@ else
             await Cargar();
     }
 
+    private string _tipoSancion = "INDEFINIDA";
+    private DateTime? _fechaFinLocal;
+    private bool _confirmandoReactivar;
+
+    private SancionCuidador? _vigente => _sanciones.FirstOrDefault(x => x.Estado == "VIGENTE");
+
+    // Horario de RD (UTC-4 fijo), igual que HoraLocalRD en la API.
+    private static readonly TimeSpan OffsetRD = TimeSpan.FromHours(-4);
+
+    private static string FechaRD(DateTimeOffset fecha) => fecha.ToOffset(OffsetRD).ToString("dd MMM yyyy, HH:mm");
+
+    private static string MinimoFechaFin()
+        => DateTimeOffset.UtcNow.ToOffset(OffsetRD).AddMinutes(5).ToString("yyyy-MM-ddTHH:mm");
+
     private async Task Suspender()
     {
         if (string.IsNullOrWhiteSpace(_motivoSancion))
@@ -336,17 +402,42 @@ else
             return;
         }
 
+        DateTimeOffset? fechaFin = null;
+        if (_tipoSancion == "TEMPORAL")
+        {
+            if (_fechaFinLocal is null)
+            {
+                _mensajeAccion = "Indica la fecha y hora de fin de la suspensión temporal.";
+                return;
+            }
+
+            fechaFin = new DateTimeOffset(DateTime.SpecifyKind(_fechaFinLocal.Value, DateTimeKind.Unspecified), OffsetRD);
+            if (fechaFin.Value < DateTimeOffset.UtcNow.AddMinutes(5))
+            {
+                _mensajeAccion = "La fecha de fin debe ser al menos 5 minutos posterior a la hora actual.";
+                return;
+            }
+        }
+
         _procesandoCuenta = true;
         _mensajeAccion = null;
 
-        var success = await CuidadorService.SuspenderAsync(Id, _adminId, _motivoSancion);
+        var resultado = await CuidadorService.SuspenderAsync(Id, _adminId, _motivoSancion.Trim(), fechaFin);
 
         _procesandoCuenta = false;
-        _mensajeAccion = success ? "Cuenta suspendida — ya no puede iniciar sesión." : "No se pudo suspender la cuenta. Intenta de nuevo.";
-        _motivoSancion = "";
 
-        if (success)
-            await Cargar();
+        if (!resultado.Success)
+        {
+            // El formulario se conserva para poder corregir y reintentar.
+            _mensajeAccion = $"No se pudo suspender la cuenta ({resultado.Code}): {resultado.Message}";
+            return;
+        }
+
+        _mensajeAccion = "Cuenta suspendida — ya no puede iniciar sesión.";
+        _motivoSancion = "";
+        _tipoSancion = "INDEFINIDA";
+        _fechaFinLocal = null;
+        await Cargar();
     }
 
     private async Task Reactivar()
@@ -354,13 +445,21 @@ else
         _procesandoCuenta = true;
         _mensajeAccion = null;
 
-        var success = await CuidadorService.ReactivarAsync(Id, _adminId);
+        var resultado = await CuidadorService.ReactivarAsync(Id, _adminId);
 
         _procesandoCuenta = false;
-        _mensajeAccion = success ? "Cuenta reactivada." : "No se pudo reactivar la cuenta. Intenta de nuevo.";
+        _confirmandoReactivar = false;
 
-        if (success)
-            await Cargar();
+        if (!resultado.Success)
+        {
+            _mensajeAccion = $"No se pudo reactivar la cuenta ({resultado.Code}): {resultado.Message}";
+            return;
+        }
+
+        _mensajeAccion = resultado.Code == "ALREADY_COMPLETED"
+            ? "La suspensión temporal ya había vencido; la cuenta quedó activa."
+            : "Cuenta reactivada.";
+        await Cargar();
     }
 
     private async Task GuardarInfo()

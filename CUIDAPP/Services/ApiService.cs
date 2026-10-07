@@ -79,20 +79,40 @@ namespace CUIDAPP.Services
             }
         }
 
-        public async Task<AuthResponse?> LoginAsync(LoginRequest request)
+        public async Task<LoginResult> LoginAsync(LoginRequest request)
         {
             try
             {
                 var response = await _httpClient.PostAsJsonAsync("auth/login", request);
-                if (!response.IsSuccessStatusCode)
-                    return null;
 
-                return await response.Content.ReadFromJsonAsync<AuthResponse>();
+                if (response.IsSuccessStatusCode)
+                {
+                    var auth = await response.Content.ReadFromJsonAsync<AuthResponse>();
+                    return auth == null
+                        ? LoginResult.Of(LoginStatus.ServerError)
+                        : LoginResult.Of(LoginStatus.Success, auth);
+                }
+
+                // El cuerpo tipado solo se intenta leer en respuestas no exitosas; un servidor
+                // antiguo o un proxy pueden devolver texto, por eso el fallback es por HTTP.
+                ApiError? error = null;
+                try { error = await response.Content.ReadFromJsonAsync<ApiError>(); }
+                catch (Exception) { }
+
+                return (int)response.StatusCode switch
+                {
+                    423 when error?.Code == "ACCOUNT_SUSPENDED" && error.Suspension != null
+                        => LoginResult.Of(LoginStatus.AccountSuspended, null, error.Suspension),
+                    423 => LoginResult.Of(LoginStatus.AccountInactive),
+                    401 => LoginResult.Of(LoginStatus.InvalidCredentials),
+                    400 => LoginResult.Of(LoginStatus.Validation),
+                    _ => LoginResult.Of(LoginStatus.ServerError)
+                };
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error en login: {ex.Message}");
-                return null;
+                return LoginResult.Of(LoginStatus.Network);
             }
         }
 
