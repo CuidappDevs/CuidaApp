@@ -20,6 +20,7 @@ namespace CUIDAPP.Localization
         {
             ("es", "Español"),
             ("en", "English"),
+            ("ht", "Kreyòl"),
         };
 
 
@@ -107,7 +108,7 @@ namespace CUIDAPP.Localization
             Codigo = codigo;
             _actual = Cargar(codigo);
 
-            Cultura = new CultureInfo(codigo);
+            Cultura = CrearCultura(codigo);
             CultureInfo.DefaultThreadCurrentCulture = Cultura;
             CultureInfo.DefaultThreadCurrentUICulture = Cultura;
             CultureInfo.CurrentCulture = Cultura;
@@ -121,6 +122,23 @@ namespace CUIDAPP.Localization
                     texto.Refrescar();
                 IdiomaCambiado?.Invoke();
             }
+        }
+
+        // Fechas y números. Si el sistema no trae formatos para un idioma (p. ej. creol "ht" en algunos
+        // Android), se usan los del país más cercano en vez de fallar.
+        private static CultureInfo CrearCultura(string codigo)
+        {
+            foreach (var nombre in codigo == "ht" ? new[] { "ht-HT", "fr-HT", "fr" } : new[] { codigo })
+            {
+                try
+                {
+                    var cultura = new CultureInfo(nombre);
+                    if (!string.IsNullOrEmpty(cultura.DateTimeFormat.MonthNames[0]))
+                        return cultura;
+                }
+                catch (CultureNotFoundException) { }
+            }
+            return new CultureInfo(IdiomaBase);
         }
 
         private static string IdiomaGuardadoODelDispositivo()

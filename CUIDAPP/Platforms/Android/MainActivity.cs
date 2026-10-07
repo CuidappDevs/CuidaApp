@@ -8,9 +8,19 @@ namespace CUIDAPP
     [Activity(Theme = "@style/Maui.SplashTheme", MainLauncher = true, LaunchMode = LaunchMode.SingleTop, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
     public class MainActivity : MauiAppCompatActivity
     {
+        // App ya abierta (SingleTop): tocar una notificación llega aquí.
+        protected override void OnNewIntent(Android.Content.Intent? intent)
+        {
+            base.OnNewIntent(intent);
+            CUIDAPP.Services.NotificacionDestino.Recibir(intent?.GetStringExtra(CUIDAPP.Services.NotificacionDestino.ClaveExtra), appYaAbierta: true);
+        }
+
         protected override void OnCreate(Bundle? savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
+
+            // App abierta tocando una notificación: el destino se procesa al abrir la sesión.
+            CUIDAPP.Services.NotificacionDestino.Recibir(Intent?.GetStringExtra(CUIDAPP.Services.NotificacionDestino.ClaveExtra), appYaAbierta: false);
 
             // La app siempre tiene fondo claro; sin esto, en dispositivos reales la
             // barra de estado a veces se pinta blanca con íconos también blancos

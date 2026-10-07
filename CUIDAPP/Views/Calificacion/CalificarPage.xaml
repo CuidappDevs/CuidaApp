@@ -4,67 +4,98 @@
              xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Calificacion.CalificarPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#FFFFFF">
+             BackgroundColor="{StaticResource ColorBackground}"
+             SafeAreaEdges="None">
 
-    <Grid RowDefinitions="Auto, *, Auto">
+    <Grid SafeAreaEdges="None">
+        <ScrollView SafeAreaEdges="None">
+            <VerticalStackLayout Spacing="0" SafeAreaEdges="None">
 
-        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" Padding="20,15,20,10" BackgroundColor="White">
-            <ContentView x:Name="BtnBack" VerticalOptions="Center">
-                <ContentView.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnBackTapped" />
-                </ContentView.GestureRecognizers>
-                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
-            </ContentView>
-            <Label Grid.Column="1" Text="{loc:T calificar}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
-        </Grid>
+                <!-- ENCABEZADO (borde a borde) -->
+                <Grid SafeAreaEdges="None" Padding="0,0,0,48">
+                    <Grid.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#2A63B8" Offset="0.0" />
+                            <GradientStop Color="{StaticResource ColorPrimary}" Offset="0.6" />
+                            <GradientStop Color="{StaticResource ColorPrimaryDark}" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </Grid.Background>
+                    <Ellipse Fill="#14FFFFFF" WidthRequest="220" HeightRequest="220" HorizontalOptions="End" VerticalOptions="Start" Margin="0,-90,-80,0"/>
+                    <Ellipse Fill="#0FFFFFFF" WidthRequest="140" HeightRequest="140" HorizontalOptions="Start" VerticalOptions="End" Margin="-50,0,0,-30"/>
 
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="25,30,25,20" Spacing="25">
+                    <VerticalStackLayout x:Name="ContenidoEncabezado" Spacing="14">
+                        <Grid ColumnDefinitions="44,*,44" Padding="12,10">
+                            <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="#26FFFFFF" WidthRequest="44" HeightRequest="44">
+                                <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                                </Border.GestureRecognizers>
+                                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="White" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <Label Grid.Column="1" Text="{loc:T calificar}" FontSize="17" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Grid>
 
-                <Border Stroke="Transparent" BackgroundColor="#EFF6FF" StrokeShape="RoundRectangle 40" WidthRequest="80" HeightRequest="80" HorizontalOptions="Center">
-                    <Path Data="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.45 13.97L5.82 21L12 17.27Z" Fill="#3B82F6" Aspect="Uniform" WidthRequest="36" HeightRequest="36" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        <!-- Insignia con estrella -->
+                        <Border x:Name="InsigniaEstrella" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 26" WidthRequest="84" HeightRequest="84" HorizontalOptions="Center">
+                            <Border.Shadow>
+                                <Shadow Brush="#051A2A" Offset="0,10" Radius="22" Opacity="0.3" />
+                            </Border.Shadow>
+                            <Path Data="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.45 13.97L5.82 21L12 17.27Z" Fill="#E09A1A" Aspect="Uniform" WidthRequest="40" HeightRequest="40" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
+
+                        <VerticalStackLayout Spacing="4" HorizontalOptions="Center" Padding="24,0">
+                            <Label x:Name="LblTitulo" Text="{loc:T como_estuvo_tu_experiencia}" FontSize="21" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                            <Label x:Name="LblSubtitulo" Text="" FontSize="14" FontFamily="OpenSansRegular" TextColor="#D9E6F7" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Grid>
+
+                <!-- Hoja -->
+                <Border Margin="0,-28,0,0" Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 28,28,0,0">
+                    <VerticalStackLayout x:Name="Contenido" Padding="20,24,20,0" Spacing="18">
+
+                        <!-- Estrellas -->
+                        <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 22" Padding="16,20">
+                            <VerticalStackLayout Spacing="10">
+                                <HorizontalStackLayout Spacing="6" HorizontalOptions="Center">
+                                    <Label x:Name="Estrella1" Text="&#9734;" FontSize="46" TextColor="#D1D5DB" Padding="4,0">
+                                        <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnEstrella1Tapped" /></Label.GestureRecognizers>
+                                    </Label>
+                                    <Label x:Name="Estrella2" Text="&#9734;" FontSize="46" TextColor="#D1D5DB" Padding="4,0">
+                                        <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnEstrella2Tapped" /></Label.GestureRecognizers>
+                                    </Label>
+                                    <Label x:Name="Estrella3" Text="&#9734;" FontSize="46" TextColor="#D1D5DB" Padding="4,0">
+                                        <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnEstrella3Tapped" /></Label.GestureRecognizers>
+                                    </Label>
+                                    <Label x:Name="Estrella4" Text="&#9734;" FontSize="46" TextColor="#D1D5DB" Padding="4,0">
+                                        <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnEstrella4Tapped" /></Label.GestureRecognizers>
+                                    </Label>
+                                    <Label x:Name="Estrella5" Text="&#9734;" FontSize="46" TextColor="#D1D5DB" Padding="4,0">
+                                        <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnEstrella5Tapped" /></Label.GestureRecognizers>
+                                    </Label>
+                                </HorizontalStackLayout>
+                                <!-- Qué significa la puntuación -->
+                                <Label x:Name="LblSignificado" Text="{loc:T toca_una_estrella}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- Comentario -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{loc:T comentario_opcional}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                            <Border x:Name="BordeComentario" Stroke="Transparent" StrokeThickness="1.5" BackgroundColor="White" StrokeShape="RoundRectangle 18" Padding="12,6">
+                                <Editor x:Name="EditorComentario" Placeholder="{loc:T cuentanos_mas}" FontFamily="OpenSansRegular" FontSize="15" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="110" AutoSize="Disabled"
+                                        Focused="OnComentarioFocused" Unfocused="OnComentarioUnfocused"/>
+                            </Border>
+                        </VerticalStackLayout>
+
+                        <!-- Enviar (dentro del contenido: nada anclado al borde inferior) -->
+                        <Button x:Name="BtnEnviar" Text="{loc:T enviar_calificacion}" Clicked="OnEnviarClicked" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="16" HeightRequest="56" IsEnabled="False" Opacity="0.5" Margin="0,4,0,0"/>
+
+                        <ContentView x:Name="EspacioInferior" HeightRequest="40" InputTransparent="True"/>
+                    </VerticalStackLayout>
                 </Border>
-
-                <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
-                    <Label x:Name="LblTitulo" Text="{loc:T como_estuvo_tu_experiencia}" FontSize="19" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
-                    <Label x:Name="LblSubtitulo" Text="" FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
-                </VerticalStackLayout>
-
-                <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
-                    <Label x:Name="Estrella1" Text="&#9734;" FontSize="42" TextColor="#D1D5DB">
-                        <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnEstrella1Tapped" /></Label.GestureRecognizers>
-                    </Label>
-                    <Label x:Name="Estrella2" Text="&#9734;" FontSize="42" TextColor="#D1D5DB">
-                        <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnEstrella2Tapped" /></Label.GestureRecognizers>
-                    </Label>
-                    <Label x:Name="Estrella3" Text="&#9734;" FontSize="42" TextColor="#D1D5DB">
-                        <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnEstrella3Tapped" /></Label.GestureRecognizers>
-                    </Label>
-                    <Label x:Name="Estrella4" Text="&#9734;" FontSize="42" TextColor="#D1D5DB">
-                        <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnEstrella4Tapped" /></Label.GestureRecognizers>
-                    </Label>
-                    <Label x:Name="Estrella5" Text="&#9734;" FontSize="42" TextColor="#D1D5DB">
-                        <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnEstrella5Tapped" /></Label.GestureRecognizers>
-                    </Label>
-                </HorizontalStackLayout>
-
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="{loc:T comentario_opcional}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
-                    <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12">
-                        <Editor x:Name="EditorComentario" Placeholder="{loc:T cuentanos_mas}" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="90" AutoSize="Disabled"/>
-                    </Border>
-                </VerticalStackLayout>
-
             </VerticalStackLayout>
         </ScrollView>
-
-        <VerticalStackLayout Grid.Row="2" Padding="20,10,20,30" Spacing="10" BackgroundColor="White">
-            <Border.Shadow>
-                <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
-            </Border.Shadow>
-            <Button x:Name="BtnEnviar" Text="{loc:T enviar_calificacion}" Clicked="OnEnviarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsEnabled="False"/>
-        </VerticalStackLayout>
-
     </Grid>
 
 </ContentPage>

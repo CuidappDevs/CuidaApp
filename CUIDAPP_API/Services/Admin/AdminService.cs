@@ -5,16 +5,26 @@ using Microsoft.Extensions.Configuration;
 using CUIDAPP_API.DTOs.Admin;
 using CUIDAPP_API.Interfaces.Admin;
 using CUIDAPP_API.Services;
+using CUIDAPP_API.Services.Realtime;
 
 namespace CUIDAPP_API.Services.Admin
 {
     public class AdminService : IAdminService
     {
         private readonly string _connectionString;
+        private readonly ITrabajoNotifier _notifier;
 
-        public AdminService(IConfiguration config)
+        public AdminService(IConfiguration config, ITrabajoNotifier notifier)
         {
             _connectionString = config.GetConnectionString("DefaultConnection") ?? "";
+            _notifier = notifier;
+        }
+
+        // Aviso en tiempo real: nunca debe tumbar la operación que ya se hizo.
+        private async Task AvisarAsync(int usuarioId, string evento, object payload)
+        {
+            try { await _notifier.NotificarAsync(usuarioId, evento, payload); }
+            catch (Exception ex) { Console.WriteLine($"No se pudo notificar {evento} a {usuarioId}: {ex.Message}"); }
         }
 
         public async Task<IEnumerable<CuidadorPendienteDto>> ObtenerCuidadoresPendientesAsync()
@@ -135,7 +145,10 @@ namespace CUIDAPP_API.Services.Admin
 
             await connection.OpenAsync();
             var filasAfectadas = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(filasAfectadas) > 0;
+            var ok = Convert.ToInt32(filasAfectadas) > 0;
+            if (ok)
+                await AvisarAsync(dto.CuidadorId, "CuentaActualizada", new { dto.CuidadorId, Estado = dto.NuevoEstado });
+            return ok;
         }
 
         public async Task<bool> MarcarPagoComoPagadoAsync(int pagoId)

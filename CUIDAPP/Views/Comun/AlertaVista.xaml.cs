@@ -15,6 +15,14 @@ namespace CUIDAPP.Views.Comun
         {
             InitializeComponent();
 
+            // Ancho fijo desde el inicio: en Android la alerta se mide una sola vez (diálogo nativo, sin
+            // página MAUI que la vuelva a medir). Si el texto se midiera con otro ancho, ocuparía más
+            // líneas de las calculadas y los botones quedarían cortados.
+            var pantalla = DeviceDisplay.MainDisplayInfo;
+            var anchoPantalla = pantalla.Density > 0 ? pantalla.Width / pantalla.Density : 360;
+            Tarjeta.WidthRequest = Math.Min(anchoPantalla - 56, 380);
+            Tarjeta.HorizontalOptions = LayoutOptions.Center;
+
             LblTitulo.Text = titulo;
             LblTitulo.IsVisible = !string.IsNullOrWhiteSpace(titulo);
             LblMensaje.Text = mensaje;
@@ -31,6 +39,21 @@ namespace CUIDAPP.Views.Comun
             else
             {
                 BtnCancelar.Text = cancelar;
+
+                // Textos largos no caben en medio ancho (se parten y se cortan): uno debajo del otro,
+                // la acción principal arriba.
+                if (aceptar.Length > 11 || cancelar.Length > 11)
+                {
+                    Botones.ColumnDefinitions.Clear();
+                    Botones.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                    Botones.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                    Botones.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                    Botones.RowSpacing = 10;
+                    Grid.SetColumn(BtnAceptar, 0);
+                    Grid.SetRow(BtnAceptar, 0);
+                    Grid.SetColumn(BtnCancelar, 0);
+                    Grid.SetRow(BtnCancelar, 1);
+                }
             }
 
             var (color, icono) = Estilo(tipo);

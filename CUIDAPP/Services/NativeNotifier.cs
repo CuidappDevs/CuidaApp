@@ -8,7 +8,7 @@ namespace CUIDAPP.Services
     {
         private static int _proximoId = 1000;
 
-        public static void Mostrar(string titulo, string mensaje)
+        public static void Mostrar(string titulo, string mensaje, string? destino = null)
         {
 #if ANDROID
             try
@@ -29,20 +29,27 @@ namespace CUIDAPP.Services
                     }
                 }
 
+                var id = _proximoId++;
                 var intent = contexto.PackageManager?.GetLaunchIntentForPackage(contexto.PackageName!);
-                intent?.SetFlags(Android.Content.ActivityFlags.NewTask | Android.Content.ActivityFlags.ClearTop);
-                var pendingIntent = Android.App.PendingIntent.GetActivity(contexto, 0, intent, Android.App.PendingIntentFlags.UpdateCurrent | Android.App.PendingIntentFlags.Immutable);
+                intent?.SetFlags(Android.Content.ActivityFlags.NewTask | Android.Content.ActivityFlags.SingleTop);
+                // Al tocarla abre la pantalla correspondiente (NotificacionDestino). Cada notificación
+                // usa su propio código para que no se pisen los destinos entre sí.
+                if (!string.IsNullOrWhiteSpace(destino))
+                    intent?.PutExtra(NotificacionDestino.ClaveExtra, destino);
+                var pendingIntent = Android.App.PendingIntent.GetActivity(contexto, id, intent, Android.App.PendingIntentFlags.UpdateCurrent | Android.App.PendingIntentFlags.Immutable);
 
                 var notificacion = new AndroidX.Core.App.NotificationCompat.Builder(contexto, canalId)
                     .SetContentTitle(titulo)
                     .SetContentText(mensaje)
+                    .SetStyle(new AndroidX.Core.App.NotificationCompat.BigTextStyle().BigText(mensaje))
                     .SetSmallIcon(_iconoResId)
+                    .SetColor(Android.Graphics.Color.ParseColor("#1C4D96"))
                     .SetAutoCancel(true)
                     .SetPriority((int)Android.App.NotificationPriority.High)
                     .SetContentIntent(pendingIntent)
                     .Build();
 
-                AndroidX.Core.App.NotificationManagerCompat.From(contexto).Notify(_proximoId++, notificacion);
+                AndroidX.Core.App.NotificationManagerCompat.From(contexto).Notify(id, notificacion);
             }
             catch (Exception ex)
             {
@@ -52,7 +59,8 @@ namespace CUIDAPP.Services
         }
 
 #if ANDROID
-        private static int _iconoResId => Android.App.Application.Context.ApplicationInfo?.Icon ?? global::Android.Resource.Drawable.SymDefAppIcon;
+        // Silueta blanca del logo: Android pinta como círculo genérico los íconos a color.
+        private static int _iconoResId => CUIDAPP.Resource.Drawable.ic_notificacion;
 #endif
     }
 }

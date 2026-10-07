@@ -54,6 +54,8 @@ builder.Services.AddScoped<IClienteService, ClienteService>();
 builder.Services.AddScoped<ICalificacionService, CalificacionService>();
 builder.Services.AddScoped<IUbicacionClienteService, UbicacionClienteService>();
 builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<CUIDAPP_API.Interfaces.TipoTrabajo.ITipoTrabajoService, CUIDAPP_API.Services.TipoTrabajo.TipoTrabajoService>();
+builder.Services.AddScoped<CUIDAPP_API.Interfaces.Nacionalidad.INacionalidadService, CUIDAPP_API.Services.Nacionalidad.NacionalidadService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IPagoAdminService, PagoAdminService>();
 builder.Services.AddScoped<ITicketService, TicketService>();

@@ -33,6 +33,21 @@ namespace CUIDAPP_API.Services.Cuidador
             return Convert.ToInt32(result);
         }
 
+        public async Task<bool> ReemplazarDocumentoAsync(int documentoId, ReemplazarDocumentoDto dto)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_ReemplazarDocumentoCuidador", connection);
+            command.CommandType = CommandType.StoredProcedure;
+
+            command.Parameters.AddWithValue("@DocumentoId", documentoId);
+            command.Parameters.AddWithValue("@CuidadorId", dto.CuidadorId);
+            command.Parameters.AddWithValue("@UrlArchivo", dto.UrlArchivo);
+
+            await connection.OpenAsync();
+            var result = await command.ExecuteScalarAsync();
+            return Convert.ToInt32(result) > 0;
+        }
+
         public async Task<EstadoVerificacionDto> ObtenerEstadoVerificacionAsync(int cuidadorId)
         {
             using var connection = new SqlConnection(_connectionString);

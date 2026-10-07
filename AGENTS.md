@@ -47,7 +47,9 @@ Each domain has its own folder in Controllers/, Interfaces/, Services/, DTOs/:
 - Email config in `appsettings.json` → `EmailCredentials` (SMTP Gmail)
 - Services registered as `Scoped` in `Program.cs`. `ITrabajoNotifier` is `Singleton`.
 - SignalR hub at `/hubs/trabajo` — clients join group `user-{usuarioId}`
-- 7 SignalR events: NuevaSolicitud, TrabajoActualizado, DisponibilidadCambio, UbicacionCuidadorCambio, MensajeNuevo, ActividadAgregada, AlertaGeocerca
+- SignalR events: NuevaSolicitud, TrabajoActualizado, DisponibilidadCambio, UbicacionCuidadorCambio, MensajeNuevo, ActividadAgregada, AlertaGeocerca, UsuarioEscribiendo, CuentaActualizada, PagoAprobado, TicketActualizado
+- App notifications: `Services/AvisosApp.cs` builds them (banner in foreground, native in background; tapping opens `NotificacionDestino`); `Services/Recordatorios.cs` schedules local ones (1 h and 15 min before an accepted service, rating reminder 24 h after completion) that arrive even with the app closed
+- Hub methods (client → server): `Unirse(usuarioId)`, `Escribiendo(conversacionId, usuarioId, escribiendo)` (chat typing indicator, forwarded to the other participant)
 - API docs at `/scalar/v1` (Scalar UI)
 - Static files served from `wwwroot/uploads`
 - `HoraLocalRD.Ahora` utility for server timezone (UTC-4)
@@ -74,7 +76,7 @@ Each domain has its own folder in Controllers/, Interfaces/, Services/, DTOs/:
 
 ## Multi-idioma (MAUI)
 
-La app está en **español (base) e inglés**. Reglas:
+La app está en **español (base), inglés y creol haitiano (`ht`)**. Reglas:
 - **Nunca escribir texto visible fijo.** Todo texto de UI (XAML, `DisplayAlert`, `Text = ...`, notificaciones, estados) va por clave.
 - XAML: `Text="{loc:T clave}"` (con `xmlns:loc="clr-namespace:CUIDAPP.Localization"`). C#: `Localizador.T("clave")` o `Localizador.F("clave", arg0, arg1)` con `{0}`, `{1}` en el texto.
 - Textos que vienen de la BD (especialidades, motivos de cancelación, documentos): `Localizador.D(texto)`; la traducción vive en la clave `dato_{texto_normalizado}` (minúsculas, sin acentos, `_`). Si no hay traducción, se muestra el texto original.

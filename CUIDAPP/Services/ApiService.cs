@@ -119,7 +119,10 @@ namespace CUIDAPP.Services
                 if (!response.IsSuccessStatusCode)
                 {
                     var cuerpo = await response.Content.ReadAsStringAsync();
-                    return (null, $"HTTP {(int)response.StatusCode}: {cuerpo}");
+                    Console.WriteLine($"Error subiendo archivo: HTTP {(int)response.StatusCode}: {cuerpo}");
+                    // 4xx: el motivo es para el usuario (tamaño, tipo de archivo). 5xx: detalle técnico, no se muestra.
+                    return (null, (int)response.StatusCode < 500 ? MensajeServidor(cuerpo) ?? Localizador.T("err_subir_archivo_servidor")
+                                                                 : Localizador.T("err_subir_archivo_servidor"));
                 }
 
                 var result = await response.Content.ReadFromJsonAsync<UploadResponse>();
@@ -131,7 +134,7 @@ namespace CUIDAPP.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"Error subiendo archivo: {ex}");
-                return (null, $"{ex.GetType().Name}: {ex.Message}");
+                return (null, Localizador.T("ocurrio_un_error_al_conectar"));
             }
         }
 
@@ -168,6 +171,21 @@ namespace CUIDAPP.Services
             {
                 Console.WriteLine($"Error obteniendo estado de verificación: {ex.Message}");
                 return null;
+            }
+        }
+
+        /// <summary>Reemplaza un documento rechazado por uno nuevo (ya subido) para que se vuelva a evaluar.</summary>
+        public async Task<bool> ReemplazarDocumentoAsync(int documentoId, int cuidadorId, string urlArchivo)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"cuidador/documentos/{documentoId}/reemplazar", new { CuidadorId = cuidadorId, UrlArchivo = urlArchivo });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reemplazando documento: {ex.Message}");
+                return false;
             }
         }
 
@@ -213,6 +231,42 @@ namespace CUIDAPP.Services
             {
                 Console.WriteLine($"Error actualizando disponibilidad: {ex.Message}");
                 return false;
+            }
+        }
+
+        /// <summary>Tipos de trabajo para el registro de cuidadores. Lista vacía si falla (la app usa sus opciones de respaldo).</summary>
+        public async Task<List<Models.Cuidador.TipoTrabajo>> ObtenerTiposTrabajoAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("tipotrabajo");
+                if (!response.IsSuccessStatusCode)
+                    return new List<Models.Cuidador.TipoTrabajo>();
+
+                return await response.Content.ReadFromJsonAsync<List<Models.Cuidador.TipoTrabajo>>() ?? new List<Models.Cuidador.TipoTrabajo>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo tipos de trabajo: {ex.Message}");
+                return new List<Models.Cuidador.TipoTrabajo>();
+            }
+        }
+
+        /// <summary>Nacionalidades para el registro. Lista vacía si falla (el campo es opcional).</summary>
+        public async Task<List<Nacionalidad>> ObtenerNacionalidadesAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("nacionalidad");
+                if (!response.IsSuccessStatusCode)
+                    return new List<Nacionalidad>();
+
+                return await response.Content.ReadFromJsonAsync<List<Nacionalidad>>() ?? new List<Nacionalidad>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo nacionalidades: {ex.Message}");
+                return new List<Nacionalidad>();
             }
         }
 
@@ -504,6 +558,18 @@ namespace CUIDAPP.Services
             }
         }
 
+        /// <summary>
+        /// Mensaje de error que manda el servidor (siempre en español): se traduce si es uno conocido
+        /// (claves dato_* en Resources/Strings) y se le quitan comillas si vino como texto plano JSON.
+        /// </summary>
+        private static string? MensajeServidor(string? mensaje)
+        {
+            if (string.IsNullOrWhiteSpace(mensaje))
+                return null;
+            var limpio = mensaje.Trim().Trim('"');
+            return Localizador.D(limpio);
+        }
+
         public async Task<(bool Success, string? Error)> CrearTrabajoAsync(CrearTrabajoRequest request)
         {
             try
@@ -514,12 +580,12 @@ namespace CUIDAPP.Services
 
                 var error = await response.Content.ReadAsStringAsync();
                 Console.WriteLine($"Error creando trabajo ({(int)response.StatusCode}): {error}");
-                return (false, error);
+                return (false, MensajeServidor(error));
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error creando trabajo: {ex.Message}");
-                return (false, ex.Message);
+                return (false, Localizador.T("ocurrio_un_error_al_conectar"));
             }
         }
 
@@ -648,18 +714,18 @@ namespace CUIDAPP.Services
                 try
                 {
                     var errorDto = await response.Content.ReadFromJsonAsync<IniciarTrabajoErrorDto>();
-                    return (false, errorDto?.Message ?? Localizador.T("err_iniciar_trabajo"));
+                    return (false, MensajeServidor(errorDto?.Message) ?? Localizador.T("err_iniciar_trabajo"));
                 }
                 catch
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    return (false, string.IsNullOrWhiteSpace(error) ? Localizador.T("err_iniciar_trabajo") : error);
+                    return (false, MensajeServidor(error) ?? Localizador.T("err_iniciar_trabajo"));
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error iniciando trabajo: {ex.Message}");
-                return (false, ex.Message);
+                return (false, Localizador.T("ocurrio_un_error_al_conectar"));
             }
         }
 
@@ -674,18 +740,18 @@ namespace CUIDAPP.Services
                 try
                 {
                     var errorDto = await response.Content.ReadFromJsonAsync<IniciarTrabajoErrorDto>();
-                    return (false, errorDto?.Message ?? Localizador.T("err_finalizar_trabajo"));
+                    return (false, MensajeServidor(errorDto?.Message) ?? Localizador.T("err_finalizar_trabajo"));
                 }
                 catch
                 {
                     var error = await response.Content.ReadAsStringAsync();
-                    return (false, string.IsNullOrWhiteSpace(error) ? Localizador.T("err_finalizar_trabajo") : error);
+                    return (false, MensajeServidor(error) ?? Localizador.T("err_finalizar_trabajo"));
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error finalizando trabajo: {ex.Message}");
-                return (false, ex.Message);
+                return (false, Localizador.T("ocurrio_un_error_al_conectar"));
             }
         }
 
@@ -698,12 +764,12 @@ namespace CUIDAPP.Services
                     return (true, null);
 
                 var errorDto = await response.Content.ReadFromJsonAsync<IniciarTrabajoErrorDto>();
-                return (false, errorDto?.Message ?? Localizador.T("err_registrar_respuesta"));
+                return (false, MensajeServidor(errorDto?.Message) ?? Localizador.T("err_registrar_respuesta"));
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error confirmando finalización: {ex.Message}");
-                return (false, ex.Message);
+                return (false, Localizador.T("ocurrio_un_error_al_conectar"));
             }
         }
 
@@ -716,12 +782,12 @@ namespace CUIDAPP.Services
                     return (true, null);
 
                 var errorDto = await response.Content.ReadFromJsonAsync<IniciarTrabajoErrorDto>();
-                return (false, errorDto?.Message ?? Localizador.T("no_se_pudo_forzar_la"));
+                return (false, MensajeServidor(errorDto?.Message) ?? Localizador.T("no_se_pudo_forzar_la"));
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error forzando finalización: {ex.Message}");
-                return (false, ex.Message);
+                return (false, Localizador.T("ocurrio_un_error_al_conectar"));
             }
         }
 
@@ -998,12 +1064,12 @@ namespace CUIDAPP.Services
                     return (true, null);
 
                 var error = await response.Content.ReadFromJsonAsync<IniciarTrabajoErrorDto>();
-                return (false, error?.Message);
+                return (false, MensajeServidor(error?.Message));
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error guardando contacto de emergencia: {ex.Message}");
-                return (false, ex.Message);
+                return (false, Localizador.T("ocurrio_un_error_al_conectar"));
             }
         }
 

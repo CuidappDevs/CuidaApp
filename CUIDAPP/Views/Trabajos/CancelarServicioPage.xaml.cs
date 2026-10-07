@@ -37,20 +37,30 @@ namespace CUIDAPP.Views.Trabajos
             {
                 var esSeleccionado = motivoSeleccionado?.Id == motivo.Id;
 
+                Color R(string k) => (Color)Application.Current!.Resources[k];
+                var primario = R("ColorPrimary");
+                var radio = new Border
+                {
+                    Stroke = esSeleccionado ? primario : R("ColorBorder"),
+                    StrokeThickness = 2,
+                    BackgroundColor = Colors.White,
+                    StrokeShape = new Microsoft.Maui.Controls.Shapes.Ellipse(),
+                    WidthRequest = 22,
+                    HeightRequest = 22,
+                    VerticalOptions = LayoutOptions.Center,
+                    Content = esSeleccionado ? new Microsoft.Maui.Controls.Shapes.Ellipse { Fill = primario, WidthRequest = 10, HeightRequest = 10, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center } : null
+                };
+                var fila = new Grid { ColumnSpacing = 12, ColumnDefinitions = { new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star) } };
+                fila.Add(radio, 0);
+                fila.Add(new Label { Text = Localizador.D(motivo.Descripcion), FontSize = 15, FontFamily = esSeleccionado ? "OpenSansSemibold" : "OpenSansRegular", TextColor = esSeleccionado ? primario : R("ColorTextStrong"), VerticalOptions = LayoutOptions.Center }, 1);
                 var card = new Border
                 {
-                    Stroke = esSeleccionado ? Color.FromArgb("#2563EB") : Color.FromArgb("#E5E7EB"),
-                    StrokeThickness = esSeleccionado ? 2 : 1,
-                    BackgroundColor = esSeleccionado ? Color.FromArgb("#EFF6FF") : Colors.White,
-                    StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 12 },
-                    Padding = new Thickness(15, 13),
-                    Content = new Label
-                    {
-                        Text = Localizador.D(motivo.Descripcion),
-                        FontSize = 14,
-                        FontFamily = esSeleccionado ? "OpenSansSemibold" : "OpenSansRegular",
-                        TextColor = esSeleccionado ? Color.FromArgb("#1D4ED8") : Color.FromArgb("#374151")
-                    }
+                    Stroke = esSeleccionado ? primario : Colors.Transparent,
+                    StrokeThickness = 2,
+                    BackgroundColor = esSeleccionado ? Color.FromArgb("#EAF1FB") : Colors.White,
+                    StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 18 },
+                    Padding = new Thickness(16, 14),
+                    Content = fila
                 };
 
                 var tap = new TapGestureRecognizer();

@@ -28,8 +28,11 @@
 
                 <Label x:Name="LblTitulo" FontFamily="OpenSansSemibold" FontSize="20" TextColor="{StaticResource ColorTextStrong}"
                        HorizontalTextAlignment="Center" Margin="0,0,0,8" />
-                <Label x:Name="LblMensaje" FontFamily="OpenSansRegular" FontSize="15" TextColor="{StaticResource ColorTextMuted}"
-                       HorizontalTextAlignment="Center" LineHeight="1.35" Margin="0,0,0,24" />
+                <!-- Sin LineHeight: en Android hace que el Label mida menos de lo que ocupa y corta los botones -->
+                <ScrollView MaximumHeightRequest="320" Margin="0,0,0,24">
+                    <Label x:Name="LblMensaje" FontFamily="OpenSansRegular" FontSize="15" TextColor="{StaticResource ColorTextMuted}"
+                           HorizontalTextAlignment="Center" />
+                </ScrollView>
 
                 <!-- Botones: uno a lo ancho, o cancelar | aceptar -->
                 <Grid x:Name="Botones" ColumnDefinitions="*,*" ColumnSpacing="12">

@@ -36,7 +36,36 @@ namespace CUIDAPP.Views.Calificacion
         {
             InitializeComponent();
             estrellas = new[] { Estrella1, Estrella2, Estrella3, Estrella4, Estrella5 };
+
+            // Borde a borde: el encabezado empieza debajo de la barra de estado y el contenido
+            // termina con espacio para la barra de gestos.
+            ContenidoEncabezado.Margin = new Thickness(0, BarraEstado.Alto(), 0, 0);
+            EspacioInferior.HeightRequest = 24 + BarraEstado.AltoInferior();
+
+            InsigniaEstrella.Scale = 0.85;
+            InsigniaEstrella.Opacity = 0;
         }
+
+        protected override async void OnAppearing()
+        {
+            base.OnAppearing();
+            BarraEstado.Azul();
+            try
+            {
+                _ = InsigniaEstrella.FadeTo(1, 300, Easing.CubicOut);
+                await InsigniaEstrella.ScaleTo(1.06, 260, Easing.CubicOut);
+                await InsigniaEstrella.ScaleTo(1, 160, Easing.CubicInOut);
+            }
+            finally
+            {
+                InsigniaEstrella.Opacity = 1;
+                InsigniaEstrella.Scale = 1;
+            }
+        }
+
+        private void OnComentarioFocused(object? sender, FocusEventArgs e) => BordeComentario.Stroke = (Color)Application.Current!.Resources["ColorPrimary"];
+
+        private void OnComentarioUnfocused(object? sender, FocusEventArgs e) => BordeComentario.Stroke = Colors.Transparent;
 
         private void OnEstrella1Tapped(object sender, EventArgs e) => SeleccionarPuntuacion(1);
         private void OnEstrella2Tapped(object sender, EventArgs e) => SeleccionarPuntuacion(2);
@@ -52,10 +81,29 @@ namespace CUIDAPP.Views.Calificacion
             {
                 var activa = i < puntuacion;
                 estrellas[i].Text = activa ? "★" : "☆";
-                estrellas[i].TextColor = activa ? Color.FromArgb("#F59E0B") : Color.FromArgb("#D1D5DB");
+                estrellas[i].TextColor = activa ? Color.FromArgb("#E09A1A") : Color.FromArgb("#D1D5DB");
+
+                // Las estrellas activas rebotan una tras otra
+                if (activa)
+                {
+                    var estrella = estrellas[i];
+                    var retraso = i * 45;
+                    _ = Task.Delay(retraso).ContinueWith(_ => MainThread.BeginInvokeOnMainThread(async () =>
+                    {
+                        await estrella.ScaleTo(1.3, 110, Easing.CubicOut);
+                        await estrella.ScaleTo(1, 160, Easing.CubicInOut);
+                    }));
+                }
             }
 
+            // Qué significa la puntuación
+            LblSignificado.Text = Localizador.T($"estrellas_{puntuacion}");
+            LblSignificado.TextColor = Color.FromArgb("#E09A1A");
+            LblSignificado.Opacity = 0;
+            _ = LblSignificado.FadeTo(1, 220, Easing.CubicOut);
+
             BtnEnviar.IsEnabled = true;
+            _ = BtnEnviar.FadeTo(1, 200, Easing.CubicOut);
         }
 
         private async void OnBackTapped(object sender, EventArgs e)
@@ -85,6 +133,8 @@ namespace CUIDAPP.Views.Calificacion
             };
 
             var success = await _apiService.CrearCalificacionAsync(request);
+            if (success)
+                Recordatorios.CancelarCalificacion(TrabajoId);
 
             if (success)
             {

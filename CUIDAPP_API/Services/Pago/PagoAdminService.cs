@@ -3,16 +3,26 @@ using Microsoft.Data.SqlClient;
 using CUIDAPP_API.DTOs.Pago;
 using CUIDAPP_API.Interfaces.Pago;
 using CUIDAPP_API.Services;
+using CUIDAPP_API.Services.Realtime;
 
 namespace CUIDAPP_API.Services.Pago
 {
     public class PagoAdminService : IPagoAdminService
     {
         private readonly string _connectionString;
+        private readonly ITrabajoNotifier _notifier;
 
-        public PagoAdminService(IConfiguration config)
+        public PagoAdminService(IConfiguration config, ITrabajoNotifier notifier)
         {
             _connectionString = config.GetConnectionString("DefaultConnection") ?? "";
+            _notifier = notifier;
+        }
+
+        // Aviso en tiempo real: nunca debe tumbar la operación que ya se hizo.
+        private async Task AvisarAsync(int usuarioId, string evento, object payload)
+        {
+            try { await _notifier.NotificarAsync(usuarioId, evento, payload); }
+            catch (Exception ex) { Console.WriteLine($"No se pudo notificar {evento} a {usuarioId}: {ex.Message}"); }
         }
 
         public async Task<List<PagoAdminDto>> ObtenerPagosAsync(int? estado)
@@ -79,7 +89,14 @@ namespace CUIDAPP_API.Services.Pago
 
             await connection.OpenAsync();
             var resultado = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(resultado) == 1;
+            var ok = Convert.ToInt32(resultado) == 1;
+            if (ok)
+            {
+                var pago = (await ObtenerPagosAsync(null)).FirstOrDefault(p => p.Id == pagoId);
+                if (pago != null)
+                    await AvisarAsync(pago.CuidadorId, "PagoAprobado", new { PagoId = pago.Id, pago.TrabajoId, Monto = pago.Monto + pago.Propina });
+            }
+            return ok;
         }
     }
 }

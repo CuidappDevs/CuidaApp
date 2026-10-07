@@ -16,9 +16,25 @@ namespace CUIDAPP.Views.Perfil
         private PerfilCuidador? _perfil;
         private List<DocumentoEstado> _documentos = new();
 
+        private bool entradaHecha;
+
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            BarraEstado.Blanca();
+            if (!entradaHecha)
+            {
+                entradaHecha = true;
+                FotoPerfil.Scale = 0.85;
+                _ = FotoPerfil.ScaleTo(1, 420, Easing.CubicOut);
+                foreach (var v in new VisualElement[] { TarjetaPerfil, TarjetaStats, Contenido })
+                {
+                    v.Opacity = 0;
+                    v.TranslationY = 16;
+                    _ = v.FadeTo(1, 320, Easing.CubicOut);
+                    _ = v.TranslateTo(0, 0, 380, Easing.CubicOut);
+                }
+            }
             Localizador.Instancia.IdiomaCambiado -= RepintarTextos;
             Localizador.Instancia.IdiomaCambiado += RepintarTextos;
             await CargarPerfil();
@@ -35,6 +51,47 @@ namespace CUIDAPP.Views.Perfil
             EntryContactoNombre.Text = contacto.Nombre;
             EntryContactoTelefono.Text = contacto.Telefono;
             EntryContactoEmail.Text = contacto.Email;
+            ActualizarResumenContacto();
+        }
+
+        // La fila muestra a quién se avisaría, o un aviso si todavía no hay contacto.
+        private void ActualizarResumenContacto()
+        {
+            var nombre = EntryContactoNombre.Text?.Trim();
+            var contacto = !string.IsNullOrWhiteSpace(EntryContactoTelefono.Text) ? EntryContactoTelefono.Text.Trim() : EntryContactoEmail.Text?.Trim();
+            bool configurado = !string.IsNullOrWhiteSpace(nombre);
+
+            LblContactoResumen.Text = configurado
+                ? string.IsNullOrWhiteSpace(contacto) ? nombre : $"{nombre} · {contacto}"
+                : Localizador.T("contacto_sin_configurar");
+            LblContactoResumen.TextColor = configurado ? (Color)Application.Current!.Resources["ColorTextMuted"] : Color.FromArgb("#B26A00");
+        }
+
+        private async void OnContactoTapped(object? sender, TappedEventArgs e)
+        {
+            await FilaContacto.ScaleTo(0.97, 80, Easing.CubicOut);
+            await FilaContacto.ScaleTo(1, 120, Easing.CubicOut);
+
+            VentanaContacto.IsVisible = true;
+            TarjetaContacto.Scale = 0.94;
+            await Task.WhenAll(
+                VeloContacto.FadeTo(0.45, 200, Easing.CubicOut),
+                TarjetaContacto.FadeTo(1, 200, Easing.CubicOut),
+                TarjetaContacto.ScaleTo(1, 220, Easing.CubicOut));
+        }
+
+        private void OnCerrarContactoTapped(object? sender, TappedEventArgs e) => _ = CerrarVentanaContactoAsync();
+
+        private async Task CerrarVentanaContactoAsync()
+        {
+            EntryContactoNombre.Unfocus();
+            EntryContactoTelefono.Unfocus();
+            EntryContactoEmail.Unfocus();
+            await Task.WhenAll(
+                VeloContacto.FadeTo(0, 160, Easing.CubicOut),
+                TarjetaContacto.FadeTo(0, 160, Easing.CubicOut),
+                TarjetaContacto.ScaleTo(0.96, 160, Easing.CubicOut));
+            VentanaContacto.IsVisible = false;
         }
 
         private async void OnGuardarContactoClicked(object sender, EventArgs e)
@@ -57,7 +114,11 @@ namespace CUIDAPP.Views.Perfil
             BtnGuardarContacto.Text = Localizador.T("guardar_contacto");
 
             if (success)
+            {
+                ActualizarResumenContacto();
+                await CerrarVentanaContactoAsync();
                 await Alerta.MostrarAsync(Localizador.T("contacto_guardado"), Localizador.T("contacto_guardado_texto"), Localizador.T("ok"));
+            }
             else
                 await Alerta.MostrarAsync(Localizador.T("error"), error ?? Localizador.T("contacto_error"), Localizador.T("ok"));
         }
@@ -87,7 +148,7 @@ namespace CUIDAPP.Views.Perfil
             LblEspecialidadBanner.Text = Localizador.D(perfil.Especialidad).ToUpper(Localizador.Cultura);
             LblEspecialidadTarifa.Text = Localizador.D(perfil.Especialidad);
             LblBio.Text = string.IsNullOrWhiteSpace(perfil.Bio) ? Localizador.T("aun_no_has_agregado_una") : perfil.Bio;
-            LblTarifa.Text = Localizador.F("rd_hr", perfil.TarifaHora);
+            LblTarifa.Text = $"{Localizador.F("rd_monto", perfil.TarifaHora)} {Localizador.T("sufijo_por_hora")}";
             LblEstadoCuenta.Text = perfil.EstadoAprobacion switch
             {
                 2 => Localizador.T("aprobado"),
@@ -139,7 +200,7 @@ namespace CUIDAPP.Views.Perfil
                     Text = Localizador.T("no_hay_documentos_registrados"),
                     FontSize = 13,
                     FontFamily = "OpenSansRegular",
-                    TextColor = Color.FromArgb("#9CA3AF")
+                    TextColor = (Color)Application.Current!.Resources["ColorTextMuted"]
                 });
                 return;
             }
@@ -154,9 +215,9 @@ namespace CUIDAPP.Views.Perfil
         {
             var (colorFondo, colorTexto, titulo, subtitulo) = doc.Estado switch
             {
-                2 => (Color.FromArgb("#D1FAE5"), Color.FromArgb("#10B981"), Localizador.T("verificado"), Localizador.T("documento_aprobado_por_administracion")),
-                3 => (Color.FromArgb("#FEE2E2"), Color.FromArgb("#DC2626"), Localizador.T("rechazado"), doc.ObservacionesAdmin ?? Localizador.T("debes_volver_a_subir_este")),
-                _ => (Color.FromArgb("#FEF3C7"), Color.FromArgb("#D97706"), Localizador.T("en_revision"), Localizador.T("aun_no_ha_sido_revisado"))
+                2 => (Color.FromArgb("#E3F4E8"), Color.FromArgb("#2E7D32"), Localizador.T("verificado"), Localizador.T("documento_aprobado_por_administracion")),
+                3 => (Color.FromArgb("#FDECEC"), Color.FromArgb("#C62828"), Localizador.T("rechazado"), doc.ObservacionesAdmin ?? Localizador.T("debes_volver_a_subir_este")),
+                _ => (Color.FromArgb("#FFF4DC"), Color.FromArgb("#E09A1A"), Localizador.T("en_revision"), Localizador.T("aun_no_ha_sido_revisado"))
             };
 
             var nombreDocumento = doc.TipoDocumento switch
@@ -191,8 +252,8 @@ namespace CUIDAPP.Views.Perfil
                 VerticalOptions = LayoutOptions.Center,
                 Children =
                 {
-                    new Label { Text = $"{nombreDocumento} — {titulo}", FontSize = 14, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#111827") },
-                    new Label { Text = subtitulo, FontSize = 12, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#6B7280") }
+                    new Label { Text = $"{nombreDocumento} — {titulo}", FontSize = 14, FontFamily = "OpenSansSemibold", TextColor = (Color)Application.Current!.Resources["ColorTextStrong"] },
+                    new Label { Text = subtitulo, FontSize = 12, FontFamily = "OpenSansRegular", TextColor = (Color)Application.Current!.Resources["ColorTextMuted"] }
                 }
             };
 

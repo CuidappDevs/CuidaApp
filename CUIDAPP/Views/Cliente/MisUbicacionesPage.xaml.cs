@@ -21,11 +21,17 @@ namespace CUIDAPP.Views.Cliente
         {
             InitializeComponent();
             ListaUbicaciones.ItemsSource = ubicaciones;
+
+            // Borde a borde: el encabezado empieza debajo de la barra de estado y la lista
+            // termina con espacio para la barra de gestos.
+            ContenidoEncabezado.Margin = new Thickness(0, BarraEstado.Alto(), 0, 0);
+            EspacioInferior.HeightRequest = 24 + BarraEstado.AltoInferior();
         }
 
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            BarraEstado.Azul();
             LblTitulo.Text = modoSeleccion ? Localizador.T("elige_a_donde_vas") : Localizador.T("mis_ubicaciones");
             await CargarUbicaciones();
         }
@@ -42,7 +48,17 @@ namespace CUIDAPP.Views.Cliente
             foreach (var u in resultado)
                 ubicaciones.Add(u);
 
-            EstadoVacio.IsVisible = ubicaciones.Count == 0;
+            var vacio = ubicaciones.Count == 0;
+            if (vacio && !EstadoVacio.IsVisible)
+            {
+                EstadoVacio.Opacity = 0;
+                EstadoVacio.IsVisible = true;
+                _ = EstadoVacio.FadeTo(1, 300, Easing.CubicOut);
+            }
+            else
+            {
+                EstadoVacio.IsVisible = vacio;
+            }
             LoaderCarga.IsRunning = false;
             LoaderCarga.IsVisible = false;
         }
@@ -82,6 +98,8 @@ namespace CUIDAPP.Views.Cliente
 
         private async void OnAgregarClicked(object sender, EventArgs e)
         {
+            await BtnAgregarCirculo.ScaleTo(0.88, 80, Easing.CubicOut);
+            _ = BtnAgregarCirculo.ScaleTo(1, 160, Easing.CubicOut);
             await Shell.Current.GoToAsync("SeleccionarPuntoMapaPage");
         }
 

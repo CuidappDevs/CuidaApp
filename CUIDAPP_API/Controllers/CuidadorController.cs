@@ -78,6 +78,25 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        // Reemplazar un documento rechazado para que se vuelva a evaluar.
+        [HttpPut("documentos/{documentoId}/reemplazar")]
+        public async Task<IActionResult> ReemplazarDocumento(int documentoId, [FromBody] ReemplazarDocumentoDto dto)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(dto.UrlArchivo))
+                    return BadRequest(new { message = "Falta el archivo." });
+
+                var ok = await _cuidadorService.ReemplazarDocumentoAsync(documentoId, dto);
+                return ok ? Ok(new { Message = "Documento reemplazado" })
+                          : BadRequest(new { message = "El documento no existe o no está rechazado." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
         [HttpGet("perfil/{cuidadorId}")]
         public async Task<IActionResult> ObtenerPerfil(int cuidadorId)
         {

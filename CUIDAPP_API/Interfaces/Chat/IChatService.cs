@@ -9,5 +9,8 @@ namespace CUIDAPP_API.Interfaces.Chat
         Task<MensajeDto> EnviarMensajeAsync(EnviarMensajeDto dto);
         Task MarcarLeidosAsync(MarcarLeidosDto dto);
         Task<IEnumerable<NoLeidosDto>> ContarNoLeidosAsync(int usuarioId);
+
+        /// <summary>Avisa al otro participante de la conversación que el usuario está (o dejó de estar) escribiendo.</summary>
+        Task NotificarEscribiendoAsync(int conversacionId, int usuarioId, bool escribiendo);
     }
 }

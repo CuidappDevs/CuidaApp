@@ -5,43 +5,59 @@
              xmlns:models="clr-namespace:CUIDAPP.Models.Ticket"
              x:Class="CUIDAPP.Views.Soporte.DetalleReportePage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#F9FAFB">
+             BackgroundColor="{StaticResource ColorBackground}">
 
+    <!-- Igual que el chat: zona segura por defecto y la barra de escritura en su propia fila,
+         así el sistema la mantiene sobre la barra de gestos y el teclado. -->
     <Grid RowDefinitions="Auto, *, Auto">
 
-        <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Padding="20,15,20,10" BackgroundColor="White">
-            <ContentView x:Name="BtnBack" VerticalOptions="Center">
-                <ContentView.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnBackTapped" />
-                </ContentView.GestureRecognizers>
-                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
-            </ContentView>
-            <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
-                <Label x:Name="LblAsunto" Text="{loc:T reporte}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center"/>
-                <Label x:Name="LblEstado" Text="" FontSize="11" FontFamily="OpenSansSemibold" TextColor="#2563EB" HorizontalOptions="Center"/>
-            </VerticalStackLayout>
-        </Grid>
+        <!-- Encabezado -->
+        <Border Grid.Row="0" Stroke="Transparent" BackgroundColor="White" Padding="12,8,16,10">
+            <Border.Shadow>
+                <Shadow Brush="#0A2F41" Offset="0,4" Opacity="0.06" Radius="12"/>
+            </Border.Shadow>
+            <Grid ColumnDefinitions="44, Auto, *" ColumnSpacing="10">
+                <Border x:Name="BtnBack" Grid.Column="0" Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
+                    <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackTapped" />
+                    </Border.GestureRecognizers>
+                    <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="{StaticResource ColorTextStrong}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Border Grid.Column="1" Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 14" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
+                    <Path Data="M12 1C7.03 1 3 5.03 3 10V17C3 18.66 4.34 20 6 20H9V12H5V10C5 6.13 8.13 3 12 3C15.87 3 19 6.13 19 10V12H15V20H19V21H12V23H18C19.66 23 21 21.66 21 20V10C21 5.03 16.97 1 12 1Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
+                <VerticalStackLayout Grid.Column="2" VerticalOptions="Center" Spacing="3">
+                    <Label x:Name="LblAsunto" Text="{loc:T reporte}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" MaxLines="1" LineBreakMode="TailTruncation"/>
+                    <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 10" Padding="8,2" HorizontalOptions="Start" x:Name="ChipEstado" IsVisible="False">
+                        <Label x:Name="LblEstado" Text="" FontSize="11" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}"/>
+                    </Border>
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
 
+        <!-- Conversación -->
         <Grid Grid.Row="1">
-            <ActivityIndicator x:Name="LoadingIndicator" IsRunning="True" IsVisible="True" Color="#2563EB" VerticalOptions="Center" HorizontalOptions="Center"/>
+            <ActivityIndicator x:Name="LoadingIndicator" IsRunning="True" IsVisible="True" Color="{StaticResource ColorPrimary}" VerticalOptions="Center" HorizontalOptions="Center"/>
 
             <ScrollView x:Name="ScrollMensajes" IsVisible="False">
-                <VerticalStackLayout x:Name="PanelMensajes" Padding="16" Spacing="12"/>
+                <VerticalStackLayout x:Name="PanelMensajes" Padding="14,16" Spacing="10"/>
             </ScrollView>
         </Grid>
 
-        <Grid Grid.Row="2" ColumnDefinitions="*, Auto" Padding="16,10,16,20" ColumnSpacing="10" BackgroundColor="White">
-            <Border Grid.Column="0" Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 20" Padding="15,2">
-                <Entry x:Name="EntryMensaje" Placeholder="{loc:T escribe_un_mensaje}" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="42"/>
+        <!-- Barra de escritura -->
+        <Grid Grid.Row="2" ColumnDefinitions="*, Auto" Padding="12,10,12,12" ColumnSpacing="8" BackgroundColor="White">
+            <Border x:Name="ContenedorEntry" Grid.Column="0" Stroke="Transparent" StrokeThickness="1.5" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 24" Padding="16,0">
+                <Entry x:Name="EntryMensaje" Placeholder="{loc:T escribe_un_mensaje}" FontFamily="OpenSansRegular" FontSize="15" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="48" Completed="OnEnviarMensajeTapped"
+                       Focused="OnMensajeFocused" Unfocused="OnMensajeUnfocused"/>
             </Border>
-            <ContentView Grid.Column="1" VerticalOptions="Center">
-                <ContentView.GestureRecognizers>
+            <Border x:Name="BtnEnviarCirculo" Grid.Column="1" Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimary}" WidthRequest="48" HeightRequest="48" VerticalOptions="Center">
+                <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnEnviarMensajeTapped" />
-                </ContentView.GestureRecognizers>
-                <Border Stroke="Transparent" BackgroundColor="#2563EB" StrokeShape="RoundRectangle 20" WidthRequest="42" HeightRequest="42">
-                    <Path Data="M2 21l21-9L2 3v7l15 2-15 2v7z" Fill="White" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
-                </Border>
-            </ContentView>
+                </Border.GestureRecognizers>
+                <Path Data="M2 21L23 12L2 3V10L17 12L2 14V21Z" Fill="White" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center" Margin="3,0,0,0"/>
+            </Border>
         </Grid>
 
     </Grid>

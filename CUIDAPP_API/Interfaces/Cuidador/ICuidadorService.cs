@@ -5,6 +5,8 @@ namespace CUIDAPP_API.Interfaces.Cuidador
     public interface ICuidadorService
     {
         Task<int> SubirDocumentoAsync(SubirDocumentoDto dto);
+        /// <summary>Reemplaza un documento rechazado (vuelve a pendiente). False si no es del cuidador o no está rechazado.</summary>
+        Task<bool> ReemplazarDocumentoAsync(int documentoId, ReemplazarDocumentoDto dto);
         Task<EstadoVerificacionDto> ObtenerEstadoVerificacionAsync(int cuidadorId);
         Task<PerfilCuidadorDto?> ObtenerPerfilAsync(int cuidadorId);
         Task<bool> ActualizarDisponibilidadAsync(ActualizarDisponibilidadDto dto);

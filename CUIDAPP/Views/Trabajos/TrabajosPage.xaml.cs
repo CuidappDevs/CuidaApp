@@ -20,6 +20,7 @@ namespace CUIDAPP.Views.Trabajos
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            BarraEstado.Blanca();
             RealtimeService.NuevaSolicitud += OnCambioTiempoReal;
             RealtimeService.TrabajoActualizado += OnCambioTiempoReal;
             await CargarTrabajos();
@@ -62,20 +63,27 @@ namespace CUIDAPP.Views.Trabajos
         {
             tabActual = nuevaTab;
 
-            var activo = Color.FromArgb("#1D4ED8");
-            var inactivo = Color.FromArgb("#6B7280");
+            var activo = (Color)Application.Current!.Resources["ColorPrimary"];
+            var inactivo = (Color)Application.Current!.Resources["ColorTextMuted"];
 
-            LblTabNuevos.TextColor = nuevaTab == Tab.Nuevos ? activo : inactivo;
-            LblTabNuevos.FontFamily = nuevaTab == Tab.Nuevos ? "OpenSansSemibold" : "OpenSansRegular";
-            IndicadorTabNuevos.Color = nuevaTab == Tab.Nuevos ? activo : Colors.Transparent;
-
-            LblTabAceptados.TextColor = nuevaTab == Tab.Aceptados ? activo : inactivo;
-            LblTabAceptados.FontFamily = nuevaTab == Tab.Aceptados ? "OpenSansSemibold" : "OpenSansRegular";
-            IndicadorTabAceptados.Color = nuevaTab == Tab.Aceptados ? activo : Colors.Transparent;
-
-            LblTabHistorial.TextColor = nuevaTab == Tab.Historial ? activo : inactivo;
-            LblTabHistorial.FontFamily = nuevaTab == Tab.Historial ? "OpenSansSemibold" : "OpenSansRegular";
-            IndicadorTabHistorial.Color = nuevaTab == Tab.Historial ? activo : Colors.Transparent;
+            // Control segmentado: la pestaña activa es una píldora blanca
+            foreach (var (tab, indicador, etiqueta) in new[]
+            {
+                (Tab.Nuevos, IndicadorTabNuevos, LblTabNuevos),
+                (Tab.Aceptados, IndicadorTabAceptados, LblTabAceptados),
+                (Tab.Historial, IndicadorTabHistorial, LblTabHistorial)
+            })
+            {
+                var esActiva = nuevaTab == tab;
+                indicador.BackgroundColor = esActiva ? Colors.White : Colors.Transparent;
+                etiqueta.TextColor = esActiva ? activo : inactivo;
+                etiqueta.FontFamily = esActiva ? "OpenSansSemibold" : "OpenSansRegular";
+                if (esActiva)
+                {
+                    indicador.Scale = 0.94;
+                    _ = indicador.ScaleTo(1, 180, Easing.CubicOut);
+                }
+            }
 
             RenderizarTab();
         }
@@ -96,9 +104,20 @@ namespace CUIDAPP.Views.Trabajos
 
             LblSinTrabajosTab.IsVisible = lista.Count == 0;
 
+            // Entrada escalonada de las tarjetas
+            var i = 0;
             foreach (var trabajo in lista)
             {
-                ListaTrabajos.Add(CrearTarjetaTrabajo(trabajo));
+                var tarjeta = CrearTarjetaTrabajo(trabajo);
+                tarjeta.Opacity = 0;
+                tarjeta.TranslationY = 14;
+                ListaTrabajos.Add(tarjeta);
+                var retraso = Math.Min(i++, 8) * 50;
+                _ = Task.Delay(retraso).ContinueWith(_ => MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    tarjeta.FadeTo(1, 260, Easing.CubicOut);
+                    tarjeta.TranslateTo(0, 0, 320, Easing.CubicOut);
+                }));
             }
         }
 
@@ -116,71 +135,106 @@ namespace CUIDAPP.Views.Trabajos
                 _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), Localizador.T("desconocido"))
             };
 
+            Color R(string k) => (Color)Application.Current!.Resources[k];
+            var cultura = System.Globalization.CultureInfo.CurrentUICulture;
+
+            // "Calendario" con el día y el mes
+            var fecha = new Border
+            {
+                Stroke = Colors.Transparent,
+                BackgroundColor = Color.FromArgb("#EAF1FB"),
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 },
+                WidthRequest = 56,
+                HeightRequest = 60,
+                VerticalOptions = LayoutOptions.Start,
+                Content = new VerticalStackLayout
+                {
+                    Spacing = 0,
+                    VerticalOptions = LayoutOptions.Center,
+                    Children =
+                    {
+                        new Label { Text = trabajo.Fecha.ToString("dd"), FontSize = 20, FontFamily = "OpenSansSemibold", TextColor = R("ColorPrimary"), HorizontalOptions = LayoutOptions.Center },
+                        new Label { Text = trabajo.Fecha.ToString("MMM", cultura).TrimEnd('.').ToUpperInvariant(), FontSize = 11, FontFamily = "OpenSansSemibold", TextColor = R("ColorPrimary"), HorizontalOptions = LayoutOptions.Center }
+                    }
+                }
+            };
+
             var badge = new Border
             {
                 Stroke = Colors.Transparent,
-                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 20 },
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 12 },
                 BackgroundColor = colorFondo,
-                Padding = new Thickness(10, 4),
+                Padding = new Thickness(9, 3),
                 HorizontalOptions = LayoutOptions.Start,
-                Content = new Label { Text = textoEstado, FontSize = 11, FontFamily = "OpenSansSemibold", TextColor = colorTexto }
+                Content = new HorizontalStackLayout
+                {
+                    Spacing = 5,
+                    Children =
+                    {
+                        new Microsoft.Maui.Controls.Shapes.Ellipse { Fill = colorTexto, WidthRequest = 6, HeightRequest = 6, VerticalOptions = LayoutOptions.Center },
+                        new Label { Text = textoEstado, FontSize = 11, FontFamily = "OpenSansSemibold", TextColor = colorTexto, VerticalOptions = LayoutOptions.Center }
+                    }
+                }
             };
 
-            var headerGrid = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star) } };
-            headerGrid.Add(badge, 0, 0);
-            headerGrid.Add(new Label
+            var reloj = new Microsoft.Maui.Controls.Shapes.Path
             {
-                Text = trabajo.Fecha.ToString("d MMM"),
-                FontSize = 12,
+                Data = (Microsoft.Maui.Controls.Shapes.Geometry)new Microsoft.Maui.Controls.Shapes.PathGeometryConverter().ConvertFromInvariantString("M11.99 2C6.47 2 2 6.48 2 12C2 17.52 6.47 22 11.99 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 11.99 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM12.5 7H11V13L16.25 16.15L17 14.92L12.5 12.25V7Z")!,
+                Fill = R("ColorTextMuted"), Aspect = Stretch.Uniform, WidthRequest = 13, HeightRequest = 13, VerticalOptions = LayoutOptions.Center
+            };
+
+            var pie = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) }, Margin = new Thickness(0, 2, 0, 0) };
+            pie.Add(new HorizontalStackLayout
+            {
+                Spacing = 6,
+                Children =
+                {
+                    reloj,
+                    new Label { Text = $"{FormatearHora(trabajo.HoraInicio)} - {FormatearHora(trabajo.HoraFin)}", FontSize = 13, FontFamily = "OpenSansRegular", TextColor = R("ColorTextMuted"), VerticalOptions = LayoutOptions.Center }
+                }
+            }, 0, 0);
+            pie.Add(new Label
+            {
+                Text = Localizador.F("rd_monto", trabajo.Tarifa),
+                FontSize = 17,
                 FontFamily = "OpenSansSemibold",
-                TextColor = Color.FromArgb("#374151"),
+                TextColor = R("ColorPrimary"),
                 HorizontalOptions = LayoutOptions.End,
                 VerticalOptions = LayoutOptions.Center
             }, 1, 0);
 
             var contenido = new VerticalStackLayout
             {
-                Spacing = 10,
+                Spacing = 5,
                 Children =
                 {
-                    headerGrid,
-                    new Label { Text = Localizador.D(trabajo.TipoServicio), FontSize = 18, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#111827") },
-                    new Label { Text = trabajo.ClienteNombre, FontSize = 14, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#4B5563") }
+                    badge,
+                    new Label { Text = Localizador.D(trabajo.TipoServicio), FontSize = 16, FontFamily = "OpenSansSemibold", TextColor = R("ColorTextStrong") },
+                    new Label { Text = trabajo.ClienteNombre, FontSize = 13, FontFamily = "OpenSansRegular", TextColor = R("ColorTextMuted") },
+                    pie
                 }
             };
 
-            var footerGrid = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) }, Margin = new Thickness(0, 5, 0, 0) };
-            footerGrid.Add(new Label
-            {
-                Text = $"{FormatearHora(trabajo.HoraInicio)} - {FormatearHora(trabajo.HoraFin)}",
-                FontSize = 14,
-                FontFamily = "OpenSansRegular",
-                TextColor = Color.FromArgb("#4B5563"),
-                VerticalOptions = LayoutOptions.Center
-            }, 0, 0);
-            footerGrid.Add(new Label
-            {
-                Text = Localizador.F("rd_2", trabajo.Tarifa),
-                FontSize = 16,
-                FontFamily = "OpenSansSemibold",
-                TextColor = Color.FromArgb("#111827"),
-                HorizontalOptions = LayoutOptions.End,
-                VerticalOptions = LayoutOptions.Center
-            }, 1, 0);
-            contenido.Children.Add(footerGrid);
+            var grid = new Grid { ColumnSpacing = 14, ColumnDefinitions = { new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star) } };
+            grid.Add(fecha, 0, 0);
+            grid.Add(contenido, 1, 0);
 
             var card = new Border
             {
-                Stroke = Color.FromArgb("#E5E7EB"),
-                StrokeThickness = 1,
+                Stroke = Colors.Transparent,
                 BackgroundColor = Colors.White,
-                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 },
-                Padding = new Thickness(20),
-                Content = contenido
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 22 },
+                Padding = new Thickness(14),
+                Content = grid
             };
 
             var tap = new TapGestureRecognizer();
-            tap.Tapped += async (s, e) => await AbrirDetalle(trabajo);
+            tap.Tapped += async (s, e) =>
+            {
+                await card.ScaleTo(0.97, 100, Easing.CubicOut);
+                _ = card.ScaleTo(1, 180, Easing.CubicOut);
+                await AbrirDetalle(trabajo);
+            };
             card.GestureRecognizers.Add(tap);
 
             return card;

@@ -4,7 +4,7 @@
              xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Seguridad.ConfirmarBienestarPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#B91C1C">
+             BackgroundColor="#B3261E">
 
     <Grid RowDefinitions="*, Auto" Padding="28,40,28,36">
 
@@ -12,23 +12,32 @@
         <VerticalStackLayout x:Name="PanelCuenta" Grid.Row="0" VerticalOptions="Center" Spacing="18">
             <Label Text="⚠️" FontSize="56" HorizontalOptions="Center"/>
             <Label Text="{loc:T dm_confirm_titulo}" FontSize="30" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center"/>
-            <Label Text="{loc:T dm_confirm_texto}" FontSize="15" FontFamily="OpenSansRegular" TextColor="#FEE2E2" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+            <Label Text="{loc:T dm_confirm_texto}" FontSize="15" FontFamily="OpenSansRegular" TextColor="#FFE1DE" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
 
-            <Border Stroke="White" StrokeThickness="4" BackgroundColor="Transparent" StrokeShape="RoundRectangle 90" WidthRequest="180" HeightRequest="180" HorizontalOptions="Center" Margin="0,10">
-                <VerticalStackLayout VerticalOptions="Center" Spacing="0">
-                    <Label x:Name="LblSegundos" Text="30" FontSize="78" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center"/>
-                    <Label Text="{loc:T dm_segundos}" FontSize="13" FontFamily="OpenSansRegular" TextColor="#FEE2E2" HorizontalOptions="Center"/>
-                </VerticalStackLayout>
-            </Border>
+            <!-- Cuenta regresiva: el círculo late cada segundo con una onda que se expande -->
+            <Grid WidthRequest="230" HeightRequest="230" HorizontalOptions="Center" Margin="0,6">
+                <Ellipse x:Name="OndaSegundo" Stroke="White" StrokeThickness="3" WidthRequest="190" HeightRequest="190" Opacity="0"/>
+                <Border x:Name="CirculoCuenta" Stroke="White" StrokeThickness="5" BackgroundColor="#26FFFFFF" WidthRequest="190" HeightRequest="190" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                    <VerticalStackLayout VerticalOptions="Center" Spacing="0">
+                        <Label x:Name="LblSegundos" Text="30" FontSize="80" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center"/>
+                        <Label Text="{loc:T dm_segundos}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#FFE1DE" HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
         </VerticalStackLayout>
 
         <!-- Estado: resultado (alerta enviada / error) -->
         <VerticalStackLayout x:Name="PanelResultado" Grid.Row="0" VerticalOptions="Center" Spacing="16" IsVisible="False">
             <Label x:Name="LblIconoResultado" Text="🚨" FontSize="56" HorizontalOptions="Center"/>
             <Label x:Name="LblTituloResultado" FontSize="26" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
-            <Label x:Name="LblTextoResultado" FontSize="15" FontFamily="OpenSansRegular" TextColor="#FEE2E2" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+            <Label x:Name="LblTextoResultado" FontSize="15" FontFamily="OpenSansRegular" TextColor="#FFE1DE" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
         </VerticalStackLayout>
 
-        <Button x:Name="BtnBien" Grid.Row="1" Text="{loc:T dm_estoy_bien}" Clicked="OnEstoyBienClicked" BackgroundColor="White" TextColor="#B91C1C" FontFamily="OpenSansSemibold" FontSize="20" CornerRadius="16" HeightRequest="68"/>
+        <Button x:Name="BtnBien" Grid.Row="1" Text="{loc:T dm_estoy_bien}" Clicked="OnEstoyBienClicked" BackgroundColor="White" TextColor="#B3261E" FontFamily="OpenSansSemibold" FontSize="20" CornerRadius="22" HeightRequest="70">
+            <Button.Shadow>
+                <Shadow Brush="#4A0A06" Offset="0,10" Radius="22" Opacity="0.35" />
+            </Button.Shadow>
+        </Button>
     </Grid>
 </ContentPage>

@@ -149,6 +149,7 @@ namespace CUIDAPP.Views.Cliente
 
         private async void OnCerrarSesionTapped(object sender, EventArgs e)
         {
+            Recordatorios.CancelarTodos();
             Preferences.Default.Clear();
             await RealtimeService.DesconectarAsync();
             ConexionServiceManager.Detener();

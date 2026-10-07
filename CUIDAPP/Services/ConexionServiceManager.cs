@@ -22,6 +22,30 @@ namespace CUIDAPP.Services
 #endif
         }
 
+        /// <summary>Vuelve a pintar la notificación persistente (p. ej. cambió la disponibilidad del cuidador).</summary>
+        public static void Actualizar()
+        {
+#if ANDROID
+            if (Preferences.Default.Get("UserId", 0) == 0)
+                return;
+            try
+            {
+                var contexto = global::Android.App.Application.Context;
+                var intent = new global::Android.Content.Intent(contexto, typeof(Platforms.Android.ConexionForegroundService))
+                    .SetAction(Platforms.Android.ConexionForegroundService.AccionActualizar);
+
+                if (global::Android.OS.Build.VERSION.SdkInt >= global::Android.OS.BuildVersionCodes.O)
+                    contexto.StartForegroundService(intent);
+                else
+                    contexto.StartService(intent);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error actualizando la notificación del servicio: {ex.Message}");
+            }
+#endif
+        }
+
         public static void Detener()
         {
 #if ANDROID

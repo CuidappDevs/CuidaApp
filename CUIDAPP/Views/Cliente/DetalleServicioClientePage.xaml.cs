@@ -21,11 +21,19 @@ namespace CUIDAPP.Views.Cliente
         public DetalleServicioClientePage()
         {
             InitializeComponent();
+
+            // Borde a borde: el encabezado empieza debajo de la barra de estado y el contenido
+            // termina con espacio para la barra de gestos.
+            ContenidoEncabezado.Margin = new Thickness(0, BarraEstado.Alto(), 0, 0);
+            EspacioInferior.HeightRequest = 24 + BarraEstado.AltoInferior();
         }
 
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            BarraEstado.Azul();
+            new Animation(t => PuntoTrabajando.Opacity = 0.35 + 0.65 * Math.Abs(Math.Cos(t * Math.PI)), 0, 1)
+                .Commit(this, "PuntoTrabajando", length: 1400, easing: Easing.Linear, repeat: () => true);
             RealtimeService.TrabajoActualizado += OnTrabajoActualizadoTiempoReal;
             RealtimeService.ActividadAgregada += OnActividadAgregadaTiempoReal;
             RealtimeService.AlertaGeocerca += OnAlertaGeocercaTiempoReal;
@@ -38,6 +46,7 @@ namespace CUIDAPP.Views.Cliente
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
+            this.AbortAnimation("PuntoTrabajando");
             RealtimeService.TrabajoActualizado -= OnTrabajoActualizadoTiempoReal;
             RealtimeService.ActividadAgregada -= OnActividadAgregadaTiempoReal;
             RealtimeService.AlertaGeocerca -= OnAlertaGeocercaTiempoReal;
@@ -88,20 +97,41 @@ namespace CUIDAPP.Views.Cliente
 
             foreach (var tarea in tareasTrabajo)
             {
+                var hecha = tarea.Completada;
+                var check = new Border
+                {
+                    Stroke = hecha ? Colors.Transparent : (Color)Application.Current!.Resources["ColorPrimaryLight"],
+                    StrokeThickness = 2,
+                    BackgroundColor = hecha ? Color.FromArgb("#2E7D32") : Colors.White,
+                    StrokeShape = new Microsoft.Maui.Controls.Shapes.Ellipse(),
+                    WidthRequest = 22,
+                    HeightRequest = 22,
+                    VerticalOptions = LayoutOptions.Center,
+                    Content = hecha ? new Microsoft.Maui.Controls.Shapes.Path
+                    {
+                        Data = (Microsoft.Maui.Controls.Shapes.Geometry)new Microsoft.Maui.Controls.Shapes.PathGeometryConverter().ConvertFromInvariantString("M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z")!,
+                        Fill = Colors.White, Aspect = Stretch.Uniform, WidthRequest = 12, HeightRequest = 12,
+                        HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center
+                    } : null
+                };
+                var fila = new Grid { ColumnSpacing = 12, ColumnDefinitions = { new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star) } };
+                fila.Add(check, 0);
+                fila.Add(new Label
+                {
+                    Text = tarea.Descripcion,
+                    FontSize = 14,
+                    FontFamily = "OpenSansRegular",
+                    TextColor = hecha ? (Color)Application.Current!.Resources["ColorTextMuted"] : (Color)Application.Current!.Resources["ColorTextStrong"],
+                    TextDecorations = hecha ? TextDecorations.Strikethrough : TextDecorations.None,
+                    VerticalOptions = LayoutOptions.Center
+                }, 1);
                 ListaTareasCliente.Add(new Border
                 {
                     Stroke = Colors.Transparent,
                     BackgroundColor = Colors.White,
-                    StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
-                    Padding = new Thickness(14, 10),
-                    Content = new Label
-                    {
-                        Text = (tarea.Completada ? "☑  " : "☐  ") + tarea.Descripcion,
-                        FontSize = 14,
-                        FontFamily = "OpenSansRegular",
-                        TextColor = tarea.Completada ? Color.FromArgb("#9CA3AF") : Color.FromArgb("#111827"),
-                        TextDecorations = tarea.Completada ? TextDecorations.Strikethrough : TextDecorations.None
-                    }
+                    StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 },
+                    Padding = new Thickness(14, 12),
+                    Content = fila
                 });
             }
         }
@@ -145,7 +175,14 @@ namespace CUIDAPP.Views.Cliente
             if (trabajo == null)
                 return;
 
-            ContenedorInfo.IsVisible = true;
+            if (!ContenedorInfo.IsVisible)
+            {
+                Contenido.Opacity = 0;
+                Contenido.TranslationY = 18;
+                ContenedorInfo.IsVisible = true;
+                _ = Contenido.FadeTo(1, 300, Easing.CubicOut);
+                _ = Contenido.TranslateTo(0, 0, 360, Easing.CubicOut);
+            }
             Renderizar(trabajo);
         }
 
@@ -159,7 +196,7 @@ namespace CUIDAPP.Views.Cliente
 
             LblFechaHora.Text = Localizador.F("fecha_hora_rango", Localizador.FechaLarga(t.Fecha), FormatearHora(t.HoraInicio), FormatearHora(t.HoraFin));
             LblDireccion.Text = string.IsNullOrWhiteSpace(t.Direccion) ? Localizador.T("sin_direccion") : t.Direccion;
-            LblPago.Text = Localizador.F("rd", t.Tarifa);
+            LblPago.Text = Localizador.F("rd_monto", t.Tarifa);
 
             var (colorFondo, colorTexto, texto) = t.Estado switch
             {
@@ -244,21 +281,17 @@ namespace CUIDAPP.Views.Cliente
 
         private static View CrearTarjetaActividad(string descripcion, DateTime fechaHora)
         {
+            var fila = new Grid { ColumnSpacing = 12, ColumnDefinitions = { new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) } };
+            fila.Add(new Microsoft.Maui.Controls.Shapes.Ellipse { Fill = (Color)Application.Current!.Resources["ColorPrimary"], WidthRequest = 8, HeightRequest = 8, VerticalOptions = LayoutOptions.Center }, 0);
+            fila.Add(new Label { Text = descripcion, FontSize = 14, FontFamily = "OpenSansRegular", TextColor = (Color)Application.Current!.Resources["ColorTextStrong"], VerticalOptions = LayoutOptions.Center }, 1);
+            fila.Add(new Label { Text = fechaHora.ToString("h:mm tt"), FontSize = 11, FontFamily = "OpenSansSemibold", TextColor = (Color)Application.Current!.Resources["ColorTextMuted"], VerticalOptions = LayoutOptions.Center }, 2);
             return new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = Color.FromArgb("#FFFFFF"),
-                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
-                Padding = new Thickness(14, 10),
-                Content = new VerticalStackLayout
-                {
-                    Spacing = 2,
-                    Children =
-                    {
-                        new Label { Text = descripcion, FontSize = 14, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#111827") },
-                        new Label { Text = fechaHora.ToString("h:mm tt"), FontSize = 11, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#9CA3AF") }
-                    }
-                }
+                BackgroundColor = Colors.White,
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 },
+                Padding = new Thickness(14, 12),
+                Content = fila
             };
         }
 
@@ -279,29 +312,56 @@ namespace CUIDAPP.Views.Cliente
             else if (estado == 5)
                 pasos = new List<(string, bool)> { (Localizador.T("solicitud_enviada"), true), (Localizador.T("cancelado"), true) };
 
-            foreach (var (texto, completado) in pasos)
+            var primario = (Color)Application.Current!.Resources["ColorPrimary"];
+            var borde = (Color)Application.Current!.Resources["ColorBorder"];
+            for (var i = 0; i < pasos.Count; i++)
             {
+                var (texto, completado) = pasos[i];
+                var esUltimo = i == pasos.Count - 1;
+                var siguienteCompletado = !esUltimo && pasos[i + 1].Completado;
+
                 var punto = new Border
                 {
-                    Stroke = Colors.Transparent,
-                    StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 6 },
-                    BackgroundColor = completado ? Color.FromArgb("#2563EB") : Color.FromArgb("#E5E7EB"),
-                    WidthRequest = 12,
-                    HeightRequest = 12,
-                    VerticalOptions = LayoutOptions.Center,
-                    Margin = new Thickness(0, 0, 12, 0)
+                    Stroke = completado ? Colors.Transparent : borde,
+                    StrokeThickness = 2,
+                    StrokeShape = new Microsoft.Maui.Controls.Shapes.Ellipse(),
+                    BackgroundColor = completado ? primario : Colors.White,
+                    WidthRequest = 22,
+                    HeightRequest = 22,
+                    HorizontalOptions = LayoutOptions.Center,
+                    Content = completado ? new Microsoft.Maui.Controls.Shapes.Path
+                    {
+                        Data = (Microsoft.Maui.Controls.Shapes.Geometry)new Microsoft.Maui.Controls.Shapes.PathGeometryConverter().ConvertFromInvariantString("M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z")!,
+                        Fill = Colors.White, Aspect = Stretch.Uniform, WidthRequest = 11, HeightRequest = 11,
+                        HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center
+                    } : null
                 };
+
+                // Línea vertical hacia el siguiente paso
+                var linea = new BoxView
+                {
+                    WidthRequest = 2,
+                    HeightRequest = 22,
+                    Color = siguienteCompletado ? primario : borde,
+                    HorizontalOptions = LayoutOptions.Center,
+                    IsVisible = !esUltimo
+                };
+
+                var columna = new VerticalStackLayout { Spacing = 0, WidthRequest = 22, Children = { punto, linea } };
 
                 var label = new Label
                 {
                     Text = texto,
                     FontSize = 14,
                     FontFamily = completado ? "OpenSansSemibold" : "OpenSansRegular",
-                    TextColor = completado ? Color.FromArgb("#111827") : Color.FromArgb("#9CA3AF"),
-                    VerticalOptions = LayoutOptions.Center
+                    TextColor = completado ? (Color)Application.Current!.Resources["ColorTextStrong"] : (Color)Application.Current!.Resources["ColorTextMuted"],
+                    VerticalOptions = LayoutOptions.Start,
+                    Margin = new Thickness(0, 1, 0, 0)
                 };
 
-                var fila = new HorizontalStackLayout { Spacing = 0, Children = { punto, label }, Margin = new Thickness(0, 8) };
+                var fila = new Grid { ColumnSpacing = 14, ColumnDefinitions = { new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star) } };
+                fila.Add(columna, 0);
+                fila.Add(label, 1);
                 ListaPasos.Add(fila);
             }
         }
@@ -349,45 +409,70 @@ namespace CUIDAPP.Views.Cliente
         private void ConstruirChipsPropina()
         {
             ChipsPropina.Clear();
-            AgregarChipPropina(Localizador.T("sin_propina"), !propinaOtroMonto && propina == 0, () => { propina = 0; propinaOtroMonto = false; });
-            foreach (var monto in PropinasSugeridas)
+
+            // Fila 1: montos sugeridos, en tarjetas del mismo ancho ("RD$" arriba, el número grande).
+            var montos = new Grid { ColumnSpacing = 8 };
+            for (int c = 0; c < PropinasSugeridas.Length; c++)
             {
-                var m = monto;
-                AgregarChipPropina($"RD${m:N0}", !propinaOtroMonto && propina == m, () => { propina = m; propinaOtroMonto = false; });
+                montos.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                var m = PropinasSugeridas[c];
+                montos.Add(CrearOpcionPropina(null, $"{m:N0}", !propinaOtroMonto && propina == m,
+                    () => { propina = m; propinaOtroMonto = false; }), c, 0);
             }
-            AgregarChipPropina(Localizador.T("otro_monto"), propinaOtroMonto, () => { propinaOtroMonto = true; propina = ParsearPropina(EntryPropina.Text) ?? 0; });
+            ChipsPropina.Add(montos);
+
+            // Fila 2: sin propina / otro monto.
+            var opciones = new Grid { ColumnSpacing = 8, ColumnDefinitions = { new(GridLength.Star), new(GridLength.Star) } };
+            opciones.Add(CrearOpcionPropina(Localizador.T("sin_propina"), null, !propinaOtroMonto && propina == 0,
+                () => { propina = 0; propinaOtroMonto = false; }), 0, 0);
+            opciones.Add(CrearOpcionPropina(Localizador.T("otro_monto"), null, propinaOtroMonto,
+                () => { propinaOtroMonto = true; propina = ParsearPropina(EntryPropina.Text) ?? 0; }), 1, 0);
+            ChipsPropina.Add(opciones);
 
             BoxPropinaOtro.IsVisible = propinaOtroMonto;
             ActualizarResumenPropina();
         }
 
-        private void AgregarChipPropina(string texto, bool seleccionado, Action alElegir)
+        // Tarjeta de opción: con monto ("RD$" + número) o con texto. Seleccionada = verde lleno.
+        private View CrearOpcionPropina(string? texto, string? monto, bool seleccionado, Action alElegir)
         {
-            var chip = new Border
+            var verde = Color.FromArgb("#2E7D32");
+            var colorTexto = seleccionado ? Colors.White : (Color)Application.Current!.Resources["ColorTextStrong"];
+
+            View contenido;
+            if (monto != null)
             {
-                Stroke = seleccionado ? Color.FromArgb("#16A34A") : Color.FromArgb("#F59E0B"),
-                StrokeThickness = 1,
-                BackgroundColor = seleccionado ? Color.FromArgb("#16A34A") : Colors.White,
-                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 18 },
-                Padding = new Thickness(14, 8),
-                Margin = new Thickness(0, 0, 8, 8),
-                Content = new Label
-                {
-                    Text = texto,
-                    FontSize = 13,
-                    FontFamily = "OpenSansSemibold",
-                    TextColor = seleccionado ? Colors.White : Color.FromArgb("#92400E")
-                }
+                var pila = new VerticalStackLayout { Spacing = 0, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
+                pila.Add(new Label { Text = "RD$", FontSize = 11, FontFamily = "OpenSansSemibold", HorizontalOptions = LayoutOptions.Center,
+                                     TextColor = seleccionado ? Color.FromArgb("#D7F0DC") : (Color)Application.Current!.Resources["ColorTextMuted"] });
+                pila.Add(new Label { Text = monto, FontSize = 19, FontFamily = "OpenSansSemibold", TextColor = colorTexto, HorizontalOptions = LayoutOptions.Center });
+                contenido = pila;
+            }
+            else
+            {
+                contenido = new Label { Text = texto, FontSize = 14, FontFamily = "OpenSansSemibold", TextColor = colorTexto,
+                                        HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
+            }
+
+            var tarjeta = new Border
+            {
+                Stroke = seleccionado ? verde : Color.FromArgb("#E3E8EE"),
+                StrokeThickness = 1.5,
+                BackgroundColor = seleccionado ? verde : Color.FromArgb("#F7F9FB"),
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 14 },
+                HeightRequest = monto != null ? 62 : 46,
+                Content = contenido
             };
-            chip.GestureRecognizers.Add(new TapGestureRecognizer
+            tarjeta.GestureRecognizers.Add(new TapGestureRecognizer
             {
-                Command = new Command(() =>
+                Command = new Command(async () =>
                 {
+                    await tarjeta.ScaleTo(0.95, 70, Easing.CubicOut);
                     alElegir();
                     ConstruirChipsPropina();
                 })
             });
-            ChipsPropina.Add(chip);
+            return tarjeta;
         }
 
         private static decimal? ParsearPropina(string? texto)
@@ -407,7 +492,7 @@ namespace CUIDAPP.Views.Cliente
 
         private void ActualizarResumenPropina()
         {
-            LblResumenPropina.IsVisible = trabajo != null && propina > 0;
+            CajaResumenPropina.IsVisible = LblResumenPropina.IsVisible = trabajo != null && propina > 0;
             if (LblResumenPropina.IsVisible)
                 LblResumenPropina.Text = Localizador.F("total_con_propina", trabajo!.Tarifa + propina);
         }
@@ -429,6 +514,7 @@ namespace CUIDAPP.Views.Cliente
             BtnConfirmarFinalizacion.Text = Localizador.T("confirmando");
 
             var propinaEnviada = propina;
+            AvisosApp.MarcarAccionPropia(trabajo.Id, 4);
             var (success, error) = await _apiService.ConfirmarFinalizacionAsync(trabajo.Id, clienteId, true, propinaEnviada);
 
             if (success)
@@ -460,6 +546,7 @@ namespace CUIDAPP.Views.Cliente
                 return;
 
             var clienteId = Preferences.Default.Get("UserId", 0);
+            AvisosApp.MarcarAccionPropia(trabajo.Id, 3);
             var (success, error) = await _apiService.ConfirmarFinalizacionAsync(trabajo.Id, clienteId, false);
 
             if (success)
@@ -480,6 +567,7 @@ namespace CUIDAPP.Views.Cliente
             BtnCancelar.IsEnabled = false;
             BtnCancelar.Text = Localizador.T("cancelando");
 
+            AvisosApp.MarcarAccionPropia(trabajo.Id, 5);
             var success = await _apiService.ActualizarEstadoTrabajoAsync(trabajo.Id, 5);
 
             if (success)

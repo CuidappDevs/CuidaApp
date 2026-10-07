@@ -142,6 +142,30 @@ namespace CUIDAPP_API.Services.Chat
             return resultado;
         }
 
+        // Los participantes de una conversación no cambian: se guardan en memoria para no
+        // consultar la BD en cada aviso de "escribiendo" (llega cada pocos segundos).
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<int, (int ClienteId, int CuidadorId)> _participantesCache = new();
+
+        public async Task NotificarEscribiendoAsync(int conversacionId, int usuarioId, bool escribiendo)
+        {
+            if (!_participantesCache.TryGetValue(conversacionId, out var participantes))
+            {
+                var leidos = await ObtenerParticipantesAsync(conversacionId);
+                if (!leidos.HasValue)
+                    return;
+                participantes = leidos.Value;
+                _participantesCache[conversacionId] = participantes;
+            }
+
+            // Solo un participante de la conversación puede avisar, y el aviso va al otro.
+            int destinatario;
+            if (usuarioId == participantes.ClienteId) destinatario = participantes.CuidadorId;
+            else if (usuarioId == participantes.CuidadorId) destinatario = participantes.ClienteId;
+            else return;
+
+            await _notifier.NotificarAsync(destinatario, "UsuarioEscribiendo", new { conversacionId, usuarioId, escribiendo });
+        }
+
         private async Task<(int ClienteId, int CuidadorId)?> ObtenerParticipantesAsync(int conversacionId)
         {
             using var connection = new SqlConnection(_connectionString);

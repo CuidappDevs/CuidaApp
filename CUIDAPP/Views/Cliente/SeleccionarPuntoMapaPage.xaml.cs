@@ -33,6 +33,7 @@ namespace CUIDAPP.Views.Cliente
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            BarraEstado.Blanca();
 
             if (soloSeleccionar)
             {
@@ -118,6 +119,24 @@ namespace CUIDAPP.Views.Cliente
                 latSeleccionada = lat;
                 lngSeleccionada = lng;
             }
+        }
+
+        // Borde resaltado al enfocar un campo
+        private static Border? BordeDe(object? sender)
+        {
+            var e = (sender as Element)?.Parent;
+            while (e != null && e is not Border) e = e.Parent;
+            return e as Border;
+        }
+
+        private void OnCampoFocused(object? sender, FocusEventArgs e)
+        {
+            if (BordeDe(sender) is Border b) { b.Stroke = (Color)Application.Current!.Resources["ColorPrimary"]; b.BackgroundColor = Colors.White; }
+        }
+
+        private void OnCampoUnfocused(object? sender, FocusEventArgs e)
+        {
+            if (BordeDe(sender) is Border b) { b.Stroke = Colors.Transparent; b.BackgroundColor = (Color)Application.Current!.Resources["ColorBackground"]; }
         }
 
         private async void OnBackTapped(object sender, EventArgs e)

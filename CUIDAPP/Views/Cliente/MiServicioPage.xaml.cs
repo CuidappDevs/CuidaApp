@@ -11,11 +11,17 @@ namespace CUIDAPP.Views.Cliente
         public MiServicioPage()
         {
             InitializeComponent();
+
+            // Borde a borde: el encabezado empieza debajo de la barra de estado y la lista
+            // termina con espacio para la barra de gestos.
+            ContenidoEncabezado.Margin = new Thickness(0, BarraEstado.Alto(), 0, 0);
+            EspacioInferior.HeightRequest = 24 + BarraEstado.AltoInferior();
         }
 
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            BarraEstado.Azul();
             RealtimeService.TrabajoActualizado += OnTrabajoActualizadoTiempoReal;
             await CargarServicios();
         }
@@ -47,7 +53,9 @@ namespace CUIDAPP.Views.Cliente
 
             if (servicios.Count == 0)
             {
+                ContenedorVacio.Opacity = 0;
                 ContenedorVacio.IsVisible = true;
+                _ = ContenedorVacio.FadeTo(1, 300, Easing.CubicOut);
                 return;
             }
 
@@ -62,8 +70,21 @@ namespace CUIDAPP.Views.Cliente
                 return;
             }
 
+            // Entrada escalonada de las tarjetas
+            var i = 0;
             foreach (var servicio in servicios)
-                ListaServicios.Add(CrearTarjetaServicio(servicio));
+            {
+                var tarjeta = CrearTarjetaServicio(servicio);
+                tarjeta.Opacity = 0;
+                tarjeta.TranslationY = 16;
+                ListaServicios.Add(tarjeta);
+                var retraso = i++ * 60;
+                _ = Task.Delay(retraso).ContinueWith(_ => MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    tarjeta.FadeTo(1, 280, Easing.CubicOut);
+                    tarjeta.TranslateTo(0, 0, 340, Easing.CubicOut);
+                }));
+            }
         }
 
         private View CrearTarjetaServicio(TrabajoCliente t)
@@ -78,24 +99,34 @@ namespace CUIDAPP.Views.Cliente
                 _ => (Color.FromArgb("#F3F4F6"), Color.FromArgb("#374151"), Localizador.T("en_curso"))
             };
 
+            Color R(string k) => (Color)Application.Current!.Resources[k];
+
             var badge = new Border
             {
                 Stroke = Colors.Transparent,
-                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 20 },
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 12 },
                 BackgroundColor = colorFondo,
                 Padding = new Thickness(10, 4),
                 HorizontalOptions = LayoutOptions.Start,
-                Content = new Label { Text = texto, FontSize = 11, FontFamily = "OpenSansSemibold", TextColor = colorTexto }
+                Content = new HorizontalStackLayout
+                {
+                    Spacing = 6,
+                    Children =
+                    {
+                        new Microsoft.Maui.Controls.Shapes.Ellipse { Fill = colorTexto, WidthRequest = 7, HeightRequest = 7, VerticalOptions = LayoutOptions.Center },
+                        new Label { Text = texto, FontSize = 11, FontFamily = "OpenSansSemibold", TextColor = colorTexto, VerticalOptions = LayoutOptions.Center }
+                    }
+                }
             };
 
             var foto = new Border
             {
                 Stroke = Colors.Transparent,
-                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 27 },
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.Ellipse(),
                 BackgroundColor = Color.FromArgb("#E5E7EB"),
-                WidthRequest = 54,
-                HeightRequest = 54,
-                Margin = new Thickness(0, 0, 14, 0),
+                WidthRequest = 56,
+                HeightRequest = 56,
+                VerticalOptions = LayoutOptions.Center,
                 Content = new Image
                 {
                     Aspect = Aspect.AspectFill,
@@ -106,30 +137,44 @@ namespace CUIDAPP.Views.Cliente
             var contenido = new VerticalStackLayout
             {
                 Spacing = 4,
+                VerticalOptions = LayoutOptions.Center,
                 Children =
                 {
-                    badge,
-                    new Label { Text = t.CuidadorNombre, FontSize = 16, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#111827") },
-                    new Label { Text = Localizador.D(t.TipoServicio), FontSize = 13, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#6B7280") }
+                    new Label { Text = t.CuidadorNombre, FontSize = 16, FontFamily = "OpenSansSemibold", TextColor = R("ColorTextStrong"), MaxLines = 1, LineBreakMode = LineBreakMode.TailTruncation },
+                    new Label { Text = Localizador.D(t.TipoServicio), FontSize = 13, FontFamily = "OpenSansRegular", TextColor = R("ColorTextMuted") },
+                    badge
                 }
             };
 
-            var grid = new Grid { ColumnDefinitions = new ColumnDefinitionCollection { new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star) } };
+            var flecha = new Microsoft.Maui.Controls.Shapes.Path
+            {
+                Data = (Microsoft.Maui.Controls.Shapes.Geometry)new Microsoft.Maui.Controls.Shapes.PathGeometryConverter().ConvertFromInvariantString("M10 6L8.59 7.41L13.17 12L8.59 16.59L10 18L16 12L10 6Z")!,
+                Fill = Color.FromArgb("#B0BEC5"), Aspect = Stretch.Uniform, WidthRequest = 18, HeightRequest = 18, VerticalOptions = LayoutOptions.Center
+            };
+
+            var grid = new Grid { ColumnSpacing = 14, ColumnDefinitions = new ColumnDefinitionCollection { new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) } };
             grid.Add(foto, 0, 0);
             grid.Add(contenido, 1, 0);
+            grid.Add(flecha, 2, 0);
 
             var card = new Border
             {
-                Stroke = Color.FromArgb("#E5E7EB"),
-                StrokeThickness = 1,
+                Stroke = Colors.Transparent,
                 BackgroundColor = Colors.White,
-                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 },
-                Padding = new Thickness(16),
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 20 },
+                Padding = new Thickness(14),
                 Content = grid
             };
 
             var tap = new TapGestureRecognizer();
-            tap.Tapped += async (s, e) => await Shell.Current.GoToAsync("DetalleServicioClientePage", new Dictionary<string, object> { { "TrabajoId", t.Id } });
+            tap.Tapped += async (s, e) =>
+            {
+                _ = flecha.TranslateTo(4, 0, 120, Easing.CubicOut);
+                await card.ScaleTo(0.97, 100, Easing.CubicOut);
+                _ = card.ScaleTo(1, 180, Easing.CubicOut);
+                await Shell.Current.GoToAsync("DetalleServicioClientePage", new Dictionary<string, object> { { "TrabajoId", t.Id } });
+                flecha.TranslationX = 0;
+            };
             card.GestureRecognizers.Add(tap);
 
             return card;

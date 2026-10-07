@@ -4,57 +4,100 @@
              xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Chat.ChatPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#F9FAFB">
+             BackgroundColor="{StaticResource ColorBackground}">
 
+    <!-- Zona segura por defecto: la barra de escritura va en su propia fila de la cuadrícula,
+         así el sistema la mantiene sobre la barra de gestos y sobre el teclado. -->
     <Grid RowDefinitions="Auto, *, Auto">
 
-        <Grid Grid.Row="0" ColumnDefinitions="Auto, Auto, *" Padding="20,15,20,10" BackgroundColor="White">
-            <ContentView Grid.Column="0" VerticalOptions="Center">
-                <ContentView.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnBackTapped" />
-                </ContentView.GestureRecognizers>
-                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
-            </ContentView>
-            <Border Grid.Column="1" Stroke="Transparent" StrokeShape="RoundRectangle 18" BackgroundColor="#E5E7EB" WidthRequest="36" HeightRequest="36" Margin="14,0,10,0">
-                <Image x:Name="ImgOtro" Aspect="AspectFill" />
-            </Border>
-            <Label x:Name="LblOtroNombre" Grid.Column="2" Text="{loc:T chat}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827" VerticalOptions="Center"/>
-        </Grid>
+        <!-- Encabezado -->
+        <Border Grid.Row="0" Stroke="Transparent" BackgroundColor="White" Padding="12,8,16,10">
+            <Border.Shadow>
+                <Shadow Brush="#0A2F41" Offset="0,4" Opacity="0.06" Radius="12"/>
+            </Border.Shadow>
+            <Grid ColumnDefinitions="44, Auto, *" ColumnSpacing="10">
+                <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
+                    <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackTapped" />
+                    </Border.GestureRecognizers>
+                    <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="{StaticResource ColorTextStrong}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Grid Grid.Column="1" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
+                    <Border Stroke="Transparent" BackgroundColor="#E5E7EB" WidthRequest="44" HeightRequest="44">
+                        <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                        <Image x:Name="ImgOtro" Aspect="AspectFill" />
+                    </Border>
+                    <Border Stroke="White" StrokeThickness="2" BackgroundColor="#2E7D32" WidthRequest="13" HeightRequest="13" HorizontalOptions="End" VerticalOptions="End">
+                        <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                    </Border>
+                </Grid>
+                <Label x:Name="LblOtroNombre" Grid.Column="2" Text="{loc:T chat}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center" MaxLines="1" LineBreakMode="TailTruncation"/>
+            </Grid>
+        </Border>
 
+        <!-- Mensajes -->
         <ScrollView x:Name="ScrollMensajes" Grid.Row="1">
-            <VerticalStackLayout x:Name="ListaMensajes" Padding="15,15,15,15" Spacing="8" />
+            <VerticalStackLayout x:Name="ListaMensajes" Padding="14,16,14,16" Spacing="8" />
         </ScrollView>
 
-        <Grid x:Name="GridEnvio" Grid.Row="2" ColumnDefinitions="Auto, Auto, *, Auto" Padding="12,10,15,15" ColumnSpacing="8" BackgroundColor="White">
-            <Border.Shadow>
-                <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
-            </Border.Shadow>
+        <!-- "Fulano está escribiendo…": burbuja con tres puntos animados, abajo de los mensajes -->
+        <HorizontalStackLayout x:Name="IndicadorEscribiendo" Grid.Row="1" Spacing="8" Padding="14,0,14,8" HorizontalOptions="Start" VerticalOptions="End" IsVisible="False" InputTransparent="True">
+            <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20,20,6,20" Padding="14,12" VerticalOptions="Center">
+                <Border.Shadow>
+                    <Shadow Brush="#0A2F41" Offset="0,2" Radius="6" Opacity="0.06"/>
+                </Border.Shadow>
+                <HorizontalStackLayout Spacing="5">
+                    <Ellipse x:Name="PuntoEscribiendo1" Fill="{StaticResource ColorTextMuted}" WidthRequest="7" HeightRequest="7"/>
+                    <Ellipse x:Name="PuntoEscribiendo2" Fill="{StaticResource ColorTextMuted}" WidthRequest="7" HeightRequest="7"/>
+                    <Ellipse x:Name="PuntoEscribiendo3" Fill="{StaticResource ColorTextMuted}" WidthRequest="7" HeightRequest="7"/>
+                </HorizontalStackLayout>
+            </Border>
+            <Label x:Name="LblEscribiendo" Text="" FontSize="12" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextMuted}" VerticalOptions="Center"/>
+        </HorizontalStackLayout>
 
-            <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="#F3F4F6" StrokeShape="RoundRectangle 20" WidthRequest="42" HeightRequest="42">
+        <!-- Barra de escritura -->
+        <Grid x:Name="GridEnvio" Grid.Row="2" ColumnDefinitions="Auto, *, Auto" Padding="10,10,12,12" ColumnSpacing="8" BackgroundColor="White">
+
+            <!-- Adjuntar imagen -->
+            <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="#EAF1FB" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
+                <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnAdjuntarImagenTapped"/>
                 </Border.GestureRecognizers>
-                <Path Data="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19ZM8.5 13.5L11 16.51L14.5 12L19 18H5L8.5 13.5Z" Fill="#2563EB" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                <Path Data="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19ZM8.5 13.5L11 16.51L14.5 12L19 18H5L8.5 13.5Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="19" HeightRequest="19" HorizontalOptions="Center" VerticalOptions="Center"/>
             </Border>
 
-            <Border x:Name="BtnMicrofono" Grid.Column="1" Stroke="Transparent" BackgroundColor="#F3F4F6" StrokeShape="RoundRectangle 20" WidthRequest="42" HeightRequest="42">
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnMicrofonoTapped"/>
-                </Border.GestureRecognizers>
-                <Path x:Name="IconoMicrofono" Data="M12 14C13.66 14 15 12.66 15 11V5C15 3.34 13.66 2 12 2C10.34 2 9 3.34 9 5V11C9 12.66 10.34 14 12 14ZM17.3 11C17.3 14 14.76 16.1 12 16.1C9.24 16.1 6.7 14 6.7 11H5C5 14.41 7.72 17.23 11 17.72V21H13V17.72C16.28 17.23 19 14.41 19 11H17.3Z" Fill="#2563EB" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <!-- Campo de texto con el micrófono dentro -->
+            <Border x:Name="ContenedorEntry" Grid.Column="1" Stroke="Transparent" StrokeThickness="1.5" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 24" Padding="16,0,4,0">
+                <Grid ColumnDefinitions="*, Auto">
+                    <Entry x:Name="EntryMensaje" TextChanged="OnMensajeTextChanged" Placeholder="{loc:T escribe_un_mensaje}" FontFamily="OpenSansRegular" FontSize="15" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="48" Completed="OnEnviarClicked"
+                           Focused="OnMensajeFocused" Unfocused="OnMensajeUnfocused"/>
+                    <Border x:Name="BtnMicrofono" Grid.Column="1" Stroke="Transparent" BackgroundColor="Transparent" WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                        <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnMicrofonoTapped"/>
+                        </Border.GestureRecognizers>
+                        <Path x:Name="IconoMicrofono" Data="M12 14C13.66 14 15 12.66 15 11V5C15 3.34 13.66 2 12 2C10.34 2 9 3.34 9 5V11C9 12.66 10.34 14 12 14ZM17.3 11C17.3 14 14.76 16.1 12 16.1C9.24 16.1 6.7 14 6.7 11H5C5 14.41 7.72 17.23 11 17.72V21H13V17.72C16.28 17.23 19 14.41 19 11H17.3Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Border>
+                </Grid>
             </Border>
 
-            <Border x:Name="ContenedorEntry" Grid.Column="2" Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 20" Padding="16,0">
-                <Entry x:Name="EntryMensaje" Placeholder="{loc:T escribe_un_mensaje}" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="46" Completed="OnEnviarClicked"/>
+            <!-- Grabando -->
+            <Border x:Name="PildoraGrabando" Grid.Column="1" Stroke="Transparent" BackgroundColor="#FDECEC" StrokeShape="RoundRectangle 24" Padding="16,0" IsVisible="{Binding Source={x:Reference LblGrabando}, Path=IsVisible}" InputTransparent="True" HeightRequest="48">
+                <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Ellipse x:Name="PuntoGrabando" Fill="{StaticResource ColorDanger}" WidthRequest="9" HeightRequest="9" VerticalOptions="Center"/>
+                    <Label x:Name="LblGrabando" Text="{loc:T grabando_toca_el_microfono_para}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorDanger}" VerticalOptions="Center" IsVisible="False"/>
+                </HorizontalStackLayout>
             </Border>
 
-            <Label x:Name="LblGrabando" Grid.Column="2" Text="{loc:T grabando_toca_el_microfono_para}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#DC2626" VerticalOptions="Center" HorizontalOptions="Center" IsVisible="False"/>
-
-            <Border Grid.Column="3" Stroke="Transparent" BackgroundColor="#2563EB" StrokeShape="RoundRectangle 23" WidthRequest="46" HeightRequest="46">
+            <!-- Enviar -->
+            <Border x:Name="BtnEnviarCirculo" Grid.Column="2" Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimary}" WidthRequest="48" HeightRequest="48" VerticalOptions="Center">
+                <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnEnviarClicked"/>
                 </Border.GestureRecognizers>
-                <Path Data="M2 21L23 12L2 3V10L17 12L2 14V21Z" Fill="White" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+                <Path Data="M2 21L23 12L2 3V10L17 12L2 14V21Z" Fill="White" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center" Margin="3,0,0,0"/>
             </Border>
         </Grid>
 

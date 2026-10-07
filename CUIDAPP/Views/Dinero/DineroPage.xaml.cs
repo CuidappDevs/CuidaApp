@@ -16,6 +16,7 @@ namespace CUIDAPP.Views.Dinero
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            BarraEstado.Blanca();
             await CargarDatos();
         }
 
@@ -45,36 +46,47 @@ namespace CUIDAPP.Views.Dinero
             ListaPagos.Clear();
             LblSinPagos.IsVisible = pagos.Count == 0;
 
+            var indice = 0;
             foreach (var pago in pagos)
             {
-                ListaPagos.Add(CrearTarjetaPago(pago));
+                var tarjeta = CrearTarjetaPago(pago);
+                tarjeta.Opacity = 0;
+                tarjeta.TranslationY = 12;
+                ListaPagos.Add(tarjeta);
+                var retraso = Math.Min(indice++, 8) * 45;
+                _ = Task.Delay(retraso).ContinueWith(_ => MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    tarjeta.FadeTo(1, 260, Easing.CubicOut);
+                    tarjeta.TranslateTo(0, 0, 320, Easing.CubicOut);
+                }));
             }
         }
 
         private static View CrearTarjetaPago(Pago pago)
         {
             var esPagado = pago.Estado == 2;
-            var colorMonto = esPagado ? Color.FromArgb("#059669") : Color.FromArgb("#D97706");
+            var colorMonto = esPagado ? Color.FromArgb("#2E7D32") : Color.FromArgb("#B26A00");
             var textoEstado = esPagado ? Localizador.T("pagado") : Localizador.T("pendiente");
             var fecha = esPagado && pago.FechaPago.HasValue ? pago.FechaPago.Value : pago.FechaCreacion;
 
+            // Pagado: check verde. Pendiente: reloj ámbar.
             var icono = new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = Color.FromArgb("#EFF6FF"),
-                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 12 },
-                WidthRequest = 45,
-                HeightRequest = 45,
+                BackgroundColor = esPagado ? Color.FromArgb("#E3F4E8") : Color.FromArgb("#FFF4DC"),
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 14 },
+                WidthRequest = 46,
+                HeightRequest = 46,
                 VerticalOptions = LayoutOptions.Center,
-                Margin = new Thickness(0, 0, 15, 0),
-                Content = new Label
+                Margin = new Thickness(0, 0, 14, 0),
+                Content = new Microsoft.Maui.Controls.Shapes.Path
                 {
-                    Text = esPagado ? "$" : "…",
-                    FontSize = 18,
-                    FontFamily = "OpenSansSemibold",
-                    TextColor = Color.FromArgb("#2563EB"),
-                    HorizontalOptions = LayoutOptions.Center,
-                    VerticalOptions = LayoutOptions.Center
+                    Data = (Microsoft.Maui.Controls.Shapes.Geometry)new Microsoft.Maui.Controls.Shapes.PathGeometryConverter().ConvertFromInvariantString(esPagado
+                        ? "M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z"
+                        : "M11.99 2C6.47 2 2 6.48 2 12C2 17.52 6.47 22 11.99 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 11.99 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM12.5 7H11V13L16.25 16.15L17 14.92L12.5 12.25V7Z")!,
+                    Fill = esPagado ? Color.FromArgb("#2E7D32") : Color.FromArgb("#E09A1A"),
+                    Aspect = Stretch.Uniform, WidthRequest = 20, HeightRequest = 20,
+                    HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center
                 }
             };
 
@@ -84,8 +96,8 @@ namespace CUIDAPP.Views.Dinero
                 VerticalOptions = LayoutOptions.Center,
                 Children =
                 {
-                    new Label { Text = Localizador.D(pago.TipoServicio), FontSize = 15, FontFamily = "OpenSansSemibold", TextColor = Color.FromArgb("#111827") },
-                    new Label { Text = $"{pago.ClienteNombre} • {fecha:d MMM}", FontSize = 12, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#6B7280") }
+                    new Label { Text = Localizador.D(pago.TipoServicio), FontSize = 15, FontFamily = "OpenSansSemibold", TextColor = (Color)Application.Current!.Resources["ColorTextStrong"] },
+                    new Label { Text = $"{pago.ClienteNombre} • {fecha:d MMM}", FontSize = 12, FontFamily = "OpenSansRegular", TextColor = (Color)Application.Current!.Resources["ColorTextMuted"] }
                 }
             };
 
@@ -97,7 +109,7 @@ namespace CUIDAPP.Views.Dinero
                 Children =
                 {
                     new Label { Text = Localizador.F("rd_4", pago.Total), FontSize = 15, FontFamily = "OpenSansSemibold", TextColor = colorMonto, HorizontalTextAlignment = TextAlignment.End },
-                    new Label { Text = textoEstado, FontSize = 11, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#9CA3AF"), HorizontalTextAlignment = TextAlignment.End }
+                    new Label { Text = textoEstado, FontSize = 11, FontFamily = "OpenSansRegular", TextColor = (Color)Application.Current!.Resources["ColorTextMuted"], HorizontalTextAlignment = TextAlignment.End }
                 }
             };
 
@@ -108,7 +120,7 @@ namespace CUIDAPP.Views.Dinero
                     Text = Localizador.F("incluye_propina", pago.Propina),
                     FontSize = 11,
                     FontFamily = "OpenSansSemibold",
-                    TextColor = Color.FromArgb("#059669"),
+                    TextColor = Color.FromArgb("#2E7D32"),
                     HorizontalTextAlignment = TextAlignment.End
                 });
             }
@@ -120,11 +132,10 @@ namespace CUIDAPP.Views.Dinero
 
             return new Border
             {
-                Stroke = Color.FromArgb("#E5E7EB"),
-                StrokeThickness = 1,
+                Stroke = Colors.Transparent,
                 BackgroundColor = Colors.White,
-                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 },
-                Padding = new Thickness(15),
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 20 },
+                Padding = new Thickness(14),
                 Content = grid
             };
         }

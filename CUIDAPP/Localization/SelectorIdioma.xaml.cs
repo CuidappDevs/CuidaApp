@@ -3,7 +3,7 @@ using System.ComponentModel;
 namespace CUIDAPP.Localization
 {
     /// <summary>
-    /// Selector de idioma (tarjeta con control segmentado ES | EN). Cambia el idioma al instante,
+    /// Selector de idioma (tarjeta con control segmentado ES | EN | HT). Cambia el idioma al instante,
     /// sin recargar la pantalla ni navegar: los textos {loc:T ...} se refrescan por binding.
     /// </summary>
     public partial class SelectorIdioma : ContentView
@@ -11,7 +11,7 @@ namespace CUIDAPP.Localization
         private readonly Dictionary<string, (Border Segmento, Label Texto)> _segmentos = new();
 
         /// <summary>
-        /// Modo píldora (🌐 ES | EN) para colocar en una esquina sobre fondo de color, p. ej. el login.
+        /// Modo píldora (🌐 ES | EN | HT) para colocar en una esquina sobre fondo de color, p. ej. el login.
         /// </summary>
         public static readonly BindableProperty CompactoProperty = BindableProperty.Create(
             nameof(Compacto), typeof(bool), typeof(SelectorIdioma), false,
@@ -90,7 +90,7 @@ namespace CUIDAPP.Localization
                 {
                     Stroke = Colors.Transparent,
                     StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 8 },
-                    Padding = new Thickness(16, 0),
+                    Padding = new Thickness(13, 0),
                     HeightRequest = 32,
                     MinimumWidthRequest = 48,
                     Content = texto

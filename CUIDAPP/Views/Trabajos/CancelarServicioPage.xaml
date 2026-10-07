@@ -4,46 +4,50 @@
              xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Trabajos.CancelarServicioPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#FFFFFF">
+             BackgroundColor="{StaticResource ColorBackground}">
 
     <Grid RowDefinitions="Auto, *, Auto">
 
-        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" Padding="20,15,20,10" BackgroundColor="White">
-            <ContentView x:Name="BtnBack" VerticalOptions="Center">
-                <ContentView.GestureRecognizers>
+        <Grid Grid.Row="0" ColumnDefinitions="44, *, 44" Padding="12,8,16,8" BackgroundColor="{StaticResource ColorBackground}">
+            <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="White" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
+                <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnBackTapped" />
-                </ContentView.GestureRecognizers>
-                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
-            </ContentView>
-            <Label Grid.Column="1" Text="{loc:T cancelar_servicio}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border.GestureRecognizers>
+                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="{StaticResource ColorTextStrong}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
+            <Label Grid.Column="1" Text="{loc:T cancelar_servicio}" FontSize="17" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Center" VerticalOptions="Center"/>
         </Grid>
 
         <ScrollView Grid.Row="1">
             <VerticalStackLayout Padding="20,15,20,20" Spacing="18">
 
-                <Border Stroke="#FEE2E2" StrokeThickness="1" BackgroundColor="#FEF2F2" StrokeShape="RoundRectangle 12" Padding="15">
-                    <Label Text="{loc:T cancelar_un_servicio_ya_aceptado}" FontSize="13" FontFamily="OpenSansRegular" TextColor="#991B1B" HorizontalTextAlignment="Center"/>
+                <Border Stroke="Transparent" BackgroundColor="#FDECEC" StrokeShape="RoundRectangle 20" Padding="16">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorDanger}" StrokeShape="RoundRectangle 12" WidthRequest="38" HeightRequest="38" VerticalOptions="Center">
+                            <Path Data="M1 21H23L12 2L1 21ZM13 18H11V16H13V18ZM13 14H11V10H13V14Z" Fill="White" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
+                        <Label Grid.Column="1" Text="{loc:T cancelar_un_servicio_ya_aceptado}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#8E1F1F" VerticalOptions="Center"/>
+                    </Grid>
                 </Border>
 
-                <Label Text="{loc:T por_que_necesitas_cancelar}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                <Label Text="{loc:T por_que_necesitas_cancelar}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
 
                 <VerticalStackLayout x:Name="ListaMotivos" Spacing="10" />
 
                 <VerticalStackLayout x:Name="ContenedorOtro" Spacing="8" IsVisible="False">
-                    <Label Text="{loc:T cuentanos_brevemente}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
-                    <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
-                        <Entry x:Name="EntryOtroMotivo" Placeholder="{loc:T escribe_el_motivo}" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="45" TextChanged="OnOtroMotivoTextChanged"/>
+                    <Label Text="{loc:T cuentanos_brevemente}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                    <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="14,0">
+                        <Entry x:Name="EntryOtroMotivo" Placeholder="{loc:T escribe_el_motivo}" FontFamily="OpenSansRegular" FontSize="15" BackgroundColor="Transparent" PlaceholderColor="#8A97A6" HeightRequest="50" TextChanged="OnOtroMotivoTextChanged"/>
                     </Border>
                 </VerticalStackLayout>
 
             </VerticalStackLayout>
         </ScrollView>
 
-        <VerticalStackLayout Grid.Row="2" Padding="20,10,20,30" Spacing="10" BackgroundColor="White">
-            <Border.Shadow>
-                <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
-            </Border.Shadow>
-            <Button x:Name="BtnConfirmar" Text="{loc:T confirmar_cancelacion}" Clicked="OnConfirmarClicked" BackgroundColor="#EF4444" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsEnabled="False"/>
+        <!-- Acción: fila propia de la cuadrícula (zona segura por defecto, sobre la barra de gestos) -->
+        <VerticalStackLayout Grid.Row="2" Padding="20,12,20,14" Spacing="10" BackgroundColor="{StaticResource ColorBackground}">
+            <Button x:Name="BtnConfirmar" Text="{loc:T confirmar_cancelacion}" Clicked="OnConfirmarClicked" BackgroundColor="{StaticResource ColorDanger}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="16" HeightRequest="56" IsEnabled="False"/>
         </VerticalStackLayout>
 
     </Grid>

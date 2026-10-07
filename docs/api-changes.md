@@ -97,3 +97,50 @@ Requiere aplicar [`sql/dead-man-sos.sql`](./sql/dead-man-sos.sql) (primero en `D
 - `SOSAlertas.Origen` (`Manual` | `Automatica`) y `SOSAlertaDto` / evento `AlertaSOS` incluyen `Origen` y el contacto de emergencia (`ContactoNombre/Telefono/Email`).
 - `PerfilCuidador` tiene contacto de emergencia (`ContactoEmergenciaNombre/Telefono/Email`): `GET|PUT /api/cuidador/{id}/contacto-emergencia` (requiere nombre y teléfono o correo).
 - Limitación: no hay proveedor de SMS/WhatsApp; al familiar se le avisa solo por correo, y el panel muestra su teléfono para que el admin lo llame.
+
+## Chat: indicador de "está escribiendo"
+
+- Hub `/hubs/trabajo`: nuevo método `Escribiendo(conversacionId, usuarioId, escribiendo)`. El cliente lo invoca mientras el usuario escribe (como máximo cada 3 s) y con `false` al dejar de escribir o al enviar.
+- El servidor busca los participantes de la conversación (cliente y cuidador del trabajo; se cachean en memoria) y reenvía al **otro** el evento `UsuarioEscribiendo` `{ conversacionId, usuarioId, escribiendo }`. Si quien avisa no es participante, no se envía nada.
+- No usa base de datos nueva ni stored procedures.
+
+## Tipos de trabajo dinámicos (registro de cuidadores)
+
+- Nuevo `GET /api/tipotrabajo` → `[{ id, nombre, descripcion, icono, activo }]` (todos, activos primero). SP `sp_ObtenerTiposTrabajos` (script en `docs/sql/tipos-trabajos.sql`).
+- La app arma el paso "¿Qué trabajo haces?" con esta lista. Los tipos con `activo = false` se muestran como "No disponible" y no se pueden elegir. Si el endpoint falla, la app usa las 3 opciones de siempre.
+- Sin cambios en el registro: se sigue enviando `Especialidad` como **texto** (el `Nombre` del tipo) y `sp_CrearUsuarioCuidador` no cambia. Por eso el `Nombre` en `TiposTrabajos` debe coincidir con el texto que se quiere guardar en `PerfilCuidador.Especialidad`.
+
+## Registro: nacionalidad, documento de identidad, teléfono y documentos opcionales
+
+- BD: tabla `Nacionalidades`; columnas en `Usuarios`: `NacionalidadId INT NULL` (FK), `DocumentoIdentidad NVARCHAR(30) NULL`, `Telefono NVARCHAR(20) NULL`.
+- Scripts, en este orden: `docs/sql/nacionalidades.sql`, `usuarios-nacionalidad.sql` (incluye `sp_ObtenerNacionalidades`), `usuarios-documento-identidad.sql`, `usuarios-telefono.sql`, `registro-sps.sql`. Correrlos **antes** de publicar el API.
+- Nuevo `GET /api/nacionalidad` → `[{ id, nombre, pais, codigoIso }]` (solo activas).
+- `POST /api/auth/register/cliente` y `/register/cuidador` aceptan, todos opcionales: `nacionalidadId`, `documentoIdentidad` y `telefono`. Solo el cuidador acepta además `documentosExtra: [{ tipoDocumento, urlArchivo }]`.
+- `sp_CrearUsuarioCliente` / `sp_CrearUsuarioCuidador` reciben `@NacionalidadId`, `@DocumentoIdentidad` y `@Telefono`, y el del cuidador también `@DocumentosExtra` (JSON, leído con `OPENJSON`). Todos son opcionales (`= NULL`): una llamada vieja funciona igual.
+- Documentos del cuidador:
+  - Si la nacionalidad no es dominicana, el documento de `CedulaUrl` se registra en `DocumentosCuidador` como `Pasaporte`; si es dominicana, como `Cedula`.
+  - Los extra quedan con `Estado = 1` (pendiente). Aprobar al cuidador los aprueba todos, igual que los demás.
+  - Tipos de los extra: `Certificado Apostillado` y `Declaración Jurada` (solo para extranjeros), `Certificado médico`, `Certificado profesional`, `Curso o capacitación` y `Carta de recomendación`.
+- App:
+  - Contraseña con mínimo 6 caracteres, al menos un número y un carácter especial, y un campo para confirmarla.
+  - Teléfono obligatorio (7 a 15 dígitos) en "Cuéntanos sobre ti".
+  - Sección de documentos opcionales.
+  - Aviso en el paso de cobro: un texto si el método requiere validación extra y otro si es efectivo.
+
+## Reemplazar un documento rechazado
+
+- Nuevo `PUT /api/cuidador/documentos/{documentoId}/reemplazar`, con cuerpo `{ cuidadorId, urlArchivo }`. Antes, la app sube el archivo con `api/upload`. Responde 400 si el documento no es de ese cuidador o no está rechazado.
+- SP `sp_ReemplazarDocumentoCuidador` (`docs/sql/reemplazar-documento.sql`):
+  - El documento vuelve a pendiente (`Estado 1`) con el archivo nuevo y sin la observación anterior.
+  - Si es cédula, pasaporte o carta de antecedentes, también actualiza la URL en `PerfilCuidador`.
+  - Si la cuenta estaba rechazada (`EstadoAprobacion 3`) y ya no le quedan documentos rechazados, vuelve a pendiente (1).
+- App: en "Documentos en revisión", cada documento rechazado tiene el botón "Subir otro documento".
+
+## Notificaciones: eventos nuevos en tiempo real
+
+Todos se envían al grupo `user-{usuarioId}`, y si falla el envío no se interrumpe la operación:
+- `CuentaActualizada` `{ cuidadorId, estado }`: el admin aprueba (2) o rechaza (3) al cuidador (`AdminService.ActualizarEstadoCuidadorAsync`).
+- `PagoAprobado` `{ pagoId, trabajoId, monto }`: el monto incluye la propina. Se envía al cuidador cuando el admin aprueba el pago (`PagoAdminService.AprobarPagoAsync`).
+- `TicketActualizado` `{ ticketId, respuesta, estado, asunto }`: se envía al dueño del reporte cuando el admin responde (`respuesta = true`) o cambia el estado.
+
+No hay SPs ni tablas nuevas. Hay que publicar el API.

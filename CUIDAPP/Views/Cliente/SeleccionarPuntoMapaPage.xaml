@@ -6,45 +6,76 @@
              Shell.NavBarIsVisible="False"
              BackgroundColor="#FFFFFF">
 
-    <Grid RowDefinitions="Auto, *, Auto">
+    <!-- Mapa arriba, formulario en una hoja inferior (fila propia de la cuadrícula: el sistema
+         la deja por encima de la barra de gestos). -->
+    <Grid RowDefinitions="*, Auto">
 
-        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" Padding="20,15,20,10" BackgroundColor="White">
-            <ContentView x:Name="BtnBack" VerticalOptions="Center">
-                <ContentView.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnBackTapped" />
-                </ContentView.GestureRecognizers>
-                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
-            </ContentView>
-            <Label Grid.Column="1" Text="{loc:T elige_la_ubicacion}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
-        </Grid>
-
-        <Grid Grid.Row="1">
+        <!-- MAPA + controles flotantes -->
+        <Grid Grid.Row="0">
             <WebView x:Name="MapaWebView" Navigating="OnMapaNavigating"/>
-            <Label Text="{loc:T toca_el_mapa_para_marcar}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="White" BackgroundColor="#CC111827" Padding="14,8" HorizontalOptions="Center" VerticalOptions="Start" Margin="0,15,0,0" />
+
+            <!-- Atrás -->
+            <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="White" WidthRequest="46" HeightRequest="46" HorizontalOptions="Start" VerticalOptions="Start" Margin="16,14,0,0">
+                <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                <Border.Shadow>
+                    <Shadow Brush="#0A2F41" Offset="0,4" Opacity="0.18" Radius="10"/>
+                </Border.Shadow>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                </Border.GestureRecognizers>
+                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="{StaticResource ColorTextStrong}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
+
+            <!-- Indicación -->
+            <Border x:Name="PildoraIndicacion" Stroke="Transparent" BackgroundColor="#E60A2F41" StrokeShape="RoundRectangle 20" Padding="14,9" HorizontalOptions="Center" VerticalOptions="Start" Margin="70,20,70,0">
+                <HorizontalStackLayout Spacing="8">
+                    <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="White" Aspect="Uniform" WidthRequest="13" HeightRequest="13" VerticalOptions="Center"/>
+                    <Label Text="{loc:T toca_el_mapa_para_marcar}" FontSize="12" FontFamily="OpenSansSemibold" TextColor="White" VerticalOptions="Center"/>
+                </HorizontalStackLayout>
+            </Border>
         </Grid>
 
-        <VerticalStackLayout Grid.Row="2" Padding="20,15,20,30" Spacing="12" BackgroundColor="White">
-            <VerticalStackLayout x:Name="LabelNombre" Spacing="8">
-                <Label Text="{loc:T nombre_de_la_ubicacion}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
-                <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
-                    <Entry x:Name="EntryNombre" Placeholder="{loc:T ej_casa_casa_de_mama}" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="45"/>
+        <!-- HOJA INFERIOR con el formulario -->
+        <Border x:Name="HojaFormulario" Grid.Row="1" Margin="0,-24,0,0" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 28,28,0,0" Padding="20,10,20,20">
+            <Border.Shadow>
+                <Shadow Brush="#0A2F41" Offset="0,-6" Opacity="0.12" Radius="20"/>
+            </Border.Shadow>
+            <VerticalStackLayout Spacing="14">
+                <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorBorder}" StrokeShape="RoundRectangle 3" WidthRequest="40" HeightRequest="5" HorizontalOptions="Center" Margin="0,0,0,2"/>
+                <Label Text="{loc:T elige_la_ubicacion}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+
+                <VerticalStackLayout x:Name="LabelNombre" Spacing="8">
+                    <Label Text="{loc:T nombre_de_la_ubicacion}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                    <Border Stroke="Transparent" StrokeThickness="1.5" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 14" Padding="14,0">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <Path Data="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="17" HeightRequest="17" VerticalOptions="Center"/>
+                            <Entry x:Name="EntryNombre" Grid.Column="1" Placeholder="{loc:T ej_casa_casa_de_mama}" FontFamily="OpenSansRegular" FontSize="15" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="50"
+                                   Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="{loc:T direccion}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                    <Border Stroke="Transparent" StrokeThickness="1.5" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 14" Padding="14,0">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="17" HeightRequest="17" VerticalOptions="Center"/>
+                            <Entry x:Name="EntryDireccion" Grid.Column="1" Placeholder="{loc:T ej_calle_principal_12_sector}" FontFamily="OpenSansRegular" FontSize="15" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="50"
+                                   Focused="OnCampoFocused" Unfocused="OnCampoUnfocused"/>
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
+
+                <Border x:Name="LabelPredeterminada" Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 14" Padding="14,6">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <Label Grid.Column="0" Text="{loc:T usar_como_predeterminada}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
+                        <Switch x:Name="SwitchPredeterminada" Grid.Column="1" OnColor="{StaticResource ColorPrimaryLight}" ThumbColor="{StaticResource ColorPrimary}"/>
+                    </Grid>
                 </Border>
+
+                <Button x:Name="BtnGuardar" Text="{loc:T guardar_ubicacion}" Clicked="OnGuardarClicked" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="16" HeightRequest="56" Margin="0,2,0,0"/>
             </VerticalStackLayout>
-
-            <VerticalStackLayout Spacing="8">
-                <Label Text="{loc:T direccion}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#374151"/>
-                <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
-                    <Entry x:Name="EntryDireccion" Placeholder="{loc:T ej_calle_principal_12_sector}" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="45"/>
-                </Border>
-            </VerticalStackLayout>
-
-            <Grid x:Name="LabelPredeterminada" ColumnDefinitions="*, Auto">
-                <Label Grid.Column="0" Text="{loc:T usar_como_predeterminada}" FontSize="14" FontFamily="OpenSansRegular" TextColor="#374151" VerticalOptions="Center"/>
-                <Switch x:Name="SwitchPredeterminada" Grid.Column="1" OnColor="#2563EB"/>
-            </Grid>
-
-            <Button x:Name="BtnGuardar" Text="{loc:T guardar_ubicacion}" Clicked="OnGuardarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55"/>
-        </VerticalStackLayout>
+        </Border>
 
     </Grid>
 

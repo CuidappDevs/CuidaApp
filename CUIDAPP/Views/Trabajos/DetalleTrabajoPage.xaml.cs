@@ -34,9 +34,20 @@ namespace CUIDAPP.Views.Trabajos
             InitializeComponent();
         }
 
+        private bool entradaHecha;
+
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            BarraEstado.Blanca();
+            if (!entradaHecha)
+            {
+                entradaHecha = true;
+                Contenido.Opacity = 0;
+                Contenido.TranslationY = 16;
+                _ = Contenido.FadeTo(1, 300, Easing.CubicOut);
+                _ = Contenido.TranslateTo(0, 0, 360, Easing.CubicOut);
+            }
             estaVisible = true;
             RealtimeService.TrabajoActualizado += OnTrabajoActualizadoTiempoReal;
             await CargarMapaRutaAsync();
@@ -150,7 +161,7 @@ namespace CUIDAPP.Views.Trabajos
                     FontSize = 14,
                     FontFamily = "OpenSansRegular",
                     VerticalOptions = LayoutOptions.Center,
-                    TextColor = tarea.Completada ? Color.FromArgb("#9CA3AF") : Color.FromArgb("#111827"),
+                    TextColor = tarea.Completada ? (Color)Application.Current!.Resources["ColorTextMuted"] : (Color)Application.Current!.Resources["ColorTextStrong"],
                     TextDecorations = tarea.Completada ? TextDecorations.Strikethrough : TextDecorations.None
                 };
 
@@ -164,7 +175,7 @@ namespace CUIDAPP.Views.Trabajos
                     var ok = await _apiService.CompletarTareaAsync(tareaId);
                     if (ok)
                     {
-                        texto.TextColor = Color.FromArgb("#9CA3AF");
+                        texto.TextColor = (Color)Application.Current!.Resources["ColorTextMuted"];
                         texto.TextDecorations = TextDecorations.Strikethrough;
                     }
                     else
@@ -201,7 +212,7 @@ namespace CUIDAPP.Views.Trabajos
                 ListaActividades.Add(new Border
                 {
                     Stroke = Colors.Transparent,
-                    BackgroundColor = Color.FromArgb("#F8FAFC"),
+                    BackgroundColor = (Color)Application.Current!.Resources["ColorBackground"],
                     StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
                     Padding = new Thickness(12, 10),
                     Content = new VerticalStackLayout
@@ -209,8 +220,8 @@ namespace CUIDAPP.Views.Trabajos
                         Spacing = 2,
                         Children =
                         {
-                            new Label { Text = actividad.Descripcion, FontSize = 14, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#111827") },
-                            new Label { Text = actividad.FechaHora.ToString("h:mm tt"), FontSize = 11, FontFamily = "OpenSansRegular", TextColor = Color.FromArgb("#9CA3AF") }
+                            new Label { Text = actividad.Descripcion, FontSize = 14, FontFamily = "OpenSansRegular", TextColor = (Color)Application.Current!.Resources["ColorTextStrong"] },
+                            new Label { Text = actividad.FechaHora.ToString("h:mm tt"), FontSize = 11, FontFamily = "OpenSansRegular", TextColor = (Color)Application.Current!.Resources["ColorTextMuted"] }
                         }
                     }
                 });
@@ -639,6 +650,7 @@ namespace CUIDAPP.Views.Trabajos
             if (trabajo == null)
                 return;
 
+            AvisosApp.MarcarAccionPropia(trabajo.Id, nuevoEstado);
             var success = await _apiService.ActualizarEstadoTrabajoAsync(trabajo.Id, nuevoEstado);
 
             if (success)

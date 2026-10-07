@@ -49,9 +49,12 @@ namespace CUIDAPP.Views.Chat
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            BarraEstado.Blanca();
             miUsuarioId = Preferences.Default.Get("UserId", 0);
 
             RealtimeService.MensajeNuevo += OnMensajeNuevoTiempoReal;
+            RealtimeService.UsuarioEscribiendo -= OnUsuarioEscribiendo;
+            RealtimeService.UsuarioEscribiendo += OnUsuarioEscribiendo;
 
             var conversacion = await _apiService.ObtenerOCrearConversacionAsync(trabajoId);
             if (conversacion == null)
@@ -76,6 +79,9 @@ namespace CUIDAPP.Views.Chat
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
+            RealtimeService.UsuarioEscribiendo -= OnUsuarioEscribiendo;
+            DejarDeAvisarEscribiendo();
+            OcultarIndicadorEscribiendo();
             RealtimeService.MensajeNuevo -= OnMensajeNuevoTiempoReal;
 
             if (ConversacionAbiertaId == conversacionId)
@@ -119,6 +125,8 @@ namespace CUIDAPP.Views.Chat
 
         private async void OnMensajeNuevoTiempoReal(Mensaje mensaje)
         {
+            if (mensaje.ConversacionId == conversacionId && mensaje.RemitenteId != miUsuarioId)
+                OcultarIndicadorEscribiendo();
             if (mensaje.ConversacionId != conversacionId)
                 return;
 
@@ -142,18 +150,32 @@ namespace CUIDAPP.Views.Chat
                 _ => CrearContenidoTexto(mensaje, esMio)
             };
 
+            // Burbuja con "cola": la esquina del lado de quien escribe queda casi recta.
             var burbuja = new Border
             {
                 Stroke = Colors.Transparent,
-                BackgroundColor = esMio ? Color.FromArgb("#2563EB") : Colors.White,
-                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 },
+                BackgroundColor = esMio ? (Color)Application.Current!.Resources["ColorPrimary"] : Colors.White,
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle
+                {
+                    CornerRadius = esMio ? new CornerRadius(20, 20, 20, 6) : new CornerRadius(20, 20, 6, 20)
+                },
                 Padding = mensaje.Tipo == "imagen" ? new Thickness(6) : new Thickness(14, 10),
-                MaximumWidthRequest = 260,
+                MaximumWidthRequest = 270,
                 HorizontalOptions = esMio ? LayoutOptions.End : LayoutOptions.Start,
+                Shadow = esMio ? null! : new Shadow { Brush = Color.FromArgb("#0A2F41"), Offset = new Point(0, 2), Radius = 6, Opacity = 0.05f },
                 Content = contenidoBurbuja
             };
 
+            // Entrada: aparece desde su lado con un leve crecimiento.
+            burbuja.Opacity = 0;
+            burbuja.Scale = 0.94;
+            burbuja.TranslationX = esMio ? 12 : -12;
+            burbuja.AnchorX = esMio ? 1 : 0;
+
             ListaMensajes.Add(burbuja);
+            _ = burbuja.FadeTo(1, 200, Easing.CubicOut);
+            _ = burbuja.ScaleTo(1, 240, Easing.CubicOut);
+            _ = burbuja.TranslateTo(0, 0, 240, Easing.CubicOut);
             _ = ScrollMensajes.ScrollToAsync(0, ListaMensajes.Height, true);
         }
 
@@ -277,7 +299,7 @@ namespace CUIDAPP.Views.Chat
                 Text = mensaje.FechaEnvio.ToString("h:mm tt"),
                 FontSize = 10,
                 FontFamily = "OpenSansRegular",
-                TextColor = esMio ? Color.FromArgb("#C7D2FE") : Color.FromArgb("#9CA3AF"),
+                TextColor = esMio ? Color.FromArgb("#C9D9F0") : Color.FromArgb("#8A97A6"),
                 HorizontalOptions = LayoutOptions.End,
                 Margin = margenExtra ? new Thickness(0, 0, 6, 4) : new Thickness(0)
             };
@@ -341,11 +363,14 @@ namespace CUIDAPP.Views.Chat
 
         private async void OnEnviarClicked(object sender, EventArgs e)
         {
+            _ = BtnEnviarCirculo.ScaleTo(0.88, 80, Easing.CubicOut).ContinueWith(_ =>
+                MainThread.BeginInvokeOnMainThread(() => BtnEnviarCirculo.ScaleTo(1, 160, Easing.CubicOut)));
             var texto = EntryMensaje.Text?.Trim();
             if (string.IsNullOrWhiteSpace(texto) || conversacionId == 0)
                 return;
 
             EntryMensaje.Text = "";
+            DejarDeAvisarEscribiendo();
 
             var mensaje = await _apiService.EnviarMensajeAsync(conversacionId, miUsuarioId, texto);
             if (mensaje != null)
@@ -402,14 +427,17 @@ namespace CUIDAPP.Views.Chat
                 grabando = true;
                 ContenedorEntry.IsVisible = false;
                 LblGrabando.IsVisible = true;
-                IconoMicrofono.Fill = Color.FromArgb("#DC2626");
+                new Animation(t => PuntoGrabando.Opacity = 0.3 + 0.7 * Math.Abs(Math.Cos(t * Math.PI)), 0, 1)
+                    .Commit(this, "PuntoGrabando", length: 1000, easing: Easing.Linear, repeat: () => LblGrabando.IsVisible);
+                IconoMicrofono.Fill = (Color)Application.Current!.Resources["ColorDanger"];
             }
             else
             {
                 grabando = false;
                 ContenedorEntry.IsVisible = true;
                 LblGrabando.IsVisible = false;
-                IconoMicrofono.Fill = Color.FromArgb("#2563EB");
+                this.AbortAnimation("PuntoGrabando");
+                IconoMicrofono.Fill = (Color)Application.Current!.Resources["ColorPrimary"];
 
                 if (_grabador == null || _rutaGrabacionActual == null)
                     return;
@@ -438,6 +466,125 @@ namespace CUIDAPP.Views.Chat
                 if (mensaje != null)
                     AgregarMensajeSiNuevo(mensaje);
             }
+        }
+
+        private void OnMensajeFocused(object? sender, FocusEventArgs e)
+        {
+            ContenedorEntry.Stroke = (Color)Application.Current!.Resources["ColorPrimary"];
+            ContenedorEntry.BackgroundColor = Colors.White;
+        }
+
+        private void OnMensajeUnfocused(object? sender, FocusEventArgs e)
+        {
+            ContenedorEntry.Stroke = Colors.Transparent;
+            ContenedorEntry.BackgroundColor = (Color)Application.Current!.Resources["ColorBackground"];
+        }
+
+        // ================= "Está escribiendo…" =================
+
+        private DateTime ultimoAvisoEscribiendo = DateTime.MinValue;
+        private bool avisandoEscribiendo;
+        private CancellationTokenSource? ctsDejarDeEscribir;
+        private CancellationTokenSource? ctsOcultarIndicador;
+
+        // Mientras escribo: aviso al otro como mucho cada 3 s; si dejo de teclear 4 s, aviso que paré.
+        private void OnMensajeTextChanged(object? sender, TextChangedEventArgs e)
+        {
+            if (conversacionId == 0)
+                return;
+
+            if (string.IsNullOrWhiteSpace(e.NewTextValue))
+            {
+                DejarDeAvisarEscribiendo();
+                return;
+            }
+
+            if (!avisandoEscribiendo || (DateTime.UtcNow - ultimoAvisoEscribiendo).TotalSeconds >= 3)
+            {
+                avisandoEscribiendo = true;
+                ultimoAvisoEscribiendo = DateTime.UtcNow;
+                _ = RealtimeService.AvisarEscribiendoAsync(conversacionId, miUsuarioId, true);
+            }
+
+            ctsDejarDeEscribir?.Cancel();
+            ctsDejarDeEscribir = new CancellationTokenSource();
+            var token = ctsDejarDeEscribir.Token;
+            _ = Task.Delay(4000, token).ContinueWith(t =>
+            {
+                if (!t.IsCanceled)
+                    MainThread.BeginInvokeOnMainThread(DejarDeAvisarEscribiendo);
+            });
+        }
+
+        private void DejarDeAvisarEscribiendo()
+        {
+            ctsDejarDeEscribir?.Cancel();
+            if (!avisandoEscribiendo || conversacionId == 0)
+                return;
+            avisandoEscribiendo = false;
+            _ = RealtimeService.AvisarEscribiendoAsync(conversacionId, miUsuarioId, false);
+        }
+
+        // El otro está escribiendo: se muestra el indicador. Si deja de llegar el aviso
+        // (se cortó la conexión, cerró la app…), se oculta solo a los 6 s.
+        private void OnUsuarioEscribiendo(int idConversacion, int usuarioId, bool escribiendo)
+        {
+            if (idConversacion != conversacionId || usuarioId == miUsuarioId)
+                return;
+
+            if (!escribiendo)
+            {
+                OcultarIndicadorEscribiendo();
+                return;
+            }
+
+            MostrarIndicadorEscribiendo();
+
+            ctsOcultarIndicador?.Cancel();
+            ctsOcultarIndicador = new CancellationTokenSource();
+            var token = ctsOcultarIndicador.Token;
+            _ = Task.Delay(6000, token).ContinueWith(t =>
+            {
+                if (!t.IsCanceled)
+                    MainThread.BeginInvokeOnMainThread(OcultarIndicadorEscribiendo);
+            });
+        }
+
+        private void MostrarIndicadorEscribiendo()
+        {
+            var nombre = LblOtroNombre.Text?.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+            LblEscribiendo.Text = Localizador.F("esta_escribiendo", nombre);
+
+            if (IndicadorEscribiendo.IsVisible)
+                return;
+
+            IndicadorEscribiendo.Opacity = 0;
+            IndicadorEscribiendo.TranslationY = 8;
+            IndicadorEscribiendo.IsVisible = true;
+            _ = IndicadorEscribiendo.FadeTo(1, 180, Easing.CubicOut);
+            _ = IndicadorEscribiendo.TranslateTo(0, 0, 220, Easing.CubicOut);
+
+            // Deja espacio abajo para que el indicador no tape el último mensaje
+            ListaMensajes.Padding = new Thickness(14, 16, 14, 56);
+            _ = ScrollMensajes.ScrollToAsync(0, ListaMensajes.Height, true);
+
+            // Los tres puntos suben y bajan en ola
+            new Animation(t =>
+            {
+                PuntoEscribiendo1.TranslationY = -4 * Math.Max(0, Math.Sin(t * Math.PI * 2));
+                PuntoEscribiendo2.TranslationY = -4 * Math.Max(0, Math.Sin(t * Math.PI * 2 - 0.9));
+                PuntoEscribiendo3.TranslationY = -4 * Math.Max(0, Math.Sin(t * Math.PI * 2 - 1.8));
+            }, 0, 1).Commit(this, "PuntosEscribiendo", length: 1100, easing: Easing.Linear, repeat: () => IndicadorEscribiendo.IsVisible);
+        }
+
+        private void OcultarIndicadorEscribiendo()
+        {
+            ctsOcultarIndicador?.Cancel();
+            if (!IndicadorEscribiendo.IsVisible)
+                return;
+            this.AbortAnimation("PuntosEscribiendo");
+            IndicadorEscribiendo.IsVisible = false;
+            ListaMensajes.Padding = new Thickness(14, 16, 14, 16);
         }
 
         private async void OnBackTapped(object sender, EventArgs e)

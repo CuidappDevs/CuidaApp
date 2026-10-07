@@ -81,6 +81,8 @@ namespace CUIDAPP.Helpers
             };
 
             dialogo.Show();
+            // Segunda medición ya con el tamaño real de la ventana (por si el texto ocupa más líneas).
+            nativa.Post(() => nativa.RequestLayout());
             _ = vista.AnimarEntradaAsync();
             return true;
 #else

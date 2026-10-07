@@ -4,96 +4,100 @@
              xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Trabajos.TrabajosPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#F9FAFB">
+             BackgroundColor="{StaticResource ColorBackground}">
 
-    <Grid RowDefinitions="Auto, Auto, *, Auto">
-        
-        <!-- HEADER -->
-        <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Padding="20,15,20,10" BackgroundColor="White">
-            <ContentView x:Name="BtnBack" VerticalOptions="Center">
-                <ContentView.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnBackTapped" />
-                </ContentView.GestureRecognizers>
-                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
-            </ContentView>
-            
-            <Label Grid.Column="1" Text="{loc:T trabajos_disponibles}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
-            
-            <!-- Icono Filtro -->
-            <Path Grid.Column="2" Data="M3 5H21V7H3V5ZM7 11H17V13H7V11ZM10 17H14V19H10V17Z" Fill="#6B7280" Aspect="Uniform" WidthRequest="22" HeightRequest="22" VerticalOptions="Center"/>
-        </Grid>
+    <!-- Zona segura por defecto: la barra de pestañas inferior va en su propia fila. -->
+    <Grid RowDefinitions="Auto, *, Auto">
 
-        <!-- TABS -->
-        <Grid Grid.Row="1" ColumnDefinitions="*, *, *" Padding="0,10,0,0" BackgroundColor="White">
-            <VerticalStackLayout Grid.Column="0" Spacing="8">
-                <VerticalStackLayout.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnTabNuevosTapped" />
-                </VerticalStackLayout.GestureRecognizers>
-                <Label x:Name="LblTabNuevos" Text="{loc:T nuevos}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#1D4ED8" HorizontalOptions="Center"/>
-                <BoxView x:Name="IndicadorTabNuevos" HeightRequest="2" Color="#1D4ED8" HorizontalOptions="Fill"/>
-            </VerticalStackLayout>
-            <VerticalStackLayout Grid.Column="1" Spacing="8">
-                <VerticalStackLayout.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnTabAceptadosTapped" />
-                </VerticalStackLayout.GestureRecognizers>
-                <Label x:Name="LblTabAceptados" Text="{loc:T aceptados}" FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
-                <BoxView x:Name="IndicadorTabAceptados" HeightRequest="2" Color="Transparent" HorizontalOptions="Fill"/>
-            </VerticalStackLayout>
-            <VerticalStackLayout Grid.Column="2" Spacing="8">
-                <VerticalStackLayout.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnTabHistorialTapped" />
-                </VerticalStackLayout.GestureRecognizers>
-                <Label x:Name="LblTabHistorial" Text="{loc:T historial}" FontSize="14" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
-                <BoxView x:Name="IndicadorTabHistorial" HeightRequest="2" Color="Transparent" HorizontalOptions="Fill"/>
-            </VerticalStackLayout>
-        </Grid>
+        <!-- ENCABEZADO + PESTAÑAS -->
+        <VerticalStackLayout Grid.Row="0" Padding="12,8,16,10" Spacing="14" BackgroundColor="{StaticResource ColorBackground}">
+            <Grid ColumnDefinitions="44, *, 44">
+                <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="White" WidthRequest="44" HeightRequest="44">
+                    <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackTapped" />
+                    </Border.GestureRecognizers>
+                    <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="{StaticResource ColorTextStrong}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Label Grid.Column="1" Text="{loc:T trabajos_disponibles}" FontSize="17" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Center" VerticalOptions="Center"/>
+            </Grid>
 
-        <!-- CONTENIDO / LISTA DE TRABAJOS -->
-        <ScrollView Grid.Row="2">
-            <VerticalStackLayout Padding="20,15,20,30" Spacing="15">
-                <VerticalStackLayout x:Name="ListaTrabajos" Spacing="15" />
-                <Label x:Name="LblSinTrabajosTab" Text="{loc:T no_hay_trabajos_en_esta}" FontSize="14" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center" IsVisible="False" Margin="0,30,0,0" />
-                <ActivityIndicator x:Name="LoadingIndicator" IsRunning="False" Color="#2563EB" />
+            <!-- Control segmentado -->
+            <Border Stroke="Transparent" BackgroundColor="#E6ECF4" StrokeShape="RoundRectangle 16" Padding="4" Margin="4,0,0,0">
+                <Grid ColumnDefinitions="*, *, *" ColumnSpacing="4">
+                    <Border x:Name="IndicadorTabNuevos" Grid.Column="0" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 12" Padding="0,9">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnTabNuevosTapped" />
+                        </Border.GestureRecognizers>
+                        <Label x:Name="LblTabNuevos" Text="{loc:T nuevos}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center"/>
+                    </Border>
+                    <Border x:Name="IndicadorTabAceptados" Grid.Column="1" Stroke="Transparent" BackgroundColor="Transparent" StrokeShape="RoundRectangle 12" Padding="0,9">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnTabAceptadosTapped" />
+                        </Border.GestureRecognizers>
+                        <Label x:Name="LblTabAceptados" Text="{loc:T aceptados}" FontSize="14" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center"/>
+                    </Border>
+                    <Border x:Name="IndicadorTabHistorial" Grid.Column="2" Stroke="Transparent" BackgroundColor="Transparent" StrokeShape="RoundRectangle 12" Padding="0,9">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnTabHistorialTapped" />
+                        </Border.GestureRecognizers>
+                        <Label x:Name="LblTabHistorial" Text="{loc:T historial}" FontSize="14" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center"/>
+                    </Border>
+                </Grid>
+            </Border>
+        </VerticalStackLayout>
+
+        <!-- LISTA -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="20,6,20,28" Spacing="12">
+                <VerticalStackLayout x:Name="ListaTrabajos" Spacing="12" />
+                <VerticalStackLayout x:Name="LblSinTrabajosTab" Spacing="12" IsVisible="False" Margin="0,40,0,0" HorizontalOptions="Center">
+                    <Border Stroke="Transparent" BackgroundColor="#EAF1FB" WidthRequest="84" HeightRequest="84" HorizontalOptions="Center">
+                        <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                        <Path Data="M20 6H16V4C16 2.9 15.1 2 14 2H10C8.9 2 8 2.9 8 4V6H4C2.9 6 2.01 6.9 2.01 8L2 19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6ZM10 4H14V6H10V4ZM20 19H4V8H20V19Z" Fill="{StaticResource ColorPrimaryLight}" Aspect="Uniform" WidthRequest="34" HeightRequest="34" HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Border>
+                    <Label Text="{loc:T no_hay_trabajos_en_esta}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                </VerticalStackLayout>
+                <ActivityIndicator x:Name="LoadingIndicator" IsRunning="False" Color="{StaticResource ColorPrimary}" />
             </VerticalStackLayout>
         </ScrollView>
 
-        <!-- BOTTOM TAB BAR (Hardcoded con Trabajos Activo) -->
-        <Border Grid.Row="3" Stroke="#F3F4F6" StrokeThickness="1" BackgroundColor="White" Padding="15,10" StrokeShape="RoundRectangle 0">
+        <!-- BARRA DE PESTAÑAS -->
+        <Border Grid.Row="2" Stroke="Transparent" BackgroundColor="White" Padding="12,8,12,8" StrokeShape="RoundRectangle 24,24,0,0">
             <Border.Shadow>
-                <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
+                <Shadow Brush="#0A2F41" Offset="0,-6" Opacity="0.07" Radius="16"/>
             </Border.Shadow>
             <Grid ColumnDefinitions="*,*,*,*">
-                <!-- Inicio (Inactivo) -->
-                <VerticalStackLayout Grid.Column="0" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center">
+                <VerticalStackLayout Grid.Column="0" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center" Padding="12,6">
                     <VerticalStackLayout.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnInicioTapped" />
                     </VerticalStackLayout.GestureRecognizers>
-                    <Path Data="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
-                    <Label Text="{loc:T inicio}" FontSize="10" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                    <Path Data="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center"/>
+                    <Label Text="{loc:T inicio}" FontSize="10" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center"/>
                 </VerticalStackLayout>
 
-                <!-- Trabajos (Activo) -->
-                <VerticalStackLayout Grid.Column="1" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center">
-                    <Path Data="M20 6H16V4C16 2.9 15.1 2 14 2H10C8.9 2 8 2.9 8 4V6H4C2.9 6 2.01 6.9 2.01 8L2 19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6ZM10 4H14V6H10V4ZM20 19H4V8H20V19Z" Fill="#2563EB" Aspect="Uniform" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
-                    <Label Text="{loc:T trabajos}" FontSize="10" FontFamily="OpenSansSemibold" TextColor="#2563EB" HorizontalOptions="Center"/>
-                </VerticalStackLayout>
+                <!-- Trabajos (activa) -->
+                <Border Grid.Column="1" Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 18" Padding="0,6" Margin="6,0">
+                    <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
+                        <Path Data="M20 6H16V4C16 2.9 15.1 2 14 2H10C8.9 2 8 2.9 8 4V6H4C2.9 6 2.01 6.9 2.01 8L2 19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6ZM10 4H14V6H10V4ZM20 19H4V8H20V19Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center"/>
+                        <Label Text="{loc:T trabajos}" FontSize="10" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+                </Border>
 
-                <!-- Dinero (Inactivo) -->
-                <VerticalStackLayout Grid.Column="2" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center">
+                <VerticalStackLayout Grid.Column="2" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center" Padding="12,6">
                     <VerticalStackLayout.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnDineroTapped" />
                     </VerticalStackLayout.GestureRecognizers>
-                    <Path Data="M21 7.28V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V16.72C21.59 16.37 22 15.74 22 15V9C22 8.26 21.59 7.63 21 7.28ZM20 15H13V9H20V15ZM5 19V5H19V7H13C11.9 7 11 7.9 11 9V15C11 16.1 11.9 17 13 17H19V19H5ZM16 13.5C15.17 13.5 14.5 12.83 14.5 12C14.5 11.17 15.17 10.5 16 10.5C16.83 10.5 17.5 11.17 17.5 12C17.5 12.83 16.83 13.5 16 13.5Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
-                    <Label Text="{loc:T dinero}" FontSize="10" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                    <Path Data="M21 7.28V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V16.72C21.59 16.37 22 15.74 22 15V9C22 8.26 21.59 7.63 21 7.28ZM20 15H13V9H20V15ZM5 19V5H19V7H13C11.9 7 11 7.9 11 9V15C11 16.1 11.9 17 13 17H19V19H5ZM16 13.5C15.17 13.5 14.5 12.83 14.5 12C14.5 11.17 15.17 10.5 16 10.5C16.83 10.5 17.5 11.17 17.5 12C17.5 12.83 16.83 13.5 16 13.5Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center"/>
+                    <Label Text="{loc:T dinero}" FontSize="10" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center"/>
                 </VerticalStackLayout>
 
-                <!-- Perfil (Inactivo) -->
-                <VerticalStackLayout Grid.Column="3" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center">
+                <VerticalStackLayout Grid.Column="3" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center" Padding="12,6">
                     <VerticalStackLayout.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnPerfilTapped" />
                     </VerticalStackLayout.GestureRecognizers>
-                    <Path Data="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
-                    <Label Text="{loc:T perfil}" FontSize="10" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                    <Path Data="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center"/>
+                    <Label Text="{loc:T perfil}" FontSize="10" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center"/>
                 </VerticalStackLayout>
             </Grid>
         </Border>

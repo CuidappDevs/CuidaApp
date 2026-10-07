@@ -89,6 +89,9 @@ namespace CUIDAPP_API.Services.Auth
             command.Parameters.AddWithValue("@DireccionPrincipal", (object?)registerDto.DireccionPrincipal ?? DBNull.Value);
             command.Parameters.AddWithValue("@ContactoEmergenciaNombre", (object?)registerDto.ContactoEmergenciaNombre ?? DBNull.Value);
             command.Parameters.AddWithValue("@ContactoEmergenciaTelefono", (object?)registerDto.ContactoEmergenciaTelefono ?? DBNull.Value);
+            command.Parameters.AddWithValue("@NacionalidadId", (object?)registerDto.NacionalidadId ?? DBNull.Value);
+            command.Parameters.AddWithValue("@DocumentoIdentidad", (object?)registerDto.DocumentoIdentidad ?? DBNull.Value);
+            command.Parameters.AddWithValue("@Telefono", (object?)registerDto.Telefono ?? DBNull.Value);
 
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();
@@ -111,6 +114,16 @@ namespace CUIDAPP_API.Services.Auth
             command.Parameters.AddWithValue("@MetodoCobro", (object?)registerDto.MetodoCobro ?? DBNull.Value);
             command.Parameters.AddWithValue("@CedulaUrl", (object?)registerDto.CedulaUrl ?? DBNull.Value);
             command.Parameters.AddWithValue("@CartaAntecedentesUrl", (object?)registerDto.CartaAntecedentesUrl ?? DBNull.Value);
+            command.Parameters.AddWithValue("@NacionalidadId", (object?)registerDto.NacionalidadId ?? DBNull.Value);
+            command.Parameters.AddWithValue("@DocumentoIdentidad", (object?)registerDto.DocumentoIdentidad ?? DBNull.Value);
+            command.Parameters.AddWithValue("@Telefono", (object?)registerDto.Telefono ?? DBNull.Value);
+            var documentosExtra = registerDto.DocumentosExtra?
+                .Where(d => !string.IsNullOrWhiteSpace(d.TipoDocumento) && !string.IsNullOrWhiteSpace(d.UrlArchivo))
+                .Select(d => new { tipoDocumento = d.TipoDocumento.Trim(), urlArchivo = d.UrlArchivo.Trim() })
+                .ToList();
+            command.Parameters.AddWithValue("@DocumentosExtra", documentosExtra is { Count: > 0 }
+                ? System.Text.Json.JsonSerializer.Serialize(documentosExtra)
+                : DBNull.Value);
 
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();

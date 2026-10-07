@@ -4,64 +4,98 @@
              xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Cliente.MisUbicacionesPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#F9FAFB">
+             BackgroundColor="{StaticResource ColorBackground}"
+             SafeAreaEdges="None">
 
-    <Grid RowDefinitions="Auto, *, Auto">
+    <Grid RowDefinitions="Auto, *" SafeAreaEdges="None">
 
-        <Grid Grid.Row="0" ColumnDefinitions="Auto, *" Padding="20,15,20,10" BackgroundColor="White">
-            <ContentView x:Name="BtnBack" VerticalOptions="Center">
-                <ContentView.GestureRecognizers>
-                    <TapGestureRecognizer Tapped="OnBackTapped" />
-                </ContentView.GestureRecognizers>
-                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
-            </ContentView>
-            <Label x:Name="LblTitulo" Grid.Column="1" Text="{loc:T mis_ubicaciones}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+        <!-- ENCABEZADO (borde a borde) -->
+        <Grid Grid.Row="0" SafeAreaEdges="None" Padding="0,0,0,40">
+            <Grid.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#2A63B8" Offset="0.0" />
+                    <GradientStop Color="{StaticResource ColorPrimary}" Offset="0.6" />
+                    <GradientStop Color="{StaticResource ColorPrimaryDark}" Offset="1.0" />
+                </LinearGradientBrush>
+            </Grid.Background>
+            <Ellipse Fill="#14FFFFFF" WidthRequest="220" HeightRequest="220" HorizontalOptions="End" VerticalOptions="Start" Margin="0,-90,-80,0"/>
+
+            <!-- Una fila: atrás · título · agregar -->
+            <Grid x:Name="ContenidoEncabezado" ColumnDefinitions="44,*,44" Padding="12,10">
+                <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="#26FFFFFF" WidthRequest="44" HeightRequest="44">
+                    <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnBackTapped" />
+                    </Border.GestureRecognizers>
+                    <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="White" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+                <Label x:Name="LblTitulo" Grid.Column="1" Text="{loc:T mis_ubicaciones}" FontSize="17" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center"/>
+                <Border x:Name="BtnAgregarCirculo" Grid.Column="2" Stroke="Transparent" BackgroundColor="White" WidthRequest="44" HeightRequest="44">
+                    <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnAgregarClicked" />
+                    </Border.GestureRecognizers>
+                    <Path Data="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+            </Grid>
         </Grid>
 
-        <Grid Grid.Row="1">
-            <CollectionView x:Name="ListaUbicaciones" Margin="20,15,20,15">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate>
-                        <Border Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 14" Padding="16" Margin="0,0,0,12">
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer Tapped="OnUbicacionTapped" CommandParameter="{Binding .}"/>
-                            </Border.GestureRecognizers>
-                            <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="12">
-                                <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="#EFF6FF" StrokeShape="RoundRectangle 10" WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
-                                    <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="#2563EB" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
-                                </Border>
-                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
-                                    <HorizontalStackLayout Spacing="8">
-                                        <Label Text="{Binding Nombre}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
-                                        <Border Stroke="Transparent" BackgroundColor="#ECFDF5" StrokeShape="RoundRectangle 8" Padding="8,2" IsVisible="{Binding EsPredeterminada}">
-                                            <Label Text="{loc:T predeterminada}" FontSize="10" FontFamily="OpenSansSemibold" TextColor="#065F46"/>
-                                        </Border>
-                                    </HorizontalStackLayout>
-                                    <Label Text="{Binding Direccion}" FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" LineBreakMode="TailTruncation"/>
-                                </VerticalStackLayout>
-                                <ContentView Grid.Column="2" VerticalOptions="Center">
-                                    <ContentView.GestureRecognizers>
-                                        <TapGestureRecognizer Tapped="OnEliminarTapped" CommandParameter="{Binding .}"/>
-                                    </ContentView.GestureRecognizers>
-                                    <Path Data="M6 19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19V7H6V19ZM19 4H15.5L14.5 3H9.5L8.5 4H5V6H19V4Z" Fill="#DC2626" Aspect="Uniform" WidthRequest="20" HeightRequest="20"/>
-                                </ContentView>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
+        <!-- Hoja -->
+        <Border Grid.Row="1" Margin="0,-28,0,0" Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 28,28,0,0">
+            <Grid>
+                <CollectionView x:Name="ListaUbicaciones" Margin="0,24,0,0">
+                    <CollectionView.ItemsLayout>
+                        <LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.Footer>
+                        <ContentView x:Name="EspacioInferior" HeightRequest="40"/>
+                    </CollectionView.Footer>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="14" Margin="20,0">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnUbicacionTapped" CommandParameter="{Binding .}"/>
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="14">
+                                    <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 14" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
+                                        <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="3">
+                                        <HorizontalStackLayout Spacing="8">
+                                            <Label Text="{Binding Nombre}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
+                                            <Border Stroke="Transparent" BackgroundColor="#E3F4E8" StrokeShape="RoundRectangle 10" Padding="8,2" IsVisible="{Binding EsPredeterminada}" VerticalOptions="Center">
+                                                <Label Text="{loc:T predeterminada}" FontSize="10" FontFamily="OpenSansSemibold" TextColor="#2E7D32"/>
+                                            </Border>
+                                        </HorizontalStackLayout>
+                                        <Label Text="{Binding Direccion}" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" LineBreakMode="TailTruncation"/>
+                                    </VerticalStackLayout>
+                                    <!-- Eliminar (área táctil de 40) -->
+                                    <Border Grid.Column="2" Stroke="Transparent" BackgroundColor="#FDECEC" WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                                        <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnEliminarTapped" CommandParameter="{Binding .}"/>
+                                        </Border.GestureRecognizers>
+                                        <Path Data="M6 19C6 20.1 6.9 21 8 21H16C17.1 21 18 20.1 18 19V7H6V19ZM19 4H15.5L14.5 3H9.5L8.5 4H5V6H19V4Z" Fill="{StaticResource ColorDanger}" Aspect="Uniform" WidthRequest="16" HeightRequest="16" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
 
-            <VerticalStackLayout x:Name="EstadoVacio" IsVisible="False" HorizontalOptions="Center" VerticalOptions="Center" Spacing="10">
-                <Label Text="{loc:T aun_no_tienes_ubicaciones_guardadas}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#6B7280" HorizontalOptions="Center"/>
-                <Label Text="{loc:T agrega_la_direccion_de_tu}" FontSize="13" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center"/>
-            </VerticalStackLayout>
+                <VerticalStackLayout x:Name="EstadoVacio" IsVisible="False" HorizontalOptions="Center" VerticalOptions="Center" Spacing="14" Padding="40">
+                    <Border Stroke="Transparent" BackgroundColor="#EAF1FB" WidthRequest="88" HeightRequest="88" HorizontalOptions="Center">
+                        <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                        <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="{StaticResource ColorPrimaryLight}" Aspect="Uniform" WidthRequest="36" HeightRequest="36" HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Border>
+                    <Label Text="{loc:T aun_no_tienes_ubicaciones_guardadas}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                    <Label Text="{loc:T agrega_la_direccion_de_tu}" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                    <Button x:Name="BtnAgregar" Text="{loc:T agregar_ubicacion}" Clicked="OnAgregarClicked" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="16" HeightRequest="50" Padding="24,0" HorizontalOptions="Center" Margin="0,6,0,0"/>
+                </VerticalStackLayout>
 
-            <ActivityIndicator x:Name="LoaderCarga" IsRunning="False" IsVisible="False" Color="#2563EB" HorizontalOptions="Center" VerticalOptions="Center"/>
-        </Grid>
-
-        <VerticalStackLayout Grid.Row="2" Padding="20,10,20,30" BackgroundColor="White">
-            <Button x:Name="BtnAgregar" Text="{loc:T agregar_ubicacion}" Clicked="OnAgregarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55"/>
-        </VerticalStackLayout>
+                <ActivityIndicator x:Name="LoaderCarga" IsRunning="False" IsVisible="False" Color="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
+            </Grid>
+        </Border>
 
     </Grid>
 

@@ -188,11 +188,19 @@ namespace CUIDAPP
 
                 _ = RealtimeService.ConectarAsync(result.UserId);
                 _ = ServerClock.SincronizarAsync();
+                _ = Recordatorios.SincronizarServiciosAsync();
                 ConexionServiceManager.Iniciar();
 
                 switch (result.RolId)
                 {
                     case 3: // Cuidador
+                        // Sin aprobación formal pero con todos los documentos aprobados también entra a su panel.
+                        if (result.EstadoAprobacion != 2 && (await _apiService.ObtenerEstadoVerificacionAsync(result.UserId))?.PuedeTrabajar == true)
+                        {
+                            result.EstadoAprobacion = 2;
+                            Preferences.Default.Set("EstadoAprobacion", 2);
+                        }
+
                         if (result.EstadoAprobacion == 2)
                             await Shell.Current.GoToAsync("CuidadorDashboardPage");
                         else
@@ -205,6 +213,7 @@ namespace CUIDAPP
                         await Alerta.MostrarAsync(Localizador.T("bienvenido"), Localizador.T("inicio_de_sesion_exitoso"), Localizador.T("ok"));
                         break;
                 }
+                await NotificacionDestino.ProcesarPendienteAsync();
             }
             finally
             {

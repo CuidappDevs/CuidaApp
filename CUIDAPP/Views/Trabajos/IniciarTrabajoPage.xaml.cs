@@ -23,6 +23,19 @@ namespace CUIDAPP.Views.Trabajos
             InitializeComponent();
         }
 
+        // Casilla del PIN: borde azul al enfocar
+        private void OnPinFocused(object? sender, FocusEventArgs e)
+        {
+            if ((sender as Element)?.Parent is Border b)
+                b.Stroke = (Color)Application.Current!.Resources["ColorPrimary"];
+        }
+
+        private void OnPinUnfocused(object? sender, FocusEventArgs e)
+        {
+            if ((sender as Element)?.Parent is Border b)
+                b.Stroke = Colors.Transparent;
+        }
+
         private void OnPin1Changed(object sender, TextChangedEventArgs e) => ManejarCambioDigito(EntryPin1, EntryPin2, e);
         private void OnPin2Changed(object sender, TextChangedEventArgs e) => ManejarCambioDigito(EntryPin2, EntryPin3, e, EntryPin1);
         private void OnPin3Changed(object sender, TextChangedEventArgs e) => ManejarCambioDigito(EntryPin3, EntryPin4, e, EntryPin2);
@@ -30,6 +43,11 @@ namespace CUIDAPP.Views.Trabajos
 
         private void ManejarCambioDigito(Entry actual, Entry? siguiente, TextChangedEventArgs e, Entry? anterior = null)
         {
+            if (!string.IsNullOrEmpty(e.NewTextValue) && actual.Parent is Border casilla)
+            {
+                _ = casilla.ScaleTo(1.08, 80, Easing.CubicOut).ContinueWith(_ =>
+                    MainThread.BeginInvokeOnMainThread(() => casilla.ScaleTo(1, 140, Easing.CubicOut)));
+            }
             LblError.IsVisible = false;
 
             var texto = e.NewTextValue ?? "";

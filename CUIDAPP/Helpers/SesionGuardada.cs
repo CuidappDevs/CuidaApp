@@ -38,6 +38,7 @@ namespace CUIDAPP.Helpers
             var usuarioId = Preferences.Default.Get("UserId", 0);
             _ = RealtimeService.ConectarAsync(usuarioId);
             _ = ServerClock.SincronizarAsync();
+            _ = Recordatorios.SincronizarServiciosAsync();
             ConexionServiceManager.Iniciar();
         }
     }

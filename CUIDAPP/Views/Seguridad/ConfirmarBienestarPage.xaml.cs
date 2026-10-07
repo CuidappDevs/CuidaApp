@@ -36,7 +36,22 @@ namespace CUIDAPP.Views.Seguridad
         // No se puede salir con el botón "atrás" mientras corre la cuenta: hay que confirmar.
         protected override bool OnBackButtonPressed() => true;
 
-        private void OnTick(int segundos) => LblSegundos.Text = segundos.ToString();
+        private void OnTick(int segundos)
+        {
+            LblSegundos.Text = segundos.ToString();
+            _ = LatirAsync();
+        }
+
+        // Cada segundo: el círculo late y una onda blanca se expande hacia afuera.
+        private async Task LatirAsync()
+        {
+            OndaSegundo.Scale = 1;
+            OndaSegundo.Opacity = 0.8;
+            _ = OndaSegundo.ScaleTo(1.22, 700, Easing.CubicOut);
+            _ = OndaSegundo.FadeTo(0, 700, Easing.CubicOut);
+            await CirculoCuenta.ScaleTo(1.05, 120, Easing.CubicOut);
+            await CirculoCuenta.ScaleTo(1, 220, Easing.CubicInOut);
+        }
 
         private void OnFinalizada(ResultadoDeadMan resultado)
         {

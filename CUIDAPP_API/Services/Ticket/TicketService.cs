@@ -3,16 +3,26 @@ using Microsoft.Data.SqlClient;
 using CUIDAPP_API.DTOs.Ticket;
 using CUIDAPP_API.Interfaces.Ticket;
 using CUIDAPP_API.Services;
+using CUIDAPP_API.Services.Realtime;
 
 namespace CUIDAPP_API.Services.Ticket
 {
     public class TicketService : ITicketService
     {
         private readonly string _connectionString;
+        private readonly ITrabajoNotifier _notifier;
 
-        public TicketService(IConfiguration config)
+        public TicketService(IConfiguration config, ITrabajoNotifier notifier)
         {
             _connectionString = config.GetConnectionString("DefaultConnection") ?? "";
+            _notifier = notifier;
+        }
+
+        // Aviso en tiempo real: nunca debe tumbar la operación que ya se hizo.
+        private async Task AvisarAsync(int usuarioId, string evento, object payload)
+        {
+            try { await _notifier.NotificarAsync(usuarioId, evento, payload); }
+            catch (Exception ex) { Console.WriteLine($"No se pudo notificar {evento} a {usuarioId}: {ex.Message}"); }
         }
 
         public async Task<int> CrearTicketAsync(CrearTicketDto dto)
@@ -134,7 +144,10 @@ namespace CUIDAPP_API.Services.Ticket
 
             await connection.OpenAsync();
             var resultado = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(resultado) == 1;
+            var ok = Convert.ToInt32(resultado) == 1;
+            if (ok && dto.EsAdmin)
+                await AvisarDuenoTicketAsync(ticketId, respuesta: true, estado: null);
+            return ok;
         }
 
         public async Task<bool> ActualizarEstadoAsync(int ticketId, ActualizarEstadoTicketDto dto)
@@ -149,7 +162,17 @@ namespace CUIDAPP_API.Services.Ticket
 
             await connection.OpenAsync();
             var resultado = await command.ExecuteScalarAsync();
-            return Convert.ToInt32(resultado) == 1;
+            var ok = Convert.ToInt32(resultado) == 1;
+            if (ok)
+                await AvisarDuenoTicketAsync(ticketId, respuesta: false, estado: dto.Estado);
+            return ok;
+        }
+
+        private async Task AvisarDuenoTicketAsync(int ticketId, bool respuesta, int? estado)
+        {
+            var ticket = await ObtenerDetalleAsync(ticketId);
+            if (ticket != null)
+                await AvisarAsync(ticket.UsuarioId, "TicketActualizado", new { TicketId = ticketId, Respuesta = respuesta, Estado = estado, ticket.Asunto });
         }
 
         private static TicketAdminDto LeerTicketAdmin(SqlDataReader reader, bool conTotalMensajes = true)

@@ -20,6 +20,8 @@ namespace CUIDAPP.Views.Dashboard
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            BarraEstado.Blanca();
+            _ = AnimarEntradaAsync();
             estaVisible = true;
             cuidadorId = Preferences.Default.Get("UserId", 0);
 
@@ -38,6 +40,9 @@ namespace CUIDAPP.Views.Dashboard
             RealtimeService.TrabajoActualizado -= OnTrabajoActualizadoTiempoReal;
             RealtimeService.NuevaSolicitud += OnNuevaSolicitudTiempoReal;
             RealtimeService.TrabajoActualizado += OnTrabajoActualizadoTiempoReal;
+            // La visibilidad también se cambia desde el botón de la notificación persistente.
+            EstadoCuidador.DisponibilidadCambiada -= OnDisponibilidadCambiadaFuera;
+            EstadoCuidador.DisponibilidadCambiada += OnDisponibilidadCambiadaFuera;
 
             await CargarDashboard();
             _ = ActualizarUbicacionActualAsync();
@@ -47,9 +52,21 @@ namespace CUIDAPP.Views.Dashboard
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
+            this.AbortAnimation("PulsoDisponible");
             estaVisible = false;
             RealtimeService.NuevaSolicitud -= OnNuevaSolicitudTiempoReal;
             RealtimeService.TrabajoActualizado -= OnTrabajoActualizadoTiempoReal;
+            EstadoCuidador.DisponibilidadCambiada -= OnDisponibilidadCambiadaFuera;
+        }
+
+        private void OnDisponibilidadCambiadaFuera(bool disponible)
+        {
+            if (disponible == disponibleActual)
+                return;
+            disponibleActual = disponible;
+            ActualizarUiDisponibilidad();
+            if (disponibleActual)
+                _ = ActualizarUbicacionActualAsync();
         }
 
         private async void OnNuevaSolicitudTiempoReal(int trabajoId, int clienteId)
@@ -149,6 +166,7 @@ namespace CUIDAPP.Views.Dashboard
                     ImgFotoPerfil.Source = $"{ApiService.ServerOrigin}{perfil.FotoUrl}";
 
                 disponibleActual = perfil.Disponible;
+                EstadoCuidador.Establecer(disponibleActual);
                 ActualizarUiDisponibilidad();
             }
 
@@ -184,21 +202,67 @@ namespace CUIDAPP.Views.Dashboard
 
             if (disponibleActual)
             {
-                CardDisponibilidad.BackgroundColor = Color.FromArgb("#ECFDF5");
-                IconoDisponibleFondo.BackgroundColor = Color.FromArgb("#10B981");
+                CardDisponibilidad.BackgroundColor = Color.FromArgb("#E3F4E8");
+                IconoDisponibleFondo.BackgroundColor = Color.FromArgb("#2E7D32");
                 IconoDisponible.Fill = Colors.White;
                 LblDisponible.Text = Localizador.T("disponible_ahora");
-                LblDisponible.TextColor = Color.FromArgb("#065F46");
+                IniciarPulsoDisponible();
+                LblDisponible.TextColor = Color.FromArgb("#1B5E20");
                 LblDisponibleSubtitulo.Text = Localizador.T("los_clientes_pueden_verte_y");
             }
             else
             {
-                CardDisponibilidad.BackgroundColor = Color.FromArgb("#F3F4F6");
+                CardDisponibilidad.BackgroundColor = Colors.White;
                 IconoDisponibleFondo.BackgroundColor = Color.FromArgb("#E5E7EB");
                 IconoDisponible.Fill = Color.FromArgb("#9CA3AF");
                 LblDisponible.Text = Localizador.T("no_disponible");
-                LblDisponible.TextColor = Color.FromArgb("#374151");
+                DetenerPulsoDisponible();
+                LblDisponible.TextColor = (Color)Application.Current!.Resources["ColorTextStrong"];
                 LblDisponibleSubtitulo.Text = Localizador.T("estas_desconectado_los_clientes_no");
+            }
+        }
+
+        // Onda verde alrededor del ícono mientras el cuidador está disponible
+        private void IniciarPulsoDisponible()
+        {
+            if (this.AnimationIsRunning("PulsoDisponible"))
+                return;
+            new Animation(t =>
+            {
+                PulsoDisponible.Scale = 1 + 0.5 * t;
+                PulsoDisponible.Opacity = 0.8 * (1 - t);
+            }, 0, 1).Commit(this, "PulsoDisponible", length: 1700, easing: Easing.CubicOut, repeat: () => true);
+        }
+
+        private void DetenerPulsoDisponible()
+        {
+            this.AbortAnimation("PulsoDisponible");
+            PulsoDisponible.Opacity = 0;
+        }
+
+        private bool entradaHecha;
+
+        private async Task AnimarEntradaAsync()
+        {
+            if (entradaHecha) return;
+            entradaHecha = true;
+            var bloques = new VisualElement[] { BloqueEncabezado, CardDisponibilidad, CardGanancias, BloqueProximo, BloqueAccesos };
+            try
+            {
+                foreach (var v in bloques) { v.Opacity = 0; v.TranslationY = 16; }
+                foreach (var v in bloques)
+                {
+                    _ = v.FadeTo(1, 300, Easing.CubicOut);
+                    _ = v.TranslateTo(0, 0, 360, Easing.CubicOut);
+                    await Task.Delay(60);
+                }
+                // La campana timbra una vez
+                foreach (var angulo in new double[] { 14, -12, 8, -6, 0 })
+                    await IconoCampana.RotateTo(angulo, 70, Easing.CubicInOut);
+            }
+            finally
+            {
+                foreach (var v in bloques) { v.Opacity = 1; v.TranslationY = 0; }
             }
         }
 
@@ -223,6 +287,7 @@ namespace CUIDAPP.Views.Dashboard
             if (success)
             {
                 disponibleActual = nuevoValor;
+                EstadoCuidador.Establecer(disponibleActual);
                 ActualizarUiDisponibilidad();
 
                 if (disponibleActual)
@@ -240,6 +305,8 @@ namespace CUIDAPP.Views.Dashboard
 
         private async void OnProximoTrabajoTapped(object sender, EventArgs e)
         {
+            await CardProximoTrabajo.ScaleTo(0.96, 80, Easing.CubicOut);
+            _ = CardProximoTrabajo.ScaleTo(1, 160, Easing.CubicOut);
             await Shell.Current.GoToAsync("TrabajosPage");
         }
 
@@ -250,6 +317,8 @@ namespace CUIDAPP.Views.Dashboard
 
         private async void OnTrabajosTapped(object sender, EventArgs e)
         {
+            await AccesoTrabajos.ScaleTo(0.96, 80, Easing.CubicOut);
+            _ = AccesoTrabajos.ScaleTo(1, 160, Easing.CubicOut);
             await Shell.Current.GoToAsync("TrabajosPage");
         }
 
@@ -270,6 +339,7 @@ namespace CUIDAPP.Views.Dashboard
                 return;
 
             DeadManService.Detener();
+            Recordatorios.CancelarTodos();
             Preferences.Default.Clear();
             await RealtimeService.DesconectarAsync();
             ConexionServiceManager.Detener();

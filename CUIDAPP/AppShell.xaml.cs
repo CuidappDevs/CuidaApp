@@ -39,7 +39,7 @@ namespace CUIDAPP
         protected override void OnNavigated(ShellNavigatedEventArgs args)
         {
             base.OnNavigated(args);
-            if (CurrentPage is MainPage or Views.Auth.ForgotPasswordPage or Views.Cliente.ClientePerfilPage or Views.Cliente.CuidadoresPorServicioPage or Views.Cliente.CuidadorDetallePage or Views.Calificacion.MisCalificacionesPage or Views.Soporte.MisReportesPage or Views.Cliente.SolicitarServicioPage) Helpers.BarraEstado.Azul();
+            if (CurrentPage is MainPage or Views.Auth.ForgotPasswordPage or Views.Cliente.ClientePerfilPage or Views.Cliente.CuidadoresPorServicioPage or Views.Cliente.CuidadorDetallePage or Views.Calificacion.MisCalificacionesPage or Views.Soporte.MisReportesPage or Views.Cliente.SolicitarServicioPage or Views.Cliente.MiServicioPage or Views.Cliente.DetalleServicioClientePage or Views.Cliente.MisUbicacionesPage or Views.Calificacion.CalificarPage or Views.Soporte.NuevoReportePage) Helpers.BarraEstado.Azul();
             else Helpers.BarraEstado.Blanca();
         }
     }

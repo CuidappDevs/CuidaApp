@@ -720,6 +720,7 @@ namespace CUIDAPP.Views.Cliente
             if (!confirmar)
                 return;
 
+            Recordatorios.CancelarTodos();
             Preferences.Default.Clear();
             await Shell.Current.GoToAsync("//MainPage");
         }

@@ -4,45 +4,43 @@
              xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Trabajos.DetalleTrabajoPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#FFFFFF">
+             BackgroundColor="{StaticResource ColorBackground}">
 
     <Grid RowDefinitions="Auto, *, Auto">
 
         <!-- HEADER -->
-        <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Padding="20,15,20,10" BackgroundColor="White">
-            <ContentView x:Name="BtnBack" VerticalOptions="Center">
-                <ContentView.GestureRecognizers>
+        <Grid Grid.Row="0" ColumnDefinitions="44, *, 44" Padding="12,8,16,8" BackgroundColor="{StaticResource ColorBackground}">
+            <Border x:Name="BtnBack" Stroke="Transparent" BackgroundColor="White" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
+                <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                <Border.GestureRecognizers>
                     <TapGestureRecognizer Tapped="OnBackTapped" />
-                </ContentView.GestureRecognizers>
-                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="#111827" Aspect="Uniform" WidthRequest="22" HeightRequest="22" />
-            </ContentView>
+                </Border.GestureRecognizers>
+                <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="{StaticResource ColorTextStrong}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
 
-            <Label Grid.Column="1" Text="{loc:T detalle_del_trabajo}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <Label Grid.Column="1" Text="{loc:T detalle_del_trabajo}" FontSize="17" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Center" VerticalOptions="Center"/>
         </Grid>
 
         <!-- CONTENIDO -->
         <ScrollView Grid.Row="1">
-            <VerticalStackLayout Padding="20,10,20,40" Spacing="20">
+            <VerticalStackLayout x:Name="Contenido" Padding="20,8,20,28" Spacing="16">
 
                 <!-- Tarjeta del Cliente -->
-                <Border Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="15">
-                    <Border.Shadow>
-                        <Shadow Brush="#000000" Offset="0,4" Opacity="0.03" Radius="10"/>
-                    </Border.Shadow>
+                <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 22" Padding="14">
                     <Grid ColumnDefinitions="Auto, *">
-                        <Border Grid.Column="0" Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 30" BackgroundColor="#F3F4F6" WidthRequest="55" HeightRequest="55" VerticalOptions="Center" Margin="0,0,15,0">
+                        <Border Grid.Column="0" Stroke="Transparent" StrokeShape="RoundRectangle 30" BackgroundColor="#E5E7EB" WidthRequest="56" HeightRequest="56" VerticalOptions="Center" Margin="0,0,14,0">
                             <Image x:Name="ImgCliente" Aspect="AspectFill" />
                         </Border>
 
                         <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
-                            <Label x:Name="LblClienteNombre" Text="{loc:T cliente}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827"/>
-                            <Label Text="{loc:T cliente_de_cuidapp}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
+                            <Label x:Name="LblClienteNombre" Text="{loc:T cliente}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                            <Label Text="{loc:T cliente_de_cuidapp}" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
                         </VerticalStackLayout>
                     </Grid>
                 </Border>
 
                 <!-- Mapa con la ruta hacia el servicio (toca para verlo en pantalla completa) -->
-                <Border x:Name="CardMapa" Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 20" HeightRequest="220" IsVisible="False">
+                <Border x:Name="CardMapa" Stroke="Transparent" StrokeShape="RoundRectangle 22" HeightRequest="220" IsVisible="False">
                     <Grid>
                         <Grid.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnMapaTapped" />
@@ -59,63 +57,60 @@
                 </Border>
 
                 <!-- Tarjeta de Detalles del Trabajo -->
-                <Border Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="20">
-                    <Border.Shadow>
-                        <Shadow Brush="#000000" Offset="0,4" Opacity="0.03" Radius="10"/>
-                    </Border.Shadow>
+                <Border Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 22" Padding="18">
                     <VerticalStackLayout Spacing="20">
 
                         <!-- Header del Trabajo -->
                         <Grid ColumnDefinitions="*, Auto">
                             <VerticalStackLayout Grid.Column="0">
-                                <Label Text="{loc:T trabajo}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
-                                <Label x:Name="LblTipoServicio" Text="" FontSize="18" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                                <Label Text="{loc:T trabajo}" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
+                                <Label x:Name="LblTipoServicio" Text="" FontSize="18" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
                             </VerticalStackLayout>
                             <Border x:Name="BadgeEstado" Grid.Column="1" Stroke="Transparent" BackgroundColor="#FCE7F3" StrokeShape="RoundRectangle 20" Padding="12,4" VerticalOptions="Start">
                                 <Label x:Name="LblEstado" Text="" FontSize="12" FontFamily="OpenSansSemibold" TextColor="#9D174D"/>
                             </Border>
                         </Grid>
 
-                        <BoxView HeightRequest="1" Color="#F3F4F6"/>
+                        <BoxView HeightRequest="1" Color="{StaticResource ColorBorder}"/>
 
                         <!-- Filas de Detalles con Iconos -->
                         <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="Auto, *" RowSpacing="15" ColumnSpacing="15">
 
                             <!-- Fecha -->
-                            <Border Grid.Row="0" Grid.Column="0" Stroke="Transparent" BackgroundColor="#F3F4F6" StrokeShape="RoundRectangle 10" WidthRequest="36" HeightRequest="36" VerticalOptions="Center">
-                                <Path Data="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V10H19V20ZM19 8H5V6H19V8Z" Fill="#6B7280" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            <Border Grid.Row="0" Grid.Column="0" Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 12" WidthRequest="42" HeightRequest="42" VerticalOptions="Center">
+                                <Path Data="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V10H19V20ZM19 8H5V6H19V8Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                             </Border>
                             <VerticalStackLayout Grid.Row="0" Grid.Column="1" VerticalOptions="Center">
-                                <Label Text="{loc:T fecha}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
-                                <Label x:Name="LblFecha" Text="" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                                <Label Text="{loc:T fecha}" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
+                                <Label x:Name="LblFecha" Text="" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
                             </VerticalStackLayout>
 
                             <!-- Hora -->
-                            <Border Grid.Row="1" Grid.Column="0" Stroke="Transparent" BackgroundColor="#F3F4F6" StrokeShape="RoundRectangle 10" WidthRequest="36" HeightRequest="36" VerticalOptions="Center">
-                                <Path Data="M11.99 2C6.47 2 2 6.48 2 12C2 17.52 6.47 22 11.99 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 11.99 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM12.5 7H11V13L16.25 16.15L17 14.92L12.5 12.25V7Z" Fill="#6B7280" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            <Border Grid.Row="1" Grid.Column="0" Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 12" WidthRequest="42" HeightRequest="42" VerticalOptions="Center">
+                                <Path Data="M11.99 2C6.47 2 2 6.48 2 12C2 17.52 6.47 22 11.99 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 11.99 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM12.5 7H11V13L16.25 16.15L17 14.92L12.5 12.25V7Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                             </Border>
                             <VerticalStackLayout Grid.Row="1" Grid.Column="1" VerticalOptions="Center">
-                                <Label Text="{loc:T hora}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
-                                <Label x:Name="LblHora" Text="" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                                <Label Text="{loc:T hora}" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
+                                <Label x:Name="LblHora" Text="" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
                             </VerticalStackLayout>
 
                             <!-- Dirección -->
-                            <Border Grid.Row="2" Grid.Column="0" Stroke="Transparent" BackgroundColor="#F3F4F6" StrokeShape="RoundRectangle 10" WidthRequest="36" HeightRequest="36" VerticalOptions="Center">
-                                <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="#6B7280" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            <Border Grid.Row="2" Grid.Column="0" Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 12" WidthRequest="42" HeightRequest="42" VerticalOptions="Center">
+                                <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
                             </Border>
                             <VerticalStackLayout Grid.Row="2" Grid.Column="1" VerticalOptions="Center">
-                                <Label Text="{loc:T direccion}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
-                                <Label x:Name="LblDireccion" Text="" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                                <Label Text="{loc:T direccion}" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
+                                <Label x:Name="LblDireccion" Text="" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
                             </VerticalStackLayout>
                         </Grid>
 
-                        <BoxView HeightRequest="1" Color="#F3F4F6" Margin="0,5,0,0"/>
+                        <BoxView HeightRequest="1" Color="{StaticResource ColorBorder}"/>
 
                         <!-- Sección de Pago -->
-                        <Border Stroke="Transparent" BackgroundColor="#F8FAFC" StrokeShape="RoundRectangle 12" Padding="15">
+                        <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 16" Padding="16,14">
                             <Grid ColumnDefinitions="*, Auto">
-                                <Label Grid.Column="0" Text="{loc:T pago_total}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#475569" VerticalOptions="Center"/>
-                                <Label x:Name="LblPago" Grid.Column="1" Text="" FontSize="22" FontFamily="OpenSansBold" TextColor="#111827" VerticalOptions="Center"/>
+                                <Label Grid.Column="0" Text="{loc:T pago_total}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimaryDark}" VerticalOptions="Center"/>
+                                <Label x:Name="LblPago" Grid.Column="1" Text="" FontSize="24" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" VerticalOptions="Center"/>
                             </Grid>
                         </Border>
 
@@ -123,34 +118,34 @@
                 </Border>
 
                 <!-- Tareas que pidió el cliente (se tachan al completarlas, solo En Progreso) -->
-                <Border x:Name="CardTareas" Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="20" IsVisible="False">
+                <Border x:Name="CardTareas" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 22" Padding="18" IsVisible="False">
                     <VerticalStackLayout Spacing="12">
-                        <Label Text="{loc:T tareas_del_cliente}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
-                        <Label x:Name="LblAyudaTareas" Text="{loc:T marca_cada_tarea_al_completarla}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
+                        <Label Text="{loc:T tareas_del_cliente}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                        <Label x:Name="LblAyudaTareas" Text="{loc:T marca_cada_tarea_al_completarla}" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
                         <VerticalStackLayout x:Name="ListaTareas" Spacing="8"/>
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Bitácora de actividades (solo visible mientras el trabajo está En Progreso) -->
-                <Border x:Name="CardActividades" Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="20" IsVisible="False">
+                <Border x:Name="CardActividades" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 22" Padding="18" IsVisible="False">
                     <VerticalStackLayout Spacing="14">
-                        <Label Text="{loc:T reporta_lo_que_vas_haciendo}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="#111827"/>
+                        <Label Text="{loc:T reporta_lo_que_vas_haciendo}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
 
-                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="10">
-                            <Border Grid.Column="0" Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 12" Padding="12,0">
-                                <Entry x:Name="EntryActividad" Placeholder="{loc:T ej_empece_a_limpiar_la}" FontFamily="OpenSansRegular" FontSize="14" HeightRequest="45" Completed="OnAgregarActividadClicked"/>
-                            </Border>
-                            <Button Grid.Column="1" x:Name="BtnAgregarActividad" Text="{loc:T enviar}" Clicked="OnAgregarActividadClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="13" CornerRadius="10" WidthRequest="80" HeightRequest="45"/>
-                        </Grid>
+                        <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 24" Padding="16,0,5,0">
+                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
+                                <Entry x:Name="EntryActividad" Placeholder="{loc:T ej_empece_a_limpiar_la}" FontFamily="OpenSansRegular" FontSize="15" PlaceholderColor="#8A97A6" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="50" Completed="OnAgregarActividadClicked"/>
+                                <Button Grid.Column="1" x:Name="BtnAgregarActividad" Text="{loc:T enviar}" Clicked="OnAgregarActividadClicked" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="13" CornerRadius="20" HeightRequest="40" Padding="16,0" VerticalOptions="Center"/>
+                            </Grid>
+                        </Border>
 
                         <VerticalStackLayout x:Name="ListaActividades" Spacing="10"/>
 
-                        <Label x:Name="LblSinActividades" Text="{loc:T aun_no_has_reportado_ninguna}" FontSize="13" FontFamily="OpenSansRegular" TextColor="#9CA3AF"/>
+                        <Label x:Name="LblSinActividades" Text="{loc:T aun_no_has_reportado_ninguna}" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
                     </VerticalStackLayout>
                 </Border>
 
                 <!-- Esperando confirmación del cliente (Estado 7) -->
-                <Border x:Name="CardEsperandoConfirmacion" Stroke="#FDE68A" StrokeThickness="1" BackgroundColor="#FFFBEB" StrokeShape="RoundRectangle 16" Padding="18" IsVisible="False">
+                <Border x:Name="CardEsperandoConfirmacion" Stroke="Transparent" BackgroundColor="#FFF4DC" StrokeShape="RoundRectangle 20" Padding="18" IsVisible="False">
                     <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
                         <Label Text="{loc:T esperando_que_el_cliente_confirme}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#92400E" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
                         <Label Text="{loc:T el_pago_se_generara_cuando}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#B45309" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
@@ -158,7 +153,7 @@
                 </Border>
 
                 <!-- El cliente rechazó la finalización -->
-                <Border x:Name="CardRechazado" Stroke="#FECACA" StrokeThickness="1" BackgroundColor="#FEF2F2" StrokeShape="RoundRectangle 16" Padding="18" IsVisible="False">
+                <Border x:Name="CardRechazado" Stroke="Transparent" BackgroundColor="#FDECEC" StrokeShape="RoundRectangle 20" Padding="18" IsVisible="False">
                     <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
                         <Label Text="{loc:T el_cliente_indico_que_el}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#991B1B" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
                         <Label Text="{loc:T puedes_seguir_trabajando_y_volver}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#B91C1C" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
@@ -167,10 +162,10 @@
                 </Border>
 
                 <!-- Ya calificaste a este cliente -->
-                <Border x:Name="CardYaCalifico" Stroke="#E5E7EB" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="18" IsVisible="False">
+                <Border x:Name="CardYaCalifico" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="18" IsVisible="False">
                     <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
-                        <Label Text="{loc:T ya_calificaste_a_este_cliente}" FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" HorizontalOptions="Center"/>
-                        <Label x:Name="LblEstrellasDadas" Text="" FontSize="22" TextColor="#F59E0B" HorizontalOptions="Center"/>
+                        <Label Text="{loc:T ya_calificaste_a_este_cliente}" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center"/>
+                        <Label x:Name="LblEstrellasDadas" Text="" FontSize="24" TextColor="#E09A1A" HorizontalOptions="Center"/>
                     </VerticalStackLayout>
                 </Border>
 
@@ -178,38 +173,32 @@
         </ScrollView>
 
         <!-- BOTONES DE ACCION FIJOS ABAJO -->
-        <VerticalStackLayout x:Name="PanelAcciones" Grid.Row="2" Padding="20,10,20,30" Spacing="15" BackgroundColor="White">
-            <Border.Shadow>
-                <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
-            </Border.Shadow>
+        <!-- Acciones: fila propia de la cuadrícula (zona segura por defecto, sobre la barra de gestos) -->
+        <VerticalStackLayout x:Name="PanelAcciones" Grid.Row="2" Padding="20,12,20,14" Spacing="10" BackgroundColor="White">
 
             <!-- Estado Pendiente: Aceptar / Rechazar -->
             <Grid x:Name="PanelPendiente" ColumnDefinitions="*, *" ColumnSpacing="15" IsVisible="False">
-                <Button x:Name="BtnRechazar" Grid.Column="0" Text="{loc:T rechazar}" Clicked="OnRechazarClicked" BackgroundColor="#F3F4F6" TextColor="#374151" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="12" HeightRequest="55"/>
-                <Button x:Name="BtnAceptar" Grid.Column="1" Text="{loc:T aceptar}" Clicked="OnAceptarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="12" HeightRequest="55"/>
+                <Button x:Name="BtnRechazar" Grid.Column="0" Text="{loc:T rechazar}" Clicked="OnRechazarClicked" BackgroundColor="{StaticResource ColorBackground}" TextColor="{StaticResource ColorTextStrong}" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="16" HeightRequest="56"/>
+                <Button x:Name="BtnAceptar" Grid.Column="1" Text="{loc:T aceptar}" Clicked="OnAceptarClicked" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="16" HeightRequest="56"/>
             </Grid>
 
             <!-- Chat con el cliente (visible mientras Aceptado o En Progreso) -->
-            <Button x:Name="BtnChat" Text="{loc:T chatear_con_el_cliente}" Clicked="OnChatClicked" BackgroundColor="#F3F4F6" TextColor="#374151" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="12" HeightRequest="48" IsVisible="False"/>
+            <Button x:Name="BtnChat" Text="{loc:T chatear_con_el_cliente}" Clicked="OnChatClicked" BackgroundColor="#EAF1FB" TextColor="{StaticResource ColorPrimary}" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="16" HeightRequest="50" IsVisible="False"/>
 
             <!-- Estado Aceptado: Iniciar -->
-            <Button x:Name="BtnIniciar" Text="{loc:T iniciar_trabajo}" Clicked="OnIniciarClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsVisible="False"/>
+            <Button x:Name="BtnIniciar" Text="{loc:T iniciar_trabajo}" Clicked="OnIniciarClicked" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="16" HeightRequest="56" IsVisible="False"/>
 
             <!-- Estado En Progreso: Completar -->
-            <Button x:Name="BtnCompletar" Text="{loc:T marcar_como_completado}" Clicked="OnCompletarClicked" BackgroundColor="#10B981" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsVisible="False"/>
+            <Button x:Name="BtnCompletar" Text="{loc:T marcar_como_completado}" Clicked="OnCompletarClicked" BackgroundColor="#2E7D32" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="16" HeightRequest="56" IsVisible="False"/>
 
             <!-- Cancelar (visible si ya fue aceptado o está en progreso) -->
-            <Button x:Name="BtnCancelar" Text="{loc:T cancelar_servicio}" Clicked="OnCancelarClicked" BackgroundColor="Transparent" TextColor="#EF4444" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="12" HeightRequest="45" IsVisible="False"/>
+            <Button x:Name="BtnCancelar" Text="{loc:T cancelar_servicio}" Clicked="OnCancelarClicked" BackgroundColor="Transparent" TextColor="{StaticResource ColorDanger}" FontFamily="OpenSansSemibold" FontSize="14" CornerRadius="16" HeightRequest="44" IsVisible="False"/>
 
             <!-- SOS - Pedir auxilio (visible si aceptado o en progreso) -->
-            <Button x:Name="BtnSOS" Text="{loc:T sos_pedir_auxilio}" Clicked="OnSOSClicked" BackgroundColor="#C62828" TextColor="White" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="12" HeightRequest="50" IsVisible="False">
-                <Button.Shadow>
-                    <Shadow Brush="#C62828" Offset="0,0" Radius="12" Opacity="0.4" />
-                </Button.Shadow>
-            </Button>
+            <Button x:Name="BtnSOS" Text="{loc:T sos_pedir_auxilio}" Clicked="OnSOSClicked" BackgroundColor="{StaticResource ColorDanger}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="16" HeightRequest="52" IsVisible="False"/>
 
             <!-- Estado Completado: Calificar al cliente -->
-            <Button x:Name="BtnCalificarCliente" Text="{loc:T calificar_al_cliente}" Clicked="OnCalificarClienteClicked" BackgroundColor="#2563EB" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="12" HeightRequest="55" IsVisible="False"/>
+            <Button x:Name="BtnCalificarCliente" Text="{loc:T calificar_al_cliente}" Clicked="OnCalificarClienteClicked" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="16" HeightRequest="56" IsVisible="False"/>
         </VerticalStackLayout>
 
     </Grid>

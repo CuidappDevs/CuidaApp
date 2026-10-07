@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Silueta del logo de CuidApp para la barra de notificaciones (Android exige un ícono blanco y transparente). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="1000"
+    android:viewportHeight="1000">
+    <group android:translateX="27" android:translateY="57">
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="115" android:fillColor="#00000000"
+            android:pathData="M65,300 C60,120 160,60 300,60 C370,60 420,90 460,130 L640,310" />
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="115" android:fillColor="#00000000"
+            android:pathData="M325,260 L140,445 C60,525 60,660 140,740 C200,800 260,820 340,820" />
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="115" android:fillColor="#00000000"
+            android:pathData="M881,585 C886,765 786,825 646,825 C576,825 526,795 486,755 L306,575" />
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="115" android:fillColor="#00000000"
+            android:pathData="M621,625 L806,440 C886,360 886,225 806,145 C746,85 686,65 606,65" />
+    </group>
+</vector>

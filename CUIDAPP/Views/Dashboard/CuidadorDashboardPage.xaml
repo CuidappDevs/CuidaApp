@@ -4,265 +4,273 @@
              xmlns:loc="clr-namespace:CUIDAPP.Localization"
              x:Class="CUIDAPP.Views.Dashboard.CuidadorDashboardPage"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="#FFFFFF">
+             BackgroundColor="{StaticResource ColorBackground}">
 
+    <!-- Zona segura por defecto: la barra de pestañas va en su propia fila de la cuadrícula
+         (el sistema la deja sobre la barra de gestos). -->
     <Grid RowDefinitions="*, Auto">
-        
-        <!-- Contenido principal -->
-        <ScrollView Grid.Row="0">
-            <Grid Padding="20,20,20,30" RowSpacing="25">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/> <!-- Header -->
-                    <RowDefinition Height="Auto"/> <!-- Disponibilidad -->
-                    <RowDefinition Height="Auto"/> <!-- Main Card -->
-                    <RowDefinition Height="Auto"/> <!-- Próximo Trabajo -->
-                    <RowDefinition Height="Auto"/> <!-- Acciones -->
-                </Grid.RowDefinitions>
 
-                <!-- HEADER -->
-                <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto, Auto">
-                    <!-- Foto perfil -->
-                    <Grid Grid.Column="0" WidthRequest="50" HeightRequest="50" Margin="0,0,15,0">
-                        <Border Stroke="Transparent" StrokeShape="RoundRectangle 25" BackgroundColor="#E5E7EB" WidthRequest="50" HeightRequest="50">
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Padding="20,16,20,28" Spacing="22">
+
+                <!-- ENCABEZADO -->
+                <Grid x:Name="BloqueEncabezado" ColumnDefinitions="Auto, *, Auto, Auto" ColumnSpacing="12">
+                    <Grid WidthRequest="52" HeightRequest="52">
+                        <Border Stroke="White" StrokeThickness="2.5" BackgroundColor="#E5E7EB" WidthRequest="52" HeightRequest="52">
+                            <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                            <Border.Shadow>
+                                <Shadow Brush="#0A2F41" Offset="0,4" Opacity="0.12" Radius="10"/>
+                            </Border.Shadow>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnPerfilTapped" />
+                            </Border.GestureRecognizers>
                             <Image x:Name="ImgFotoPerfil" Aspect="AspectFill" />
                         </Border>
                     </Grid>
 
-                    <!-- Textos Header -->
                     <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="3">
-                        <Label x:Name="LblSaludo" Text="{loc:T hola}" FontSize="20" FontFamily="OpenSansSemibold" TextColor="#1D4ED8"/>
-                        <HorizontalStackLayout x:Name="ContenedorRating" Spacing="4" IsVisible="False">
-                            <Label Text="★" FontSize="13" TextColor="#F59E0B"/>
-                            <Label x:Name="LblRating" Text="" FontSize="12" FontFamily="OpenSansSemibold" TextColor="#6B7280"/>
-                        </HorizontalStackLayout>
+                        <Label x:Name="LblSaludo" Text="{loc:T hola}" FontSize="21" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" MaxLines="1" LineBreakMode="TailTruncation"/>
+                        <Border x:Name="ContenedorRating" Stroke="Transparent" BackgroundColor="#FFF4DC" StrokeShape="RoundRectangle 10" Padding="8,2" HorizontalOptions="Start" IsVisible="False">
+                            <HorizontalStackLayout Spacing="4">
+                                <Path Data="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z" Fill="#E09A1A" Aspect="Uniform" WidthRequest="12" HeightRequest="12" VerticalOptions="Center"/>
+                                <Label x:Name="LblRating" Text="" FontSize="12" FontFamily="OpenSansSemibold" TextColor="#8A4B00" VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                        </Border>
                     </VerticalStackLayout>
 
-                    <!-- Campana de Notificación -->
-                    <Grid Grid.Column="2" WidthRequest="40" HeightRequest="40" Margin="0,0,10,0" VerticalOptions="Center">
-                        <Border Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" BackgroundColor="White">
+                    <!-- Notificaciones -->
+                    <Grid Grid.Column="2" WidthRequest="46" HeightRequest="46" VerticalOptions="Center">
+                        <Border Stroke="Transparent" BackgroundColor="White" WidthRequest="46" HeightRequest="46">
+                            <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnNotificacionesTapped" />
                             </Border.GestureRecognizers>
-                            <Path Data="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 16V11C18 7.93 16.36 5.36 13.5 4.68V4C13.5 3.17 12.83 2.5 12 2.5C11.17 2.5 10.5 3.17 10.5 4V4.68C7.63 5.36 6 7.92 6 11V16L4 18V19H20V18L18 16ZM16 17H8V11C8 8.52 9.51 6.5 12 6.5C14.49 6.5 16 8.52 16 11V17Z" Fill="#1D4ED8" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            <Path x:Name="IconoCampana" Data="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 16V11C18 7.93 16.36 5.36 13.5 4.68V4C13.5 3.17 12.83 2.5 12 2.5C11.17 2.5 10.5 3.17 10.5 4V4.68C7.63 5.36 6 7.92 6 11V16L4 18V19H20V18L18 16ZM16 17H8V11C8 8.52 9.51 6.5 12 6.5C14.49 6.5 16 8.52 16 11V17Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" AnchorY="0.15"/>
                         </Border>
-                        <Border x:Name="BadgeNotificaciones" Stroke="White" StrokeThickness="2" StrokeShape="RoundRectangle 8" BackgroundColor="#EF4444" WidthRequest="16" HeightRequest="16" HorizontalOptions="End" VerticalOptions="Start" IsVisible="False" InputTransparent="True">
+                        <Border x:Name="BadgeNotificaciones" Stroke="White" StrokeThickness="2" StrokeShape="RoundRectangle 9" BackgroundColor="{StaticResource ColorDanger}" MinimumWidthRequest="18" HeightRequest="18" Padding="4,0" HorizontalOptions="End" VerticalOptions="Start" IsVisible="False" InputTransparent="True">
                             <Label x:Name="LblBadgeNotificaciones" Text="0" FontSize="9" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center"/>
                         </Border>
                     </Grid>
 
                     <!-- Cerrar sesión -->
-                    <Border Grid.Column="3" Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" BackgroundColor="White" VerticalOptions="Center">
+                    <Border Grid.Column="3" Stroke="Transparent" BackgroundColor="White" WidthRequest="46" HeightRequest="46" VerticalOptions="Center">
+                        <Border.StrokeShape><Ellipse/></Border.StrokeShape>
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnCerrarSesionTapped" />
                         </Border.GestureRecognizers>
-                        <Path Data="M17 7L15.59 8.41L18.17 11H8V13H18.17L15.59 15.59L17 17L22 12L17 7ZM4 5H12V3H4C2.9 3 2 3.9 2 5V19C2 20.1 2.9 21 4 21H12V19H4V5Z" Fill="#EF4444" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        <Path Data="M17 7L15.59 8.41L18.17 11H8V13H18.17L15.59 15.59L17 17L22 12L17 7ZM4 5H12V3H4C2.9 3 2 3.9 2 5V19C2 20.1 2.9 21 4 21H12V19H4V5Z" Fill="{StaticResource ColorDanger}" Aspect="Uniform" WidthRequest="19" HeightRequest="19" HorizontalOptions="Center" VerticalOptions="Center"/>
                     </Border>
                 </Grid>
 
-                <!-- TARJETA DE DISPONIBILIDAD -->
-                <Border x:Name="CardDisponibilidad" Grid.Row="1" Stroke="Transparent" BackgroundColor="#F3F4F6" StrokeShape="RoundRectangle 16" Padding="18">
-                    <Grid ColumnDefinitions="Auto, *, Auto">
-                        <!-- Ícono + texto: tocar aquí alterna el Switch (columna aparte, sin solapar el gesto) -->
-                        <HorizontalStackLayout Grid.Column="0" Grid.ColumnSpan="2" Spacing="14" HorizontalOptions="Start">
+                <!-- DISPONIBILIDAD -->
+                <Border x:Name="CardDisponibilidad" Stroke="Transparent" BackgroundColor="#F3F4F6" StrokeShape="RoundRectangle 22" Padding="16">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <!-- Ícono + texto: tocar aquí alterna el Switch -->
+                        <HorizontalStackLayout Grid.Column="0" Spacing="14" HorizontalOptions="Start">
                             <HorizontalStackLayout.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnDisponibilidadTapped" />
                             </HorizontalStackLayout.GestureRecognizers>
-                            <Border x:Name="IconoDisponibleFondo" Stroke="Transparent" BackgroundColor="#E5E7EB" StrokeShape="RoundRectangle 22" WidthRequest="44" HeightRequest="44">
-                                <Path x:Name="IconoDisponible" Data="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center"/>
-                            </Border>
+                            <Grid WidthRequest="48" HeightRequest="48">
+                                <Ellipse x:Name="PulsoDisponible" Fill="#5510B981" WidthRequest="48" HeightRequest="48" Opacity="0"/>
+                                <Border x:Name="IconoDisponibleFondo" Stroke="Transparent" BackgroundColor="#E5E7EB" WidthRequest="48" HeightRequest="48">
+                                    <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                                    <Path x:Name="IconoDisponible" Data="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </Border>
+                            </Grid>
                             <VerticalStackLayout VerticalOptions="Center" Spacing="2">
-                                <Label x:Name="LblDisponible" Text="{loc:T no_disponible}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#374151"/>
-                                <Label x:Name="LblDisponibleSubtitulo" Text="{loc:T estas_desconectado_los_clientes_no}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#9CA3AF"/>
+                                <Label x:Name="LblDisponible" Text="{loc:T no_disponible}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                                <Label x:Name="LblDisponibleSubtitulo" Text="{loc:T estas_desconectado_los_clientes_no}" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" MaximumWidthRequest="210"/>
                             </VerticalStackLayout>
                         </HorizontalStackLayout>
-                        <Switch x:Name="SwitchDisponible" Grid.Column="2" VerticalOptions="Center" OnColor="#2563EB" Toggled="OnDisponibilidadToggled"/>
+                        <Switch x:Name="SwitchDisponible" Grid.Column="1" VerticalOptions="Center" OnColor="#7FD3A6" ThumbColor="White" Toggled="OnDisponibilidadToggled"/>
                     </Grid>
                 </Border>
 
-                <!-- MAIN CARD (Ganado hoy) -->
-                <Border Grid.Row="2" Stroke="Transparent" BackgroundColor="#2563EB" StrokeShape="RoundRectangle 16" Padding="25">
+                <!-- GANANCIAS -->
+                <Border x:Name="CardGanancias" Stroke="Transparent" StrokeShape="RoundRectangle 24" Padding="22">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#2A63B8" Offset="0" />
+                            <GradientStop Color="{StaticResource ColorPrimary}" Offset="0.6" />
+                            <GradientStop Color="{StaticResource ColorPrimaryDark}" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
                     <Border.Shadow>
-                        <Shadow Brush="#2563EB" Offset="0,10" Opacity="0.3" Radius="15"/>
+                        <Shadow Brush="{StaticResource ColorPrimary}" Offset="0,12" Opacity="0.3" Radius="20"/>
                     </Border.Shadow>
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnDineroTapped" />
                     </Border.GestureRecognizers>
-                    <VerticalStackLayout Spacing="15">
-                        <VerticalStackLayout Spacing="5">
-                            <Label Text="{loc:T ganado_hoy}" FontSize="14" FontFamily="OpenSansRegular" TextColor="#E0E7FF"/>
-                            <Label x:Name="LblGanadoHoy" Text="{loc:T rd_0}" FontSize="36" FontFamily="OpenSansSemibold" TextColor="White"/>
+                    <Grid>
+                        <Ellipse Fill="#14FFFFFF" WidthRequest="160" HeightRequest="160" HorizontalOptions="End" VerticalOptions="Start" Margin="0,-70,-60,0"/>
+                        <VerticalStackLayout Spacing="16">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{loc:T ganado_hoy}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#D9E6F7"/>
+                                    <Label x:Name="LblGanadoHoy" Text="{loc:T rd_0}" FontSize="36" FontFamily="OpenSansSemibold" TextColor="White"/>
+                                </VerticalStackLayout>
+                                <Border Grid.Column="1" Stroke="Transparent" BackgroundColor="#26FFFFFF" WidthRequest="44" HeightRequest="44" VerticalOptions="Start">
+                                    <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                                    <Path Data="M21 7.28V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V16.72C21.59 16.37 22 15.74 22 15V9C22 8.26 21.59 7.63 21 7.28ZM20 15H13V9H20V15ZM5 19V5H19V7H13C11.9 7 11 7.9 11 9V15C11 16.1 11.9 17 13 17H19V19H5ZM16 13.5C15.17 13.5 14.5 12.83 14.5 12C14.5 11.17 15.17 10.5 16 10.5C16.83 10.5 17.5 11.17 17.5 12C17.5 12.83 16.83 13.5 16 13.5Z" Fill="White" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </Border>
+                            </Grid>
+
+                            <Border Stroke="Transparent" BackgroundColor="#1FFFFFFF" StrokeShape="RoundRectangle 16" Padding="14,12">
+                                <Grid ColumnDefinitions="*, Auto">
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="{loc:T pendiente_por_cobrar}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#D9E6F7"/>
+                                        <Label x:Name="LblPendienteCobrar" Text="{loc:T rd_0}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="White"/>
+                                    </VerticalStackLayout>
+                                    <HorizontalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                        <Label Text="{loc:T ver_detalle}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="White" VerticalOptions="Center"/>
+                                    </HorizontalStackLayout>
+                                </Grid>
+                            </Border>
                         </VerticalStackLayout>
-
-                        <BoxView HeightRequest="1" BackgroundColor="#8B72F7" Opacity="0.5"/>
-
-                        <Grid ColumnDefinitions="*, Auto">
-                            <VerticalStackLayout Grid.Column="0" Spacing="2">
-                                <Label Text="{loc:T pendiente_por_cobrar}" FontSize="12" FontFamily="OpenSansRegular" TextColor="#E0E7FF"/>
-                                <Label x:Name="LblPendienteCobrar" Text="{loc:T rd_0}" FontSize="18" FontFamily="OpenSansSemibold" TextColor="White"/>
-                            </VerticalStackLayout>
-                            <Label Grid.Column="1" Text="{loc:T ver_detalle}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#E0E7FF" VerticalOptions="End"/>
-                        </Grid>
-                    </VerticalStackLayout>
+                    </Grid>
                 </Border>
 
-                <!-- PROXIMO TRABAJO -->
-                <VerticalStackLayout Grid.Row="3" Spacing="15">
-                    <Label Text="{loc:T proximo_trabajo}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#374151"/>
+                <!-- PRÓXIMO TRABAJO -->
+                <VerticalStackLayout x:Name="BloqueProximo" Spacing="12">
+                    <Label Text="{loc:T proximo_trabajo}" FontSize="17" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
 
-                    <Border x:Name="CardProximoTrabajo" Stroke="#F3F4F6" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="15" IsVisible="False">
-                        <Border.Shadow>
-                            <Shadow Brush="#000000" Offset="0,4" Opacity="0.05" Radius="10"/>
-                        </Border.Shadow>
+                    <Border x:Name="CardProximoTrabajo" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 22" Padding="16" IsVisible="False">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnProximoTrabajoTapped" />
                         </Border.GestureRecognizers>
-                        <Grid ColumnDefinitions="Auto, *, Auto">
-                            <!-- Icono Izquierda -->
-                            <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="#EFF6FF" StrokeShape="RoundRectangle 12" WidthRequest="50" HeightRequest="50" VerticalOptions="Center" Margin="0,0,15,0">
-                                <Path Data="M19.36 2.72L20.78 4.14L15.06 9.85C16.13 11.39 16.28 13.24 15.38 14.44L9.06 8.12C10.26 7.22 12.11 7.37 13.65 8.44L19.36 2.72ZM5.93 17.57C3.92 15.56 2.69 13.16 2.35 10.92L7.23 8.34L15.16 16.27L12.58 21.15C10.34 20.81 7.94 19.58 5.93 17.57ZM3.17 18.5C4.7 20.03 6.7 21.05 8.65 21.43L2 22L2.57 15.35C2.95 17.3 3.97 19.3 5.5 20.83L3.17 18.5Z" Fill="#2563EB" Aspect="Uniform" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        <Grid ColumnDefinitions="Auto, *, Auto" ColumnSpacing="14">
+                            <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 16" WidthRequest="52" HeightRequest="52" VerticalOptions="Center">
+                                <Path Data="M19.36 2.72L20.78 4.14L15.06 9.85C16.13 11.39 16.28 13.24 15.38 14.44L9.06 8.12C10.26 7.22 12.11 7.37 13.65 8.44L19.36 2.72ZM5.93 17.57C3.92 15.56 2.69 13.16 2.35 10.92L7.23 8.34L15.16 16.27L12.58 21.15C10.34 20.81 7.94 19.58 5.93 17.57Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center" VerticalOptions="Center"/>
                             </Border>
-
-                            <!-- Info central -->
-                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
-                                <Label x:Name="LblProximoHorario" Text="" FontSize="12" FontFamily="OpenSansSemibold" TextColor="#2563EB"/>
-                                <Label x:Name="LblProximoServicio" Text="" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#111827"/>
-                                <HorizontalStackLayout Spacing="5" Margin="0,2,0,0">
-                                    <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="12" HeightRequest="12" VerticalOptions="Center"/>
-                                    <Label x:Name="LblProximoDireccion" Text="" FontSize="13" FontFamily="OpenSansRegular" TextColor="#6B7280" VerticalOptions="Center"/>
+                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="3">
+                                <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 10" Padding="8,2" HorizontalOptions="Start">
+                                    <Label x:Name="LblProximoHorario" Text="" FontSize="11" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}"/>
+                                </Border>
+                                <Label x:Name="LblProximoServicio" Text="" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                                <HorizontalStackLayout Spacing="5">
+                                    <Path Data="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="12" HeightRequest="12" VerticalOptions="Center"/>
+                                    <Label x:Name="LblProximoDireccion" Text="" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" VerticalOptions="Center" MaxLines="1" LineBreakMode="TailTruncation"/>
                                 </HorizontalStackLayout>
                             </VerticalStackLayout>
-
-                            <!-- Icono Calendario Derecha -->
-                            <Border Grid.Column="2" Stroke="#E5E7EB" StrokeThickness="1" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" BackgroundColor="Transparent" VerticalOptions="Center">
-                                <Path Data="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3.01 4.9 3.01 6L3 20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V10H19V20ZM19 8H5V6H19V8ZM9 14H7V12H9V14ZM13 14H11V12H13V14ZM17 14H15V12H17V14ZM9 18H7V16H9V18ZM13 18H11V16H13V18ZM17 18H15V16H17V18Z" Fill="#6B7280" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
-                            </Border>
+                            <Path Grid.Column="2" Data="M10 6L8.59 7.41L13.17 12L8.59 16.59L10 18L16 12L10 6Z" Fill="#B0BEC5" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
                         </Grid>
                     </Border>
 
-                    <Label x:Name="LblSinTrabajos" Text="{loc:T no_tienes_trabajos_proximos_por}" FontSize="13" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center" IsVisible="False" Margin="0,10,0,0"/>
+                    <Border x:Name="LblSinTrabajosCaja" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 22" Padding="18" IsVisible="{Binding Source={x:Reference LblSinTrabajos}, Path=IsVisible}">
+                        <HorizontalStackLayout Spacing="12">
+                            <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" WidthRequest="40" HeightRequest="40">
+                                <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                                <Path Data="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3.01 4.9 3.01 6L3 20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V10H19V20ZM19 8H5V6H19V8Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+                            <Label x:Name="LblSinTrabajos" Text="{loc:T no_tienes_trabajos_proximos_por}" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" VerticalOptions="Center" MaximumWidthRequest="240" IsVisible="False"/>
+                        </HorizontalStackLayout>
+                    </Border>
                 </VerticalStackLayout>
 
-                <!-- CUADRICULA DE ACCIONES 2x2 -->
-                <VerticalStackLayout Grid.Row="4" Spacing="15">
-                <Label Text="{loc:T accesos_rapidos}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="#374151"/>
-                <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto" ColumnSpacing="15" RowSpacing="15">
+                <!-- ACCESOS RÁPIDOS -->
+                <VerticalStackLayout x:Name="BloqueAccesos" Spacing="12">
+                    <Label Text="{loc:T accesos_rapidos}" FontSize="17" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                    <Grid ColumnDefinitions="*, *" RowDefinitions="Auto, Auto" ColumnSpacing="12" RowSpacing="12">
 
-                    <!-- 1. Trabajos -->
-                    <Border Grid.Row="0" Grid.Column="0" Stroke="#F3F4F6" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="15">
-                        <Border.Shadow>
-                            <Shadow Brush="#000000" Offset="0,4" Opacity="0.03" Radius="8"/>
-                        </Border.Shadow>
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnTrabajosTapped" />
-                        </Border.GestureRecognizers>
-                        <VerticalStackLayout Spacing="10">
-                            <Border Stroke="Transparent" BackgroundColor="#DBEAFE" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" HorizontalOptions="Start">
-                                <Path Data="M20 6H16V4C16 2.9 15.1 2 14 2H10C8.9 2 8 2.9 8 4V6H4C2.9 6 2.01 6.9 2.01 8L2 19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6ZM10 4H14V6H10V4ZM20 19H4V8H20V19Z" Fill="#3B82F6" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
-                            </Border>
-                            <VerticalStackLayout Spacing="2">
-                                <Label Text="{loc:T ver_trabajos}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#111827"/>
-                                <Label Text="{loc:T nuevas_solicitudes}" FontSize="11" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
+                        <Border x:Name="AccesoTrabajos" Grid.Row="0" Grid.Column="0" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="16">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnTrabajosTapped" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="12">
+                                <Border Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 14" WidthRequest="44" HeightRequest="44" HorizontalOptions="Start">
+                                    <Path Data="M20 6H16V4C16 2.9 15.1 2 14 2H10C8.9 2 8 2.9 8 4V6H4C2.9 6 2.01 6.9 2.01 8L2 19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6ZM10 4H14V6H10V4ZM20 19H4V8H20V19Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </Border>
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="{loc:T ver_trabajos}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                                    <Label Text="{loc:T nuevas_solicitudes}" FontSize="11" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
+                                </VerticalStackLayout>
                             </VerticalStackLayout>
-                        </VerticalStackLayout>
-                    </Border>
+                        </Border>
 
-                    <!-- 2. Dinero -->
-                    <Border Grid.Row="0" Grid.Column="1" Stroke="#F3F4F6" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="15">
-                        <Border.Shadow>
-                            <Shadow Brush="#000000" Offset="0,4" Opacity="0.03" Radius="8"/>
-                        </Border.Shadow>
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnDineroTapped" />
-                        </Border.GestureRecognizers>
-                        <VerticalStackLayout Spacing="10">
-                            <Border Stroke="Transparent" BackgroundColor="#D1FAE5" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" HorizontalOptions="Start">
-                                <Path Data="M21 7.28V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V16.72C21.59 16.37 22 15.74 22 15V9C22 8.26 21.59 7.63 21 7.28ZM20 15H13V9H20V15ZM5 19V5H19V7H13C11.9 7 11 7.9 11 9V15C11 16.1 11.9 17 13 17H19V19H5ZM16 13.5C15.17 13.5 14.5 12.83 14.5 12C14.5 11.17 15.17 10.5 16 10.5C16.83 10.5 17.5 11.17 17.5 12C17.5 12.83 16.83 13.5 16 13.5Z" Fill="#10B981" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
-                            </Border>
-                            <VerticalStackLayout Spacing="2">
-                                <Label Text="{loc:T mi_dinero}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#111827"/>
-                                <Label Text="{loc:T balance_y_pagos}" FontSize="11" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
+                        <Border x:Name="AccesoDinero" Grid.Row="0" Grid.Column="1" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="16">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnDineroTapped" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="12">
+                                <Border Stroke="Transparent" BackgroundColor="#E3F4E8" StrokeShape="RoundRectangle 14" WidthRequest="44" HeightRequest="44" HorizontalOptions="Start">
+                                    <Path Data="M11.8 10.9C9.53 10.31 8.8 9.7 8.8 8.75C8.8 7.66 9.81 6.9 11.5 6.9C13.28 6.9 13.94 7.75 14 9H16.21C16.14 7.28 15.09 5.7 13 5.19V3H10V5.16C8.06 5.58 6.5 6.84 6.5 8.77C6.5 11.08 8.41 12.23 11.2 12.9C13.7 13.5 14.2 14.38 14.2 15.31C14.2 16 13.71 17.1 11.5 17.1C9.44 17.1 8.63 16.18 8.52 15H6.32C6.44 17.19 8.08 18.42 10 18.83V21H13V18.85C14.95 18.48 16.5 17.35 16.5 15.3C16.5 12.46 14.07 11.49 11.8 10.9Z" Fill="#2E7D32" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </Border>
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="{loc:T mi_dinero}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                                    <Label Text="{loc:T balance_y_pagos}" FontSize="11" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
+                                </VerticalStackLayout>
                             </VerticalStackLayout>
-                        </VerticalStackLayout>
-                    </Border>
+                        </Border>
 
-                    <!-- 3. Horario -->
-                    <Border Grid.Row="1" Grid.Column="0" Stroke="#F3F4F6" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="15">
-                        <Border.Shadow>
-                            <Shadow Brush="#000000" Offset="0,4" Opacity="0.03" Radius="8"/>
-                        </Border.Shadow>
-                        <VerticalStackLayout Spacing="10">
-                            <Border Stroke="Transparent" BackgroundColor="#FFEDD5" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" HorizontalOptions="Start">
-                                <Path Data="M19 3H18V1H16V3H8V1H6V3H5C3.89 3 3.01 3.9 3.01 5L3 19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V9H19V19ZM19 7H5V5H19V7ZM7 11H12V16H7V11Z" Fill="#F97316" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
-                            </Border>
-                            <VerticalStackLayout Spacing="2">
-                                <Label Text="{loc:T mi_horario}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#111827"/>
-                                <Label Text="{loc:T disponibilidad}" FontSize="11" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
+                        <Border Grid.Row="1" Grid.Column="0" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="16">
+                            <VerticalStackLayout Spacing="12">
+                                <Border Stroke="Transparent" BackgroundColor="#FFF4DC" StrokeShape="RoundRectangle 14" WidthRequest="44" HeightRequest="44" HorizontalOptions="Start">
+                                    <Path Data="M11.99 2C6.47 2 2 6.48 2 12C2 17.52 6.47 22 11.99 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 11.99 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM12.5 7H11V13L16.25 16.15L17 14.92L12.5 12.25V7Z" Fill="#E09A1A" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </Border>
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="{loc:T mi_horario}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                                    <Label Text="{loc:T disponibilidad}" FontSize="11" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
+                                </VerticalStackLayout>
                             </VerticalStackLayout>
-                        </VerticalStackLayout>
-                    </Border>
+                        </Border>
 
-                    <!-- 4. Ayuda -->
-                    <Border Grid.Row="1" Grid.Column="1" Stroke="#F3F4F6" StrokeThickness="1" BackgroundColor="White" StrokeShape="RoundRectangle 16" Padding="15">
-                        <Border.Shadow>
-                            <Shadow Brush="#000000" Offset="0,4" Opacity="0.03" Radius="8"/>
-                        </Border.Shadow>
-                        <VerticalStackLayout Spacing="10">
-                            <Border Stroke="Transparent" BackgroundColor="#EFF6FF" StrokeShape="RoundRectangle 20" WidthRequest="40" HeightRequest="40" HorizontalOptions="Start">
-                                <Path Data="M11 18H13V16H11V18ZM12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM12 6C9.79 6 8 7.79 8 10H10C10 8.9 10.9 8 12 8C13.1 8 14 8.9 14 10C14 12 11 11.75 11 15H13C13 12.75 16 12.5 16 10C16 7.79 14.21 6 12 6Z" Fill="#3B82F6" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
-                            </Border>
-                            <VerticalStackLayout Spacing="2">
-                                <Label Text="{loc:T ayuda}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="#111827"/>
-                                <Label Text="{loc:T soporte_y_dudas}" FontSize="11" FontFamily="OpenSansRegular" TextColor="#6B7280"/>
+                        <Border Grid.Row="1" Grid.Column="1" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 20" Padding="16">
+                            <VerticalStackLayout Spacing="12">
+                                <Border Stroke="Transparent" BackgroundColor="#F1ECFB" StrokeShape="RoundRectangle 14" WidthRequest="44" HeightRequest="44" HorizontalOptions="Start">
+                                    <Path Data="M12 1C7.03 1 3 5.03 3 10V17C3 18.66 4.34 20 6 20H9V12H5V10C5 6.13 8.13 3 12 3C15.87 3 19 6.13 19 10V12H15V20H19V21H12V23H18C19.66 23 21 21.66 21 20V10C21 5.03 16.97 1 12 1Z" Fill="#6A4BC4" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </Border>
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="{loc:T ayuda}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                                    <Label Text="{loc:T soporte_y_dudas}" FontSize="11" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
+                                </VerticalStackLayout>
                             </VerticalStackLayout>
-                        </VerticalStackLayout>
-                    </Border>
-                </Grid>
+                        </Border>
+                    </Grid>
                 </VerticalStackLayout>
 
-            </Grid>
+            </VerticalStackLayout>
         </ScrollView>
 
-        <!-- BOTTOM TAB BAR (Hardcoded) -->
-        <Border Grid.Row="1" Stroke="#F3F4F6" StrokeThickness="1" BackgroundColor="White" Padding="15,10" StrokeShape="RoundRectangle 0">
+        <!-- BARRA DE PESTAÑAS -->
+        <Border Grid.Row="1" Stroke="Transparent" BackgroundColor="White" Padding="12,8,12,8" StrokeShape="RoundRectangle 24,24,0,0">
             <Border.Shadow>
-                <Shadow Brush="#000000" Offset="0,-4" Opacity="0.05" Radius="10"/>
+                <Shadow Brush="#0A2F41" Offset="0,-6" Opacity="0.07" Radius="16"/>
             </Border.Shadow>
             <Grid ColumnDefinitions="*,*,*,*">
-                <!-- Inicio (Activo) -->
-                <VerticalStackLayout Grid.Column="0" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center">
-                    <Path Data="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" Fill="#2563EB" Aspect="Uniform" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
-                    <Label Text="{loc:T inicio}" FontSize="10" FontFamily="OpenSansSemibold" TextColor="#2563EB" HorizontalOptions="Center"/>
-                </VerticalStackLayout>
+                <!-- Inicio (activa: píldora azul) -->
+                <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="#EAF1FB" StrokeShape="RoundRectangle 18" Padding="0,6" Margin="6,0">
+                    <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
+                        <Path Data="M10 20V14H14V20H19V12H22L12 3L2 12H5V20H10Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center"/>
+                        <Label Text="{loc:T inicio}" FontSize="10" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+                </Border>
 
-                <!-- Trabajos -->
-                <VerticalStackLayout Grid.Column="1" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center">
+                <VerticalStackLayout Grid.Column="1" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center" Padding="12,6">
                     <VerticalStackLayout.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnTrabajosTapped" />
                     </VerticalStackLayout.GestureRecognizers>
-                    <Path Data="M20 6H16V4C16 2.9 15.1 2 14 2H10C8.9 2 8 2.9 8 4V6H4C2.9 6 2.01 6.9 2.01 8L2 19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6ZM10 4H14V6H10V4ZM20 19H4V8H20V19Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
-                    <Label Text="{loc:T trabajos}" FontSize="10" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                    <Path Data="M20 6H16V4C16 2.9 15.1 2 14 2H10C8.9 2 8 2.9 8 4V6H4C2.9 6 2.01 6.9 2.01 8L2 19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V8C22 6.9 21.1 6 20 6ZM10 4H14V6H10V4ZM20 19H4V8H20V19Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center"/>
+                    <Label Text="{loc:T trabajos}" FontSize="10" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center"/>
                 </VerticalStackLayout>
 
-                <!-- Dinero -->
-                <VerticalStackLayout Grid.Column="2" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center">
+                <VerticalStackLayout Grid.Column="2" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center" Padding="12,6">
                     <VerticalStackLayout.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnDineroTapped" />
                     </VerticalStackLayout.GestureRecognizers>
-                    <Path Data="M21 7.28V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V16.72C21.59 16.37 22 15.74 22 15V9C22 8.26 21.59 7.63 21 7.28ZM20 15H13V9H20V15ZM5 19V5H19V7H13C11.9 7 11 7.9 11 9V15C11 16.1 11.9 17 13 17H19V19H5ZM16 13.5C15.17 13.5 14.5 12.83 14.5 12C14.5 11.17 15.17 10.5 16 10.5C16.83 10.5 17.5 11.17 17.5 12C17.5 12.83 16.83 13.5 16 13.5Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
-                    <Label Text="{loc:T dinero}" FontSize="10" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                    <Path Data="M21 7.28V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V16.72C21.59 16.37 22 15.74 22 15V9C22 8.26 21.59 7.63 21 7.28ZM20 15H13V9H20V15ZM5 19V5H19V7H13C11.9 7 11 7.9 11 9V15C11 16.1 11.9 17 13 17H19V19H5ZM16 13.5C15.17 13.5 14.5 12.83 14.5 12C14.5 11.17 15.17 10.5 16 10.5C16.83 10.5 17.5 11.17 17.5 12C17.5 12.83 16.83 13.5 16 13.5Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center"/>
+                    <Label Text="{loc:T dinero}" FontSize="10" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center"/>
                 </VerticalStackLayout>
 
-                <!-- Perfil -->
-                <VerticalStackLayout Grid.Column="3" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center">
+                <VerticalStackLayout Grid.Column="3" Spacing="2" HorizontalOptions="Center" VerticalOptions="Center" Padding="12,6">
                     <VerticalStackLayout.GestureRecognizers>
                         <TapGestureRecognizer Tapped="OnPerfilTapped" />
                     </VerticalStackLayout.GestureRecognizers>
-                    <Path Data="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" Fill="#9CA3AF" Aspect="Uniform" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"/>
-                    <Label Text="{loc:T perfil}" FontSize="10" FontFamily="OpenSansRegular" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                    <Path Data="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="22" HeightRequest="22" HorizontalOptions="Center"/>
+                    <Label Text="{loc:T perfil}" FontSize="10" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center"/>
                 </VerticalStackLayout>
             </Grid>
         </Border>
-        
+
     </Grid>
 
 </ContentPage>

@@ -19,6 +19,10 @@ namespace CUIDAPP.Services
         public static event Action<int, int, string>? TareaCompletada; // TrabajoId, TareaId, Descripcion
         public static event Action<Mensaje>? MensajeNuevo;
         public static event Action<int, double>? AlertaGeocerca; // TrabajoId, DistanciaMetros
+        public static event Action<int, int, bool>? UsuarioEscribiendo; // ConversacionId, UsuarioId, Escribiendo
+        public static event Action<int>? CuentaActualizada; // Estado (2=Aprobado, 3=Rechazado)
+        public static event Action<int, decimal>? PagoAprobado; // TrabajoId, Monto
+        public static event Action<int, bool, int?, string?>? TicketActualizado; // TicketId, Respuesta, Estado, Asunto
 
         public static bool EstaConectado => _connection?.State == HubConnectionState.Connected;
 
@@ -53,6 +57,29 @@ namespace CUIDAPP.Services
                 MainThread.BeginInvokeOnMainThread(() => MensajeNuevo?.Invoke(mensaje));
             });
             _connection.On<object>("AlertaGeocerca", payload => DispatchAlertaGeocerca(payload));
+            _connection.On<object>("UsuarioEscribiendo", payload => DispatchUsuarioEscribiendo(payload));
+            _connection.On<object>("CuentaActualizada", payload =>
+            {
+                var json = (System.Text.Json.JsonElement)payload;
+                var estado = json.GetProperty("estado").GetInt32();
+                MainThread.BeginInvokeOnMainThread(() => CuentaActualizada?.Invoke(estado));
+            });
+            _connection.On<object>("PagoAprobado", payload =>
+            {
+                var json = (System.Text.Json.JsonElement)payload;
+                var trabajoId = json.TryGetProperty("trabajoId", out var t) ? t.GetInt32() : 0;
+                var monto = json.GetProperty("monto").GetDecimal();
+                MainThread.BeginInvokeOnMainThread(() => PagoAprobado?.Invoke(trabajoId, monto));
+            });
+            _connection.On<object>("TicketActualizado", payload =>
+            {
+                var json = (System.Text.Json.JsonElement)payload;
+                var ticketId = json.GetProperty("ticketId").GetInt32();
+                var respuesta = json.TryGetProperty("respuesta", out var r) && r.GetBoolean();
+                int? estado = json.TryGetProperty("estado", out var e) && e.ValueKind == System.Text.Json.JsonValueKind.Number ? e.GetInt32() : null;
+                var asunto = json.TryGetProperty("asunto", out var a) && a.ValueKind == System.Text.Json.JsonValueKind.String ? a.GetString() : null;
+                MainThread.BeginInvokeOnMainThread(() => TicketActualizado?.Invoke(ticketId, respuesta, estado, asunto));
+            });
 
             _connection.Reconnecting += ex =>
             {
@@ -161,6 +188,33 @@ namespace CUIDAPP.Services
             var trabajoId = json.GetProperty("trabajoId").GetInt32();
             var distancia = json.GetProperty("distanciaMetros").GetDouble();
             MainThread.BeginInvokeOnMainThread(() => AlertaGeocerca?.Invoke(trabajoId, distancia));
+        }
+
+        private static void DispatchUsuarioEscribiendo(object payload)
+        {
+            var json = (System.Text.Json.JsonElement)payload;
+            var conversacionId = json.GetProperty("conversacionId").GetInt32();
+            var usuarioId = json.GetProperty("usuarioId").GetInt32();
+            var escribiendo = json.GetProperty("escribiendo").GetBoolean();
+            MainThread.BeginInvokeOnMainThread(() => UsuarioEscribiendo?.Invoke(conversacionId, usuarioId, escribiendo));
+        }
+
+        /// <summary>
+        /// Avisa al otro participante del chat que este usuario está (o dejó de estar) escribiendo.
+        /// Es "mejor esfuerzo": si no hay conexión, simplemente no se avisa.
+        /// </summary>
+        public static async Task AvisarEscribiendoAsync(int conversacionId, int usuarioId, bool escribiendo)
+        {
+            if (_connection?.State != HubConnectionState.Connected)
+                return;
+            try
+            {
+                await _connection.InvokeAsync("Escribiendo", conversacionId, usuarioId, escribiendo);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Realtime] No se pudo avisar 'escribiendo': {ex.Message}");
+            }
         }
 
         private static (int, int) LeerDosEnteros(object payload, string campo1, string campo2)

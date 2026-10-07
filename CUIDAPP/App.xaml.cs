@@ -45,6 +45,9 @@ namespace CUIDAPP
             RealtimeService.AlertaGeocerca += OnAlertaGeocercaGlobal;
             RealtimeService.TareaCompletada += OnTareaCompletadaGlobal;
             RealtimeService.PropinaRecibida += OnPropinaRecibidaGlobal;
+            RealtimeService.CuentaActualizada += estado => AvisosApp.CuentaActualizada(estado);
+            RealtimeService.PagoAprobado += (trabajoId, monto) => AvisosApp.PagoAprobado(trabajoId, monto);
+            RealtimeService.TicketActualizado += (ticketId, respuesta, estado, asunto) => AvisosApp.TicketActualizado(ticketId, respuesta, estado, asunto);
         }
 
         private void OnPropinaRecibidaGlobal(int trabajoId, decimal monto)
@@ -103,46 +106,9 @@ namespace CUIDAPP
                 NativeNotifier.Mostrar(Localizador.T("tu_cuidador_se_alejo_del"), texto);
         }
 
-        private void OnMensajeNuevoGlobal(Mensaje mensaje)
-        {
-            var miUsuarioId = Preferences.Default.Get("UserId", 0);
-            if (mensaje.RemitenteId == miUsuarioId)
-                return;
+        private void OnMensajeNuevoGlobal(Mensaje mensaje) => _ = AvisosApp.MensajeNuevoAsync(mensaje);
 
-            var texto = mensaje.Tipo switch
-            {
-                "imagen" => Localizador.T("notif_foto"),
-                "audio" => Localizador.T("notif_audio"),
-                _ => mensaje.Contenido
-            };
-
-            NotificacionHistorial.Agregar(Localizador.T("nuevo_mensaje"), texto, "mensaje");
-
-            // Si ya tiene esa misma conversación abierta, ChatPage se encarga de pintarlo
-            // en vivo — no hace falta ni banner ni notificación del sistema encima.
-            if (mensaje.ConversacionId == ChatPage.ConversacionAbiertaId)
-                return;
-
-            if (EstaEnPrimerPlano)
-                GlobalNotifier.MostrarBanner(Localizador.T("nuevo_mensaje"), texto);
-            else
-                NativeNotifier.Mostrar(Localizador.T("nuevo_mensaje"), texto);
-        }
-
-        private void OnNuevaSolicitudGlobal(int trabajoId, int clienteId)
-        {
-            var miUsuarioId = Preferences.Default.Get("UserId", 0);
-            if (miUsuarioId == 0)
-                return;
-
-            var texto = Localizador.T("un_cliente_solicito_tus_servicios");
-            NotificacionHistorial.Agregar(Localizador.T("nueva_solicitud_de_servicio"), texto, "solicitud", trabajoId);
-
-            if (EstaEnPrimerPlano)
-                GlobalNotifier.MostrarBanner(Localizador.T("nueva_solicitud"), texto);
-            else
-                NativeNotifier.Mostrar(Localizador.T("nueva_solicitud_de_servicio"), texto);
-        }
+        private void OnNuevaSolicitudGlobal(int trabajoId, int clienteId) => _ = AvisosApp.NuevaSolicitudAsync(trabajoId);
 
         private void OnTrabajoActualizadoGlobal(int trabajoId, int estado)
         {
@@ -150,23 +116,7 @@ namespace CUIDAPP
             if (Preferences.Default.Get("RolId", 0) == 3)
                 _ = DeadManService.SincronizarAsync(Preferences.Default.Get("UserId", 0));
 
-            var texto = estado switch
-            {
-                2 => Localizador.T("est_aceptada"),
-                3 => Localizador.T("est_en_progreso"),
-                4 => Localizador.T("est_completado"),
-                5 => Localizador.T("est_cancelado"),
-                6 => Localizador.T("est_rechazada"),
-                7 => Localizador.T("est_cuidador_termino"),
-                _ => Localizador.T("est_actualizacion")
-            };
-
-            NotificacionHistorial.Agregar(Localizador.T("actualizacion_de_servicio"), texto, "trabajo", trabajoId);
-
-            if (!EstaEnPrimerPlano)
-                NativeNotifier.Mostrar(Localizador.T("actualizacion_de_servicio"), texto);
-            // En primer plano no mostramos banner aquí: cada pantalla de detalle ya se
-            // refresca sola y mostrar un banner encima sería redundante con eso.
+            _ = AvisosApp.TrabajoActualizadoAsync(trabajoId, estado);
         }
 
         /// <summary>
@@ -188,6 +138,7 @@ namespace CUIDAPP
             {
                 Helpers.SesionGuardada.IniciarServicios();
                 await shell.GoToAsync(ruta, animate: false);
+                await NotificacionDestino.ProcesarPendienteAsync();
             }
             catch (Exception ex)
             {
