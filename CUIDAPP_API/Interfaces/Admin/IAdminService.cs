@@ -10,8 +10,8 @@ namespace CUIDAPP_API.Interfaces.Admin
         Task<IEnumerable<DocumentoDto>> ObtenerDocumentosPorCuidadorAsync(int cuidadorId);
         Task<bool> ActualizarEstadoCuidadorAsync(ActualizarEstadoCuidadorDto dto);
         Task<bool> MarcarPagoComoPagadoAsync(int pagoId);
-        Task<bool> SuspenderCuidadorAsync(int usuarioId, SuspenderCuidadorDto dto);
-        Task<bool> ReactivarCuidadorAsync(int usuarioId, ReactivarCuidadorDto dto);
+        Task<AdminActionResult> SuspenderUsuarioAsync(int usuarioId, SuspenderCuidadorDto dto);
+        Task<AdminActionResult> ReactivarUsuarioAsync(int usuarioId, ReactivarCuidadorDto dto);
         Task<IEnumerable<SancionCuidadorDto>> ObtenerSancionesAsync(int usuarioId);
         Task<bool> ActualizarInfoCuidadorAsync(int usuarioId, ActualizarInfoCuidadorDto dto);
 
