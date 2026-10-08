@@ -11,6 +11,8 @@ namespace CUIDAPP.Services
     public static class Recordatorios
     {
         private const string ClaveProgramados = "RecordatoriosServicios"; // ids de trabajos con recordatorio
+        private const string ClaveHorario = "RecordatoriosHorario";        // "id|ticks|i/f;..." avisos del horario
+        private const int BaseIdHorario = 2_000_000;
 
         private static int IdUnaHora(int trabajoId) => trabajoId * 10 + 1;
         private static int IdQuinceMin(int trabajoId) => trabajoId * 10 + 2;
@@ -83,9 +85,75 @@ namespace CUIDAPP.Services
 
         public static void CancelarCalificacion(int trabajoId) => Cancelar(IdCalificar(trabajoId));
 
+        /// <summary>
+        /// Programa en el teléfono el aviso de inicio y de fin de cada franja del horario automático para
+        /// los próximos 7 días (llegan aunque la app esté cerrada). Se vuelve a llamar cada vez que se
+        /// abre el panel o se guarda el horario, así la ventana de 7 días se mantiene al día.
+        /// </summary>
+        public static void ProgramarHorario(Models.Cuidador.HorarioCuidador horario)
+        {
+            CancelarHorario();
+            if (!horario.Activo)
+                return;
+
+            var guardados = new List<string>();
+            var n = 0;
+            foreach (var (ini, fin) in horario.Proximas(DateTime.Now, 7))
+            {
+                var hasta = fin.ToString("h:mm tt", Localizador.Cultura);
+                if (ini > DateTime.Now)
+                {
+                    Programar(BaseIdHorario + n, ini, Localizador.T("notif_horario_inicio_titulo"), Localizador.F("notif_horario_inicio_texto", hasta), "");
+                    guardados.Add($"{BaseIdHorario + n}|{ini.Ticks}|i");
+                    n++;
+                }
+                if (fin > DateTime.Now)
+                {
+                    Programar(BaseIdHorario + n, fin, Localizador.T("notif_horario_fin_titulo"), Localizador.T("notif_horario_fin_texto"), "");
+                    guardados.Add($"{BaseIdHorario + n}|{fin.Ticks}|f");
+                    n++;
+                }
+            }
+            Preferences.Default.Set(ClaveHorario, string.Join(";", guardados));
+        }
+
+        public static void CancelarHorario()
+        {
+            foreach (var (id, _, _) in LeerHorario())
+                Cancelar(id);
+            Preferences.Default.Remove(ClaveHorario);
+        }
+
+        /// <summary>
+        /// Si la app ya mostró el aviso en vivo (llegó el cambio del servidor), se quita la alarma de ese
+        /// mismo momento para que no llegue repetido unos minutos después.
+        /// </summary>
+        public static void QuitarAvisoHorarioCercano(bool inicio)
+        {
+            var ahora = DateTime.Now;
+            var restantes = new List<string>();
+            foreach (var (id, cuando, esInicio) in LeerHorario())
+            {
+                if (esInicio == inicio && Math.Abs((cuando - ahora).TotalMinutes) <= 20)
+                    Cancelar(id);
+                else
+                    restantes.Add($"{id}|{cuando.Ticks}|{(esInicio ? "i" : "f")}");
+            }
+            Preferences.Default.Set(ClaveHorario, string.Join(";", restantes));
+        }
+
+        private static List<(int Id, DateTime Cuando, bool Inicio)> LeerHorario()
+            => Preferences.Default.Get(ClaveHorario, "")
+                .Split(';', StringSplitOptions.RemoveEmptyEntries)
+                .Select(x => x.Split('|'))
+                .Where(p => p.Length == 3 && int.TryParse(p[0], out _) && long.TryParse(p[1], out _))
+                .Select(p => (int.Parse(p[0]), new DateTime(long.Parse(p[1])), p[2] == "i"))
+                .ToList();
+
         /// <summary>Al cerrar sesión: no deben llegar recordatorios de otra cuenta.</summary>
         public static void CancelarTodos()
         {
+            CancelarHorario();
             foreach (var id in LeerProgramados())
             {
                 Cancelar(IdUnaHora(id));

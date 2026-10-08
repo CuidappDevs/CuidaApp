@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:CUIDAPP.Localization"
+             xmlns:skia="clr-namespace:SkiaSharp.Extended.UI.Controls;assembly=SkiaSharp.Extended.UI"
+             x:Class="CUIDAPP.Views.Soporte.AyudaPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource ColorBackground}"
+             SafeAreaEdges="None">
+
+    <ScrollView SafeAreaEdges="None">
+        <VerticalStackLayout Spacing="0">
+
+            <!-- ENCABEZADO (borde a borde) con animación -->
+            <Grid SafeAreaEdges="None" Padding="0,0,0,44">
+                <Grid.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#2A63B8" Offset="0.0" />
+                        <GradientStop Color="{StaticResource ColorPrimary}" Offset="0.6" />
+                        <GradientStop Color="{StaticResource ColorPrimaryDark}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Grid.Background>
+                <Ellipse Fill="#14FFFFFF" WidthRequest="240" HeightRequest="240" HorizontalOptions="End" VerticalOptions="Start" Margin="0,-90,-90,0"/>
+                <Ellipse Fill="#0FFFFFFF" WidthRequest="160" HeightRequest="160" HorizontalOptions="Start" VerticalOptions="End" Margin="-60,0,0,-30"/>
+
+                <VerticalStackLayout x:Name="ContenidoEncabezado" Spacing="4">
+                    <Grid ColumnDefinitions="44,*,44" Padding="12,10">
+                        <Border Stroke="Transparent" BackgroundColor="#26FFFFFF" WidthRequest="44" HeightRequest="44">
+                            <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnBackTapped" />
+                            </Border.GestureRecognizers>
+                            <Path Data="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" Fill="White" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Grid.Column="1" Text="{loc:T ayuda_titulo}" FontSize="17" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Grid>
+
+                    <!-- Animación sobre un círculo blanco -->
+                    <Border Stroke="Transparent" BackgroundColor="White" WidthRequest="132" HeightRequest="132" HorizontalOptions="Center">
+                        <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                        <skia:SKLottieView x:Name="AnimacionEncabezado" RepeatCount="-1" WidthRequest="124" HeightRequest="124" HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Border>
+                    <Label Text="{loc:T ayuda_encabezado}" FontSize="20" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" Margin="0,10,0,12"/>
+
+                    <!-- Búsqueda -->
+                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 16" Margin="20,0" Padding="14,0" HeightRequest="50">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                            <Path Data="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
+                            <Entry x:Name="EntryBuscar" Grid.Column="1" Placeholder="{loc:T ayuda_buscar}" PlaceholderColor="{StaticResource ColorPlaceholder}" TextColor="{StaticResource ColorTextStrong}" FontSize="15" VerticalOptions="Center" TextChanged="OnBuscarChanged" ClearButtonVisibility="WhileEditing"/>
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
+            </Grid>
+
+            <!-- Hoja -->
+            <Border Margin="0,-24,0,0" Stroke="Transparent" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 28,28,0,0" Padding="20,24,20,0">
+                <VerticalStackLayout Spacing="14">
+
+                    <!-- Soporte -->
+                    <VerticalStackLayout x:Name="BloqueSoporte" Spacing="10">
+                        <Label Text="{loc:T ayuda_soporte_titulo}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" Margin="2,0,0,0"/>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <Border x:Name="BtnReportar" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="14">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnReportarTapped" />
+                                </Border.GestureRecognizers>
+                                <VerticalStackLayout Spacing="10">
+                                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 14" WidthRequest="42" HeightRequest="42" HorizontalOptions="Start">
+                                        <Path x:Name="IconoReportar" Data="M20 2H4C2.9 2 2.01 2.9 2.01 4L2 22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM13 14H11V12H13V14ZM13 10H11V6H13V10Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                    </Border>
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="{loc:T ayuda_reportar}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                                        <Label Text="{loc:T ayuda_reportar_desc}" FontSize="11" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
+                                    </VerticalStackLayout>
+                                </VerticalStackLayout>
+                            </Border>
+                            <Border x:Name="BtnMisReportes" Grid.Column="1" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="14">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnMisReportesTapped" />
+                                </Border.GestureRecognizers>
+                                <VerticalStackLayout Spacing="10">
+                                    <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSuccessSoft}" StrokeShape="RoundRectangle 14" WidthRequest="42" HeightRequest="42" HorizontalOptions="Start">
+                                        <Path Data="M19 3H14.82C14.4 1.84 13.3 1 12 1C10.7 1 9.6 1.84 9.18 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM12 3C12.55 3 13 3.45 13 4C13 4.55 12.55 5 12 5C11.45 5 11 4.55 11 4C11 3.45 11.45 3 12 3ZM14 17H7V15H14V17ZM17 13H7V11H17V13ZM17 9H7V7H17V9Z" Fill="{StaticResource ColorSuccess}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                    </Border>
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="{loc:T ayuda_mis_reportes}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                                        <Label Text="{loc:T ayuda_mis_reportes_desc}" FontSize="11" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
+                                    </VerticalStackLayout>
+                                </VerticalStackLayout>
+                            </Border>
+                        </Grid>
+                        <!-- WhatsApp y llamada al equipo de soporte -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <Border x:Name="BtnWhatsApp" Stroke="Transparent" BackgroundColor="{StaticResource ColorSuccessSoft}" StrokeShape="RoundRectangle 16" HeightRequest="48">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnWhatsAppTapped" />
+                                </Border.GestureRecognizers>
+                                <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
+                                    <Path Data="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2ZM16.83 15.81C16.62 16.38 15.65 16.91 15.18 16.95C14.71 17 14.28 17.17 12.07 16.31C9.41 15.27 7.73 12.55 7.6 12.38C7.47 12.2 6.53 10.97 6.53 9.69C6.53 8.41 7.2 7.79 7.44 7.53C7.67 7.27 7.95 7.21 8.12 7.21C8.29 7.21 8.47 7.21 8.62 7.22C8.8 7.22 9.03 7.15 9.26 7.71C9.5 8.29 10.06 9.57 10.13 9.7C10.2 9.83 10.24 9.98 10.16 10.15C10.07 10.33 10.03 10.43 9.9 10.58C9.77 10.73 9.62 10.92 9.51 11.03C9.38 11.16 9.24 11.3 9.4 11.57C9.55 11.83 10.08 12.7 10.87 13.4C11.88 14.3 12.74 14.58 13 14.71C13.26 14.84 13.41 14.82 13.57 14.64C13.72 14.47 14.22 13.88 14.39 13.62C14.57 13.36 14.74 13.4 14.98 13.49C15.22 13.58 16.5 14.21 16.76 14.34C17.02 14.47 17.19 14.53 17.26 14.64C17.33 14.75 17.33 15.27 17.12 15.84L16.83 15.81Z" Fill="{StaticResource ColorSuccess}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" VerticalOptions="Center"/>
+                                    <Label Text="{loc:T ayuda_whatsapp}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorSuccess}" VerticalOptions="Center"/>
+                                </HorizontalStackLayout>
+                            </Border>
+                            <Border x:Name="BtnLlamar" Grid.Column="1" Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 16" HeightRequest="48">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnLlamarTapped" />
+                                </Border.GestureRecognizers>
+                                <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
+                                    <Path Data="M6.62 10.79C8.06 13.62 10.38 15.93 13.21 17.38L15.41 15.18C15.68 14.91 16.08 14.82 16.43 14.94C17.55 15.31 18.76 15.51 20 15.51C20.55 15.51 21 15.96 21 16.51V20C21 20.55 20.55 21 20 21C10.61 21 3 13.39 3 4C3 3.45 3.45 3 4 3H7.5C8.05 3 8.5 3.45 8.5 4C8.5 5.25 8.7 6.45 9.07 7.57C9.18 7.92 9.1 8.31 8.82 8.59L6.62 10.79Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
+                                    <Label Text="{loc:T ayuda_llamar}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" VerticalOptions="Center"/>
+                                </HorizontalStackLayout>
+                            </Border>
+                        </Grid>
+                    </VerticalStackLayout>
+
+                    <!-- Preguntas frecuentes (se arman en código) -->
+                    <Label x:Name="TituloPreguntas" Text="{loc:T ayuda_preguntas}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" Margin="2,6,0,0"/>
+                    <VerticalStackLayout x:Name="ListaCategorias" Spacing="12"/>
+                    <Label x:Name="LblSinResultados" Text="{loc:T ayuda_sin_resultados}" IsVisible="False" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalTextAlignment="Center" Margin="20,10"/>
+
+                    <!-- Pie -->
+                    <Border x:Name="BtnBienvenida" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 16" Padding="16,14" Margin="0,8,0,0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnBienvenidaTapped" />
+                        </Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                            <Path Data="M8 5V19L19 12L8 5Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="16" HeightRequest="16" VerticalOptions="Center"/>
+                            <Label Grid.Column="1" Text="{loc:T ayuda_repetir_bienvenida}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
+                            <Path Grid.Column="2" Data="M10 6L8.59 7.41L13.17 12L8.59 16.59L10 18L16 12L10 6Z" Fill="{StaticResource ColorChevron}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
+                        </Grid>
+                    </Border>
+                    <Label x:Name="LblVersion" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center" Margin="0,4,0,0"/>
+
+                    <ContentView x:Name="EspacioInferior"/>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,79 @@
+@page "/buscar"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@using CUIDAPP_ADMINISTRATIVO.Models.Cuidador
+@using CUIDAPP_ADMINISTRATIVO.Models.Cliente
+@inject PanelApiService Api
+@inject CuidadorAdminApiService Cuidadores
+@inject ClienteAdminApiService Clientes
+
+<PageTitle>Búsqueda · Cuidapp Admin</PageTitle>
+
+<div class="pn-page">
+    <span style="font-size:18px; font-weight:600;">Resultados para “@Q”</span>
+
+    @if (_cargando)
+    {
+        <div class="adm-card"><Esqueleto Filas="5" /></div>
+    }
+    else
+    {
+        @if (_servicio != null)
+        {
+            <a class="adm-card adm-card-pad d-flex align-items-center" href="servicios/@_servicio.Servicio.Id" style="gap:14px; text-decoration:none; color:inherit;">
+                <span class="pn-kpi-icon tone-info"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"></path></svg></span>
+                <span class="pn-who-text" style="flex:1;"><span>Servicio #@_servicio.Servicio.Id · @_servicio.Servicio.TipoServicio</span><span class="pn-muted">@_servicio.Servicio.ClienteNombre con @_servicio.Servicio.CuidadorNombre · @_servicio.Servicio.Fecha.ToString("dd MMM yyyy")</span></span>
+                <span class="pn-pill @EstadoServicio.Tono(_servicio.Servicio.Estado)">@EstadoServicio.Texto(_servicio.Servicio.Estado)</span>
+            </a>
+        }
+
+        <div class="pn-grid pn-grid-2-eq">
+            <div class="adm-card overflow-hidden">
+                <div class="pn-card-head"><span class="adm-card-title">Care Partners</span><span class="pn-muted">@_cuidadores.Count</span></div>
+                @if (_cuidadores.Count == 0) { <EstadoVacio Titulo="Sin coincidencias" /> }
+                @foreach (var c in _cuidadores.Take(20))
+                {
+                    <a class="d-flex align-items-center" href="care-partners/@c.UsuarioId" style="gap:12px; padding:12px 20px; border-bottom:1px solid var(--adm-line-soft); text-decoration:none; color:inherit;">
+                        <Avatar Url="@Api.Archivo(c.FotoUrl)" Nombre="@c.NombreCompleto" Tam="34" />
+                        <span class="pn-who-text"><span>@c.NombreCompleto</span><span class="pn-muted">@c.Email</span></span>
+                    </a>
+                }
+            </div>
+            <div class="adm-card overflow-hidden">
+                <div class="pn-card-head"><span class="adm-card-title">Clientes</span><span class="pn-muted">@_clientes.Count</span></div>
+                @if (_clientes.Count == 0) { <EstadoVacio Titulo="Sin coincidencias" /> }
+                @foreach (var c in _clientes.Take(20))
+                {
+                    <a class="d-flex align-items-center" href="clientes/@c.UsuarioId" style="gap:12px; padding:12px 20px; border-bottom:1px solid var(--adm-line-soft); text-decoration:none; color:inherit;">
+                        <Avatar Url="@Api.Archivo(c.FotoUrl)" Nombre="@c.NombreCompleto" Tam="34" />
+                        <span class="pn-who-text"><span>@c.NombreCompleto</span><span class="pn-muted">@c.Email</span></span>
+                    </a>
+                }
+            </div>
+        </div>
+
+        <a class="pn-link" href="servicios">Buscar “@Q” en servicios →</a>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "q")] public string? Q { get; set; }
+
+    private bool _cargando = true;
+    private List<CuidadorAdmin> _cuidadores = new();
+    private List<ClienteAdmin> _clientes = new();
+    private DetalleServicio? _servicio;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _cargando = true;
+        var q = (Q ?? "").Trim().TrimStart('#');
+        bool Coincide(params string?[] campos) => campos.Any(c => c != null && c.Contains(q, StringComparison.CurrentCultureIgnoreCase));
+
+        var tc = Cuidadores.ObtenerCuidadoresAsync(null);
+        var tl = Clientes.ObtenerClientesAsync(null);
+        _servicio = int.TryParse(q, out var id) ? await Api.ServicioAsync(id) : null;
+        _cuidadores = string.IsNullOrEmpty(q) ? new() : (await tc).Where(c => Coincide(c.NombreCompleto, c.Email)).ToList();
+        _clientes = string.IsNullOrEmpty(q) ? new() : (await tl).Where(c => Coincide(c.NombreCompleto, c.Email)).ToList();
+        _cargando = false;
+    }
+}

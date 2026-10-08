@@ -129,6 +129,47 @@ namespace CUIDAPP_API.Services.Cuidador
             return success;
         }
 
+        public async Task<HorarioCuidadorDto?> ObtenerHorarioAsync(int cuidadorId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_ObtenerHorarioCuidador", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.AddWithValue("@CuidadorId", cuidadorId);
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                return null;
+
+            var horario = new HorarioCuidadorDto { Activo = Convert.ToBoolean(reader["Activo"]) };
+            await reader.NextResultAsync();
+            while (await reader.ReadAsync())
+                horario.Franjas.Add(new FranjaHorarioDto
+                {
+                    DiaSemana = Convert.ToInt32(reader["DiaSemana"]),
+                    HoraInicio = ((TimeSpan)reader["HoraInicio"]).ToString(@"hh\:mm"),
+                    HoraFin = ((TimeSpan)reader["HoraFin"]).ToString(@"hh\:mm")
+                });
+            return horario;
+        }
+
+        public async Task<string> GuardarHorarioAsync(int cuidadorId, HorarioCuidadorDto dto)
+        {
+            string resultado;
+            using (var connection = new SqlConnection(_connectionString))
+            using (var command = new SqlCommand("sp_GuardarHorarioCuidador", connection) { CommandType = CommandType.StoredProcedure })
+            {
+                command.Parameters.AddWithValue("@CuidadorId", cuidadorId);
+                command.Parameters.AddWithValue("@Activo", dto.Activo);
+                command.Parameters.AddWithValue("@Franjas", System.Text.Json.JsonSerializer.Serialize(dto.Franjas));
+                await connection.OpenAsync();
+                resultado = (await command.ExecuteScalarAsync())?.ToString() ?? "ERROR";
+            }
+
+            // Al activarlo se aplica en el momento (no espera al siguiente minuto).
+            if (resultado == "OK" && dto.Activo)
+                await HorarioVisibilidadService.AplicarAsync(_connectionString, _notifier, cuidadorId);
+            return resultado;
+        }
+
         public async Task<bool> ActualizarUbicacionAsync(ActualizarUbicacionDto dto)
         {
             using var connection = new SqlConnection(_connectionString);
@@ -137,13 +178,15 @@ namespace CUIDAPP_API.Services.Cuidador
             command.Parameters.AddWithValue("@CuidadorId", dto.CuidadorId);
             command.Parameters.AddWithValue("@Latitud", dto.Latitud);
             command.Parameters.AddWithValue("@Longitud", dto.Longitud);
+            command.Parameters.AddWithValue("@Bateria", dto.Bateria is int b ? (object)(byte)Math.Clamp(b, 0, 100) : DBNull.Value);
+            command.Parameters.AddWithValue("@Fecha", HoraLocalRD.Ahora);
 
             await connection.OpenAsync();
             var filasAfectadas = await command.ExecuteScalarAsync();
             var success = Convert.ToInt32(filasAfectadas) > 0;
 
             if (success)
-                await _notifier.NotificarGlobalAsync("UbicacionCuidadorCambio", new { dto.CuidadorId, dto.Latitud, dto.Longitud });
+                await _notifier.NotificarGlobalAsync("UbicacionCuidadorCambio", new { dto.CuidadorId, dto.Latitud, dto.Longitud, dto.Bateria });
 
             return success;
         }

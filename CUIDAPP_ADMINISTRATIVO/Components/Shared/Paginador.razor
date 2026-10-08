@@ -1,0 +1,32 @@
+@* Paginador de listas: "Mostrando 21–40 de 134" + anterior / siguiente. *@
+@if (Total > 0)
+{
+    <div class="pn-pager">
+        <span class="pn-pager-info">Mostrando <strong>@Desde–@Hasta</strong> de <strong>@Total</strong></span>
+        <div class="pn-pager-btns">
+            <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" disabled="@(Pagina <= 1)" @onclick="() => Ir(Pagina - 1)" aria-label="Página anterior">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"></path></svg>
+            </button>
+            <span class="pn-pager-num">@Pagina / @Paginas</span>
+            <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" disabled="@(Pagina >= Paginas)" @onclick="() => Ir(Pagina + 1)" aria-label="Página siguiente">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg>
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Pagina { get; set; } = 1;
+    [Parameter] public int Tamano { get; set; } = 20;
+    [Parameter] public int Total { get; set; }
+    [Parameter] public EventCallback<int> PaginaCambiada { get; set; }
+
+    private int Paginas => Math.Max(1, (int)Math.Ceiling(Total / (double)Tamano));
+    private int Desde => Total == 0 ? 0 : (Pagina - 1) * Tamano + 1;
+    private int Hasta => Math.Min(Total, Pagina * Tamano);
+
+    private Task Ir(int p) => PaginaCambiada.InvokeAsync(Math.Clamp(p, 1, Paginas));
+
+    /// <summary>Para listas que ya vienen completas de la API: devuelve solo la página actual.</summary>
+    public static IEnumerable<T> Cortar<T>(IEnumerable<T> lista, int pagina, int tamano) => lista.Skip((pagina - 1) * tamano).Take(tamano);
+}

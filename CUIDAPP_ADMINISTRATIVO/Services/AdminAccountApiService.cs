@@ -13,9 +13,10 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
     {
         private readonly HttpClient _httpClient;
 
-        public AdminAccountApiService(HttpClient httpClient)
+        public AdminAccountApiService(HttpClient httpClient, Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider estado)
         {
             _httpClient = httpClient;
+            SesionAdmin.Adjuntar(_httpClient, estado);
         }
 
         public async Task<List<AdminUsuario>> ObtenerAdminsAsync()

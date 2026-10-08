@@ -2,6 +2,77 @@
 
 Todo lo listado aquí requiere **republicar la API** (ver [deployment.md](./deployment.md)) para que tome efecto en producción.
 
+## Centro de mando del panel ("Ojo de Dios")
+
+SQL: `docs/sql/centro-mando.sql` (tablas `UbicacionesHistorial` y `AvisosDirectos`, columnas `PerfilCuidador.UltimaUbicacion` y `Bateria`, nueva versión de `sp_ActualizarUbicacionCuidador` y `sp_AdminMapa`). Correr **después** de `panel-admin.sql` y `horario-cuidador.sql`.
+
+| Método | Ruta | Nivel | Qué hace |
+|---|---|---|---|
+| GET | `/api/admin/mapa/ficha/{usuarioId}` | Admin | Persona, servicio en curso/próximo y avisos recientes |
+| GET | `/api/admin/mapa/estelas?minutos=` | Admin | Puntos recientes para dibujar estelas |
+| GET | `/api/admin/mapa/recorrido?trabajoId=` o `?cuidadorId&desde&hasta` | Admin | Recorrido para reproducir |
+| GET | `/api/admin/mapa/demanda?dias=` | Admin | Mapa de calor de servicios pedidos |
+| GET | `/api/admin/mapa/alertas` | Admin | Servicios que no empezaron a tiempo y Care Partners en servicio sin señal |
+| POST | `/api/admin/mapa/notificar` `{ usuarioIds, titulo, mensaje }` | Operaciones | Notificación directa (evento `AvisoDirecto` al grupo del usuario) |
+| POST | `/api/admin/mapa/checkin` `{ usuarioId, minutos, mensaje }` | Operaciones | "¿Estás bien?"; sin respuesta a tiempo → SOS |
+| POST | `/api/admin/mapa/ocultar/{id}` | Operaciones | Oculta al Care Partner y apaga su horario automático |
+| POST | `/api/usuario/{usuarioId}/checkin/{avisoId}` `{ estaBien }` | (app) | Respuesta al "¿Estás bien?"; "ayuda" → SOS |
+
+- `PUT /api/cuidador/ubicacion` acepta `bateria` (opcional) y guarda historial mientras el cuidador está visible o en servicio (30 días).
+- El servicio de fondo (`HorarioVisibilidadService`) también convierte cada minuto los "¿Estás bien?" vencidos en SOS y emite `CheckinRespondido`.
+
+## Horario automático de visibilidad del Care Partner
+
+SQL: `docs/sql/horario-cuidador.sql` (columna `PerfilCuidador.HorarioAutomatico`, tabla `HorarioCuidador`, SPs `sp_ObtenerHorarioCuidador`, `sp_GuardarHorarioCuidador`, `sp_AplicarHorariosCuidadores` y nueva versión de `sp_ActualizarDisponibilidadCuidador`).
+
+| Método | Ruta | Qué hace |
+|---|---|---|
+| GET | `/api/cuidador/{id}/horario` | `{ activo, franjas: [{ diaSemana, horaInicio, horaFin }] }` (0 domingo … 6 sábado, "HH:mm") |
+| PUT | `/api/cuidador/{id}/horario` | Guarda modo y franjas; si se activa, se aplica al momento. Errores: `SIN_FRANJAS`, `FRANJAS_SOLAPADAS`, `FRANJA_INVALIDA` |
+
+- `Services/Cuidador/HorarioVisibilidadService.cs` (BackgroundService): cada minuto pone visible/oculto a quienes tienen el modo activo y emite `DisponibilidadCambio` (con `PorHorario = true`).
+- Con el modo activo, `PUT /api/cuidador/disponibilidad` ya no cambia nada para ese cuidador (el interruptor manual queda bloqueado).
+
+## Seguridad del panel: JWT obligatorio en endpoints de administración
+
+- `Seguridad/PoliticasAdmin.cs`: la API ahora **valida el JWT** (`UseAuthentication` + JwtBearer) y define 4 políticas:
+  `Admin` (cualquier administrador), `AdminOperaciones` (niveles 1 y 2), `AdminFinanzas` (niveles 1 y 3) y `SuperAdmin` (nivel 1).
+- Solo exigen token: `AdminController`, `PagoAdminController`, el nuevo `AdminOperacionesController`, `GET /api/ticket`,
+  `PUT /api/ticket/{id}/estado`, `GET /api/sos/pendientes|historial|{id}` y `PUT /api/sos/{id}/atender|descartar`.
+  **La app móvil no envía token y no usa ninguno de esos endpoints**, así que sigue funcionando igual.
+- Niveles de administrador (`Usuarios.NivelAdmin`): 1 Superadmin, 2 Operaciones/soporte, 3 Finanzas. El login de un
+  administrador agrega el claim `nivel_admin` y el token dura 8 h (el de la app sigue en 2 h).
+- `Seguridad/AuditarAdminAttribute.cs`: toda acción del panel que cambia datos (POST/PUT/DELETE) queda en `AuditoriaAdmin`
+  (quién, qué, registro afectado, motivo y si salió bien).
+- **El panel administrativo y la API se tienen que publicar juntos**: un panel viejo contra la API nueva recibe 401.
+
+## Operación diaria del panel (`AdminOperacionesController`, ruta `api/admin`)
+
+SQL: `docs/sql/panel-admin.sql` (tablas `AuditoriaAdmin`, `AvisosAdmin`, columna `Usuarios.NivelAdmin` y los SP `sp_Admin*`).
+
+| Método | Ruta | Nivel | Qué hace |
+|---|---|---|---|
+| GET | `/api/admin/dashboard` | Admin | Indicadores, serie de 14 días, actividad reciente y cola de verificación |
+| GET | `/api/admin/servicios?estado&desde&hasta&buscar&pagina&tamano` | Admin | Lista paginada de servicios |
+| GET | `/api/admin/servicios/{id}` | Admin | Detalle: tareas, bitácora, pago, calificaciones, chat, SOS y reportes |
+| PUT | `/api/admin/servicios/{id}/cancelar` `{ motivo }` | Operaciones | Cancela (estados 1, 2, 3, 7) y avisa a los dos por SignalR |
+| PUT | `/api/admin/servicios/{id}/completar` `{ motivo }` | Operaciones | Da por completado (3, 7) y crea el pago pendiente |
+| GET | `/api/admin/verificacion` | Admin | Care Partners por verificar con conteo de documentos |
+| GET | `/api/admin/mapa` | Admin | Care Partners visibles, servicios en curso y SOS con coordenadas |
+| GET | `/api/admin/calificaciones?max=` | Admin | Reseñas y promedio por Care Partner |
+| GET | `/api/admin/finanzas?desde&hasta` | Finanzas | Totales, por Care Partner y por día |
+| GET | `/api/admin/auditoria?buscar&pagina&tamano` | SuperAdmin | Bitácora del panel |
+| PUT | `/api/admin/administradores/{id}/nivel` `{ nivel }` | SuperAdmin | Cambia el nivel (no deja quitar el último superadmin) |
+| GET/POST | `/api/admin/avisos` `{ destino, idioma, titulo, mensaje }` | POST: Operaciones | Aviso masivo: evento SignalR global `AvisoGeneral` (destino 0 todos, 2 clientes, 3 cuidadores; idioma null todos, `es`, `en`, `ht`) |
+| POST | `/api/admin/avisos/{id}/reenviar` | Operaciones | Reenvía un aviso del historial (queda como envío nuevo) |
+| DELETE | `/api/admin/avisos/{id}` | Operaciones | Lo quita del historial (no de los teléfonos) |
+| GET/POST | `/api/admin/catalogos/tipos-servicio` | POST: Operaciones | Tipos de servicio |
+| GET/POST | `/api/admin/catalogos/motivos-cancelacion` | POST: Operaciones | Motivos de cancelación |
+| GET/POST | `/api/admin/catalogos/nacionalidades` | POST: Operaciones | Nacionalidades |
+| GET/POST | `/api/admin/catalogos/estatus-migratorio` | POST: Operaciones | Estatus migratorio + documentos requeridos |
+| POST/DELETE | `/api/admin/catalogos/requisitos[/{id}]` | Operaciones | Agrega o quita un documento requerido |
+| GET | `/api/sos/historial?top=` | Admin | Alertas SOS atendidas o descartadas |
+
 ## Servicio de correo (`EmailService`)
 
 - `Interfaces/Email/IEmailService.cs` + `Services/Email/EmailService.cs` — envío de correo vía MailKit, usando las credenciales SMTP de `appsettings.json` (sección `EmailCredentials`, Gmail con contraseña de aplicación).

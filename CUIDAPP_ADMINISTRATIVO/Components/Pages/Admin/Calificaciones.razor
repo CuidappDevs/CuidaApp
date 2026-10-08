@@ -1,0 +1,109 @@
+@page "/calificaciones"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@inject PanelApiService Api
+
+<PageTitle>Calificaciones · Cuidapp Admin</PageTitle>
+
+<div class="pn-page">
+    <div class="pn-grid pn-grid-2">
+        <div class="adm-card overflow-hidden">
+            <div class="pn-card-head" style="flex-wrap:wrap;">
+                <span class="adm-card-title">Reseñas</span>
+                <div class="pn-seg">
+                    <button type="button" class="@(_max == null ? "on" : "")" @onclick="() => Filtrar(null)">Todas</button>
+                    <button type="button" class="@(_max == 3 ? "on" : "")" @onclick="() => Filtrar(3)">3 o menos</button>
+                    <button type="button" class="@(_max == 2 ? "on" : "")" @onclick="() => Filtrar(2)">Malas (1–2)</button>
+                </div>
+            </div>
+            @if (_datos == null)
+            {
+                <Esqueleto Filas="6" ConAvatar="false" />
+            }
+            else if (_datos.Calificaciones.Count == 0)
+            {
+                <EstadoVacio Titulo="Sin reseñas con este filtro" Icono="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z" />
+            }
+            else
+            {
+                @foreach (var c in Paginador.Cortar(_datos.Calificaciones, _pagina, 12))
+                {
+                    <div class="d-flex flex-column" style="gap:6px; padding:16px 20px; border-bottom:1px solid var(--adm-line-soft);">
+                        <div class="d-flex flex-wrap align-items-center" style="gap:8px;">
+                            <Estrellas Valor="c.Puntuacion" />
+                            <span style="font-size:13.5px;">
+                                <a class="pn-link" href="@Ficha(c.CalificadorId, c.CalificadorRol)">@c.CalificadorNombre</a>
+                                <span class="pn-muted"> calificó a </span>
+                                <a class="pn-link" href="@Ficha(c.CalificadoId, c.CalificadoRol)">@c.CalificadoNombre</a>
+                            </span>
+                            <span class="pn-grow"></span>
+                            <span class="pn-muted">@c.FechaCreacion.ToString("dd MMM yyyy") · <a class="pn-link" href="servicios/@c.TrabajoId">servicio #@c.TrabajoId</a></span>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(c.Comentario))
+                        {
+                            <span style="font-size:14px; color:var(--adm-ink-2);">“@c.Comentario”</span>
+                        }
+                        else
+                        {
+                            <span class="pn-muted">Sin comentario.</span>
+                        }
+                    </div>
+                }
+                <Paginador Pagina="_pagina" Tamano="12" Total="_datos.Calificaciones.Count" PaginaCambiada="p => _pagina = p" />
+            }
+        </div>
+
+        <div class="adm-card overflow-hidden">
+            <div class="pn-card-head">
+                <div class="d-flex flex-column" style="gap:2px;">
+                    <span class="adm-card-title">Care Partners por nota</span>
+                    <span class="adm-card-sub">De menor a mayor: arriba los que conviene revisar</span>
+                </div>
+            </div>
+            @if (_datos?.Resumen is { Count: > 0 } resumen)
+            {
+                @foreach (var r in resumen)
+                {
+                    <a class="d-flex align-items-center" href="care-partners/@r.UsuarioId" style="gap:12px; padding:12px 20px; border-bottom:1px solid var(--adm-line-soft); text-decoration:none; color:inherit;">
+                        <Avatar Url="@Api.Archivo(r.FotoUrl)" Nombre="@r.Nombre" Tam="34" />
+                        <div class="pn-who-text" style="flex:1;">
+                            <span>@r.Nombre</span>
+                            <span class="pn-muted">@r.Total reseña(s)@(r.Bajas > 0 ? $" · {r.Bajas} mala(s)" : "")</span>
+                        </div>
+                        <span class="d-flex flex-column align-items-end">
+                            <span style="font-weight:600; color:@(r.Promedio < 3.5m ? "var(--danger)" : r.Promedio < 4.3m ? "var(--warn)" : "var(--ok)");">@r.Promedio.ToString("0.0")</span>
+                            <Estrellas Valor="r.Promedio" Tam="11" />
+                        </span>
+                    </a>
+                }
+            }
+            else if (_datos != null)
+            {
+                <EstadoVacio Titulo="Todavía no hay calificaciones" />
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private CalificacionesPanel? _datos;
+    private int? _max;
+    private int _pagina = 1;
+
+    protected override async Task OnInitializedAsync() => await Cargar();
+
+    private async Task Filtrar(int? max)
+    {
+        _max = max; _pagina = 1;
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        var resumen = _datos?.Resumen;
+        _datos = null;
+        _datos = await Api.CalificacionesAsync(_max) ?? new();
+        if (_datos.Resumen.Count == 0 && resumen != null) _datos.Resumen = resumen;
+    }
+
+    private static string Ficha(int id, int rol) => rol == 3 ? $"care-partners/{id}" : $"clientes/{id}";
+}

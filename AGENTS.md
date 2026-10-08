@@ -28,12 +28,12 @@ dotnet run --project CUIDAPP_ADMINISTRATIVO
 Each domain has its own folder in Controllers/, Interfaces/, Services/, DTOs/:
 - `Auth/` — login, registration, forgot/reset password (roles: 1=Admin, 2=Cliente, 3=Cuidador)
 - `Trabajo/` — jobs, status, cancellation, PIN, geofence, activities (15 SPs)
-- `Cuidador/` — caregiver profiles, availability, GPS, documents, earnings
+- `Cuidador/` — caregiver profiles, availability, GPS, documents, earnings + automatic visibility schedule (`HorarioCuidador`; `HorarioVisibilidadService` applies it every minute; in that mode manual availability changes are rejected)
 - `Cliente/` — client profiles
 - `Busqueda/` — nearby search (GPS-based)
 - `Calificacion/` — ratings (1-5 stars)
 - `UbicacionCliente/` — client saved locations
-- `Admin/` — admin operations (approve/suspend caregivers, manage clients, sanctions)
+- `Admin/` — admin operations (approve/suspend caregivers, manage clients, sanctions) + `AdminOperacionesController` (dashboard, services, verification, map, ratings, finance, catalogs, audit log, mass notices) using the generic `IAdminOperacionesService` (SP → rows)
 - `Chat/` — real-time chat (text, image, audio messages)
 - `Email/` — MailKit email service (SMTP via `EmailCredentials` config)
 - `Ticket/` — support tickets (create, message, status)
@@ -47,9 +47,10 @@ Each domain has its own folder in Controllers/, Interfaces/, Services/, DTOs/:
 - Email config in `appsettings.json` → `EmailCredentials` (SMTP Gmail)
 - Services registered as `Scoped` in `Program.cs`. `ITrabajoNotifier` is `Singleton`.
 - SignalR hub at `/hubs/trabajo` — clients join group `user-{usuarioId}`
-- SignalR events: NuevaSolicitud, TrabajoActualizado, DisponibilidadCambio, UbicacionCuidadorCambio, MensajeNuevo, ActividadAgregada, AlertaGeocerca, UsuarioEscribiendo, CuentaActualizada, PagoAprobado, TicketActualizado
-- App notifications: `Services/AvisosApp.cs` builds them (banner in foreground, native in background; tapping opens `NotificacionDestino`); `Services/Recordatorios.cs` schedules local ones (1 h and 15 min before an accepted service, rating reminder 24 h after completion) that arrive even with the app closed
+- SignalR events: AvisoGeneral (global, from the panel), NuevaSolicitud, TrabajoActualizado, DisponibilidadCambio, UbicacionCuidadorCambio, MensajeNuevo, ActividadAgregada, AlertaGeocerca, UsuarioEscribiendo, CuentaActualizada, PagoAprobado, TicketActualizado
+- App notifications: `Services/AvisosApp.cs` builds them (banner in foreground, native in background; tapping opens `NotificacionDestino`); `Services/Recordatorios.cs` schedules local ones (1 h and 15 min before an accepted service, rating reminder 24 h after completion) that arrive even with the app closed; it also schedules the start/end notices of the caregiver's automatic schedule (`ProgramarHorario`, 7-day window renewed on every dashboard load)
 - Hub methods (client → server): `Unirse(usuarioId)`, `Escribiendo(conversacionId, usuarioId, escribiendo)` (chat typing indicator, forwarded to the other participant)
+- **Admin security** (`Seguridad/`): JWT is validated; only admin endpoints use `[Authorize(Policy = PoliticasAdmin.X)]` (`Admin`, `AdminOperaciones`, `AdminFinanzas`, `SuperAdmin`, from `Usuarios.NivelAdmin`: 1 Superadmin, 2 Operaciones, 3 Finanzas). Add `[AuditarAdmin]` to admin controllers so POST/PUT/DELETE are logged to `AuditoriaAdmin`. The mobile app sends no token, so never put `[Authorize]` on endpoints the app uses
 - API docs at `/scalar/v1` (Scalar UI)
 - Static files served from `wwwroot/uploads`
 - `HoraLocalRD.Ahora` utility for server timezone (UTC-4)
@@ -67,7 +68,7 @@ Each domain has its own folder in Controllers/, Interfaces/, Services/, DTOs/:
 - `BaseUrl` is currently hardcoded to production (`http://192.169.179.217/api/`)
 - SignalR client in `RealtimeService` (static class)
 - 30 pages organized by domain: `Views/Trabajos/`, `Views/Cliente/`, `Views/Auth/`, etc.
-- Static services: RealtimeService, LocationService, ServerClock, NativeNotifier, GlobalNotifier
+- Static services: RealtimeService, LocationService, ServerClock, NativeNotifier, GlobalNotifier, RastreoUbicacion (sends caregiver location + battery every 20 s while visible or in service, also in background; the foreground service adds the `location` type when permission is granted), CheckinApp (full-screen "¿Estás bien?" from the panel)
 - Mapbox + Leaflet for maps (WebView)
 - Plugin.Maui.Audio for voice messages
 - Colors defined in `Resources/Styles/Colors.xaml` as StaticResource
@@ -87,10 +88,14 @@ La app está en **español (base), inglés y creol haitiano (`ht`)**. Reglas:
 
 ## Blazor Admin
 
-- Cookie-based authentication (8h expiry, sliding)
-- Pages: Login, Dashboard (mock data), Care Partners, Clientes, Pagos, Soporte, Administradores
-- Services: AdminAuthService, CuidadorAdminApiService, ClienteAdminApiService, PagoAdminApiService, TicketAdminApiService, AdminAccountApiService
-- CSS design system in `wwwroot/css/admin.css` (685 lines)
+- Cookie-based authentication (8h, no sliding). The API JWT travels inside the cookie (claim `api_token`, plus `nivel_admin`) and every API service attaches it with `SesionAdmin.Adjuntar` (`Services/SesionAdmin.cs`); the layout logs out when the token expires
+- Menu sections are filtered by admin level (Superadmin / Operaciones / Finanzas); pages check `SesionAdmin.PuedeOperar/PuedeFinanzas/EsSuperadmin`
+- Pages: Dashboard (real data), SOS (persistent: loads pending from the API, history), Servicios + detalle (timeline, tasks, payment, read-only chat, cancel/complete), Mapa en vivo (Leaflet + OSM, `wwwroot/js/panel.js`), Verificación, Care Partners, Clientes, Calificaciones, Soporte, Avisos masivos, Pagos, Finanzas (CSV export), Catálogos, Auditoría, Administradores (levels), Buscar
+- `PanelApiService` for the new endpoints; models in `Models/Panel/PanelModels.cs`
+- `/mapa` is the command center ("Ojo de Dios"): layer chips, click a marker → side card with actions (direct notification, "¿Estás bien?" check-in, follow, call/WhatsApp, today's route replay, hide), draw an area to notify caregivers inside, heat map, alerts tab with sound. Map logic lives in `wwwroot/js/panel.js` (`cuidPanel.*`, calls back into the page via `DotNetObjectReference`)
+- Shared components in `Components/Shared/`: `DialogoConfirmacion` (+ `ConfirmacionService`, toasts via `AvisoToastService`), `Paginador`, `GraficoBarras`, `Avatar`, `Estrellas`, `Esqueleto`, `EstadoVacio`. Every destructive action must go through `ConfirmacionService`
+- CSS: `wwwroot/css/admin.css` (base) + `wwwroot/css/panel.css` (`pn-*` components; ease-out motion under 250 ms, hover only with a mouse, `prefers-reduced-motion`)
+- Local preview against a local API: `.claude/launch.json` → `cuidapp-administrativo-local`
 
 ## DB Access Pattern
 
@@ -114,8 +119,7 @@ Read before making changes to understand domain context.
 ## Known Issues
 
 ### Critical
-- `UseAuthentication()` not called in API Program.cs — JWT tokens are never validated
-- No `[Authorize]` on any API endpoint — all endpoints are unauthenticated
+- Only admin endpoints require a JWT; endpoints used by the mobile app are still unauthenticated (the app never sends its token)
 - `appsettings.Development.json` missing `EmailCredentials` — EmailService throws in Development
 - Credentials committed in plaintext (DB password, Gmail app password)
 
@@ -127,7 +131,5 @@ Read before making changes to understand domain context.
 - Android `colors.xml` still has MAUI template defaults (#512BD4)
 
 ### Blazor
-- Dashboard uses mock data, not API
-- `Iniciales()` helper duplicated in 4 files
-- No pagination on list pages
-- No confirmation dialogs for destructive actions
+- `Iniciales()` helper duplicated in some older pages (new code uses `Components/Shared/Avatar`)
+- Lists (Care Partners, Clientes, Soporte, Pagos) are paginated client-side: the API still returns the full list

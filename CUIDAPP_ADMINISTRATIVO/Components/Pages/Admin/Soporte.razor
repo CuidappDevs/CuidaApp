@@ -31,7 +31,7 @@
     else
     {
         <div class="adm-card overflow-hidden">
-            @foreach (var t in _tickets)
+            @foreach (var t in Paginador.Cortar(_tickets, _pag, 15))
             {
                 <div class="d-flex flex-wrap align-items-center" style="gap:12px 16px; padding:16px 24px; border-bottom:1px solid var(--adm-line-soft); cursor:pointer;"
                      @onclick="() => IrADetalle(t.Id)">
@@ -56,12 +56,14 @@
                     </span>
                 </div>
             }
+            <Paginador Pagina="_pag" Tamano="15" Total="_tickets.Count" PaginaCambiada="p => _pag = p" />
         </div>
     }
 
 </div>
 
 @code {
+    private int _pag = 1;
     private record Tab(int? Estado, string Label);
 
     private readonly Tab[] _tabs =
@@ -82,6 +84,7 @@
 
     private async Task CambiarFiltro(int? estado)
     {
+        _pag = 1;
         _estadoFiltro = estado;
         await CargarTickets();
     }

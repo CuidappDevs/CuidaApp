@@ -43,7 +43,7 @@
                 <span></span>
             </div>
 
-            @foreach (var c in _cuidadores)
+            @foreach (var c in Paginador.Cortar(_cuidadores, _pag, 15))
             {
                 <div class="adm-trow" style="grid-template-columns: 2fr 1.2fr 1fr 1fr 1fr auto;">
                     <div class="d-flex align-items-center" style="gap:12px; min-width:0;">
@@ -64,11 +64,13 @@
                     <a href="@($"care-partners/{c.UsuarioId}")" class="adm-btn adm-btn-ghost-line" style="justify-self:end;">Ver ficha</a>
                 </div>
             }
+            <Paginador Pagina="_pag" Tamano="15" Total="_cuidadores.Count" PaginaCambiada="p => _pag = p" />
         </div>
     }
 </div>
 
 @code {
+    private int _pag = 1;
     private int? _estadoFiltro = 1;
     private List<CuidadorAdmin> _cuidadores = new();
     private bool _cargando = true;
@@ -77,6 +79,7 @@
 
     private async Task CambiarFiltro(int? estado)
     {
+        _pag = 1;
         _estadoFiltro = estado;
         await Cargar();
     }

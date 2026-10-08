@@ -21,6 +21,19 @@ namespace CUIDAPP.Services
         /// </summary>
         public static bool CuentaAprobada => Preferences.Default.Get("CuentaAprobada", false);
 
+        /// <summary>
+        /// Horario automático activo: el servidor lo pone visible / oculto según su horario y el
+        /// interruptor manual (panel y notificación) queda bloqueado.
+        /// </summary>
+        public static bool HorarioAutomatico => Preferences.Default.Get("HorarioAutomatico", false);
+
+        public static void EstablecerHorarioAutomatico(bool activo)
+        {
+            if (HorarioAutomatico == activo) return;
+            Preferences.Default.Set("HorarioAutomatico", activo);
+            ConexionServiceManager.Actualizar();
+        }
+
         public static void EstablecerCuentaAprobada(bool aprobada)
         {
             if (CuentaAprobada == aprobada) return;
@@ -42,7 +55,7 @@ namespace CUIDAPP.Services
         public static async Task<bool> CambiarAsync(bool disponible)
         {
             var cuidadorId = Preferences.Default.Get("UserId", 0);
-            if (cuidadorId == 0 || (disponible && !CuentaAprobada))
+            if (cuidadorId == 0 || HorarioAutomatico || (disponible && !CuentaAprobada))
                 return false;
 
             var ok = await new ApiService().ActualizarDisponibilidadAsync(cuidadorId, disponible);

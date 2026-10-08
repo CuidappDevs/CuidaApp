@@ -14,6 +14,9 @@ namespace CUIDAPP.Services
                 if (estadoPermiso != PermissionStatus.Granted)
                 {
                     estadoPermiso = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+                    // Recién concedido: la notificación fija pasa a incluir ubicación (envío en segundo plano).
+                    if (estadoPermiso == PermissionStatus.Granted)
+                        ConexionServiceManager.Actualizar();
                 }
 
                 if (estadoPermiso != PermissionStatus.Granted)

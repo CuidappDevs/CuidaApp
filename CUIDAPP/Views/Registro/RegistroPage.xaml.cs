@@ -334,63 +334,64 @@ namespace CUIDAPP.Views.Registro
 
         private async Task FinishRegistration()
         {
-            // Mostrar modal de carga con texto de "Cargando..."
-            OverlayTitle.Text = Localizador.T("cargando");
-            OverlayMessage.Text = Localizador.T("subiendo_documentos");
-            OverlayIcon.IsVisible = false; // Ocultar el icono de check
+            bool esCuidador = selectedRole == "Cuidador";
+
+            // Archivos a subir, en orden. Los opcionales que fallen no bloquean el registro.
+            var subidas = new List<(FileResult Archivo, string Clave, string ErrorClave, bool Obligatorio, DocumentoExtra? Extra)>();
+            if (fotoFile != null) subidas.Add((fotoFile, "progreso_foto", "err_subir_foto", true, null));
+            if (esCuidador)
+            {
+                if (cedulaFile != null) subidas.Add((cedulaFile, EsExtranjero() ? "progreso_pasaporte" : "progreso_cedula", "err_subir_cedula", true, null));
+                if (antecedentesFile != null) subidas.Add((antecedentesFile, "progreso_antecedentes", "err_subir_carta", true, null));
+                foreach (var doc in documentosExtra.Where(d => d.Archivo != null && DocumentoExtraVisible(d)))
+                    subidas.Add((doc.Archivo!, "progreso_opcional", "", false, doc));
+            }
+
+            // Ventana de carga: el cuidador ve una barra con el avance real (sus documentos pueden tardar);
+            // el cliente, que solo sube su foto, un spinner.
+            OverlayTitle.Text = Localizador.T(esCuidador ? "progreso_titulo" : "cargando");
+            OverlayMessage.Text = Localizador.T(esCuidador ? "progreso_subtitulo" : "subiendo_documentos");
+            OverlayIcon.IsVisible = false;
+            OverlaySpinner.IsVisible = OverlaySpinner.IsRunning = !esCuidador;
+            BloqueProgreso.IsVisible = esCuidador;
+            PintarProgreso(0, subidas.Count > 0 ? Localizador.F(subidas[0].Clave, 1, subidas.Count) : "");
             OverlayExito.IsVisible = true;
             await OverlayExito.FadeTo(1, 300);
 
-            // Subir todos los archivos elegidos a la carpeta de este usuario en el servidor.
+            // Peso de cada archivo para que la barra avance según los bytes, no solo por cantidad de archivos.
+            var tamanos = subidas.Select(x => { try { return Math.Max(1L, new FileInfo(x.Archivo.FullPath).Length); } catch { return 1L; } }).ToList();
+            double total = tamanos.Sum(), hechos = 0;
+
             string fotoUrl = "";
             string cedulaUrl = "";
             string antecedentesUrl = "";
+            var documentosExtraSubidos = new List<DocumentoExtraDto>();
 
-            if (fotoFile != null)
+            for (int n = 0; n < subidas.Count; n++)
             {
-                fotoUrl = await _apiService.UploadFileAsync(fotoFile.FullPath, carpetaUsuario) ?? "";
-                if (fotoUrl == "")
+                var (archivo, clave, errorClave, obligatorio, extra) = subidas[n];
+                var texto = Localizador.F(clave, n + 1, subidas.Count);
+                var baseHechos = hechos;
+                var tamano = tamanos[n];
+                PintarProgreso(baseHechos / total, texto);
+
+                var progreso = new Progress<double>(f => PintarProgreso((baseHechos + f * tamano) / total, texto));
+                var url = await _apiService.UploadFileAsync(archivo.FullPath, carpetaUsuario, esCuidador ? progreso : null) ?? "";
+                hechos += tamano;
+
+                if (url == "" && obligatorio)
                 {
-                    await MostrarErrorSubida(Localizador.T("err_subir_foto"));
+                    await MostrarErrorSubida(Localizador.T(errorClave));
                     return;
                 }
+
+                if (archivo == fotoFile) fotoUrl = url;
+                else if (archivo == cedulaFile) cedulaUrl = url;
+                else if (archivo == antecedentesFile) antecedentesUrl = url;
+                else if (extra != null && url != "") documentosExtraSubidos.Add(new DocumentoExtraDto { TipoDocumento = extra.Tipo, UrlArchivo = url });
             }
 
-            if (selectedRole == "Cuidador")
-            {
-                if (cedulaFile != null)
-                {
-                    cedulaUrl = await _apiService.UploadFileAsync(cedulaFile.FullPath, carpetaUsuario) ?? "";
-                    if (cedulaUrl == "")
-                    {
-                        await MostrarErrorSubida(Localizador.T("err_subir_cedula"));
-                        return;
-                    }
-                }
-
-                if (antecedentesFile != null)
-                {
-                    antecedentesUrl = await _apiService.UploadFileAsync(antecedentesFile.FullPath, carpetaUsuario) ?? "";
-                    if (antecedentesUrl == "")
-                    {
-                        await MostrarErrorSubida(Localizador.T("err_subir_carta"));
-                        return;
-                    }
-                }
-            }
-
-            // Opcionales: si alguno no sube, se sigue sin él (no bloquea el registro).
-            var documentosExtraSubidos = new List<DocumentoExtraDto>();
-            if (selectedRole == "Cuidador")
-            {
-                foreach (var doc in documentosExtra.Where(d => d.Archivo != null && DocumentoExtraVisible(d)))
-                {
-                    var url = await _apiService.UploadFileAsync(doc.Archivo!.FullPath, carpetaUsuario);
-                    if (!string.IsNullOrEmpty(url))
-                        documentosExtraSubidos.Add(new DocumentoExtraDto { TipoDocumento = doc.Tipo, UrlArchivo = url });
-                }
-            }
-
+            PintarProgreso(1, Localizador.T("enviando_datos_al_servidor"));
             OverlayMessage.Text = Localizador.T("enviando_datos_al_servidor");
 
             bool success = false;
@@ -452,6 +453,8 @@ namespace CUIDAPP.Views.Registro
                 OverlayTitle.Text = Localizador.T("exito_2");
                 OverlayMessage.Text = Localizador.T("registro_completado");
                 OverlayIcon.IsVisible = true;
+                OverlaySpinner.IsVisible = OverlaySpinner.IsRunning = false;
+                BloqueProgreso.IsVisible = false;
 
                 await Task.Delay(1500); // 1.5s para que lo vea
                 
@@ -466,6 +469,21 @@ namespace CUIDAPP.Views.Registro
                 OverlayExito.IsVisible = false;
                 await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("ocurrio_un_error_al_conectar"), Localizador.T("ok"));
             }
+        }
+
+        // Barra de progreso de la ventana de carga (0..1). La animación es corta para que avance suave.
+        private void PintarProgreso(double fraccion, string paso)
+        {
+            fraccion = Math.Clamp(fraccion, 0, 1);
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                LblProgresoPaso.Text = paso;
+                LblProgresoPorcentaje.Text = $"{(int)Math.Round(fraccion * 100)}%";
+                var ancho = (PistaProgreso.Width > 0 ? PistaProgreso.Width : 240) * fraccion;
+                BarraProgreso.AbortAnimation("Progreso");
+                var desde = BarraProgreso.WidthRequest < 0 ? 0 : BarraProgreso.WidthRequest;
+                BarraProgreso.Animate("Progreso", v => BarraProgreso.WidthRequest = v, desde, ancho, length: 180, easing: Easing.CubicOut);
+            });
         }
 
         private async Task MostrarErrorSubida(string mensaje)

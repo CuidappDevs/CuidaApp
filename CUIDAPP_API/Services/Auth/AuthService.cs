@@ -106,7 +106,9 @@ namespace CUIDAPP_API.Services.Auth
                 return SuspendidoResult(sancionMotivo, sancionTipo, sancionFin);
             }
 
-            var token = GenerateJwtToken(loginDto.Email, rolId.ToString(), id.ToString());
+            // Los administradores llevan su nivel en el token (permisos del panel).
+            int? nivelAdmin = rolId == 1 ? await ObtenerNivelAdminAsync(id) : null;
+            var token = GenerateJwtToken(loginDto.Email, rolId.ToString(), id.ToString(), nivelAdmin);
 
             return new LoginResult(LoginStatus.Success, new AuthResponseDto
             {
@@ -260,10 +262,20 @@ namespace CUIDAPP_API.Services.Auth
             return (false, "Error al procesar la solicitud");
         }
 
-        private string GenerateJwtToken(string email, string role, string userId)
+        private async Task<int> ObtenerNivelAdminAsync(int usuarioId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_AdminObtenerNivel", connection) { CommandType = CommandType.StoredProcedure };
+            command.Parameters.AddWithValue("@UsuarioId", usuarioId);
+            await connection.OpenAsync();
+            var nivel = await command.ExecuteScalarAsync();
+            return nivel is null or DBNull ? 2 : Convert.ToInt32(nivel);
+        }
+
+        private string GenerateJwtToken(string email, string role, string userId, int? nivelAdmin = null)
         {
             var jwtSettings = _config.GetSection("Jwt");
-            var keyString = jwtSettings["Key"] ?? "TuSuperClaveSecretaMuyLargaParaQueSeaSegura123!";
+            var keyString = Seguridad.PoliticasAdmin.ClaveJwt(_config);
             
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -274,13 +286,16 @@ namespace CUIDAPP_API.Services.Auth
                 new Claim(JwtRegisteredClaimNames.Email, email),
                 new Claim(ClaimTypes.Role, role),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
+            }.ToList();
+            if (nivelAdmin.HasValue)
+                claims.Add(new Claim(Seguridad.PoliticasAdmin.ClaimNivel, nivelAdmin.Value.ToString()));
 
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"] ?? "Cuidapp",
                 audience: jwtSettings["Audience"] ?? "CuidappApp",
                 claims: claims,
-                expires: DateTime.Now.AddHours(2),
+                // La sesión del panel dura 8 h; la de la app sigue en 2 h.
+                expires: DateTime.UtcNow.AddHours(nivelAdmin.HasValue ? 8 : 2),
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);

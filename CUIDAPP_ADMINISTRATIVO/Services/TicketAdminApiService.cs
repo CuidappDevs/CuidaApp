@@ -7,9 +7,10 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
     {
         private readonly HttpClient _httpClient;
 
-        public TicketAdminApiService(HttpClient httpClient)
+        public TicketAdminApiService(HttpClient httpClient, Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider estado)
         {
             _httpClient = httpClient;
+            SesionAdmin.Adjuntar(_httpClient, estado);
         }
 
         public async Task<List<TicketAdmin>> ObtenerTicketsAsync(int? estado)

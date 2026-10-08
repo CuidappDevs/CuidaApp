@@ -830,6 +830,20 @@
                     <Path x:Name="OverlayIcon" Data="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 17L5 12L6.41 10.59L10 14.17L17.59 6.58L19 8L10 17Z" Fill="#065F46" Aspect="Uniform" WidthRequest="60" HeightRequest="60" HorizontalOptions="Center"/>
                     <Label x:Name="OverlayTitle" Text="{loc:T exito_2}" FontSize="24" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Center"/>
                     <Label x:Name="OverlayMessage" Text="{loc:T registro_completado}" FontSize="16" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                    <!-- Cliente: solo un spinner -->
+                    <ActivityIndicator x:Name="OverlaySpinner" IsVisible="False" IsRunning="False" Color="{StaticResource ColorPrimary}" WidthRequest="36" HeightRequest="36" HorizontalOptions="Center"/>
+                    <!-- Cuidador: barra de progreso real mientras suben sus documentos -->
+                    <VerticalStackLayout x:Name="BloqueProgreso" IsVisible="False" Spacing="8" WidthRequest="240">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label x:Name="LblProgresoPaso" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" LineBreakMode="TailTruncation"/>
+                            <Label x:Name="LblProgresoPorcentaje" Grid.Column="1" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}"/>
+                        </Grid>
+                        <Grid x:Name="PistaProgreso" HeightRequest="10">
+                            <Border StrokeThickness="0" BackgroundColor="{StaticResource ColorSubtle}" StrokeShape="RoundRectangle 5"/>
+                            <Border x:Name="BarraProgreso" StrokeThickness="0" BackgroundColor="{StaticResource ColorPrimary}" StrokeShape="RoundRectangle 5" HorizontalOptions="Start" WidthRequest="0"/>
+                        </Grid>
+                        <Label x:Name="LblProgresoAyuda" Text="{loc:T progreso_documentos_ayuda}" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalTextAlignment="Center" Margin="0,4,0,0"/>
+                    </VerticalStackLayout>
                 </VerticalStackLayout>
             </Border>
         </ContentView>

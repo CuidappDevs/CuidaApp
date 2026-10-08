@@ -14,7 +14,8 @@ namespace CUIDAPP.Platforms.Android
     //
     // Su notificación es persistente ("CuidApp está ejecutándose") y, para el cuidador, trae un
     // botón para hacerse visible u ocultarse a los clientes sin abrir la app.
-    [Service(Exported = false, ForegroundServiceType = global::Android.Content.PM.ForegroundService.TypeDataSync)]
+    // Tipo "location" además de "dataSync": permite enviar la ubicación del cuidador con la app en segundo plano.
+    [Service(Exported = false, ForegroundServiceType = global::Android.Content.PM.ForegroundService.TypeDataSync | global::Android.Content.PM.ForegroundService.TypeLocation)]
     public class ConexionForegroundService : Service
     {
         private const int NotificacionId = 1;
@@ -40,8 +41,31 @@ namespace CUIDAPP.Platforms.Android
                 _ = CambiarVisibilidadAsync();
             }
 
-            StartForeground(NotificacionId, CrearNotificacion());
+            IniciarEnPrimerPlano(CrearNotificacion());
             return StartCommandResult.Sticky;
+        }
+
+        // Con permiso de ubicación se declara también el tipo "location"; si Android no lo permite en ese
+        // momento (p. ej. reinicio en segundo plano), se queda solo con "dataSync".
+        private void IniciarEnPrimerPlano(Notification notificacion)
+        {
+            if (Build.VERSION.SdkInt < BuildVersionCodes.Q)
+            {
+                StartForeground(NotificacionId, notificacion);
+                return;
+            }
+            var tipo = global::Android.Content.PM.ForegroundService.TypeDataSync;
+            var conUbicacion = AndroidX.Core.Content.ContextCompat.CheckSelfPermission(this, global::Android.Manifest.Permission.AccessFineLocation) == global::Android.Content.PM.Permission.Granted
+                            || AndroidX.Core.Content.ContextCompat.CheckSelfPermission(this, global::Android.Manifest.Permission.AccessCoarseLocation) == global::Android.Content.PM.Permission.Granted;
+            try
+            {
+                StartForeground(NotificacionId, notificacion, conUbicacion && EstadoCuidador.EsCuidador ? tipo | global::Android.Content.PM.ForegroundService.TypeLocation : tipo);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Conexion] Sin tipo ubicación: {ex.Message}");
+                StartForeground(NotificacionId, notificacion, tipo);
+            }
         }
 
         private async Task CambiarVisibilidadAsync()
@@ -113,7 +137,9 @@ namespace CUIDAPP.Platforms.Android
             {
                 bool visible = EstadoCuidador.Disponible;
                 bool aprobada = EstadoCuidador.CuentaAprobada;
+                bool porHorario = EstadoCuidador.HorarioAutomatico;
                 var estado = !aprobada ? Localizador.T("notif_perfil_en_validacion")
+                           : porHorario ? Localizador.T(visible ? "notif_visible_por_horario" : "notif_oculto_por_horario")
                            : cambiando ? Localizador.T("notif_actualizando_visibilidad")
                            : error ? Localizador.T("notif_error_visibilidad")
                            : Localizador.T(visible ? "notif_visible_clientes" : "notif_oculto_clientes");
@@ -122,7 +148,8 @@ namespace CUIDAPP.Platforms.Android
                 builder.SetSubText(estado)
                        .SetStyle(new NotificationCompat.BigTextStyle().BigText(Localizador.T("recibiendo_avisos_tiempo_real")));
 
-                if (!cambiando && aprobada)
+                // En modo horario la visibilidad la decide el horario: no hay botón.
+                if (!cambiando && aprobada && !porHorario)
                 {
                     var alCambiar = PendingIntent.GetService(this, 1,
                         new Intent(this, typeof(ConexionForegroundService)).SetAction(AccionCambiarVisibilidad), flags);

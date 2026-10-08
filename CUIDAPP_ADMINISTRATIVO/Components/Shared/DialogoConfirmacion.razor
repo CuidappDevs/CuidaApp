@@ -1,0 +1,80 @@
+@implements IDisposable
+@inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
+
+@if (Confirmacion.Actual is { } s)
+{
+    <div class="pn-overlay" @onclick="Cancelar" @onkeydown="Tecla" tabindex="-1">
+        <div class="pn-dialog" role="alertdialog" aria-modal="true" aria-labelledby="pn-dlg-t" @onclick:stopPropagation="true">
+            <div class="pn-dialog-icon @(s.Peligro ? "is-danger" : "")">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    @if (s.Peligro)
+                    {
+                        <path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path>
+                    }
+                    else
+                    {
+                        <path d="M12 16v-4m0-4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z"></path>
+                    }
+                </svg>
+            </div>
+            <h2 id="pn-dlg-t" class="pn-dialog-title">@s.Titulo</h2>
+            <p class="pn-dialog-text">@s.Mensaje</p>
+
+            @if (s.EtiquetaTexto != null)
+            {
+                <label class="pn-label" for="pn-dlg-txt">@s.EtiquetaTexto</label>
+                <textarea id="pn-dlg-txt" class="adm-textarea" rows="3" maxlength="400" @bind="_texto" @bind:event="oninput"
+                          placeholder="Escribe el motivo (lo verá el registro de auditoría)"></textarea>
+                <span class="pn-hint">@((_texto ?? "").Trim().Length) / 400 · mínimo @s.MinimoTexto caracteres</span>
+            }
+
+            <div class="pn-dialog-actions">
+                <button type="button" class="pn-btn pn-btn-quiet" @onclick="Cancelar">Cancelar</button>
+                <button type="button" class="pn-btn @(s.Peligro ? "pn-btn-danger" : "pn-btn-primary")"
+                        disabled="@(s.EtiquetaTexto != null && (_texto ?? "").Trim().Length < s.MinimoTexto)"
+                        @onclick="Aceptar">
+                    @s.Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@* Toasts *@
+<div class="pn-toasts" aria-live="polite">
+    @foreach (var t in Toasts.Lista.ToList())
+    {
+        <div class="pn-toast @(t.Ok ? "" : "is-error")" @key="t.Id">
+            <span class="pn-toast-dot"></span>
+            <span>@t.Texto</span>
+            <button type="button" class="pn-toast-x" aria-label="Cerrar" @onclick="() => Toasts.Quitar(t.Id)">×</button>
+        </div>
+    }
+</div>
+
+@code {
+    private string? _texto;
+
+    protected override void OnInitialized()
+    {
+        Confirmacion.Cambio += Refrescar;
+        Toasts.Cambio += Refrescar;
+    }
+
+    private void Refrescar() => InvokeAsync(() => { if (Confirmacion.Actual == null) _texto = null; StateHasChanged(); });
+
+    private void Cancelar() => Confirmacion.Responder(false);
+    private void Aceptar() => Confirmacion.Responder(true, _texto);
+
+    private void Tecla(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape") Cancelar();
+    }
+
+    public void Dispose()
+    {
+        Confirmacion.Cambio -= Refrescar;
+        Toasts.Cambio -= Refrescar;
+    }
+}

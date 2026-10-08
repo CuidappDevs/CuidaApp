@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using CUIDAPP_API.Seguridad;
 using CUIDAPP_API.DTOs.Admin;
 using CUIDAPP_API.DTOs.Common;
 using CUIDAPP_API.Interfaces.Admin;
@@ -7,6 +9,8 @@ namespace CUIDAPP_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Policy = PoliticasAdmin.Admin)]
+    [AuditarAdmin]
     public class AdminController : ControllerBase
     {
         private readonly IAdminService _adminService;
@@ -105,6 +109,7 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [Authorize(Policy = PoliticasAdmin.Operaciones)]
         [HttpPut("aprobar-cuidador")]
         public async Task<IActionResult> ActualizarEstadoCuidador([FromBody] ActualizarEstadoCuidadorDto dto)
         {
@@ -121,6 +126,7 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [Authorize(Policy = PoliticasAdmin.Operaciones)]
         [HttpPut("cuidadores/{usuarioId}/suspender")]
         public async Task<IActionResult> SuspenderCuidador(int usuarioId, [FromBody] SuspenderCuidadorDto dto)
         {
@@ -139,6 +145,7 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [Authorize(Policy = PoliticasAdmin.Operaciones)]
         [HttpPut("cuidadores/{usuarioId}/reactivar")]
         public async Task<IActionResult> ReactivarCuidador(int usuarioId, [FromBody] ReactivarCuidadorDto dto)
         {
@@ -171,6 +178,7 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [Authorize(Policy = PoliticasAdmin.Operaciones)]
         [HttpPut("cuidadores/{usuarioId}/info")]
         public async Task<IActionResult> ActualizarInfoCuidador(int usuarioId, [FromBody] ActualizarInfoCuidadorDto dto)
         {
@@ -219,6 +227,7 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [Authorize(Policy = PoliticasAdmin.Operaciones)]
         [HttpPut("clientes/{usuarioId}/info")]
         public async Task<IActionResult> ActualizarInfoCliente(int usuarioId, [FromBody] ActualizarInfoClienteDto dto)
         {
@@ -239,10 +248,12 @@ namespace CUIDAPP_API.Controllers
         // Suspender/reactivar y el historial de sanciones son genéricos (por UsuarioId,
         // sin importar el rol) — se reutiliza la misma lógica que ya usan los Care
         // Partners bajo una ruta equivalente para clientes.
+        [Authorize(Policy = PoliticasAdmin.Operaciones)]
         [HttpPut("clientes/{usuarioId}/suspender")]
         public async Task<IActionResult> SuspenderCliente(int usuarioId, [FromBody] SuspenderCuidadorDto dto)
             => await SuspenderCuidador(usuarioId, dto);
 
+        [Authorize(Policy = PoliticasAdmin.Operaciones)]
         [HttpPut("clientes/{usuarioId}/reactivar")]
         public async Task<IActionResult> ReactivarCliente(int usuarioId, [FromBody] ReactivarCuidadorDto dto)
             => await ReactivarCuidador(usuarioId, dto);
@@ -251,6 +262,7 @@ namespace CUIDAPP_API.Controllers
         public async Task<IActionResult> ObtenerSancionesCliente(int usuarioId)
             => await ObtenerSanciones(usuarioId);
 
+        [Authorize(Policy = PoliticasAdmin.SuperAdmin)]
         [HttpPost("administradores")]
         public async Task<IActionResult> CrearAdmin([FromBody] CrearAdminDto dto)
         {
@@ -284,14 +296,17 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [Authorize(Policy = PoliticasAdmin.SuperAdmin)]
         [HttpPut("administradores/{usuarioId}/suspender")]
         public async Task<IActionResult> SuspenderAdmin(int usuarioId, [FromBody] SuspenderCuidadorDto dto)
             => await SuspenderCuidador(usuarioId, dto);
 
+        [Authorize(Policy = PoliticasAdmin.SuperAdmin)]
         [HttpPut("administradores/{usuarioId}/reactivar")]
         public async Task<IActionResult> ReactivarAdmin(int usuarioId, [FromBody] ReactivarCuidadorDto dto)
             => await ReactivarCuidador(usuarioId, dto);
 
+        [Authorize(Policy = PoliticasAdmin.Finanzas)]
         [HttpPut("marcar-pago-pagado/{pagoId}")]
         public async Task<IActionResult> MarcarPagoComoPagado(int pagoId)
         {

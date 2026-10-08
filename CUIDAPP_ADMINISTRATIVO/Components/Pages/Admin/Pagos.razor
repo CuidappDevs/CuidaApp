@@ -4,6 +4,8 @@
 @using CUIDAPP_ADMINISTRATIVO.Models.Pago
 @using CUIDAPP_ADMINISTRATIVO.Services
 @inject PagoAdminApiService PagoService
+@inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
 
 <PageTitle>Pagos y finanzas · Cuidapp Admin</PageTitle>
 
@@ -32,7 +34,7 @@
     else
     {
         <div class="adm-card overflow-hidden">
-            @foreach (var pago in _pagos)
+            @foreach (var pago in Paginador.Cortar(_pagos, _pag, 15))
             {
                 <div class="d-flex flex-wrap align-items-center" style="gap:12px 16px; padding:16px 24px; border-bottom:1px solid var(--adm-line-soft);">
 
@@ -74,14 +76,14 @@
                         @if (pago.Estado == 1)
                         {
                             <button type="button" class="adm-btn" style="height:36px; padding:0 16px; border:none; border-radius:11px; background:var(--cuid-blue); color:#fff; font-size:13px;"
-                                    disabled="@(_procesando == pago.Id)" @onclick="() => Autorizar(pago.Id)">
+                                    disabled="@(_procesando == pago.Id)" @onclick="() => Autorizar(pago)">
                                 @(_procesando == pago.Id ? "..." : "Autorizar")
                             </button>
                         }
                         else if (pago.Estado == 3)
                         {
                             <button type="button" class="adm-btn" style="height:36px; padding:0 16px; border:none; border-radius:11px; background:#16A34A; color:#fff; font-size:13px;"
-                                    disabled="@(_procesando == pago.Id)" @onclick="() => Aprobar(pago.Id)">
+                                    disabled="@(_procesando == pago.Id)" @onclick="() => Aprobar(pago)">
                                 @(_procesando == pago.Id ? "..." : "Confirmar envío")
                             </button>
                         }
@@ -98,12 +100,14 @@
 
                 </div>
             }
+            <Paginador Pagina="_pag" Tamano="15" Total="_pagos.Count" PaginaCambiada="p => _pag = p" />
         </div>
     }
 
 </div>
 
 @code {
+    private int _pag = 1;
     [CascadingParameter]
     private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthStateTask { get; set; }
 
@@ -136,6 +140,7 @@
 
     private async Task CambiarFiltro(int? estado)
     {
+        _pag = 1;
         _estadoFiltro = estado;
         await CargarPagos();
     }
@@ -150,23 +155,36 @@
         _cargando = false;
     }
 
-    private async Task Autorizar(int pagoId)
+    private async Task Autorizar(PagoAdmin pago)
     {
+        var aviso = pago.PagoDisputado ? " Atención: el pago está en disputa." : "";
+        if (!await Confirmacion.PreguntarAsync($"¿Autorizar RD$ {pago.Total:N2}?",
+                $"Pago a {pago.CuidadorNombre} por {pago.TipoServicio}.{aviso} Después hay que confirmar el envío del dinero.", "Autorizar pago", peligro: pago.PagoDisputado))
+            return;
+
+        var pagoId = pago.Id;
         _procesando = pagoId;
         StateHasChanged();
 
-        await PagoService.AutorizarPagoAsync(pagoId, _adminId);
+        var ok = await PagoService.AutorizarPagoAsync(pagoId, _adminId);
+        Toasts.Mostrar(ok ? "Pago autorizado." : "No se pudo autorizar el pago.", ok);
         await CargarPagos();
 
         _procesando = null;
     }
 
-    private async Task Aprobar(int pagoId)
+    private async Task Aprobar(PagoAdmin pago)
     {
+        if (!await Confirmacion.PreguntarAsync($"¿Ya enviaste RD$ {pago.Total:N2}?",
+                $"Confirma solo si el dinero ya salió hacia {pago.CuidadorNombre}. Se le avisará en la app que su pago fue enviado.", "Sí, confirmar envío"))
+            return;
+
+        var pagoId = pago.Id;
         _procesando = pagoId;
         StateHasChanged();
 
-        await PagoService.AprobarPagoAsync(pagoId, _adminId);
+        var ok = await PagoService.AprobarPagoAsync(pagoId, _adminId);
+        Toasts.Mostrar(ok ? "Envío confirmado." : "No se pudo confirmar el envío.", ok);
         await CargarPagos();
 
         _procesando = null;

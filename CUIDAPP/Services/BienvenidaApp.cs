@@ -12,6 +12,30 @@ namespace CUIDAPP.Services
         // Caché local para no consultar al servidor cada vez que se abre el panel.
         private static string ClaveLocal(int usuarioId) => $"BienvenidaVista_{usuarioId}";
 
+        /// <summary>Vuelve a mostrar la bienvenida a pedido (desde Ayuda), sin tocar lo guardado en el servidor.</summary>
+        public static async Task RepetirAsync()
+        {
+            if (_enCurso || Shell.Current?.Navigation is not { } navegacion)
+                return;
+            _enCurso = true;
+            try
+            {
+                var pagina = new Views.Comun.BienvenidaPage(
+                    esCuidador: Preferences.Default.Get("RolId", 0) == 3,
+                    nombre: Preferences.Default.Get("UserNombre", ""));
+                await navegacion.PushModalAsync(pagina, false);
+                await pagina.Terminada;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Bienvenida] {ex.Message}");
+            }
+            finally
+            {
+                _enCurso = false;
+            }
+        }
+
         public static async Task MostrarSiCorrespondeAsync()
         {
             var usuarioId = Preferences.Default.Get("UserId", 0);

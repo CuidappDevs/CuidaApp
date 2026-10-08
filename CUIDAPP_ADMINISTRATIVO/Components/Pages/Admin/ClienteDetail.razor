@@ -5,6 +5,7 @@
 @using CUIDAPP_ADMINISTRATIVO.Models.Cuidador
 @using CUIDAPP_ADMINISTRATIVO.Services
 @inject ClienteAdminApiService ClienteService
+@inject ConfirmacionService Confirmacion
 
 <PageTitle>Ficha de cliente · Cuidapp Admin</PageTitle>
 
@@ -319,6 +320,11 @@ else
                 return;
             }
         }
+
+        var duracion = fechaFin is { } fin ? $"hasta el {FechaRD(fin)}" : "de forma indefinida";
+        if (!await Confirmacion.PreguntarAsync("¿Suspender esta cuenta?",
+                $"No podrá iniciar sesión {duracion}. El motivo queda registrado en su historial y en la auditoría.", "Suspender cuenta", peligro: true))
+            return;
 
         _procesandoCuenta = true;
         _mensajeAccion = null;

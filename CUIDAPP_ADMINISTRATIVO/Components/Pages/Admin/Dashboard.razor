@@ -1,91 +1,289 @@
 @page "/dashboard"
 @layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
-@using CUIDAPP_ADMINISTRATIVO.Services
+@implements IDisposable
+@inject PanelApiService Api
+@inject SosNotificationService SosService
 
 <PageTitle>Dashboard · Cuidapp Admin</PageTitle>
 
-<div class="d-grid gap-4 adm-two-col" style="grid-template-columns: 1.55fr 1fr; align-items: start;">
+<div class="pn-page">
+    @if (_datos == null)
+    {
+        <div class="pn-grid pn-grid-kpi">
+            @for (var i = 0; i < 6; i++)
+            {
+                <div class="pn-kpi"><span class="pn-skel" style="width:50%;"></span><span class="pn-skel" style="width:35%; height:26px;"></span><span class="pn-skel pn-skel-sm" style="width:70%;"></span></div>
+            }
+        </div>
+    }
+    else
+    {
+        var k = _datos.Indicadores;
+        var sos = Math.Max(k.SosPendientes, SosService.AlertasPendientes.Count);
 
-    @* ----- Solicitudes pendientes ----- *@
-    <div class="adm-card overflow-hidden">
-        <div class="d-flex align-items-center justify-content-between adm-card-pad" style="border-bottom:1px solid var(--adm-line);">
-            <div class="d-flex flex-column" style="gap:3px;">
-                <span class="adm-card-title">Solicitudes pendientes de revisión</span>
-                <span class="adm-card-sub">Care Partners esperando aprobación de documentos</span>
+        <div class="d-flex flex-wrap align-items-end justify-content-between" style="gap:8px;">
+            <div class="d-flex flex-column" style="gap:2px;">
+                <span style="font-size:22px; font-weight:600; letter-spacing:-.01em;">@Saludo(), @_nombre</span>
+                <span class="pn-muted" style="font-size:13.5px;">@Resumen(k, sos)</span>
             </div>
-            <a href="care-partners" class="adm-btn adm-btn-outline">Ver todas</a>
+            <span class="pn-muted">Actualizado @_actualizado.ToString("h:mm tt") · se refresca cada minuto</span>
         </div>
 
-        @foreach (var q in AdminMockData.Queue())
-        {
-            <div class="d-flex flex-wrap align-items-center" style="gap:12px 16px; padding:16px 24px; border-bottom:1px solid var(--adm-line-soft);">
-                <div class="d-flex align-items-center justify-content-center flex-shrink-0"
-                     style="width:42px; height:42px; border-radius:14px; background:var(--cuid-blue-soft); font-size:14px; font-weight:600; color:var(--cuid-blue);">
-                    @q.Initials
+        @* ---- Lo urgente ---- *@
+        <div class="pn-grid pn-grid-kpi">
+            <a class="pn-kpi @(sos > 0 ? "is-alert" : "")" href="sos-alertas">
+                <div class="pn-kpi-top"><span class="pn-kpi-label">Emergencias SOS</span>
+                    <span class="pn-kpi-icon tone-danger"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg></span></div>
+                <span class="pn-kpi-value">@sos</span>
+                <span class="pn-kpi-sub">@(sos == 0 ? "Todo en calma" : "Requieren atención ahora")</span>
+            </a>
+            <a class="pn-kpi" href="servicios?estado=3">
+                <div class="pn-kpi-top"><span class="pn-kpi-label">Servicios en curso</span>
+                    <span class="pn-kpi-icon tone-live"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 6v6l4 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z"></path></svg></span></div>
+                <span class="pn-kpi-value">@k.ServiciosEnCurso</span>
+                <span class="pn-kpi-sub">@k.ServiciosHoy programados hoy · @k.ServiciosPorAceptar por aceptar</span>
+            </a>
+            <a class="pn-kpi" href="verificacion">
+                <div class="pn-kpi-top"><span class="pn-kpi-label">Por verificar</span>
+                    <span class="pn-kpi-icon tone-warn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 12l2 2 4-4M12 3l7 3v6c0 4.5-3 7.7-7 9-4-1.3-7-4.5-7-9V6z"></path></svg></span></div>
+                <span class="pn-kpi-value">@k.CuidadoresPorVerificar</span>
+                <span class="pn-kpi-sub">Care Partners esperando revisión</span>
+            </a>
+            <a class="pn-kpi" href="soporte">
+                <div class="pn-kpi-top"><span class="pn-kpi-label">Reportes abiertos</span>
+                    <span class="pn-kpi-icon tone-violet"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span></div>
+                <span class="pn-kpi-value">@k.TicketsAbiertos</span>
+                <span class="pn-kpi-sub">Soporte pendiente de respuesta</span>
+            </a>
+            @if (_finanzas)
+            {
+                <a class="pn-kpi" href="pagos">
+                    <div class="pn-kpi-top"><span class="pn-kpi-label">Pagos pendientes</span>
+                        <span class="pn-kpi-icon tone-info"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 7h20M2 7v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2M6 15h4"></path></svg></span></div>
+                    <span class="pn-kpi-value">@(k.PagosPorAutorizar + k.PagosPorEnviar)</span>
+                    <span class="pn-kpi-sub">@k.PagosPorAutorizar por autorizar · @k.PagosPorEnviar por enviar</span>
+                </a>
+                <a class="pn-kpi" href="finanzas">
+                    <div class="pn-kpi-top"><span class="pn-kpi-label">Facturado · 7 días</span>
+                        <span class="pn-kpi-icon tone-ok"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v18h18M7 15l4-4 3 3 5-6"></path></svg></span></div>
+                    <span class="pn-kpi-value" style="font-size:24px;">RD$ @k.IngresosSemana.ToString("N0")</span>
+                    <span class="pn-kpi-sub">
+                        @if (Delta(k) is { } d)
+                        {
+                            <span class="pn-delta @(d >= 0 ? "up" : "down")">@(d >= 0 ? "▲" : "▼") @Math.Abs(d).ToString("0")%</span>
+                        }
+                        vs. semana anterior
+                    </span>
+                </a>
+            }
+            else
+            {
+                <a class="pn-kpi" href="mapa">
+                    <div class="pn-kpi-top"><span class="pn-kpi-label">Visibles ahora</span>
+                        <span class="pn-kpi-icon tone-ok"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 21s-7-6.1-7-11a7 7 0 1 1 14 0c0 4.9-7 11-7 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg></span></div>
+                    <span class="pn-kpi-value">@k.CuidadoresVisibles</span>
+                    <span class="pn-kpi-sub">Care Partners disponibles</span>
+                </a>
+            }
+        </div>
+
+        <div class="pn-grid pn-grid-2">
+            @* ---- Actividad de servicios ---- *@
+            <div class="adm-card adm-card-pad d-flex flex-column" style="gap:18px;">
+                <div class="d-flex flex-wrap align-items-center justify-content-between" style="gap:10px;">
+                    <div class="d-flex flex-column" style="gap:2px;">
+                        <span class="adm-card-title">Servicios de los últimos 14 días</span>
+                        <span class="adm-card-sub">@_datos.Serie.Sum(x => x.Servicios) programados · @_datos.Serie.Sum(x => x.Completados) completados</span>
+                    </div>
+                    <div class="pn-seg">
+                        <button type="button" class="@(_metrica == 0 ? "on" : "")" @onclick="() => _metrica = 0">Servicios</button>
+                        @if (_finanzas)
+                        {
+                            <button type="button" class="@(_metrica == 1 ? "on" : "")" @onclick="() => _metrica = 1">Facturado</button>
+                        }
+                    </div>
                 </div>
-                <div class="d-flex flex-column" style="flex:1; min-width:0; gap:3px;">
-                    <span style="font-size:14.5px; font-weight:600;">@q.Name</span>
-                    <span class="adm-card-sub">@q.Meta</span>
+                <GraficoBarras Puntos="Puntos()" Alto="170" Moneda="_metrica == 1" Titulo="Servicios por día" />
+            </div>
+
+            @* ---- Comunidad ---- *@
+            <div class="adm-card adm-card-pad d-flex flex-column" style="gap:16px;">
+                <span class="adm-card-title">Comunidad</span>
+                <div class="d-flex" style="gap:12px;">
+                    <a class="pn-kpi" href="care-partners" style="flex:1; padding:14px 16px;">
+                        <span class="pn-kpi-label">Care Partners</span>
+                        <span class="pn-kpi-value" style="font-size:24px;">@k.CuidadoresTotal</span>
+                        <span class="pn-kpi-sub">@k.CuidadoresVisibles visibles ahora</span>
+                    </a>
+                    <a class="pn-kpi" href="clientes" style="flex:1; padding:14px 16px;">
+                        <span class="pn-kpi-label">Clientes</span>
+                        <span class="pn-kpi-value" style="font-size:24px;">@k.ClientesTotal</span>
+                        <span class="pn-kpi-sub">@k.RegistrosSemana registros esta semana</span>
+                    </a>
                 </div>
-                <span class="flex-shrink-0" style="padding:5px 11px; border-radius:999px; font-size:12px; font-weight:600;
-                             background:@(q.DocsAlert ? "#FEE2E2" : "#F3F4F6"); color:@(q.DocsAlert ? "#DC2626" : "#6B7280");">
-                    @q.Docs
-                </span>
-                <span class="flex-shrink-0 text-end" style="width:96px; font-size:13px; color:var(--adm-muted-2);">@q.When</span>
-                <a href="@($"care-partners/{q.PartnerIndex}")" class="adm-btn flex-shrink-0"
-                   style="height:36px; padding:0 16px; border:none; border-radius:11px; background:var(--cuid-blue); color:#fff; font-size:13px;">
-                    Revisar
+                <a class="pn-flag-like d-flex align-items-center justify-content-between" href="calificaciones" style="text-decoration:none; color:inherit; padding:12px 14px; border:1px solid var(--adm-line); border-radius:14px;">
+                    <span class="d-flex flex-column" style="gap:2px;">
+                        <span class="pn-kpi-label">Calificación promedio de Care Partners</span>
+                        <span class="d-flex align-items-center" style="gap:8px;"><span style="font-size:20px; font-weight:600;">@(k.CalificacionPromedio > 0 ? k.CalificacionPromedio.ToString("0.0") : "—")</span><Estrellas Valor="k.CalificacionPromedio" Tam="15" /></span>
+                    </span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--adm-muted-2)" stroke-width="2" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg>
                 </a>
             </div>
-        }
-    </div>
-
-    @* ----- Columna derecha ----- *@
-    <div class="d-flex flex-column gap-4">
-
-        @* Gráfico *@
-        <div class="adm-card adm-card-pad d-flex flex-column" style="gap:20px;">
-            <div class="d-flex flex-column" style="gap:3px;">
-                <span class="adm-card-title">Registros por semana</span>
-                <span class="adm-card-sub">Care Partners y clientes nuevos</span>
-            </div>
-            <div class="adm-bars">
-                @foreach (var w in AdminMockData.Weeks)
-                {
-                    <div class="adm-bar-col">
-                        <div class="adm-bar-pair">
-                            <div class="adm-bar adm-bar-a" style="height:@(w.H1)%;"></div>
-                            <div class="adm-bar adm-bar-b" style="height:@(w.H2)%;"></div>
-                        </div>
-                        <span class="adm-bar-label">@w.Label</span>
-                    </div>
-                }
-            </div>
-            <div class="d-flex" style="gap:18px;">
-                <span class="d-flex align-items-center" style="gap:7px; font-size:12.5px; color:var(--adm-muted);">
-                    <span class="adm-legend-dot adm-bar-a"></span>Care Partners
-                </span>
-                <span class="d-flex align-items-center" style="gap:7px; font-size:12.5px; color:var(--adm-muted);">
-                    <span class="adm-legend-dot adm-bar-b"></span>Clientes
-                </span>
-            </div>
         </div>
 
-        @* Actividad *@
-        <div class="adm-card adm-card-pad d-flex flex-column" style="gap:18px;">
-            <span class="adm-card-title">Actividad reciente</span>
-            <div class="d-flex flex-column" style="gap:16px;">
-                @foreach (var a in AdminMockData.Activity)
-                {
-                    <div class="d-flex" style="gap:12px;">
-                        <span class="adm-timeline-dot" style="background:@a.Dot;"></span>
-                        <div class="d-flex flex-column" style="gap:2px;">
-                            <span class="adm-timeline-text">@a.Text</span>
-                            <span class="adm-timeline-when">@a.Who</span>
-                        </div>
+        <div class="pn-grid pn-grid-2">
+            @* ---- Verificación ---- *@
+            <div class="adm-card overflow-hidden">
+                <div class="pn-card-head">
+                    <div class="d-flex flex-column" style="gap:2px;">
+                        <span class="adm-card-title">Esperando verificación</span>
+                        <span class="adm-card-sub">Los que más tiempo llevan esperando, primero</span>
                     </div>
+                    <a class="pn-link" href="verificacion">Ver todos</a>
+                </div>
+                @if (_datos.Verificacion.Count == 0)
+                {
+                    <EstadoVacio Titulo="Nadie esperando" Texto="Todos los Care Partners registrados ya fueron revisados." Icono="M9 12l2 2 4-4M12 3l7 3v6c0 4.5-3 7.7-7 9-4-1.3-7-4.5-7-9V6z" />
+                }
+                else
+                {
+                    @foreach (var v in _datos.Verificacion)
+                    {
+                        <a class="d-flex align-items-center" href="care-partners/@v.UsuarioId" style="gap:12px; padding:14px 20px; border-bottom:1px solid var(--adm-line-soft); text-decoration:none; color:inherit;">
+                            <Avatar Url="@Api.Archivo(v.FotoUrl)" Nombre="@v.Nombre" Tam="38" />
+                            <div class="pn-who-text" style="flex:1;">
+                                <span>@v.Nombre</span>
+                                <span class="pn-muted">Esperando desde hace @Dias(v.FechaCreacion)</span>
+                            </div>
+                            @if (v.DocsRechazados > 0)
+                            {
+                                <span class="pn-pill tone-danger">@v.DocsRechazados rechazado(s)</span>
+                            }
+                            else if (v.DocsPendientes > 0)
+                            {
+                                <span class="pn-pill tone-warn">@v.DocsPendientes por revisar</span>
+                            }
+                            else
+                            {
+                                <span class="pn-pill tone-ok">Listo para aprobar</span>
+                            }
+                        </a>
+                    }
                 }
             </div>
+
+            @* ---- Actividad reciente ---- *@
+            <div class="adm-card adm-card-pad d-flex flex-column" style="gap:6px;">
+                <span class="adm-card-title" style="margin-bottom:6px;">Actividad reciente</span>
+                @if (_datos.Actividad.Count == 0)
+                {
+                    <span class="pn-muted">Todavía no hay actividad.</span>
+                }
+                <div class="pn-timeline">
+                    @foreach (var a in _datos.Actividad)
+                    {
+                        var (tono, icono) = IconoActividad(a.Tipo);
+                        <a class="pn-tl-item" href="@(a.Enlace ?? "dashboard")">
+                            <span class="pn-tl-icon @tono"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="@icono"></path></svg></span>
+                            <span class="d-flex flex-column" style="gap:1px; min-width:0;">
+                                <span class="pn-tl-text">@a.Texto</span>
+                                <span class="pn-tl-when">@Cuando(a.Fecha)</span>
+                            </span>
+                        </a>
+                    }
+                </div>
+            </div>
         </div>
-    </div>
+    }
 </div>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private DashboardPanel? _datos;
+    private DateTime _actualizado;
+    private string _nombre = "";
+    private bool _finanzas;
+    private int _metrica;
+    private Timer? _timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthStateTask != null)
+        {
+            var user = (await AuthStateTask).User;
+            _nombre = (user.FindFirst(ClaimTypes.Name)?.Value ?? "").Split(' ')[0];
+            _finanzas = SesionAdmin.PuedeFinanzas(user);
+        }
+        SosService.OnAlertaRecibida += Refrescar;
+        await Cargar();
+        _timer = new Timer(async _ => { await Cargar(); await InvokeAsync(StateHasChanged); }, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+    }
+
+    private async Task Cargar()
+    {
+        var d = await Api.DashboardAsync();
+        if (d != null) { _datos = d; _actualizado = HoraRD; }
+        else _datos ??= new DashboardPanel();
+    }
+
+    private void Refrescar() => InvokeAsync(StateHasChanged);
+
+    private static DateTime HoraRD => DateTime.UtcNow.AddHours(-4);
+
+    private static string Saludo() => HoraRD.Hour switch { < 12 => "Buenos días", < 19 => "Buenas tardes", _ => "Buenas noches" };
+
+    private static string Resumen(Indicadores k, int sos)
+    {
+        var partes = new List<string>();
+        if (sos > 0) partes.Add(sos == 1 ? "hay 1 emergencia activa" : $"hay {sos} emergencias activas");
+        if (k.CuidadoresPorVerificar > 0) partes.Add($"{k.CuidadoresPorVerificar} Care Partner(s) por verificar");
+        if (k.TicketsAbiertos > 0) partes.Add($"{k.TicketsAbiertos} reporte(s) abierto(s)");
+        return partes.Count == 0 ? "No hay nada urgente pendiente." : "Pendiente: " + string.Join(", ", partes) + ".";
+    }
+
+    private static decimal? Delta(Indicadores k) => k.IngresosSemanaAnterior == 0 ? null : (k.IngresosSemana - k.IngresosSemanaAnterior) / k.IngresosSemanaAnterior * 100;
+
+    private List<GraficoBarras.Punto> Puntos()
+    {
+        var hoy = HoraRD.Date;
+        var cultura = new System.Globalization.CultureInfo("es-DO");
+        return _datos!.Serie.Select(p => new GraficoBarras.Punto(
+            p.Dia.ToString("dddd d 'de' MMMM", cultura),
+            p.Dia.ToString("dd", cultura),
+            _metrica == 1 ? p.Ingresos : p.Servicios,
+            p.Dia.Date == hoy)).ToList();
+    }
+
+    private static string Dias(DateTime? fecha)
+    {
+        if (fecha == null) return "—";
+        var d = (HoraRD - fecha.Value).TotalDays;
+        return d < 1 ? $"{Math.Max(1, (HoraRD - fecha.Value).TotalHours):0} h" : $"{d:0} día(s)";
+    }
+
+    public static string Cuando(DateTime fecha)
+    {
+        var min = (HoraRD - fecha).TotalMinutes;
+        if (min < 1) return "Ahora";
+        if (min < 60) return $"Hace {min:0} min";
+        if (min < 1440) return $"Hace {min / 60:0} h";
+        if (min < 2880) return "Ayer, " + fecha.ToString("h:mm tt");
+        return fecha.ToString("dd MMM, h:mm tt");
+    }
+
+    private static (string Tono, string Icono) IconoActividad(string tipo) => tipo switch
+    {
+        "registro" => ("tone-info", "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 8v6M22 11h-6"),
+        "servicio" => ("tone-ok", "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"),
+        "sos" => ("tone-danger", "M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"),
+        "ticket" => ("tone-violet", "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"),
+        _ => ("tone-muted", "M12 8v4l3 3")
+    };
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+        SosService.OnAlertaRecibida -= Refrescar;
+    }
+}

@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using CUIDAPP_API.Seguridad;
 using CUIDAPP_API.DTOs.SOS;
 using CUIDAPP_API.Interfaces.SOS;
 
@@ -50,6 +52,8 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [Authorize(Policy = PoliticasAdmin.Admin)]
+        [AuditarAdmin]
         [HttpGet("pendientes")]
         public async Task<IActionResult> ObtenerAlertasPendientes()
         {
@@ -64,6 +68,22 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [Authorize(Policy = PoliticasAdmin.Admin)]
+        [HttpGet("historial")]
+        public async Task<IActionResult> ObtenerHistorial([FromQuery] int top = 100)
+        {
+            try
+            {
+                return Ok(await _sosService.ObtenerHistorialAsync(Math.Clamp(top, 1, 500)));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
+        [Authorize(Policy = PoliticasAdmin.Admin)]
+        [AuditarAdmin]
         [HttpGet("{id}")]
         public async Task<IActionResult> ObtenerAlertaPorId(int id)
         {
@@ -81,6 +101,8 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [Authorize(Policy = PoliticasAdmin.Admin)]
+        [AuditarAdmin]
         [HttpPut("{id}/atender")]
         public async Task<IActionResult> AtenderAlerta(int id, [FromBody] AtenderSOSDto dto)
         {
@@ -98,6 +120,8 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [Authorize(Policy = PoliticasAdmin.Admin)]
+        [AuditarAdmin]
         [HttpPut("{id}/descartar")]
         public async Task<IActionResult> DescartarAlerta(int id)
         {

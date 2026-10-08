@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:CUIDAPP.Localization"
+             x:Class="CUIDAPP.Views.Comun.CheckinPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource ColorBackground}">
+
+    <Grid RowDefinitions="*,Auto" Padding="24,0">
+        <VerticalStackLayout Grid.Row="0" VerticalOptions="Center" Spacing="18">
+            <!-- Ícono con anillos que laten -->
+            <Grid WidthRequest="150" HeightRequest="150" HorizontalOptions="Center">
+                <Ellipse x:Name="Anillo1" Fill="{StaticResource ColorPrimarySoft}" WidthRequest="150" HeightRequest="150"/>
+                <Ellipse x:Name="Anillo2" Fill="{StaticResource ColorPrimarySoft}" WidthRequest="150" HeightRequest="150"/>
+                <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimary}" WidthRequest="96" HeightRequest="96" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                    <Path x:Name="Corazon" Data="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" Fill="White" Aspect="Uniform" WidthRequest="42" HeightRequest="42" HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
+            </Grid>
+
+            <Label Text="{loc:T checkin_titulo}" FontSize="26" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalOptions="Center"/>
+            <Label x:Name="LblMensaje" FontSize="15" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" HorizontalTextAlignment="Center"/>
+            <Label x:Name="LblRestante" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorWarning}" HorizontalOptions="Center"/>
+        </VerticalStackLayout>
+
+        <!-- Botones dentro del contenido (con margen inferior por la barra de gestos) -->
+        <VerticalStackLayout x:Name="BloqueBotones" Grid.Row="1" Spacing="12">
+            <Border x:Name="BtnBien" Stroke="Transparent" BackgroundColor="{StaticResource ColorSuccess}" StrokeShape="RoundRectangle 18" HeightRequest="58">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnBienTapped" />
+                </Border.GestureRecognizers>
+                <Label Text="{loc:T checkin_estoy_bien}" FontSize="17" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center"/>
+            </Border>
+            <Border x:Name="BtnAyuda" Stroke="{StaticResource ColorDanger}" StrokeThickness="1.5" BackgroundColor="{StaticResource ColorDangerSoft}" StrokeShape="RoundRectangle 18" HeightRequest="58">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnAyudaTapped" />
+                </Border.GestureRecognizers>
+                <Label Text="{loc:T checkin_necesito_ayuda}" FontSize="17" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorDanger}" HorizontalOptions="Center" VerticalOptions="Center"/>
+            </Border>
+            <ActivityIndicator x:Name="Enviando" IsVisible="False" IsRunning="False" Color="{StaticResource ColorPrimary}" HorizontalOptions="Center"/>
+            <ContentView x:Name="EspacioInferior"/>
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

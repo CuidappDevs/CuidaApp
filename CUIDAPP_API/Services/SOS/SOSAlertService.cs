@@ -181,6 +181,22 @@ namespace CUIDAPP_API.Services.SOS
             return alertas;
         }
 
+        public async Task<IEnumerable<SOSAlertaDto>> ObtenerHistorialAsync(int top)
+        {
+            var alertas = new List<SOSAlertaDto>();
+            using var connection = new SqlConnection(_connectionString);
+            using var command = new SqlCommand("sp_ObtenerSOSHistorial", connection);
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.AddWithValue("@Top", top);
+
+            await connection.OpenAsync();
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+                alertas.Add(MapearAlerta(reader));
+
+            return alertas;
+        }
+
         public async Task<SOSAlertaDto?> ObtenerAlertaPorIdAsync(int id)
         {
             using var connection = new SqlConnection(_connectionString);

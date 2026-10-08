@@ -1,0 +1,161 @@
+@page "/finanzas"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@inject PanelApiService Api
+@inject IJSRuntime JS
+@inject AvisoToastService Toasts
+
+<PageTitle>Finanzas · Cuidapp Admin</PageTitle>
+
+<div class="pn-page">
+    @if (!_permitido)
+    {
+        <div class="adm-card"><EstadoVacio Titulo="Sin acceso" Texto="Esta sección es solo para administradores de Finanzas o Superadmin." Icono="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2Zm10-10V7a4 4 0 0 0-8 0v4h8Z" /></div>
+    }
+    else
+    {
+        <div class="pn-toolbar">
+            <div class="pn-seg">
+                <button type="button" class="@(_rango == 7 ? "on" : "")" @onclick="() => Rango(7)">7 días</button>
+                <button type="button" class="@(_rango == 30 ? "on" : "")" @onclick="() => Rango(30)">30 días</button>
+                <button type="button" class="@(_rango == 90 ? "on" : "")" @onclick="() => Rango(90)">90 días</button>
+                <button type="button" class="@(_rango == 0 ? "on" : "")" @onclick="() => Rango(0)">Este mes</button>
+            </div>
+            <label class="pn-muted d-flex align-items-center" style="gap:6px;">Desde <input class="pn-input" type="date" @bind="_desde" @bind:after="Personalizado" /></label>
+            <label class="pn-muted d-flex align-items-center" style="gap:6px;">Hasta <input class="pn-input" type="date" @bind="_hasta" @bind:after="Personalizado" /></label>
+            <span class="pn-grow"></span>
+            <button type="button" class="pn-btn pn-btn-quiet" disabled="@(_datos == null || _datos.PorCuidador.Count == 0)" @onclick="Exportar">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"></path></svg>
+                Exportar CSV
+            </button>
+        </div>
+
+        @if (_datos == null)
+        {
+            <div class="adm-card"><Esqueleto Filas="4" ConAvatar="false" /></div>
+        }
+        else
+        {
+            var t = _datos.Totales;
+            <div class="pn-grid pn-grid-kpi">
+                <div class="pn-kpi"><span class="pn-kpi-label">Facturado (servicios completados)</span><span class="pn-kpi-value" style="font-size:24px;">RD$ @t.Facturado.ToString("N0")</span><span class="pn-kpi-sub">@t.ServiciosCompletados servicio(s) · promedio RD$ @(t.ServiciosCompletados == 0 ? "0" : (t.Facturado / t.ServiciosCompletados).ToString("N0"))</span></div>
+                <div class="pn-kpi"><span class="pn-kpi-label">Propinas</span><span class="pn-kpi-value" style="font-size:24px;">RD$ @t.Propinas.ToString("N0")</span><span class="pn-kpi-sub">Van íntegras al Care Partner</span></div>
+                <div class="pn-kpi"><span class="pn-kpi-label">Pagado a Care Partners</span><span class="pn-kpi-value" style="font-size:24px; color:var(--ok);">RD$ @t.Pagado.ToString("N0")</span><span class="pn-kpi-sub">Tarifa + propina, pagos confirmados</span></div>
+                <a class="pn-kpi @(t.PorPagar > 0 ? "" : "")" href="pagos"><span class="pn-kpi-label">Por pagar</span><span class="pn-kpi-value" style="font-size:24px; color:@(t.PorPagar > 0 ? "var(--warn)" : "inherit");">RD$ @t.PorPagar.ToString("N0")</span><span class="pn-kpi-sub">Pendientes o autorizados · ir a Pagos</span></a>
+                <div class="pn-kpi @(t.Disputados > 0 ? "is-alert" : "")"><span class="pn-kpi-label">Cancelados / en disputa</span><span class="pn-kpi-value" style="font-size:24px;">@t.ServiciosCancelados / @t.Disputados</span><span class="pn-kpi-sub">En el período</span></div>
+            </div>
+
+            <div class="adm-card adm-card-pad d-flex flex-column" style="gap:16px;">
+                <div class="d-flex flex-column" style="gap:2px;">
+                    <span class="adm-card-title">Facturado por día</span>
+                    <span class="adm-card-sub">@_datos.Desde.ToString("d MMM", Es) – @_datos.Hasta.ToString("d MMM yyyy", Es)</span>
+                </div>
+                <GraficoBarras Puntos="Serie()" Alto="160" Moneda="true" Titulo="Facturado por día" />
+            </div>
+
+            <div class="adm-card overflow-hidden">
+                <div class="pn-card-head"><span class="adm-card-title">Por Care Partner</span><span class="pn-muted">@_datos.PorCuidador.Count persona(s)</span></div>
+                @if (_datos.PorCuidador.Count == 0)
+                {
+                    <EstadoVacio Titulo="Sin servicios completados en el período" />
+                }
+                else
+                {
+                    <div class="pn-table-wrap">
+                        <table class="pn-table">
+                            <thead><tr><th>Care Partner</th><th>Método de cobro</th><th class="pn-num">Servicios</th><th class="pn-num">Facturado</th><th class="pn-num">Propinas</th><th class="pn-num">Pagado</th><th class="pn-num">Por pagar</th></tr></thead>
+                            <tbody>
+                                @foreach (var c in _datos.PorCuidador)
+                                {
+                                    <tr>
+                                        <td><a class="pn-link" href="care-partners/@c.UsuarioId">@c.Nombre</a></td>
+                                        <td>@(c.MetodoCobro ?? "—")</td>
+                                        <td class="pn-num">@c.Servicios</td>
+                                        <td class="pn-num">RD$ @c.Facturado.ToString("N2")</td>
+                                        <td class="pn-num">RD$ @c.Propinas.ToString("N2")</td>
+                                        <td class="pn-num" style="color:var(--ok);">RD$ @c.Pagado.ToString("N2")</td>
+                                        <td class="pn-num pn-strong" style="color:@(c.PorPagar > 0 ? "var(--warn)" : "inherit");">RD$ @c.PorPagar.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+            <span class="pn-muted">Nota: la app no guarda con qué método pagó el cliente (efectivo, tarjeta…), solo el método con el que cobra cada Care Partner.</span>
+        }
+    }
+</div>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private static readonly System.Globalization.CultureInfo Es = new("es-DO");
+    private FinanzasPanel? _datos;
+    private bool _permitido;
+    private int _rango = 30;
+    private DateTime? _desde, _hasta;
+
+    private static DateTime Hoy => DateTime.UtcNow.AddHours(-4).Date;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthStateTask != null) _permitido = SesionAdmin.PuedeFinanzas((await AuthStateTask).User);
+        if (_permitido) await Rango(30);
+    }
+
+    private async Task Rango(int dias)
+    {
+        _rango = dias;
+        _hasta = Hoy;
+        _desde = dias == 0 ? new DateTime(Hoy.Year, Hoy.Month, 1) : Hoy.AddDays(-(dias - 1));
+        await Cargar();
+    }
+
+    private async Task Personalizado()
+    {
+        if (_desde == null || _hasta == null) return;
+        if (_desde > _hasta) (_desde, _hasta) = (_hasta, _desde);
+        _rango = -1;
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        _datos = null;
+        _datos = await Api.FinanzasAsync(_desde!.Value, _hasta!.Value) ?? new();
+    }
+
+    private List<GraficoBarras.Punto> Serie()
+    {
+        // Un punto por día del rango (los días sin servicios van en cero).
+        var porDia = _datos!.Serie.ToDictionary(x => x.Dia.Date, x => x.Facturado);
+        var dias = (int)(_datos.Hasta.Date - _datos.Desde.Date).TotalDays + 1;
+        if (dias > 62)
+        {
+            // Rangos largos: agrupado por semana.
+            return Enumerable.Range(0, (dias + 6) / 7).Select(w =>
+            {
+                var ini = _datos.Desde.Date.AddDays(w * 7);
+                var total = Enumerable.Range(0, 7).Sum(i => porDia.GetValueOrDefault(ini.AddDays(i)));
+                return new GraficoBarras.Punto($"Semana del {ini:d MMM}", ini.ToString("d/M"), total);
+            }).ToList();
+        }
+        return Enumerable.Range(0, dias).Select(i =>
+        {
+            var d = _datos.Desde.Date.AddDays(i);
+            return new GraficoBarras.Punto(d.ToString("dddd d MMM", Es), dias > 16 ? d.ToString("%d") : d.ToString("dd/MM"), porDia.GetValueOrDefault(d), d == Hoy);
+        }).ToList();
+    }
+
+    private async Task Exportar()
+    {
+        static string Csv(string? v) => "\"" + (v ?? "").Replace("\"", "\"\"") + "\"";
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        var sb = new System.Text.StringBuilder("Care Partner,Metodo de cobro,Servicios,Facturado,Propinas,Pagado,Por pagar\n");
+        foreach (var c in _datos!.PorCuidador)
+            sb.AppendLine(string.Join(",", Csv(c.Nombre), Csv(c.MetodoCobro), c.Servicios, c.Facturado.ToString(inv), c.Propinas.ToString(inv), c.Pagado.ToString(inv), c.PorPagar.ToString(inv)));
+        await JS.InvokeVoidAsync("cuidPanel.descargar", $"finanzas_{_datos.Desde:yyyyMMdd}_{_datos.Hasta:yyyyMMdd}.csv", sb.ToString());
+        Toasts.Mostrar("CSV descargado.");
+    }
+}

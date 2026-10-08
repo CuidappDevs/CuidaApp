@@ -1,0 +1,827 @@
+@page "/mapa"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@implements IAsyncDisposable
+@inject PanelApiService Api
+@inject SosNotificationService Tiempo
+@inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<PageTitle>Centro de mando · Cuidapp Admin</PageTitle>
+
+<div class="pn-page pn-mando" id="pn-mando">
+    @* ---------- Barra superior ---------- *@
+    <div class="pn-toolbar">
+        <div class="pn-chips" role="group" aria-label="Capas del mapa">
+            @foreach (var (clave, texto, color) in Capas)
+            {
+                <button type="button" class="pn-chip @(_capas[clave] ? "on" : "")" @onclick="() => AlternarCapa(clave)" aria-pressed="@_capas[clave]">
+                    @if (color != null) { <i class="pn-dot" style="background:@color;"></i> }
+                    @texto
+                    @if (Conteo(clave) is int n) { <b>@n</b> }
+                </button>
+            }
+        </div>
+        <span class="pn-grow"></span>
+        @if (_conectado)
+        {
+            <span class="pn-live" title="Los cambios aparecen al instante"><i></i>En vivo</span>
+        }
+        else
+        {
+            <span class="pn-live is-off" title="Sin conexión en tiempo real: se actualiza cada 20 s"><i></i>Reconectando…</span>
+        }
+        @if (_puedeOperar)
+        {
+            <button type="button" class="pn-btn pn-btn-quiet" @onclick="EmpezarArea" title="Dibuja un área para avisar a los Care Partners que estén dentro">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l6-4 8 3 4 6-5 9-9-2z"></path></svg>
+                Avisar a un área
+            </button>
+        }
+        <button type="button" class="pn-btn pn-btn-quiet" @onclick="() => Cargar(true)">Centrar</button>
+        <button type="button" class="pn-btn pn-btn-quiet" @onclick="PantallaCompleta" aria-label="Pantalla completa" title="Pantalla completa">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path></svg>
+        </button>
+    </div>
+
+    <div class="pn-grid" style="grid-template-columns: 1fr 320px;">
+        @* ---------- Mapa ---------- *@
+        <div style="position:relative; min-width:0;">
+            <div id="pn-mapa" class="pn-map"></div>
+
+            @if (_dibujando)
+            {
+                <div class="pn-banner-dibujo">Marca los puntos del área en el mapa · doble clic para terminar <button type="button" @onclick="CancelarArea">Cancelar</button></div>
+            }
+
+            @* Aviso a los Care Partners de un área dibujada *@
+            @if (_areaIds != null)
+            {
+                <div class="pn-ficha" style="bottom:auto;">
+                    <div class="pn-card-head" style="padding:14px 18px;">
+                        <span class="adm-card-title" style="font-size:15px;">Avisar a esta área</span>
+                        <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" @onclick="CerrarArea" aria-label="Cerrar">×</button>
+                    </div>
+                    <div class="pn-ficha-body">
+                        @if (_areaIds.Length == 0)
+                        {
+                            <span class="pn-muted">No hay Care Partners en el mapa dentro de esa área.</span>
+                        }
+                        else
+                        {
+                            <span style="font-size:13.5px;"><b>@_areaIds.Length</b> Care Partner(s) dentro: @string.Join(", ", NombresArea().Take(6))@(_areaIds.Length > 6 ? "…" : "")</span>
+                            <div><label class="pn-label">Título</label><input class="adm-input" maxlength="120" @bind="_avisoTitulo" @bind:event="oninput" placeholder="Ej.: Lluvia fuerte en la zona" /></div>
+                            <div><label class="pn-label">Mensaje</label><textarea class="adm-textarea" rows="3" maxlength="500" @bind="_avisoMensaje" @bind:event="oninput" placeholder="Lo reciben en su teléfono al instante"></textarea></div>
+                            <button type="button" class="pn-btn pn-btn-primary" disabled="@(_enviando || (_avisoTitulo ?? "").Trim().Length < 2 || (_avisoMensaje ?? "").Trim().Length < 2)" @onclick="EnviarArea">
+                                Enviar a @_areaIds.Length persona(s)
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+
+            @* ---------- Ficha rápida de una persona ---------- *@
+            @if (_ficha != null && _areaIds == null)
+            {
+                var p = _ficha.Persona;
+                var s = _ficha.Servicio;
+                <div class="pn-ficha" @key="p.UsuarioId">
+                    <div class="pn-ficha-head">
+                        <Avatar Url="@Api.Archivo(p.FotoUrl)" Nombre="@p.Nombre" Tam="44" />
+                        <div class="d-flex flex-column" style="flex:1; min-width:0; gap:3px;">
+                            <span class="pn-ficha-nombre">@p.Nombre</span>
+                            <span class="d-flex align-items-center flex-wrap" style="gap:6px;">
+                                @if (s != null && s.Estado is 3 or 7) { <span class="pn-pill tone-live">En servicio</span> }
+                                else if (p.Disponible == true) { <span class="pn-pill tone-ok">Visible</span> }
+                                else { <span class="pn-pill tone-muted">Oculto</span> }
+                                @if (p.HorarioAutomatico == true) { <span class="pn-pill tone-info no-dot">Por horario</span> }
+                            </span>
+                        </div>
+                        <button type="button" class="pn-cerrar" @onclick="CerrarFicha" aria-label="Cerrar ficha">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                    <div class="pn-ficha-body">
+                        <span class="pn-ficha-sub" style="margin-top:-4px;">@(p.RolId == 3 ? (p.Especialidad ?? "Care Partner") : "Cliente")@(string.IsNullOrWhiteSpace(p.Telefono) ? "" : $" · {p.Telefono}")</span>
+
+                        <div class="pn-stats">
+                            <div class="pn-stat"><span class="pn-stat-k">Última señal</span><span class="pn-stat-v">@HaceCuanto(p.UltimaUbicacion)</span></div>
+                            <div class="pn-stat">
+                                <span class="pn-stat-k">Batería</span>
+                                <span class="pn-stat-v" style="color:@(p.Bateria is int b && b <= 15 ? "var(--danger)" : p.Bateria is int b2 && b2 <= 30 ? "var(--warn)" : "var(--adm-ink)");">@(p.Bateria is int bt ? $"{bt}%" : "—")</span>
+                            </div>
+                            <div class="pn-stat"><span class="pn-stat-k">Calificación</span><span class="pn-stat-v">@(p.Calificacion is decimal c ? $"{c:0.0} ★" : "—") <span class="pn-muted" style="font-weight:400;">· @p.Completados</span></span></div>
+                            <div class="pn-stat"><span class="pn-stat-k">Servicios hoy</span><span class="pn-stat-v">@p.ServiciosHoy</span></div>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(p.ContactoEmergenciaNombre))
+                        {
+                            <span class="pn-muted" style="font-size:12px; margin-top:-6px;">Contacto de emergencia: <b style="color:var(--adm-ink-2);">@p.ContactoEmergenciaNombre</b> · @p.ContactoEmergenciaTelefono</span>
+                        }
+
+                        @if (s != null)
+                        {
+                            <a class="adm-card" href="servicios/@s.Id" style="padding:12px 14px; text-decoration:none; color:inherit; display:flex; flex-direction:column; gap:6px; border-radius:14px;">
+                                <span class="d-flex align-items-center" style="gap:8px;">
+                                    <span class="pn-strong" style="flex:1;">@s.TipoServicio</span>
+                                    <span class="pn-pill @EstadoServicio.Tono(s.Estado)">@EstadoServicio.Texto(s.Estado)</span>
+                                </span>
+                                <span class="pn-muted">@s.ClienteNombre · @s.HoraInicio–@s.HoraFin · @(s.Direccion ?? "")</span>
+                                @if (s.Tareas > 0)
+                                {
+                                    <div class="pn-progress"><span style="width:@(100 * s.TareasHechas / s.Tareas)%; background:var(--ok);"></span></div>
+                                    <span class="pn-muted">@s.TareasHechas de @s.Tareas tareas</span>
+                                }
+                            </a>
+                        }
+
+                        <div class="pn-acciones">
+                            @if (_puedeOperar)
+                            {
+                                <button type="button" class="pn-accion @(_formulario == "notificar" ? "is-on" : "")" @onclick='() => AbrirFormulario("notificar")'>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+                                    Notificar
+                                </button>
+                                <button type="button" class="pn-accion @(_formulario == "checkin" ? "is-on" : "")" @onclick='() => AbrirFormulario("checkin")'>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"></path></svg>
+                                    ¿Está bien?
+                                </button>
+                            }
+                            @if (p.RolId == 3)
+                            {
+                                <button type="button" class="pn-accion @(_siguiendo == p.UsuarioId ? "is-on" : "")" @onclick="AlternarSeguir">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path></svg>
+                                    @(_siguiendo == p.UsuarioId ? "Siguiendo" : "Seguir")
+                                </button>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(p.Telefono))
+                            {
+                                <a class="pn-accion" href="tel:@Telefono(p.Telefono)">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"></path></svg>
+                                    Llamar
+                                </a>
+                                <a class="pn-accion" href="@($"https://wa.me/{Telefono(p.Telefono)}")" target="_blank" rel="noopener">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l2.1-5.5A8.4 8.4 0 1 1 21 11.5z"></path></svg>
+                                    WhatsApp
+                                </a>
+                            }
+                            @if (p.RolId == 3)
+                            {
+                                <button type="button" class="pn-accion" @onclick="RecorridoDeHoy">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 3l14 9-14 9V3z"></path></svg>
+                                    Recorrido
+                                </button>
+                            }
+                            <a class="pn-accion" href="@(p.RolId == 3 ? $"care-partners/{p.UsuarioId}" : $"clientes/{p.UsuarioId}")">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                Ver ficha
+                            </a>
+                            @if (s != null)
+                            {
+                                <a class="pn-accion" href="servicios/@s.Id">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                    Servicio
+                                </a>
+                            }
+                            @if (_puedeOperar && p.RolId == 3 && p.Disponible == true)
+                            {
+                                <button type="button" class="pn-accion is-danger" @onclick="Ocultar">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.9 17.9A10 10 0 0 1 12 20c-7 0-11-8-11-8a18.5 18.5 0 0 1 5.1-5.9M9.9 4.2A9 9 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.2 3.2M1 1l22 22"></path></svg>
+                                    Ocultar
+                                </button>
+                            }
+                        </div>
+
+                        @if (_formulario == "notificar")
+                        {
+                            <div class="d-flex flex-column" style="gap:8px;">
+                                <div class="pn-chips">
+                                    @foreach (var (t, m) in Plantillas)
+                                    {
+                                        <button type="button" class="pn-chip" @onclick="() => { _avisoTitulo = t; _avisoMensaje = m; }">@t</button>
+                                    }
+                                </div>
+                                <input class="adm-input" maxlength="120" placeholder="Título" @bind="_avisoTitulo" @bind:event="oninput" />
+                                <textarea class="adm-textarea" rows="3" maxlength="500" placeholder="Mensaje que verá en su teléfono" @bind="_avisoMensaje" @bind:event="oninput"></textarea>
+                                <button type="button" class="pn-btn pn-btn-primary" disabled="@(_enviando || (_avisoTitulo ?? "").Trim().Length < 2 || (_avisoMensaje ?? "").Trim().Length < 2)" @onclick="EnviarNotificacion">Enviar notificación</button>
+                            </div>
+                        }
+                        @if (_formulario == "checkin")
+                        {
+                            <div class="d-flex flex-column" style="gap:8px;">
+                                <span class="pn-muted">Le aparece en pantalla completa con dos botones: <b>Estoy bien</b> o <b>Necesito ayuda</b>. Si pide ayuda o no responde a tiempo, se crea una alerta SOS@(s == null ? " (solo si tiene un servicio activo)" : "").</span>
+                                <label class="pn-label" style="margin:0;">Tiempo para responder</label>
+                                <div class="pn-seg">
+                                    @foreach (var min in new[] { 3, 5, 10, 15 })
+                                    {
+                                        <button type="button" class="@(_checkinMin == min ? "on" : "")" @onclick="() => _checkinMin = min">@min min</button>
+                                    }
+                                </div>
+                                <textarea class="adm-textarea" rows="2" maxlength="500" placeholder="Mensaje (opcional)" @bind="_avisoMensaje" @bind:event="oninput"></textarea>
+                                <button type="button" class="pn-btn pn-btn-primary" disabled="@_enviando" @onclick="EnviarCheckin">Preguntar «¿Estás bien?»</button>
+                            </div>
+                        }
+
+                        @if (_ficha.Avisos.Count > 0)
+                        {
+                            <div class="d-flex flex-column">
+                                <span class="pn-section-title" style="margin-bottom:4px;">Avisos recientes</span>
+                                @foreach (var a in _ficha.Avisos)
+                                {
+                                    <div class="pn-aviso-fila">
+                                        <span class="d-flex flex-column" style="flex:1; min-width:0; gap:1px;">
+                                            <span style="font-weight:600; color:var(--adm-ink-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@a.Titulo</span>
+                                            <span class="pn-muted" style="font-size:11.5px;">@a.Fecha.ToString("dd MMM, h:mm tt")@(a.AdminNombre != null ? $" · {a.AdminNombre}" : "")</span>
+                                        </span>
+                                        @if (a.Tipo == "checkin")
+                                        {
+                                            <span class="pn-pill no-dot @(a.Respuesta switch { "ok" => "tone-ok", "ayuda" => "tone-danger", "vencido" => "tone-danger", _ => "tone-warn" })">
+                                                @(a.Respuesta switch { "ok" => "Está bien", "ayuda" => "Pidió ayuda", "vencido" => "No respondió", _ => "Esperando…" })
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="pn-pill no-dot tone-info">Enviado</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            @* ---------- Reproducción de un recorrido ---------- *@
+            @if (_replay != null)
+            {
+                <div class="pn-replay">
+                    <button type="button" @onclick="AlternarReplay" aria-label="@(_replayJugando ? "Pausa" : "Reproducir")">@(_replayJugando ? "❚❚" : "▶")</button>
+                    <input type="range" min="0" max="1000" value="@((int)(_replayProg * 1000))" @oninput="MoverReplay" aria-label="Posición del recorrido" />
+                    <span style="font-size:12px; min-width:64px; text-align:right;">@_replayHora</span>
+                    @foreach (var v in new[] { 30, 60, 240 })
+                    {
+                        <button type="button" class="@(_replayVel == v ? "on" : "")" @onclick="() => VelocidadReplay(v)">@(v)×</button>
+                    }
+                    <button type="button" @onclick="CerrarReplay" aria-label="Cerrar">×</button>
+                </div>
+            }
+        </div>
+
+        @* ---------- Panel lateral ---------- *@
+        <div class="adm-card overflow-hidden d-flex flex-column" style="min-height:460px; max-height:calc(100vh - 230px);">
+            <div class="pn-card-head" style="padding:12px 14px;">
+                <div class="pn-seg" style="width:100%;">
+                    <button type="button" class="@(_tab == 0 ? "on" : "")" style="flex:1;" @onclick="() => _tab = 0">Alertas @if (TotalAlertas > 0) { <span class="pn-seg-n" style="background:var(--danger); color:#fff;">@TotalAlertas</span> }</button>
+                    <button type="button" class="@(_tab == 1 ? "on" : "")" style="flex:1;" @onclick="() => _tab = 1">En el mapa</button>
+                    <button type="button" class="@(_tab == 2 ? "on" : "")" style="flex:1;" @onclick="() => _tab = 2">Actividad</button>
+                </div>
+            </div>
+            <div style="overflow-y:auto; overscroll-behavior:contain; flex:1;">
+                @if (_tab == 0)
+                {
+                    var sos = Tiempo.AlertasPendientes;
+                    @if (sos.Count == 0 && _alertas.Count == 0)
+                    {
+                        <EstadoVacio Titulo="Todo en orden" Texto="Aquí aparecen los SOS, los servicios que no empezaron a tiempo y quien está en servicio sin señal." Icono="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    }
+                    @foreach (var a in sos)
+                    {
+                        <button type="button" class="pn-alerta-item tone-sos" @key="@($"sos{a.Id}")" @onclick="() => IrA(a.Latitud, a.Longitud, null)">
+                            <i class="pn-dot" style="background:#DC2626; margin-top:5px;"></i>
+                            <span class="pn-who-text" style="flex:1;"><span>SOS · @a.NombreUsuario</span><span class="pn-muted">@(a.EsAutomatica ? "Posible caída" : a.Motivo ?? "Botón SOS") · @a.FechaCreacion.ToString("h:mm tt")</span></span>
+                            <a class="pn-link" href="sos-alertas" @onclick:stopPropagation="true">Atender</a>
+                        </button>
+                    }
+                    @foreach (var a in _alertas)
+                    {
+                        <button type="button" class="pn-alerta-item tone-alerta" @key="@($"{a.Tipo}{a.TrabajoId}")" @onclick="() => IrA(a.Latitud, a.Longitud, a.CuidadorId)">
+                            <i class="pn-dot" style="background:var(--warn); margin-top:5px;"></i>
+                            <span class="pn-who-text" style="flex:1;">
+                                <span>@(a.Tipo == "sin_senal" ? "Sin señal" : "No empezó a tiempo") · @a.Nombre</span>
+                                <span class="pn-muted">@a.TipoServicio · @(a.Tipo == "sin_senal" ? $"última señal {HaceCuanto(a.Desde)}" : $"debía empezar {a.Desde:h:mm tt}")</span>
+                            </span>
+                        </button>
+                    }
+                }
+                else if (_tab == 1)
+                {
+                    @if (_datos == null)
+                    {
+                        <Esqueleto Filas="5" />
+                    }
+                    else if (_datos.Cuidadores.Count + _datos.Servicios.Count == 0)
+                    {
+                        <EstadoVacio Titulo="Nadie en el mapa" Texto="No hay Care Partners visibles ni servicios activos con ubicación en este momento." Icono="M12 21s-7-6.1-7-11a7 7 0 1 1 14 0c0 4.9-7 11-7 11Z" />
+                    }
+                    else
+                    {
+                        @foreach (var c in _datos.Cuidadores)
+                        {
+                            <button type="button" class="pn-map-item" @key="@($"c{c.UsuarioId}")" @onclick="() => AbrirFicha(c.UsuarioId)">
+                                <i class="pn-dot" style="background:@(c.EnServicio ? "#0E7490" : "#059669");"></i>
+                                <span class="pn-who-text" style="flex:1;"><span>@c.Nombre</span><span class="pn-muted">@(c.EnServicio ? "En servicio" : "Disponible") · señal @HaceCuanto(c.UltimaUbicacion)</span></span>
+                                @if (c.Bateria is int b && b <= 20) { <span class="pn-pill tone-warn no-dot">@b%</span> }
+                            </button>
+                        }
+                        @foreach (var s in _datos.Servicios)
+                        {
+                            <button type="button" class="pn-map-item" @key="@($"s{s.Id}")" @onclick="() => AbrirFicha(s.CuidadorId)">
+                                <i class="pn-dot" style="background:#0253A5;"></i>
+                                <span class="pn-who-text"><span>@s.TipoServicio</span><span class="pn-muted">@s.CuidadorNombre → @s.ClienteNombre · @EstadoServicio.Texto(s.Estado)</span></span>
+                            </button>
+                        }
+                    }
+                }
+                else
+                {
+                    @if (_eventos.Count == 0)
+                    {
+                        <span class="pn-muted" style="display:block; padding:14px 18px;">Aquí verás quién se activa, se desactiva, pide ayuda o responde al «¿Estás bien?», en el momento.</span>
+                    }
+                    @foreach (var e in _eventos)
+                    {
+                        <div class="pn-feed-item" @key="e.Id">
+                            <i class="pn-dot" style="background:@e.Color;"></i>
+                            <span style="flex:1; min-width:0;">@e.Texto</span>
+                            <span class="pn-muted" style="font-size:11px;">@e.Hora.ToString("h:mm:ss tt")</span>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .pn-map-item { display:flex; align-items:center; gap:10px; width:100%; padding:11px 16px; border:0; border-bottom:1px solid var(--adm-line-soft); background:#fff; text-align:left; font-family:inherit; font-size:13px; cursor:pointer; transition: background-color 120ms ease; }
+    .pn-map-item:active { background: var(--adm-line-soft); }
+    @@media (hover: hover) and (pointer: fine) { .pn-map-item:hover { background:#F8FAFD; } }
+    @@media (max-width: 991.98px) { .pn-mando > .pn-grid { grid-template-columns: 1fr !important; } }
+</style>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private record Evento(Guid Id, string Texto, string Color, DateTime Hora);
+
+    private static readonly (string Clave, string Texto, string? Color)[] Capas =
+    {
+        ("cuidadores", "Care Partners", "#059669"), ("servicios", "Servicios", "#0253A5"), ("sos", "SOS", "#DC2626"),
+        ("rutas", "Rutas", null), ("geocercas", "Zonas", null), ("estelas", "Estelas", null), ("calor", "Demanda", null)
+    };
+
+    private static readonly (string Titulo, string Mensaje)[] Plantillas =
+    {
+        ("¿Todo bien?", "Hola, ¿todo bien con tu servicio? Si necesitas algo, escríbenos."),
+        ("Llama a soporte", "Por favor comunícate con soporte de CuidApp lo antes posible."),
+        ("Tu cliente te espera", "Tu cliente te está esperando. Avísanos si vas a llegar tarde."),
+        ("Revisa la app", "Tienes una notificación importante en la app de CuidApp."),
+    };
+
+    private readonly Dictionary<string, bool> _capas = new()
+    {
+        ["cuidadores"] = true, ["servicios"] = true, ["sos"] = true, ["rutas"] = true, ["geocercas"] = true, ["estelas"] = true, ["calor"] = false
+    };
+
+    private MapaPanel? _datos;
+    private List<AlertaMapa> _alertas = new();
+    private readonly List<Evento> _eventos = new();
+    private FichaMapa? _ficha;
+    private string? _formulario;
+    private string? _avisoTitulo, _avisoMensaje;
+    private int _checkinMin = 5;
+    private int? _siguiendo;
+    private int _tab;
+    private bool _listo, _conectado, _recargaPendiente, _enviando, _puedeOperar, _dibujando;
+    private int[]? _areaIds;
+    private Timer? _respaldo, _timerAlertas;
+    private DotNetObjectReference<Mapa>? _ref;
+    private int _sosConocidos;
+    private HashSet<string> _alertasConocidas = new();
+
+    // Reproducción
+    private List<PuntoRecorrido>? _replay;
+    private double _replayProg;
+    private string _replayHora = "";
+    private bool _replayJugando;
+    private int _replayVel = 60;
+
+    private int TotalAlertas => Tiempo.AlertasPendientes.Count + _alertas.Count;
+
+    private int? Conteo(string capa) => capa switch
+    {
+        "cuidadores" => _datos?.Cuidadores.Count,
+        "servicios" => _datos?.Servicios.Count,
+        "sos" => _datos?.Sos.Count,
+        _ => null
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthStateTask != null) _puedeOperar = SesionAdmin.PuedeOperar((await AuthStateTask).User);
+        _conectado = Tiempo.Conectado;
+        _sosConocidos = Tiempo.AlertasPendientes.Count;
+        Tiempo.OnDisponibilidadCambio += AlCambiarDisponibilidad;
+        Tiempo.OnUbicacionCambio += AlMoverse;
+        Tiempo.OnAlertaRecibida += AlCambiarSos;
+        Tiempo.OnAlertaAtendida += AlCambiarSos;
+        Tiempo.OnConexionCambio += AlCambiarConexion;
+        Tiempo.OnCheckinRespondido += AlResponderCheckin;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _ref = DotNetObjectReference.Create(this);
+        _listo = true;
+        await Cargar(false);
+        await CargarEstelas();
+        await CargarAlertas(sinSonido: true);
+        _respaldo = new Timer(_ => InvokeAsync(() => Cargar(false)), null, TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(20));
+        _timerAlertas = new Timer(_ => InvokeAsync(async () => { await CargarAlertas(); await CargarEstelas(); }), null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+    }
+
+    private async Task Js(string fn, params object?[] args)
+    {
+        try { await JS.InvokeVoidAsync(fn, args); } catch (JSDisconnectedException) { } catch (JSException ex) { Console.WriteLine($"[Mapa] {fn}: {ex.Message}"); }
+    }
+
+    private async Task Cargar(bool centrar)
+    {
+        var d = await Api.MapaAsync();
+        if (d == null) return;
+        _datos = d;
+        _conectado = Tiempo.Conectado;
+        StateHasChanged();
+        if (_listo) await Js("cuidPanel.mapa", "pn-mapa", d, centrar, _ref);
+    }
+
+    private async Task CargarEstelas()
+    {
+        if (!_capas["estelas"]) return;
+        var puntos = await Api.EstelasAsync(20);
+        if (puntos != null) await Js("cuidPanel.estelas", "pn-mapa", puntos);
+    }
+
+    private async Task CargarAlertas(bool sinSonido = false)
+    {
+        var alertas = await Api.AlertasMapaAsync();
+        if (alertas == null) return;
+        var nuevas = alertas.Where(a => !_alertasConocidas.Contains($"{a.Tipo}{a.TrabajoId}")).ToList();
+        _alertasConocidas = alertas.Select(a => $"{a.Tipo}{a.TrabajoId}").ToHashSet();
+        _alertas = alertas;
+        if (!sinSonido && nuevas.Count > 0)
+        {
+            foreach (var a in nuevas)
+                Registrar(a.Tipo == "sin_senal" ? $"{a.Nombre} está en servicio sin señal" : $"{a.Nombre} no empezó su servicio a tiempo", "#B45309");
+            await Js("cuidPanel.sonar", "alerta");
+        }
+        StateHasChanged();
+    }
+
+    // ---------- Capas
+    private async Task AlternarCapa(string clave)
+    {
+        _capas[clave] = !_capas[clave];
+        await Js("cuidPanel.capas", "pn-mapa", _capas);
+        if (clave == "calor" && _capas["calor"])
+        {
+            var demanda = await Api.DemandaAsync(60);
+            await Js("cuidPanel.calor", "pn-mapa", demanda ?? new());
+            Toasts.Mostrar("Mapa de calor: dónde se pidieron servicios en los últimos 60 días.");
+        }
+        if (clave == "estelas" && _capas["estelas"]) await CargarEstelas();
+    }
+
+    // ---------- Selección (clic en el mapa o en la lista)
+    [JSInvokable]
+    public async Task Seleccionar(string tipo, int id)
+    {
+        switch (tipo)
+        {
+            case "persona":
+                await AbrirFicha(id);
+                break;
+            case "servicio":
+                var s = _datos?.Servicios.FirstOrDefault(x => x.Id == id);
+                if (s != null) await AbrirFicha(s.CuidadorId);
+                break;
+            case "sos":
+                Nav.NavigateTo("sos-alertas");
+                break;
+        }
+    }
+
+    private async Task AbrirFicha(int usuarioId)
+    {
+        _areaIds = null;
+        _formulario = null;
+        _avisoTitulo = _avisoMensaje = null;
+        _ficha = await Api.FichaMapaAsync(usuarioId);
+        StateHasChanged();
+        await Js("cuidPanel.resaltar", "pn-mapa", $"c{usuarioId}");
+        var c = _datos?.Cuidadores.FirstOrDefault(x => x.UsuarioId == usuarioId);
+        if (c != null) await Js("cuidPanel.enfocar", "pn-mapa", c.Latitud, c.Longitud, 15);
+    }
+
+    private async Task CerrarFicha()
+    {
+        _ficha = null;
+        _formulario = null;
+        await Js("cuidPanel.resaltar", "pn-mapa", "");
+    }
+
+    private void AbrirFormulario(string f)
+    {
+        _formulario = _formulario == f ? null : f;
+        _avisoTitulo = _avisoMensaje = null;
+    }
+
+    private async Task IrA(double? lat, double? lng, int? cuidadorId)
+    {
+        if (lat is double la && lng is double lo && (la != 0 || lo != 0)) await Js("cuidPanel.enfocar", "pn-mapa", la, lo, 16);
+        if (cuidadorId is int id) await AbrirFicha(id);
+    }
+
+    // ---------- Acciones sobre la persona
+    private async Task EnviarNotificacion()
+    {
+        if (_ficha == null) return;
+        _enviando = true;
+        var r = await Api.NotificarAsync(new[] { _ficha.Persona.UsuarioId }, _avisoTitulo!.Trim(), _avisoMensaje!.Trim());
+        _enviando = false;
+        Toasts.Mostrar(r);
+        if (!r.Ok) return;
+        Registrar($"Notificación enviada a {_ficha.Persona.Nombre}", "#0253A5");
+        await AbrirFicha(_ficha.Persona.UsuarioId);
+    }
+
+    private async Task EnviarCheckin()
+    {
+        if (_ficha == null) return;
+        _enviando = true;
+        var r = await Api.CheckinAsync(_ficha.Persona.UsuarioId, _checkinMin, string.IsNullOrWhiteSpace(_avisoMensaje) ? null : _avisoMensaje.Trim());
+        _enviando = false;
+        Toasts.Mostrar(r);
+        if (!r.Ok) return;
+        Registrar($"«¿Estás bien?» enviado a {_ficha.Persona.Nombre} ({_checkinMin} min)", "#7C3AED");
+        await AbrirFicha(_ficha.Persona.UsuarioId);
+    }
+
+    private async Task Ocultar()
+    {
+        if (_ficha == null) return;
+        var p = _ficha.Persona;
+        if (!await Confirmacion.PreguntarAsync($"¿Ocultar a {p.Nombre}?",
+                "Dejará de aparecerles a los clientes de inmediato y se apagará su horario automático. Se le avisa en su teléfono y queda en la auditoría.",
+                "Ocultar ahora", peligro: true))
+            return;
+        var r = await Api.OcultarCuidadorAsync(p.UsuarioId);
+        Toasts.Mostrar(r);
+        if (r.Ok) await AbrirFicha(p.UsuarioId);
+    }
+
+    private async Task AlternarSeguir()
+    {
+        if (_ficha == null) return;
+        if (_siguiendo == _ficha.Persona.UsuarioId)
+        {
+            _siguiendo = null;
+            await Js("cuidPanel.dejarDeSeguir", "pn-mapa");
+        }
+        else
+        {
+            _siguiendo = _ficha.Persona.UsuarioId;
+            await Js("cuidPanel.seguir", "pn-mapa", _siguiendo);
+            Toasts.Mostrar($"Siguiendo a {_ficha.Persona.Nombre}. Arrastra el mapa para dejar de seguir.");
+        }
+    }
+
+    [JSInvokable]
+    public Task DejoDeSeguir()
+    {
+        _siguiendo = null;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    // ---------- Recorridos
+    private async Task RecorridoDeHoy()
+    {
+        if (_ficha == null) return;
+        var ahora = DateTime.UtcNow.AddHours(-4);
+        var puntos = _ficha.Servicio is { Estado: 3 or 7 } s
+            ? await Api.RecorridoServicioAsync(s.Id)
+            : await Api.RecorridoCuidadorAsync(_ficha.Persona.UsuarioId, ahora.Date, ahora);
+        if (puntos == null || puntos.Count < 2)
+        {
+            Toasts.Mostrar("Todavía no hay suficientes ubicaciones guardadas para reproducir un recorrido.", false);
+            return;
+        }
+        _replay = puntos;
+        _replayJugando = true;
+        _replayProg = 0;
+        _ficha = null;
+        await Js("cuidPanel.reproducir", "pn-mapa", puntos, _ref);
+    }
+
+    [JSInvokable]
+    public Task ProgresoReplay(double prog, string fechaIso, bool jugando)
+    {
+        _replayProg = prog;
+        _replayJugando = jugando;
+        if (DateTime.TryParse(fechaIso, null, System.Globalization.DateTimeStyles.RoundtripKind, out var f))
+            _replayHora = f.ToString("h:mm tt");
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private Task AlternarReplay() => Js("cuidPanel.controlReproduccion", "pn-mapa", _replayJugando ? "pausa" : "play", 0);
+    private Task MoverReplay(ChangeEventArgs e) => Js("cuidPanel.controlReproduccion", "pn-mapa", "ir", double.Parse(e.Value?.ToString() ?? "0") / 1000);
+    private async Task VelocidadReplay(int v) { _replayVel = v; await Js("cuidPanel.controlReproduccion", "pn-mapa", "velocidad", v); }
+    private async Task CerrarReplay() { _replay = null; await Js("cuidPanel.detenerReproduccion", "pn-mapa"); }
+
+    // ---------- Área dibujada
+    private async Task EmpezarArea()
+    {
+        _ficha = null;
+        _areaIds = null;
+        _dibujando = true;
+        await Js("cuidPanel.dibujarArea", "pn-mapa");
+    }
+
+    private async Task CancelarArea()
+    {
+        _dibujando = false;
+        await Js("cuidPanel.limpiarArea", "pn-mapa");
+    }
+
+    [JSInvokable]
+    public Task AreaDibujada(int[] ids)
+    {
+        _dibujando = false;
+        _areaIds = ids;
+        _avisoTitulo = _avisoMensaje = null;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public Task AreaCancelada()
+    {
+        _dibujando = false;
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private IEnumerable<string> NombresArea() => (_datos?.Cuidadores ?? new()).Where(c => _areaIds!.Contains(c.UsuarioId)).Select(c => c.Nombre.Split(' ')[0]);
+
+    private async Task CerrarArea()
+    {
+        _areaIds = null;
+        await Js("cuidPanel.limpiarArea", "pn-mapa");
+    }
+
+    private async Task EnviarArea()
+    {
+        if (_areaIds is not { Length: > 0 } ids) return;
+        if (!await Confirmacion.PreguntarAsync($"¿Avisar a {ids.Length} Care Partner(s)?", "La notificación les llega al instante a su teléfono.", "Enviar"))
+            return;
+        _enviando = true;
+        var r = await Api.NotificarAsync(ids, _avisoTitulo!.Trim(), _avisoMensaje!.Trim());
+        _enviando = false;
+        Toasts.Mostrar(r);
+        if (!r.Ok) return;
+        Registrar($"Aviso de área enviado a {ids.Length} Care Partner(s)", "#7C3AED");
+        await CerrarArea();
+    }
+
+    private Task PantallaCompleta() => Js("cuidPanel.pantallaCompleta", "#pn-mando");
+
+    // ---------- Eventos en vivo
+    private void RecargarPronto()
+    {
+        if (_recargaPendiente) return;
+        _recargaPendiente = true;
+        _ = InvokeAsync(async () =>
+        {
+            await Task.Delay(350);
+            _recargaPendiente = false;
+            await Cargar(false);
+        });
+    }
+
+    private void AlCambiarDisponibilidad(int cuidadorId, bool disponible)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            var nombre = _datos?.Cuidadores.FirstOrDefault(c => c.UsuarioId == cuidadorId)?.Nombre;
+            RecargarPronto();
+            if (nombre == null)
+            {
+                await Task.Delay(800);
+                nombre = _datos?.Cuidadores.FirstOrDefault(c => c.UsuarioId == cuidadorId)?.Nombre ?? $"Care Partner #{cuidadorId}";
+            }
+            Registrar(disponible ? $"{nombre} se activó" : $"{nombre} se desactivó", disponible ? "#059669" : "#9CA3AF");
+            if (_ficha?.Persona.UsuarioId == cuidadorId) await AbrirFicha(cuidadorId);
+        });
+    }
+
+    private void AlMoverse(int cuidadorId, double lat, double lng)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            var c = _datos?.Cuidadores.FirstOrDefault(x => x.UsuarioId == cuidadorId);
+            if (c == null) return;
+            c.Latitud = lat; c.Longitud = lng; c.UltimaUbicacion = DateTime.UtcNow.AddHours(-4);
+            await Js("cuidPanel.mover", "pn-mapa", cuidadorId, lat, lng);
+        });
+    }
+
+    private void AlCambiarSos()
+    {
+        _ = InvokeAsync(async () =>
+        {
+            var actuales = Tiempo.AlertasPendientes;
+            if (actuales.Count > _sosConocidos)
+            {
+                var nueva = actuales[0];
+                Registrar($"SOS de {nueva.NombreUsuario}", "#DC2626");
+                _tab = 0;
+                await Js("cuidPanel.sonar", "sos");
+                if (nueva.Latitud != 0 || nueva.Longitud != 0) await Js("cuidPanel.enfocar", "pn-mapa", nueva.Latitud, nueva.Longitud, 16);
+            }
+            else if (actuales.Count < _sosConocidos)
+                Registrar("Alerta SOS atendida", "#0253A5");
+            _sosConocidos = actuales.Count;
+            RecargarPronto();
+        });
+    }
+
+    private void AlResponderCheckin(int usuarioId, string nombre, string respuesta)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            switch (respuesta)
+            {
+                case "ok":
+                    Registrar($"{nombre} respondió que está bien", "#059669");
+                    Toasts.Mostrar($"{nombre} respondió que está bien.");
+                    break;
+                case "ayuda":
+                    Registrar($"{nombre} pidió ayuda", "#DC2626");
+                    Toasts.Mostrar($"{nombre} pidió ayuda: se creó una alerta SOS.", false);
+                    await Js("cuidPanel.sonar", "sos");
+                    break;
+                default:
+                    Registrar($"{nombre} no respondió al «¿Estás bien?»", "#DC2626");
+                    Toasts.Mostrar($"{nombre} no respondió a tiempo.", false);
+                    await Js("cuidPanel.sonar", "sos");
+                    break;
+            }
+            if (_ficha?.Persona.UsuarioId == usuarioId) await AbrirFicha(usuarioId);
+        });
+    }
+
+    private void AlCambiarConexion(bool conectado)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            _conectado = conectado;
+            StateHasChanged();
+            if (conectado) await Cargar(false);
+        });
+    }
+
+    private void Registrar(string texto, string color)
+    {
+        _eventos.Insert(0, new Evento(Guid.NewGuid(), texto, color, DateTime.UtcNow.AddHours(-4)));
+        if (_eventos.Count > 40) _eventos.RemoveAt(_eventos.Count - 1);
+        StateHasChanged();
+    }
+
+    // ---------- Utilidades
+    private static string HaceCuanto(DateTime? fecha)
+    {
+        if (fecha == null) return "sin datos";
+        var min = (DateTime.UtcNow.AddHours(-4) - fecha.Value).TotalMinutes;
+        return min < 1 ? "ahora" : min < 60 ? $"hace {min:0} min" : min < 1440 ? $"hace {min / 60:0} h" : fecha.Value.ToString("dd MMM h:mm tt");
+    }
+
+    // Teléfonos de RD guardados sin código de país (8091234567) → 18091234567.
+    private static string Telefono(string? t)
+    {
+        var d = new string((t ?? "").Where(char.IsDigit).ToArray());
+        return d.Length == 10 ? "1" + d : d;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _respaldo?.Dispose();
+        _timerAlertas?.Dispose();
+        Tiempo.OnDisponibilidadCambio -= AlCambiarDisponibilidad;
+        Tiempo.OnUbicacionCambio -= AlMoverse;
+        Tiempo.OnAlertaRecibida -= AlCambiarSos;
+        Tiempo.OnAlertaAtendida -= AlCambiarSos;
+        Tiempo.OnConexionCambio -= AlCambiarConexion;
+        Tiempo.OnCheckinRespondido -= AlResponderCheckin;
+        await Js("cuidPanel.destruir", "pn-mapa");
+        _ref?.Dispose();
+    }
+}

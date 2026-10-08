@@ -1,0 +1,293 @@
+@page "/servicios/{Id:int}"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@inject PanelApiService Api
+@inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
+
+<PageTitle>Servicio #@Id · Cuidapp Admin</PageTitle>
+
+<div class="pn-page">
+    <a class="adm-back" href="servicios">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"></path></svg>
+        Volver a servicios
+    </a>
+
+    @if (_cargando)
+    {
+        <div class="adm-card"><Esqueleto Filas="6" /></div>
+    }
+    else if (_d == null)
+    {
+        <div class="adm-card"><EstadoVacio Titulo="Servicio no encontrado" Texto="Puede que el número no exista." /></div>
+    }
+    else
+    {
+        var s = _d.Servicio;
+        <div class="adm-card adm-card-pad d-flex flex-wrap align-items-center" style="gap:16px 24px;">
+            <div class="d-flex flex-column" style="gap:6px; flex:1; min-width:260px;">
+                <div class="d-flex flex-wrap align-items-center" style="gap:10px;">
+                    <span style="font-size:20px; font-weight:600;">@s.TipoServicio</span>
+                    <span class="pn-pill @EstadoServicio.Tono(s.Estado)">@EstadoServicio.Texto(s.Estado)</span>
+                    @if (s.PagoDisputado) { <span class="pn-pill tone-warn">Pago en disputa</span> }
+                    @if (_d.Sos.Count > 0) { <span class="pn-pill tone-danger">@_d.Sos.Count alerta(s) SOS</span> }
+                </div>
+                <span class="pn-muted" style="font-size:13.5px;">
+                    #@s.Id · @s.Fecha.ToString("dddd d 'de' MMMM yyyy", Es) · @s.HoraInicio – @s.HoraFin · @(s.Direccion ?? "Sin dirección")
+                </span>
+            </div>
+            <div class="d-flex flex-column align-items-end" style="gap:2px;">
+                <span class="pn-muted">Tarifa</span>
+                <span style="font-size:22px; font-weight:600;">RD$ @s.Tarifa.ToString("N2")</span>
+            </div>
+            @if (_puedeOperar && s.Estado is 1 or 2 or 3 or 7)
+            {
+                <div class="d-flex" style="gap:8px; flex-wrap:wrap;">
+                    @if (s.Estado is 3 or 7)
+                    {
+                        <button type="button" class="pn-btn pn-btn-ok" disabled="@_procesando" @onclick="Completar">Dar por completado</button>
+                    }
+                    <button type="button" class="pn-btn pn-btn-danger-soft" disabled="@_procesando" @onclick="Cancelar">Cancelar servicio</button>
+                </div>
+            }
+        </div>
+
+        <div class="pn-grid pn-grid-2">
+            <div class="d-flex flex-column" style="gap:16px; min-width:0;">
+
+                @* Personas *@
+                <div class="pn-grid pn-grid-2-eq">
+                    @Persona("Cliente", s.ClienteNombre, s.ClienteFoto, s.ClienteEmail, s.ClienteTelefono, $"clientes/{s.ClienteId}")
+                    @Persona("Care Partner", s.CuidadorNombre, s.CuidadorFoto, s.CuidadorEmail, s.CuidadorTelefono, $"care-partners/{s.CuidadorId}")
+                </div>
+
+                @* Línea de tiempo *@
+                <div class="adm-card adm-card-pad">
+                    <span class="adm-card-title">Línea de tiempo</span>
+                    <div class="pn-timeline" style="margin-top:10px;">
+                        @foreach (var e in Linea())
+                        {
+                            <div class="pn-tl-item">
+                                <span class="pn-tl-icon @e.Tono"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="@e.Icono"></path></svg></span>
+                                <span class="d-flex flex-column" style="gap:1px; min-width:0;">
+                                    <span class="pn-tl-text">@e.Texto</span>
+                                    <span class="pn-tl-when">@e.Fecha.ToString("dd MMM, h:mm tt", Es)</span>
+                                </span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                @* Chat *@
+                <div class="adm-card adm-card-pad d-flex flex-column" style="gap:12px;">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="adm-card-title">Chat del servicio</span>
+                        <span class="pn-muted">Solo lectura · @_d.Mensajes.Count mensaje(s)</span>
+                    </div>
+                    @if (_d.Mensajes.Count == 0)
+                    {
+                        <span class="pn-muted">No hubo mensajes en este servicio.</span>
+                    }
+                    else
+                    {
+                        <div class="pn-chat">
+                            @foreach (var m in _d.Mensajes)
+                            {
+                                var derecha = m.RemitenteId == s.CuidadorId;
+                                <div class="pn-msg @(derecha ? "is-right" : "")">
+                                    <div class="pn-msg-bubble">
+                                        @if (m.Eliminado)
+                                        {
+                                            <em style="opacity:.7;">Mensaje eliminado: @m.Contenido</em>
+                                        }
+                                        else if (m.Tipo == "imagen" && Api.Archivo(m.UrlArchivo) is { } img)
+                                        {
+                                            <a href="@img" target="_blank" rel="noopener"><img src="@img" alt="Foto enviada en el chat" loading="lazy" /></a>
+                                        }
+                                        else if (m.Tipo == "audio" && Api.Archivo(m.UrlArchivo) is { } aud)
+                                        {
+                                            <audio controls preload="none" src="@aud"></audio>
+                                        }
+                                        else
+                                        {
+                                            @m.Contenido
+                                        }
+                                    </div>
+                                    <span class="pn-msg-meta">@m.RemitenteNombre · @m.FechaEnvio.ToString("dd MMM h:mm tt", Es)</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="d-flex flex-column" style="gap:16px; min-width:0;">
+                @* Tareas *@
+                <div class="adm-card adm-card-pad d-flex flex-column" style="gap:10px;">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="adm-card-title">Tareas</span>
+                        <span class="pn-muted">@_d.Tareas.Count(t => t.Completada) de @_d.Tareas.Count</span>
+                    </div>
+                    @if (_d.Tareas.Count > 0)
+                    {
+                        <div class="pn-progress"><span class="tone-ok" style="width:@(100 * _d.Tareas.Count(t => t.Completada) / _d.Tareas.Count)%; background:var(--ok);"></span></div>
+                    }
+                    @foreach (var t in _d.Tareas)
+                    {
+                        <div class="d-flex align-items-start" style="gap:10px; font-size:13.5px;">
+                            <span class="adm-check-box @(t.Completada ? "on" : "")" style="width:18px; height:18px; margin-top:1px; @(t.Completada ? "background:var(--ok); border-color:var(--ok);" : "")">
+                                @if (t.Completada) { <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"><path d="m5 12 5 5L20 7"></path></svg> }
+                            </span>
+                            <span style="@(t.Completada ? "color:var(--adm-muted);" : "")">@t.Descripcion</span>
+                        </div>
+                    }
+                    @if (_d.Tareas.Count == 0) { <span class="pn-muted">Sin tareas registradas.</span> }
+                </div>
+
+                @* Pago *@
+                <div class="adm-card adm-card-pad d-flex flex-column" style="gap:10px;">
+                    <span class="adm-card-title">Pago al Care Partner</span>
+                    @if (_d.Pagos.Count == 0)
+                    {
+                        <span class="pn-muted">Aún no hay pago. Se crea cuando el cliente confirma que el servicio terminó.</span>
+                    }
+                    @foreach (var p in _d.Pagos)
+                    {
+                        <dl class="pn-kv" style="margin:0; grid-template-columns:110px 1fr;">
+                            <dt>Estado</dt><dd><span class="pn-pill @p.Tono">@p.EstadoTexto</span></dd>
+                            <dt>Tarifa</dt><dd>RD$ @p.Monto.ToString("N2")</dd>
+                            <dt>Propina</dt><dd>RD$ @p.Propina.ToString("N2")</dd>
+                            <dt>Total</dt><dd class="pn-strong">RD$ @((p.Monto + p.Propina).ToString("N2"))</dd>
+                            @if (p.FechaPago is { } fp) { <dt>Pagado</dt><dd>@fp.ToString("dd MMM yyyy, h:mm tt", Es)</dd> }
+                        </dl>
+                    }
+                </div>
+
+                @* Calificaciones *@
+                <div class="adm-card adm-card-pad d-flex flex-column" style="gap:12px;">
+                    <span class="adm-card-title">Calificaciones</span>
+                    @if (_d.Calificaciones.Count == 0) { <span class="pn-muted">Nadie calificó todavía.</span> }
+                    @foreach (var c in _d.Calificaciones)
+                    {
+                        <div class="d-flex flex-column" style="gap:4px;">
+                            <span class="d-flex align-items-center" style="gap:8px;"><Estrellas Valor="c.Puntuacion" /> <span class="pn-muted">por @c.CalificadorNombre</span></span>
+                            @if (!string.IsNullOrWhiteSpace(c.Comentario)) { <span style="font-size:13.5px;">“@c.Comentario”</span> }
+                        </div>
+                    }
+                </div>
+
+                @* Incidencias *@
+                @if (_d.Sos.Count > 0 || _d.Tickets.Count > 0 || !string.IsNullOrWhiteSpace(s.MotivoCancelacion) || !string.IsNullOrWhiteSpace(s.JustificacionFinalizacion))
+                {
+                    <div class="adm-card adm-card-pad d-flex flex-column" style="gap:10px;">
+                        <span class="adm-card-title">Incidencias</span>
+                        @if (!string.IsNullOrWhiteSpace(s.MotivoCancelacion))
+                        {
+                            <div class="pn-callout tone-danger"><span><b>Cancelación:</b> @s.MotivoCancelacion</span></div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(s.JustificacionFinalizacion))
+                        {
+                            <div class="pn-callout tone-muted"><span><b>Nota de cierre:</b> @s.JustificacionFinalizacion</span></div>
+                        }
+                        @foreach (var a in _d.Sos)
+                        {
+                            <a class="pn-callout tone-danger" href="sos-alertas" style="text-decoration:none;">
+                                <span><b>SOS @(a.Origen == "Automatica" ? "automático (posible caída)" : "manual")</b> · @a.TipoUsuario · @a.FechaCreacion.ToString("dd MMM h:mm tt", Es) · @a.Estado@(a.AtendidoPor != null ? $" por {a.AtendidoPor}" : "")</span>
+                            </a>
+                        }
+                        @foreach (var t in _d.Tickets)
+                        {
+                            <a class="pn-callout tone-violet" href="soporte/@t.Id" style="text-decoration:none;">
+                                <span><b>Reporte #@t.Id:</b> @t.Asunto · @t.Categoria</span>
+                            </a>
+                        }
+                    </div>
+                }
+
+                @if (s.Latitud is { } lat && s.Longitud is { } lng)
+                {
+                    <a class="pn-btn pn-btn-quiet" target="_blank" rel="noopener"
+                       href="@($"https://www.google.com/maps?q={lat.ToString(System.Globalization.CultureInfo.InvariantCulture)},{lng.ToString(System.Globalization.CultureInfo.InvariantCulture)}")">
+                        Ver la dirección en Google Maps
+                    </a>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private static readonly System.Globalization.CultureInfo Es = new("es-DO");
+    private DetalleServicio? _d;
+    private bool _cargando = true;
+    private bool _procesando;
+    private bool _puedeOperar;
+
+    private record Evento(DateTime Fecha, string Texto, string Tono, string Icono);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (AuthStateTask != null)
+            _puedeOperar = SesionAdmin.PuedeOperar((await AuthStateTask).User);
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        _cargando = true;
+        _d = await Api.ServicioAsync(Id);
+        _cargando = false;
+    }
+
+    private IEnumerable<Evento> Linea()
+    {
+        var s = _d!.Servicio;
+        var e = new List<Evento> { new(s.FechaCreacion, $"{s.ClienteNombre} solicitó el servicio", "tone-info", "M12 5v14M5 12h14") };
+        if (s.FechaInicioReal is { } ini) e.Add(new(ini, $"{s.CuidadorNombre} inició el servicio con el PIN", "tone-live", "M5 3l14 9-14 9V3z"));
+        e.AddRange(_d.Tareas.Where(t => t.FechaCompletada != null).Select(t => new Evento(t.FechaCompletada!.Value, $"Tarea completada: {t.Descripcion}", "tone-ok", "m5 12 5 5L20 7")));
+        e.AddRange(_d.Actividades.Select(a => new Evento(a.FechaHora, $"Bitácora: {a.Descripcion}", "tone-muted", "M4 6h16M4 12h16M4 18h10")));
+        e.AddRange(_d.Sos.Select(a => new Evento(a.FechaCreacion, $"Alerta SOS ({a.TipoUsuario})", "tone-danger", "M12 9v4m0 4h.01")));
+        if (s.FechaFin is { } fin) e.Add(new(fin, s.Estado == 4 ? "Servicio finalizado" : "El Care Partner marcó el final", "tone-ok", "M20 6 9 17l-5-5"));
+        e.AddRange(_d.Pagos.Where(p => p.FechaPago != null).Select(p => new Evento(p.FechaPago!.Value, $"Pago enviado: RD$ {p.Monto + p.Propina:N2}", "tone-ok", "M2 7h20M2 7v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7")));
+        return e.OrderBy(x => x.Fecha);
+    }
+
+    private RenderFragment Persona(string rol, string nombre, string? foto, string? email, string? tel, string enlace) => __builder =>
+    {
+        <a class="adm-card adm-card-pad d-flex align-items-center" href="@enlace" style="gap:12px; text-decoration:none; color:inherit;">
+            <Avatar Url="@Api.Archivo(foto)" Nombre="@nombre" Tam="46" />
+            <div class="pn-who-text" style="flex:1;">
+                <span class="pn-muted" style="font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em;">@rol</span>
+                <span style="font-size:15px;">@nombre</span>
+                <span class="pn-muted">@(tel ?? "Sin teléfono") · @email</span>
+            </div>
+        </a>
+    };
+
+    private async Task Cancelar()
+    {
+        var motivo = await Confirmacion.PedirMotivoAsync("¿Cancelar este servicio?",
+            "Se avisará al cliente y al Care Partner en la app. Esta acción no se puede deshacer.", "Cancelar servicio");
+        if (motivo == null) return;
+        _procesando = true;
+        var r = await Api.CancelarServicioAsync(Id, motivo);
+        Toasts.Mostrar(r);
+        _procesando = false;
+        if (r.Ok) await Cargar();
+    }
+
+    private async Task Completar()
+    {
+        var motivo = await Confirmacion.PedirMotivoAsync("¿Dar el servicio por completado?",
+            "Úsalo para resolver disputas: el servicio pasa a completado y se crea el pago pendiente al Care Partner.",
+            "Dar por completado", "Justificación", peligro: false);
+        if (motivo == null) return;
+        _procesando = true;
+        var r = await Api.CompletarServicioAsync(Id, motivo);
+        Toasts.Mostrar(r);
+        _procesando = false;
+        if (r.Ok) await Cargar();
+    }
+}

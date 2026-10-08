@@ -1,0 +1,122 @@
+@page "/servicios"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@inject PanelApiService Api
+@inject NavigationManager Nav
+
+<PageTitle>Servicios · Cuidapp Admin</PageTitle>
+
+<div class="pn-page">
+    <div class="pn-toolbar">
+        <div class="pn-seg">
+            <button type="button" class="@(Estado == null ? "on" : "")" @onclick="() => Filtrar(null)">Todos</button>
+            @foreach (var (id, texto) in EstadoServicio.Todos)
+            {
+                <button type="button" class="@(Estado == id ? "on" : "")" @onclick="() => Filtrar(id)">@texto</button>
+            }
+        </div>
+    </div>
+
+    <div class="pn-toolbar">
+        <div class="pn-search pn-grow">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+            <input class="pn-input" type="search" placeholder="Cliente, Care Partner, tipo de servicio o número #" @bind="_buscar" @bind:event="oninput" @onkeydown="TeclaBuscar" aria-label="Buscar servicios" />
+        </div>
+        <label class="pn-muted d-flex align-items-center" style="gap:6px;">Desde <input class="pn-input" type="date" @bind="_desde" @bind:after="Recargar" /></label>
+        <label class="pn-muted d-flex align-items-center" style="gap:6px;">Hasta <input class="pn-input" type="date" @bind="_hasta" @bind:after="Recargar" /></label>
+        @if (_desde != null || _hasta != null || !string.IsNullOrWhiteSpace(_buscar))
+        {
+            <button type="button" class="pn-btn pn-btn-quiet" @onclick="Limpiar">Limpiar filtros</button>
+        }
+    </div>
+
+    <div class="adm-card overflow-hidden">
+        @if (_pagina == null)
+        {
+            <Esqueleto Filas="8" ConAvatar="false" />
+        }
+        else if (_pagina.Filas.Count == 0)
+        {
+            <EstadoVacio Titulo="No hay servicios con estos filtros" Texto="Prueba con otro estado o amplía el rango de fechas."
+                         Icono="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
+        }
+        else
+        {
+            <div class="pn-table-wrap">
+                <table class="pn-table">
+                    <thead>
+                        <tr><th>#</th><th>Servicio</th><th>Cuándo</th><th>Cliente</th><th>Care Partner</th><th>Estado</th><th class="pn-num">Tarifa</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in _pagina.Filas)
+                        {
+                            <tr class="pn-row-link" @onclick='() => Nav.NavigateTo($"servicios/{s.Id}")'>
+                                <td class="pn-muted">#@s.Id</td>
+                                <td>
+                                    <div class="d-flex flex-column" style="gap:3px;">
+                                        <span class="pn-strong">@s.TipoServicio</span>
+                                        <span class="d-flex flex-wrap" style="gap:4px;">
+                                            @if (s.TieneSos) { <span class="pn-flag tone-danger">SOS</span> }
+                                            @if (s.PagoDisputado) { <span class="pn-flag tone-warn">Pago en disputa</span> }
+                                            @if (s.RechazadoPorCliente) { <span class="pn-flag tone-violet">Cliente no confirmó</span> }
+                                        </span>
+                                    </div>
+                                </td>
+                                <td style="white-space:nowrap;">@s.Fecha.ToString("ddd dd MMM", Es)<br /><span class="pn-muted">@s.HoraInicio – @s.HoraFin</span></td>
+                                <td>@s.ClienteNombre</td>
+                                <td>@s.CuidadorNombre</td>
+                                <td><span class="pn-pill @EstadoServicio.Tono(s.Estado)">@EstadoServicio.Texto(s.Estado)</span></td>
+                                <td class="pn-num pn-strong">RD$ @s.Tarifa.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <Paginador Pagina="_numPagina" Tamano="Tamano" Total="_pagina.Total" PaginaCambiada="IrPagina" />
+        }
+    </div>
+</div>
+
+@code {
+    private const int Tamano = 20;
+    private static readonly System.Globalization.CultureInfo Es = new("es-DO");
+
+    [SupplyParameterFromQuery(Name = "estado")] public int? Estado { get; set; }
+
+    private Pagina<ServicioFila>? _pagina;
+    private int _numPagina = 1;
+    private string? _buscar;
+    private DateTime? _desde, _hasta;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _numPagina = 1;
+        await Recargar();
+    }
+
+    private void Filtrar(int? estado) => Nav.NavigateTo(estado == null ? "servicios" : $"servicios?estado={estado}");
+
+    private async Task Recargar()
+    {
+        _pagina = null;
+        _pagina = await Api.ServiciosAsync(Estado, _desde, _hasta, _buscar, _numPagina, Tamano) ?? new();
+    }
+
+    private async Task IrPagina(int p)
+    {
+        _numPagina = p;
+        await Recargar();
+    }
+
+    private async Task TeclaBuscar(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter") return;
+        _numPagina = 1;
+        await Recargar();
+    }
+
+    private async Task Limpiar()
+    {
+        _buscar = null; _desde = null; _hasta = null; _numPagina = 1;
+        await Recargar();
+    }
+}

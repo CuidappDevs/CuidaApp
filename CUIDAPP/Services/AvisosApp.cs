@@ -224,6 +224,39 @@ namespace CUIDAPP.Services
             Avisar(Localizador.T("notif_pago_titulo"), Localizador.F("notif_pago_texto", monto), "pago", trabajoId > 0 ? trabajoId : null, NotificacionDestino.Dinero);
         }
 
+        // ---------- 9. Notificación directa del equipo (centro de mando del panel)
+        public static void AvisoDirecto(string titulo, string mensaje)
+        {
+            if (UsuarioId == 0 || string.IsNullOrWhiteSpace(mensaje))
+                return;
+            Avisar(string.IsNullOrWhiteSpace(titulo) ? Localizador.T("notif_aviso_equipo") : titulo, mensaje, "aviso", null, null);
+        }
+
+        // ---------- 8. Horario automático: empezó o terminó (el servidor cambió la visibilidad)
+        public static void CambioPorHorario(bool visible)
+        {
+            if (!EsCuidador || !EstadoCuidador.HorarioAutomatico)
+                return;
+            Recordatorios.QuitarAvisoHorarioCercano(visible);
+            if (visible)
+                Avisar(Localizador.T("notif_horario_inicio_titulo"), Localizador.T("notif_horario_inicio_texto_corto"), "trabajo", null, null);
+            else
+                Avisar(Localizador.T("notif_horario_fin_titulo"), Localizador.T("notif_horario_fin_texto"), "trabajo", null, null);
+        }
+
+        // ---------- 7. Aviso masivo del equipo de CuidApp (panel administrativo)
+        // El texto lo escribe el administrador, así que llega tal cual (no se traduce).
+        // Si el aviso va para un idioma, solo lo muestran las apps que están en ese idioma.
+        public static void AvisoGeneral(int destino, string? idioma, string titulo, string mensaje)
+        {
+            var rol = Preferences.Default.Get("RolId", 0);
+            if (UsuarioId == 0 || (destino != 0 && destino != rol) || string.IsNullOrWhiteSpace(mensaje))
+                return;
+            if (!string.IsNullOrEmpty(idioma) && idioma != Localizador.Instancia.Codigo)
+                return;
+            Avisar(string.IsNullOrWhiteSpace(titulo) ? Localizador.T("notif_aviso_equipo") : titulo, mensaje, "aviso", null, null);
+        }
+
         // ---------- 6. Soporte respondió / cambió el estado del reporte
         public static void TicketActualizado(int ticketId, bool respuesta, int? estado, string? asunto)
         {

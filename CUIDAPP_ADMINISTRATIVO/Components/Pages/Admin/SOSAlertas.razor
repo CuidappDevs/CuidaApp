@@ -1,132 +1,207 @@
 @page "/sos-alertas"
-@inject SosNotificationService SosService
-@inject HttpClient Http
-@inject NavigationManager Nav
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
 @implements IDisposable
+@inject SosNotificationService SosService
+@inject PanelApiService Api
+@inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
 
-<PageTitle>Emergencias SOS - CuidApp Admin</PageTitle>
+<PageTitle>Emergencias SOS · Cuidapp Admin</PageTitle>
 
-<div style="padding:24px; max-width:900px;">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
-        <div>
-            <h2 style="margin:0; font-size:20px; font-weight:600;">Emergencias SOS</h2>
-            <p style="margin:4px 0 0; color:#6B7280; font-size:13px;">Alertas de emergencia recibidas en tiempo real</p>
+<div class="pn-page">
+    <div class="pn-toolbar">
+        <div class="pn-seg">
+            <button type="button" class="@(_vista == 0 ? "on" : "")" @onclick="() => CambiarVista(0)">
+                Activas <span class="pn-seg-n">@SosService.AlertasPendientes.Count</span>
+            </button>
+            <button type="button" class="@(_vista == 1 ? "on" : "")" @onclick="() => CambiarVista(1)">Historial</button>
         </div>
-        <span style="background:#FEE2E2; color:#991B1B; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:600;">
-            @SosService.AlertasPendientes.Count activa(s)
-        </span>
+        <span class="pn-grow"></span>
+        <button type="button" class="pn-btn pn-btn-quiet" @onclick="Recargar">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"></path></svg>
+            Actualizar
+        </button>
     </div>
 
-    @if (SosService.AlertasPendientes.Count == 0)
+    @if (_vista == 0)
     {
-        <div style="text-align:center; padding:60px 20px; background:#F9FAFB; border-radius:12px; border:1px dashed #D1D5DB;">
-            <div style="font-size:48px; margin-bottom:12px;">✅</div>
-            <h3 style="margin:0; color:#374151; font-size:16px;">No hay alertas SOS activas</h3>
-            <p style="margin:8px 0 0; color:#9CA3AF; font-size:13px;">Las emergencias aparecerán aquí en tiempo real cuando un cliente o cuidador presione el botón SOS.</p>
-        </div>
+        var alertas = SosService.AlertasPendientes;
+        @if (alertas.Count == 0)
+        {
+            <div class="adm-card">
+                <EstadoVacio Titulo="No hay emergencias activas"
+                             Texto="Cuando un cliente o un Care Partner presione el botón SOS, o la app detecte una posible caída, la alerta aparecerá aquí al instante."
+                             Icono="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </div>
+        }
+        else
+        {
+            <div class="d-flex flex-column" style="gap:14px;">
+                @foreach (var a in alertas)
+                {
+                    <div class="adm-card" style="border:1.5px solid #FCA5A5; box-shadow:0 8px 24px -12px rgba(220,38,38,.35);" @key="a.Id">
+                        <div class="d-flex flex-wrap" style="gap:18px; padding:20px 22px;">
+                            <div class="pn-kpi-icon" style="width:46px; height:46px; border-radius:14px; background:var(--danger-soft); color:var(--danger);">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>
+                            </div>
+                            <div class="d-flex flex-column" style="flex:1; min-width:240px; gap:8px;">
+                                <div class="d-flex flex-wrap align-items-center" style="gap:8px;">
+                                    <span style="font-size:16px; font-weight:600;">@a.NombreUsuario</span>
+                                    <span class="pn-pill tone-muted no-dot">@a.TipoUsuario</span>
+                                    @if (a.EsAutomatica)
+                                    {
+                                        <span class="pn-pill tone-danger">Posible caída · detección automática</span>
+                                    }
+                                    <span class="pn-muted">hace @Hace(a.FechaCreacion) · @a.FechaCreacion.ToString("HH:mm:ss")</span>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(a.Motivo))
+                                {
+                                    <div class="pn-callout tone-muted" style="padding:10px 12px;">@a.Motivo</div>
+                                }
+
+                                <dl class="pn-kv" style="margin:4px 0 0;">
+                                    <dt>Servicio</dt>
+                                    <dd><a class="pn-link" href="servicios/@a.TrabajoId">#@a.TrabajoId · ver detalle</a></dd>
+                                    @if (!string.IsNullOrEmpty(a.EmailUsuario))
+                                    {
+                                        <dt>Correo</dt><dd>@a.EmailUsuario</dd>
+                                    }
+                                    <dt>Contacto de emergencia</dt>
+                                    <dd>
+                                        @if (!string.IsNullOrEmpty(a.ContactoNombre) || !string.IsNullOrEmpty(a.ContactoTelefono))
+                                        {
+                                            <span class="pn-strong">@a.ContactoNombre</span>
+                                            @if (!string.IsNullOrEmpty(a.ContactoTelefono))
+                                            {
+                                                <text> · </text><a class="pn-link" href="tel:@a.ContactoTelefono">@a.ContactoTelefono</a>
+                                            }
+                                            @if (!string.IsNullOrEmpty(a.ContactoEmail))
+                                            {
+                                                <text> · @a.ContactoEmail</text>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span style="color:var(--warn);">No tiene contacto de emergencia registrado</span>
+                                        }
+                                    </dd>
+                                    <dt>Ubicación</dt>
+                                    <dd>
+                                        @a.Latitud.ToString("F5", System.Globalization.CultureInfo.InvariantCulture), @a.Longitud.ToString("F5", System.Globalization.CultureInfo.InvariantCulture)
+                                        · <a class="pn-link" target="_blank" rel="noopener" href="@($"https://www.google.com/maps?q={a.Latitud.ToString(System.Globalization.CultureInfo.InvariantCulture)},{a.Longitud.ToString(System.Globalization.CultureInfo.InvariantCulture)}")">Abrir en Google Maps</a>
+                                    </dd>
+                                </dl>
+                            </div>
+                            <div class="d-flex flex-column" style="gap:8px; flex:none;">
+                                <button type="button" class="pn-btn pn-btn-ok" disabled="@(_procesando == a.Id)" @onclick="() => Atender(a)">Marcar como atendida</button>
+                                <button type="button" class="pn-btn pn-btn-quiet" disabled="@(_procesando == a.Id)" @onclick="() => Descartar(a)">Falsa alarma</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
     }
     else
     {
-        @foreach (var alerta in SosService.AlertasPendientes.OrderByDescending(a => a.FechaCreacion))
-        {
-            <div style="background:white; border:2px solid #C62828; border-radius:12px; padding:20px; margin-bottom:16px; box-shadow: 0 4px 12px rgba(198,40,40,0.15);">
-                <div style="display:flex; align-items:start; justify-content:space-between;">
-                    <div style="display:flex; gap:14px;">
-                        <div style="width:48px; height:48px; background:#FEE2E2; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;">
-                            🚨
-                        </div>
-                        <div>
-                            <div style="font-size:16px; font-weight:600; color:#111827;">@alerta.NombreUsuario</div>
-                            @if (alerta.EsAutomatica)
+        <div class="adm-card overflow-hidden">
+            @if (_historial == null)
+            {
+                <Esqueleto Filas="5" ConAvatar="false" />
+            }
+            else if (_historial.Count == 0)
+            {
+                <EstadoVacio Titulo="Sin alertas anteriores" Texto="Aquí quedan las alertas atendidas o descartadas." />
+            }
+            else
+            {
+                <div class="pn-table-wrap">
+                    <table class="pn-table">
+                        <thead><tr><th>Fecha</th><th>Persona</th><th>Origen</th><th>Servicio</th><th>Resultado</th><th>Atendida por</th></tr></thead>
+                        <tbody>
+                            @foreach (var a in Paginador.Cortar(_historial, _pagina, 15))
                             {
-                                <div style="margin-top:4px;">
-                                    <span style="background:#C62828; color:white; padding:2px 8px; border-radius:10px; font-weight:700; font-size:11px;">⚠ DETECCIÓN AUTOMÁTICA · Posible caída</span>
-                                </div>
+                                <tr>
+                                    <td class="pn-num" style="text-align:left;">@a.FechaCreacion.ToString("dd MMM yyyy, HH:mm")</td>
+                                    <td><span class="pn-strong">@a.NombreUsuario</span> <span class="pn-muted">· @a.TipoUsuario</span></td>
+                                    <td>@(a.EsAutomatica ? "Caída detectada" : "Botón SOS")</td>
+                                    <td><a class="pn-link" href="servicios/@a.TrabajoId">#@a.TrabajoId</a></td>
+                                    <td><span class="pn-pill @(a.Estado == "Atendida" ? "tone-ok" : "tone-muted")">@a.Estado</span></td>
+                                    <td>@(a.AtendidoPor ?? "—") @if (a.FechaAtencion is { } f) { <span class="pn-muted">· @f.ToString("HH:mm")</span> }</td>
+                                </tr>
                             }
-                            <div style="font-size:13px; color:#6B7280; margin-top:2px;">
-                                <span style="background:#FEF3C7; color:#92400E; padding:2px 8px; border-radius:10px; font-weight:600; font-size:11px;">@alerta.TipoUsuario</span>
-                                &nbsp;· Trabajo #@alerta.TrabajoId
-                                &nbsp;· @alerta.FechaCreacion.ToString("HH:mm:ss")
-                            </div>
-                            @if (!string.IsNullOrEmpty(alerta.EmailUsuario))
-                            {
-                                <div style="font-size:12px; color:#6B7280; margin-top:4px;">📧 @alerta.EmailUsuario</div>
-                            }
-                            @if (!string.IsNullOrEmpty(alerta.ContactoNombre) || !string.IsNullOrEmpty(alerta.ContactoTelefono))
-                            {
-                                <div style="font-size:12px; color:#374151; margin-top:4px;">
-                                    👪 Contacto de emergencia: <b>@alerta.ContactoNombre</b>
-                                    @if (!string.IsNullOrEmpty(alerta.ContactoTelefono)) { <span>· 📞 @alerta.ContactoTelefono</span> }
-                                    @if (!string.IsNullOrEmpty(alerta.ContactoEmail)) { <span>· ✉ @alerta.ContactoEmail</span> }
-                                </div>
-                            }
-                            else if (alerta.EsAutomatica)
-                            {
-                                <div style="font-size:12px; color:#B45309; margin-top:4px;">👪 Este cuidador no tiene contacto de emergencia registrado.</div>
-                            }
-                            @if (!string.IsNullOrEmpty(alerta.Motivo))
-                            {
-                                <div style="font-size:13px; color:#374151; margin-top:6px; background:#F8FAFC; padding:8px 12px; border-radius:8px;">@alerta.Motivo</div>
-                            }
-                            <div style="font-size:12px; color:#9CA3AF; margin-top:6px;">
-                                📍 @alerta.Latitud.ToString("F6"), @alerta.Longitud.ToString("F6")
-                                &nbsp;· <a href="https://www.google.com/maps?q=@alerta.Latitud,@alerta.Longitud" target="_blank" style="color:#2563EB;">Ver en mapa</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="display:flex; gap:8px; flex-shrink:0;">
-                        <button style="background:#16A34A; color:white; border:none; padding:8px 16px; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer;" @onclick="() => AtenderAlerta(alerta)">Atender</button>
-                        <button style="background:#F3F4F6; color:#374151; border:1px solid #D1D5DB; padding:8px 16px; border-radius:8px; font-weight:600; font-size:13px; cursor:pointer;" @onclick="() => DescartarAlerta(alerta)">Descartar</button>
-                    </div>
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-        }
+                <Paginador Pagina="_pagina" Tamano="15" Total="_historial.Count" PaginaCambiada="p => _pagina = p" />
+            }
+        </div>
     }
 </div>
 
 @code {
-    protected override void OnInitialized()
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private int _vista;
+    private int _pagina = 1;
+    private int? _procesando;
+    private string _nombreAdmin = "Administrador";
+    private List<SosAlerta>? _historial;
+
+    protected override async Task OnInitializedAsync()
     {
-        SosService.OnAlertaRecibida += OnAlertaCambiada;
-        SosService.OnAlertaAtendida += OnAlertaCambiada;
+        SosService.OnAlertaRecibida += Refrescar;
+        SosService.OnAlertaAtendida += Refrescar;
+        if (AuthStateTask != null)
+            _nombreAdmin = (await AuthStateTask).User.FindFirst(ClaimTypes.Name)?.Value ?? _nombreAdmin;
     }
 
-    private void OnAlertaCambiada()
+    private void Refrescar() => InvokeAsync(StateHasChanged);
+
+    private async Task CambiarVista(int v)
     {
-        InvokeAsync(StateHasChanged);
+        _vista = v;
+        if (v == 1) { _historial = null; _pagina = 1; _historial = await Api.SosHistorialAsync() ?? new(); }
     }
 
-    private async Task AtenderAlerta(SosAlerta alerta)
+    private async Task Recargar()
     {
-        try
-        {
-            await Http.PutAsJsonAsync($"sos/{alerta.Id}/atender", new { AtendidoPor = "Admin Panel" });
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error atendiendo SOS: {ex.Message}");
-        }
-
-        SosService.MarcarAtendida(alerta.Id);
+        await SosService.RecargarAsync();
+        if (_vista == 1) await CambiarVista(1);
+        Toasts.Mostrar("Alertas actualizadas.");
     }
 
-    private async Task DescartarAlerta(SosAlerta alerta)
+    private async Task Atender(SosAlerta a)
     {
-        try
-        {
-            await Http.PutAsJsonAsync($"sos/{alerta.Id}/descartar", new { });
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error descartando SOS: {ex.Message}");
-        }
+        if (!await Confirmacion.PreguntarAsync("¿Marcar como atendida?",
+                $"Confirma que ya se contactó a {a.NombreUsuario} o a su contacto de emergencia. Quedará registrada a tu nombre.", "Marcar atendida"))
+            return;
+        _procesando = a.Id;
+        Toasts.Mostrar(await SosService.AtenderAsync(a.Id, _nombreAdmin));
+        _procesando = null;
+    }
 
-        SosService.MarcarAtendida(alerta.Id);
+    private async Task Descartar(SosAlerta a)
+    {
+        if (!await Confirmacion.PreguntarAsync("¿Es una falsa alarma?",
+                $"La alerta de {a.NombreUsuario} saldrá de la lista de activas y quedará en el historial como descartada.", "Descartar alerta", peligro: true))
+            return;
+        _procesando = a.Id;
+        Toasts.Mostrar(await SosService.DescartarAsync(a.Id));
+        _procesando = null;
+    }
+
+    private static string Hace(DateTime fecha)
+    {
+        // Las fechas del servidor están en hora de RD (UTC-4).
+        var min = (DateTime.UtcNow.AddHours(-4) - fecha).TotalMinutes;
+        return min < 1 ? "menos de 1 min" : min < 60 ? $"{min:0} min" : min < 1440 ? $"{min / 60:0} h" : $"{min / 1440:0} d";
     }
 
     public void Dispose()
     {
-        SosService.OnAlertaRecibida -= OnAlertaCambiada;
-        SosService.OnAlertaAtendida -= OnAlertaCambiada;
+        SosService.OnAlertaRecibida -= Refrescar;
+        SosService.OnAlertaAtendida -= Refrescar;
     }
 }

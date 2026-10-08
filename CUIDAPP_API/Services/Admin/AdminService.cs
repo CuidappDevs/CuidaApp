@@ -373,7 +373,8 @@ namespace CUIDAPP_API.Services.Admin
                     NombreCompleto = reader["NombreCompleto"] as string ?? "",
                     Email = reader["Email"] as string ?? "",
                     FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
-                    IsActive = Convert.ToBoolean(reader["IsActive"])
+                    IsActive = Convert.ToBoolean(reader["IsActive"]),
+                    NivelAdmin = Convert.ToInt32(reader["NivelAdmin"])
                 });
             }
 

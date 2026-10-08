@@ -4,6 +4,7 @@ namespace CUIDAPP.Services
     {
         public static void Iniciar()
         {
+            RastreoUbicacion.Iniciar();
 #if ANDROID
             try
             {
@@ -48,6 +49,7 @@ namespace CUIDAPP.Services
 
         public static void Detener()
         {
+            RastreoUbicacion.Detener();
 #if ANDROID
             try
             {

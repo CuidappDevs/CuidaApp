@@ -1,0 +1,37 @@
+@* Gráfico de barras en HTML/CSS (sin librerías). Cada barra muestra su valor al pasar el mouse. *@
+<div class="pn-chart" style="--alto:@(Alto)px;">
+    @if (Puntos.Count == 0 || Puntos.All(p => p.Valor == 0))
+    {
+        <div class="pn-chart-empty">@Vacio</div>
+    }
+    <div class="pn-chart-bars" role="img" aria-label="@Titulo">
+        @for (var i = 0; i < Puntos.Count; i++)
+        {
+            var p = Puntos[i];
+            // Con muchos días se muestra una etiqueta cada tantas barras (siempre la última).
+            var conEtiqueta = Puntos.Count <= 16 || i % (int)Math.Ceiling(Puntos.Count / 12.0) == 0 || i == Puntos.Count - 1;
+            var pct = Max == 0 ? 0 : (double)p.Valor / (double)Max * 100;
+            <div class="pn-chart-col" title="@p.Etiqueta: @Formato(p.Valor)">
+                <span class="pn-chart-val">@(p.Valor == 0 || Puntos.Count > 31 ? "" : Formato(p.Valor))</span>
+                <div class="pn-chart-bar @(p.Resaltar ? "is-hl" : "")" style="height:@(Math.Max(pct, p.Valor > 0 ? 3 : 0).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))%;"></div>
+                <span class="pn-chart-lbl">@(conEtiqueta ? p.EtiquetaCorta : "")</span>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    public record Punto(string Etiqueta, string EtiquetaCorta, decimal Valor, bool Resaltar = false);
+
+    [Parameter] public List<Punto> Puntos { get; set; } = new();
+    [Parameter] public int Alto { get; set; } = 160;
+    [Parameter] public string Titulo { get; set; } = "";
+    [Parameter] public string Vacio { get; set; } = "Sin datos en este período";
+    [Parameter] public bool Moneda { get; set; }
+
+    private decimal Max => Puntos.Count == 0 ? 0 : Puntos.Max(p => p.Valor);
+
+    private string Formato(decimal v) => Moneda
+        ? (v >= 1000 ? $"{v / 1000:0.#}k" : v.ToString("0"))
+        : v.ToString("0");
+}

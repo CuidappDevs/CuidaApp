@@ -1,0 +1,13 @@
+@* Calificación en estrellas (1–5). *@
+<span class="pn-stars" aria-label="@Valor de 5 estrellas" title="@Valor.ToString("0.#") de 5">
+    @for (var i = 1; i <= 5; i++)
+    {
+        var lleno = Valor >= i - 0.25m;
+        <svg width="@Tam" height="@Tam" viewBox="0 0 24 24" class="@(lleno ? "on" : "")"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"></path></svg>
+    }
+</span>
+
+@code {
+    [Parameter] public decimal Valor { get; set; }
+    [Parameter] public int Tam { get; set; } = 14;
+}

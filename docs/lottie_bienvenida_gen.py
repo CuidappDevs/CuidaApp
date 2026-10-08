@@ -410,9 +410,35 @@ def a_seguridad():
     c.append(capa([grupo(path_shapes(I['corazon'], esc, -12 * esc, -12 * esc) + [fill(BLANCO)])], ks(p=est([256, 256, 0]), s=late), nombre='corazon'))
     animacion('seguridad', c, T)
 
+def a_ayuda():
+    """Centro de ayuda: globo de chat que aparece con puntos "escribiendo" y una respuesta con check."""
+    c = []
+    c += halo(256, 250, 150, AZUL_SUAVE, 30, 60, T)
+    # Globo grande (pregunta) con su colita
+    globo = [grupo([rect(0, 0, 300, 190, 60), fill(AZUL)]),
+             grupo(path_shapes("M-70 80 L-110 140 L-20 92 Z", 1, 0, 0) + [fill(AZUL)])]
+    c.append(capa(globo, ks(p=est([236, 210, 0]), s=pop(0, 16)), nombre='globo'))
+    # Tres puntos que rebotan en ola (bucle)
+    for k in range(3):
+        frames = []
+        t = 14 + k * 5
+        while t < T:
+            frames += [(t, [180 + k * 56, 210, 0]), (t + 7, [180 + k * 56, 188, 0]), (t + 14, [180 + k * 56, 210, 0])]
+            t += 30
+        c.append(capa([grupo([elipse(0, 0, 34), fill(BLANCO)])],
+                      ks(p=kf(frames, EASE_IO), s=pop(10 + k * 3, 12)), nombre=f'punto{k}'))
+    # Globo de respuesta con check
+    resp = [grupo([elipse(0, 4, 120), fill(hexc('#0A2F41', 0.12))]), grupo([elipse(0, 0, 120), fill(BLANCO)])]
+    c.append(capa(resp, ks(p=est([360, 352, 0]), s=pop(34, 16)), nombre='respuesta'))
+    esc = 70 / 24
+    chk = grupo(path_shapes(I['check'], esc, -12 * esc, -12 * esc) + [trim(kf([(46, 0), (60, 100)], EASE_OUT)), stroke(VERDE, 11)])
+    c.append(capa([chk], ks(p=est([360, 352, 0])), nombre='check'))
+    c += destellos(300, 280, 200, 58, T, n=5, color=AMBAR)
+    animacion('ayuda', c, T)
+
 a_bienvenida('bienvenida_cliente', con_confeti=False)
 a_bienvenida('bienvenida_cuidador', con_confeti=True)
 a_servicios(); a_verificado(); a_seguimiento(); a_califica()
-a_disponible(); a_solicitud(); a_pin(); a_cobro(); a_seguridad()
+a_disponible(); a_solicitud(); a_pin(); a_cobro(); a_seguridad(); a_ayuda()
 for f in sorted(os.listdir(SALIDA)):
     print(f'{os.path.getsize(os.path.join(SALIDA, f)):>7}  {f}')

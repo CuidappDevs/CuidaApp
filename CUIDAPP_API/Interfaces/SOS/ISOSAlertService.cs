@@ -10,5 +10,6 @@ namespace CUIDAPP_API.Interfaces.SOS
         Task<SOSAlertaDto?> ObtenerAlertaPorIdAsync(int id);
         Task<bool> AtenderAlertaAsync(int id, AtenderSOSDto dto);
         Task<bool> DescartarAlertaAsync(int id);
+        Task<IEnumerable<SOSAlertaDto>> ObtenerHistorialAsync(int top);
     }
 }

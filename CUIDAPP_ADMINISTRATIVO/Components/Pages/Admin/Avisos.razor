@@ -1,0 +1,202 @@
+@page "/avisos"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@inject PanelApiService Api
+@inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
+
+<PageTitle>Avisos masivos · Cuidapp Admin</PageTitle>
+
+<div class="pn-page">
+    <div class="pn-grid pn-grid-2">
+        <div class="adm-card adm-card-pad d-flex flex-column" style="gap:14px;">
+            <div class="d-flex flex-column" style="gap:2px;">
+                <span class="adm-card-title">Nuevo aviso</span>
+                <span class="adm-card-sub">Llega como notificación a quienes tengan la app abierta o en segundo plano, y queda en su lista de notificaciones.</span>
+            </div>
+
+            <div class="d-flex flex-wrap" style="gap:14px 24px;">
+                <div>
+                    <span class="pn-label">Para</span>
+                    <div class="pn-seg">
+                        <button type="button" class="@(_destino == 0 ? "on" : "")" @onclick="() => _destino = 0">Todos</button>
+                        <button type="button" class="@(_destino == 2 ? "on" : "")" @onclick="() => _destino = 2">Clientes</button>
+                        <button type="button" class="@(_destino == 3 ? "on" : "")" @onclick="() => _destino = 3">Care Partners</button>
+                    </div>
+                </div>
+                <div>
+                    <span class="pn-label">Idioma de la app</span>
+                    <div class="pn-seg">
+                        <button type="button" class="@(_idioma == null ? "on" : "")" @onclick="() => _idioma = null">Todos</button>
+                        @foreach (var (codigo, nombre) in Idiomas.Todos)
+                        {
+                            <button type="button" class="@(_idioma == codigo ? "on" : "")" @onclick="() => _idioma = codigo">@nombre</button>
+                        }
+                    </div>
+                </div>
+            </div>
+            <span class="pn-hint" style="margin-top:-6px;">
+                @(_idioma == null
+                    ? "Lo reciben todos sin importar el idioma. Si tienes el texto en varios idiomas, envía un aviso por idioma."
+                    : $"Solo lo reciben quienes tienen la app en {Idiomas.Nombre(_idioma)!.ToLowerInvariant()}. Escríbelo en ese idioma.")
+            </span>
+
+            <div>
+                <label class="pn-label" for="av-t">Título</label>
+                <input id="av-t" class="adm-input" maxlength="120" placeholder="Ej.: Mantenimiento programado" @bind="_titulo" @bind:event="oninput" />
+            </div>
+            <div>
+                <label class="pn-label" for="av-m">Mensaje</label>
+                <textarea id="av-m" class="adm-textarea" rows="4" maxlength="500" placeholder="Escribe el mensaje tal como lo leerán en el teléfono" @bind="_mensaje" @bind:event="oninput"></textarea>
+                <span class="pn-hint">@((_mensaje ?? "").Length) / 500 · se envía tal cual, la app no lo traduce</span>
+            </div>
+
+            @* Vista previa como notificación de Android *@
+            <div>
+                <span class="pn-label">Vista previa</span>
+                <div style="background:#1F2937; border-radius:18px; padding:14px;">
+                    <div style="background:#fff; border-radius:14px; padding:12px 14px; display:flex; gap:12px; align-items:flex-start; box-shadow:0 4px 14px rgba(0,0,0,.25);">
+                        <img src="img/cuidapp-logo.png" alt="" style="width:30px; height:30px; border-radius:8px;" />
+                        <div class="d-flex flex-column" style="gap:2px; min-width:0;">
+                            <span style="font-size:11.5px; color:var(--adm-muted);">CuidApp · ahora</span>
+                            <span style="font-size:14px; font-weight:600;">@(string.IsNullOrWhiteSpace(_titulo) ? "Título del aviso" : _titulo)</span>
+                            <span style="font-size:13px; color:var(--adm-ink-2); word-break:break-word;">@(string.IsNullOrWhiteSpace(_mensaje) ? "El mensaje aparecerá aquí." : _mensaje)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end" style="gap:8px;">
+                @if (!string.IsNullOrWhiteSpace(_titulo) || !string.IsNullOrWhiteSpace(_mensaje))
+                {
+                    <button type="button" class="pn-btn pn-btn-quiet" @onclick="Limpiar">Limpiar</button>
+                }
+                <button type="button" class="pn-btn pn-btn-primary" disabled="@(!_puedeEnviar || _enviando || (_titulo ?? "").Trim().Length < 3 || (_mensaje ?? "").Trim().Length < 3)" @onclick="Enviar">
+                    @(_enviando ? "Enviando…" : "Enviar aviso")
+                </button>
+            </div>
+            @if (!_puedeEnviar)
+            {
+                <span class="pn-hint">Tu nivel (Finanzas) no puede enviar avisos.</span>
+            }
+        </div>
+
+        <div class="adm-card overflow-hidden">
+            <div class="pn-card-head"><span class="adm-card-title">Enviados</span><span class="pn-muted">@(_historial?.Count ?? 0)</span></div>
+            @if (_historial == null)
+            {
+                <Esqueleto Filas="4" ConAvatar="false" />
+            }
+            else if (_historial.Count == 0)
+            {
+                <EstadoVacio Titulo="Aún no se ha enviado ningún aviso" Icono="M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1Z" />
+            }
+            else
+            {
+                @foreach (var a in Paginador.Cortar(_historial, _pagina, 8))
+                {
+                    <div class="pn-aviso" @key="a.Id">
+                        <div class="d-flex align-items-start" style="gap:8px;">
+                            <span class="pn-strong" style="flex:1; min-width:0;">@a.Titulo</span>
+                            <span class="pn-pill tone-info no-dot">@a.DestinoTexto</span>
+                            @if (a.IdiomaTexto != null)
+                            {
+                                <span class="pn-pill tone-violet no-dot">@a.IdiomaTexto</span>
+                            }
+                        </div>
+                        <span style="font-size:13px; color:var(--adm-ink-2); word-break:break-word;">@a.Mensaje</span>
+                        <div class="d-flex flex-wrap align-items-center" style="gap:6px;">
+                            <span class="pn-muted" style="flex:1; min-width:160px;">@a.Fecha.ToString("dd MMM yyyy, h:mm tt") · @a.AdminNombre</span>
+                            @if (_puedeEnviar)
+                            {
+                                <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" title="Copiar al formulario para editarlo antes de enviar" @onclick="() => Copiar(a)">Editar y enviar</button>
+                                <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" disabled="@(_procesando == a.Id)" @onclick="() => Reenviar(a)">Reenviar</button>
+                                <button type="button" class="pn-btn pn-btn-danger-soft pn-btn-sm" disabled="@(_procesando == a.Id)" @onclick="() => Eliminar(a)" aria-label="Eliminar del historial">Eliminar</button>
+                            }
+                        </div>
+                    </div>
+                }
+                <Paginador Pagina="_pagina" Tamano="8" Total="_historial.Count" PaginaCambiada="p => _pagina = p" />
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .pn-aviso { display:flex; flex-direction:column; gap:6px; padding:14px 20px; border-bottom:1px solid var(--adm-line-soft); }
+</style>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private int _destino;
+    private string? _idioma;
+    private string? _titulo, _mensaje;
+    private bool _enviando, _puedeEnviar;
+    private int? _procesando;
+    private int _pagina = 1;
+    private List<AvisoFila>? _historial;
+
+    private static string Publico(int destino, string? idioma)
+    {
+        var quien = destino switch { 2 => "todos los clientes", 3 => "todos los Care Partners", _ => "todos los usuarios" };
+        return idioma == null ? quien : $"{quien} con la app en {Idiomas.Nombre(idioma)!.ToLowerInvariant()}";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthStateTask != null) _puedeEnviar = SesionAdmin.PuedeOperar((await AuthStateTask).User);
+        await Cargar();
+    }
+
+    private async Task Cargar() => _historial = await Api.AvisosAsync() ?? new();
+
+    private void Limpiar() { _titulo = _mensaje = null; }
+
+    private async Task Enviar()
+    {
+        if (!await Confirmacion.PreguntarAsync($"¿Enviar a {Publico(_destino, _idioma)}?", "La notificación sale de inmediato y no se puede retirar de los teléfonos.", "Enviar ahora"))
+            return;
+        _enviando = true;
+        var r = await Api.EnviarAvisoAsync(_destino, _idioma, _titulo!.Trim(), _mensaje!.Trim());
+        Toasts.Mostrar(r);
+        _enviando = false;
+        if (!r.Ok) return;
+        Limpiar();
+        _pagina = 1;
+        await Cargar();
+    }
+
+    private void Copiar(AvisoFila a)
+    {
+        _destino = a.Destino;
+        _idioma = a.Idioma;
+        _titulo = a.Titulo;
+        _mensaje = a.Mensaje;
+        Toasts.Mostrar("Aviso copiado al formulario. Edítalo y envíalo.");
+    }
+
+    private async Task Reenviar(AvisoFila a)
+    {
+        if (!await Confirmacion.PreguntarAsync($"¿Reenviar «{a.Titulo}»?", $"Se enviará otra vez a {Publico(a.Destino, a.Idioma)} y quedará como un envío nuevo en el historial.", "Reenviar"))
+            return;
+        _procesando = a.Id;
+        var r = await Api.ReenviarAvisoAsync(a.Id);
+        Toasts.Mostrar(r);
+        _procesando = null;
+        if (!r.Ok) return;
+        _pagina = 1;
+        await Cargar();
+    }
+
+    private async Task Eliminar(AvisoFila a)
+    {
+        if (!await Confirmacion.PreguntarAsync($"¿Eliminar «{a.Titulo}» del historial?", "Solo se quita de esta lista; quienes ya lo recibieron lo siguen teniendo en su teléfono. Queda registrado en la auditoría.", "Eliminar", peligro: true))
+            return;
+        _procesando = a.Id;
+        var r = await Api.EliminarAvisoAsync(a.Id);
+        Toasts.Mostrar(r);
+        _procesando = null;
+        if (r.Ok) await Cargar();
+        if (_historial != null && (_pagina - 1) * 8 >= _historial.Count) _pagina = Math.Max(1, _pagina - 1);
+    }
+}

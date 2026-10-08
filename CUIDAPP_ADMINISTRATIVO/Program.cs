@@ -33,7 +33,14 @@ builder.Services.AddHttpClient<AdminAccountApiService>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]!);
 });
-builder.Services.AddSingleton<SosNotificationService>();
+builder.Services.AddHttpClient<PanelApiService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]!);
+});
+builder.Services.AddHttpClient("archivos");
+builder.Services.AddScoped<SosNotificationService>();
+builder.Services.AddScoped<ConfirmacionService>();
+builder.Services.AddScoped<AvisoToastService>();
 
 // Autenticación por cookie: la sesión vive en el navegador (no en el circuito de
 // Blazor Server), así que sobrevive a un refresh completo de la página. El JWT que
@@ -45,7 +52,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.Name = "CuidappAdminAuth";
         options.LoginPath = "/";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
-        options.SlidingExpiration = true;
+        // Sin renovación: la cookie no puede sobrevivir al JWT que lleva dentro.
+        options.SlidingExpiration = false;
         options.Cookie.HttpOnly = true;
         options.Cookie.SameSite = SameSiteMode.Strict;
     });
@@ -90,17 +98,39 @@ app.MapGet("/account/login-complete", async (HttpContext http, string code) =>
     if (!string.IsNullOrWhiteSpace(data.FotoUrl))
         claims.Add(new Claim("foto_url", data.FotoUrl));
 
+    // El JWT de la API viaja dentro de la cookie: los servicios del panel lo envían en cada llamada.
+    var (nivel, vence) = SesionAdmin.LeerToken(data.Token);
+    claims.Add(new Claim(SesionAdmin.ClaimToken, data.Token));
+    claims.Add(new Claim(SesionAdmin.ClaimNivel, nivel.ToString()));
+
     var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
     var principal = new ClaimsPrincipal(identity);
 
     await http.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, new AuthenticationProperties
     {
         IsPersistent = true,
-        ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
+        // La sesión termina cuando vence el token de la API (8 h).
+        ExpiresUtc = vence ?? DateTimeOffset.UtcNow.AddHours(8)
     });
 
     return Results.Redirect("/dashboard");
 });
+
+// Proxy de archivos subidos (fotos, documentos, audios del chat): el panel los pide a la API y los entrega
+// desde su propio dominio. Solo rutas de /uploads y solo con sesión de administrador.
+app.MapGet("/archivo/uploads/{**ruta}", async (string ruta, HttpContext http, IHttpClientFactory fabrica, IConfiguration config) =>
+{
+    if (ruta.Contains("..") || ruta.Contains('\\'))
+        return Results.BadRequest();
+    var api = new Uri(config["ApiBaseUrl"]!);
+    var cliente = fabrica.CreateClient("archivos");
+    var respuesta = await cliente.GetAsync($"{api.Scheme}://{api.Authority}/uploads/{ruta}", HttpCompletionOption.ResponseHeadersRead, http.RequestAborted);
+    if (!respuesta.IsSuccessStatusCode)
+        return Results.StatusCode((int)respuesta.StatusCode);
+    http.Response.Headers.CacheControl = "private, max-age=86400";
+    var tipo = respuesta.Content.Headers.ContentType?.ToString() ?? "application/octet-stream";
+    return Results.Stream(await respuesta.Content.ReadAsStreamAsync(http.RequestAborted), tipo, enableRangeProcessing: true);
+}).RequireAuthorization();
 
 app.MapGet("/account/logout", async (HttpContext http) =>
 {

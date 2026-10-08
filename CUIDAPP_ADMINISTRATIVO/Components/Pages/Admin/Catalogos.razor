@@ -1,0 +1,327 @@
+@page "/catalogos"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@inject PanelApiService Api
+@inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
+
+<PageTitle>Catálogos · Cuidapp Admin</PageTitle>
+
+<div class="pn-page">
+    <div class="pn-toolbar">
+        <div class="pn-seg">
+            <button type="button" class="@(_tab == 0 ? "on" : "")" @onclick="() => Tab(0)">Tipos de servicio</button>
+            <button type="button" class="@(_tab == 1 ? "on" : "")" @onclick="() => Tab(1)">Motivos de cancelación</button>
+            <button type="button" class="@(_tab == 2 ? "on" : "")" @onclick="() => Tab(2)">Nacionalidades</button>
+            <button type="button" class="@(_tab == 3 ? "on" : "")" @onclick="() => Tab(3)">Estatus y documentos</button>
+        </div>
+        <span class="pn-grow"></span>
+        @if (_puedeEditar && _tab != 3)
+        {
+            <button type="button" class="pn-btn pn-btn-primary" @onclick="Nuevo">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+                Agregar
+            </button>
+        }
+    </div>
+
+    @if (_tab != 2)
+    {
+        <div class="pn-callout tone-info">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 16v-4m0-4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z"></path></svg>
+            <span>Los nombres se guardan en español. La app los muestra traducidos al inglés y al creol solo si existe su traducción (<code>dato_…</code> en los archivos de idioma de la app); un nombre nuevo o cambiado aparecerá en español hasta que se agregue su traducción en la próxima versión de la app.</span>
+        </div>
+    }
+
+    <div class="adm-card overflow-hidden">
+        @switch (_tab)
+        {
+            case 0:
+                @if (_tipos == null) { <Esqueleto Filas="5" ConAvatar="false" /> }
+                else
+                {
+                    <table class="pn-table">
+                        <thead><tr><th>Nombre</th><th>Descripción</th><th>Ícono</th><th>Estado</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var t in _tipos)
+                            {
+                                <tr>
+                                    <td class="pn-strong">@t.Nombre</td>
+                                    <td style="max-width:420px;">@(t.Descripcion ?? "—")</td>
+                                    <td class="pn-muted">@(t.Icono ?? "—")</td>
+                                    <td><span class="pn-pill @(t.Activo ? "tone-ok" : "tone-muted")">@(t.Activo ? "Activo" : "Oculto")</span></td>
+                                    <td class="pn-num">@if (_puedeEditar) { <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" @onclick="() => Editar(t)">Editar</button> }</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                break;
+
+            case 1:
+                @if (_motivos == null) { <Esqueleto Filas="5" ConAvatar="false" /> }
+                else
+                {
+                    <table class="pn-table">
+                        <thead><tr><th style="width:80px;">Orden</th><th>Motivo</th><th>Estado</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var m in _motivos)
+                            {
+                                <tr>
+                                    <td class="pn-muted">@m.OrdenVisual</td>
+                                    <td class="pn-strong">@m.Descripcion</td>
+                                    <td><span class="pn-pill @(m.Activo ? "tone-ok" : "tone-muted")">@(m.Activo ? "Activo" : "Oculto")</span></td>
+                                    <td class="pn-num">@if (_puedeEditar) { <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" @onclick="() => Editar(m)">Editar</button> }</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                break;
+
+            case 2:
+                @if (_nacionalidades == null) { <Esqueleto Filas="5" ConAvatar="false" /> }
+                else
+                {
+                    <div class="pn-card-head">
+                        <div class="pn-search" style="max-width:320px; flex:1;">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+                            <input class="pn-input" type="search" placeholder="Buscar nacionalidad o país" @bind="_filtroNac" @bind:event="oninput" @bind:after="() => _pagNac = 1" />
+                        </div>
+                        <span class="pn-muted">@_nacionalidades.Count(n => n.Activo) activas de @_nacionalidades.Count</span>
+                    </div>
+                    <table class="pn-table">
+                        <thead><tr><th>Nacionalidad</th><th>País</th><th>ISO</th><th class="pn-num">Usuarios</th><th>Estado</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var n in Paginador.Cortar(NacFiltradas(), _pagNac, 15))
+                            {
+                                <tr>
+                                    <td class="pn-strong">@n.Nombre</td>
+                                    <td>@n.Pais</td>
+                                    <td class="pn-muted">@n.CodigoIso</td>
+                                    <td class="pn-num">@n.Usuarios</td>
+                                    <td><span class="pn-pill @(n.Activo ? "tone-ok" : "tone-muted")">@(n.Activo ? "Activa" : "Oculta")</span></td>
+                                    <td class="pn-num">@if (_puedeEditar) { <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" @onclick="() => Editar(n)">Editar</button> }</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    <Paginador Pagina="_pagNac" Tamano="15" Total="NacFiltradas().Count()" PaginaCambiada="p => _pagNac = p" />
+                }
+                break;
+
+            case 3:
+                @if (_estatus == null) { <Esqueleto Filas="3" ConAvatar="false" /> }
+                else
+                {
+                    <div class="pn-card-head">
+                        <div class="d-flex flex-column" style="gap:2px;">
+                            <span class="adm-card-title">Documentos requeridos según estatus migratorio</span>
+                            <span class="adm-card-sub">Lo que la app le pide a cada Care Partner al registrarse, según el estatus que elija.</span>
+                        </div>
+                        @if (_puedeEditar)
+                        {
+                            <button type="button" class="pn-btn pn-btn-quiet" @onclick="() => Editar(new EstatusCat())">Nuevo estatus</button>
+                        }
+                    </div>
+                    @foreach (var e in _estatus.Estatus)
+                    {
+                        <div class="d-flex flex-column" style="gap:12px; padding:18px 20px; border-bottom:1px solid var(--adm-line-soft);">
+                            <div class="d-flex align-items-center" style="gap:10px;">
+                                <span class="pn-strong" style="font-size:15px;">@e.Nombre</span>
+                                <span class="pn-pill @(e.Activo ? "tone-ok" : "tone-muted")">@(e.Activo ? "Activo" : "Oculto")</span>
+                                <span class="pn-grow"></span>
+                                @if (_puedeEditar) { <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" @onclick="() => Editar(e)">Editar</button> }
+                            </div>
+                            <div class="d-flex flex-wrap align-items-center" style="gap:8px;">
+                                @foreach (var r in _estatus.Requisitos.Where(r => r.EstatusMigratorioId == e.Id))
+                                {
+                                    <span class="pn-tag">
+                                        @r.TipoDocumento
+                                        @if (_puedeEditar)
+                                        {
+                                            <button type="button" aria-label="Quitar @r.TipoDocumento" @onclick="() => QuitarRequisito(r, e)">×</button>
+                                        }
+                                    </span>
+                                }
+                                @if (!_estatus.Requisitos.Any(r => r.EstatusMigratorioId == e.Id))
+                                {
+                                    <span class="pn-muted">Sin documentos adicionales.</span>
+                                }
+                                @if (_puedeEditar)
+                                {
+                                    <span class="d-flex" style="gap:6px;">
+                                        <input class="pn-input" style="height:32px; width:220px;" placeholder="Nuevo documento requerido" maxlength="100"
+                                               value="@_nuevoReq.GetValueOrDefault(e.Id!.Value)" @oninput="ev => _nuevoReq[e.Id!.Value] = ev.Value?.ToString() ?? string.Empty" />
+                                        <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" disabled="@(string.IsNullOrWhiteSpace(_nuevoReq.GetValueOrDefault(e.Id!.Value)))" @onclick="() => AgregarRequisito(e)">Agregar</button>
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+                break;
+        }
+    </div>
+</div>
+
+@* ---------- Formulario lateral ---------- *@
+@if (_editando != null)
+{
+    <div class="pn-drawer-overlay" @onclick="Cerrar"></div>
+    <div class="pn-drawer" role="dialog" aria-modal="true" aria-label="Editar">
+        <div class="pn-drawer-head">
+            <span class="adm-card-title">@(EsNuevo ? "Agregar" : "Editar") @NombreEditando</span>
+            <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" aria-label="Cerrar" @onclick="Cerrar">×</button>
+        </div>
+        <div class="pn-drawer-body">
+            @switch (_editando)
+            {
+                case TipoServicioCat t:
+                    <div><label class="pn-label">Nombre</label><input class="adm-input" maxlength="100" @bind="t.Nombre" @bind:event="oninput" /></div>
+                    <div><label class="pn-label">Descripción</label><textarea class="adm-textarea" rows="4" maxlength="500" @bind="t.Descripcion"></textarea></div>
+                    <div><label class="pn-label">Ícono</label><input class="adm-input" maxlength="100" placeholder="Nombre del ícono que usa la app (ej.: limpieza)" @bind="t.Icono" /></div>
+                    <label class="pn-switch"><input type="checkbox" @bind="t.Activo" /> Visible en la app</label>
+                    break;
+                case MotivoCat m:
+                    <div><label class="pn-label">Motivo</label><input class="adm-input" maxlength="200" @bind="m.Descripcion" @bind:event="oninput" /></div>
+                    <div><label class="pn-label">Orden en la lista</label><input class="adm-input" type="number" min="0" @bind="m.OrdenVisual" /></div>
+                    <label class="pn-switch"><input type="checkbox" @bind="m.Activo" /> Visible en la app</label>
+                    break;
+                case NacionalidadCat n:
+                    <div><label class="pn-label">Nacionalidad</label><input class="adm-input" maxlength="100" placeholder="Ej.: Dominicana" @bind="n.Nombre" @bind:event="oninput" /></div>
+                    <div><label class="pn-label">País</label><input class="adm-input" maxlength="100" placeholder="Ej.: República Dominicana" @bind="n.Pais" @bind:event="oninput" /></div>
+                    <div><label class="pn-label">Código ISO (2 letras)</label><input class="adm-input" maxlength="2" style="text-transform:uppercase; width:100px;" @bind="n.CodigoIso" @bind:event="oninput" /></div>
+                    <label class="pn-switch"><input type="checkbox" @bind="n.Activo" /> Visible en el registro</label>
+                    break;
+                case EstatusCat e:
+                    <div><label class="pn-label">Nombre del estatus</label><input class="adm-input" maxlength="100" @bind="e.Nombre" @bind:event="oninput" /></div>
+                    <label class="pn-switch"><input type="checkbox" @bind="e.Activo" /> Visible en el registro</label>
+                    break;
+            }
+            @if (!EsNuevo)
+            {
+                <span class="pn-hint">Ocultar en lugar de borrar: así los registros que ya lo usan no se rompen.</span>
+            }
+        </div>
+        <div class="pn-drawer-foot">
+            <button type="button" class="pn-btn pn-btn-quiet" @onclick="Cerrar">Cancelar</button>
+            <button type="button" class="pn-btn pn-btn-primary" disabled="@(_guardando || !Valido())" @onclick="Guardar">@(_guardando ? "Guardando…" : "Guardar")</button>
+        </div>
+    </div>
+}
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private int _tab;
+    private bool _puedeEditar, _guardando;
+    private List<TipoServicioCat>? _tipos;
+    private List<MotivoCat>? _motivos;
+    private List<NacionalidadCat>? _nacionalidades;
+    private EstatusPanel? _estatus;
+    private object? _editando;
+    private string? _filtroNac;
+    private int _pagNac = 1;
+    private readonly Dictionary<int, string> _nuevoReq = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthStateTask != null) _puedeEditar = SesionAdmin.PuedeOperar((await AuthStateTask).User);
+        await Cargar();
+    }
+
+    private async Task Tab(int t) { _tab = t; await Cargar(); }
+
+    private async Task Cargar()
+    {
+        switch (_tab)
+        {
+            case 0: _tipos = await Api.TiposServicioAsync() ?? new(); break;
+            case 1: _motivos = await Api.MotivosAsync() ?? new(); break;
+            case 2: _nacionalidades = await Api.NacionalidadesAsync() ?? new(); break;
+            case 3: _estatus = await Api.EstatusMigratorioAsync() ?? new(); break;
+        }
+    }
+
+    private IEnumerable<NacionalidadCat> NacFiltradas() => (_nacionalidades ?? new()).Where(n => string.IsNullOrWhiteSpace(_filtroNac)
+        || n.Nombre.Contains(_filtroNac, StringComparison.CurrentCultureIgnoreCase) || n.Pais.Contains(_filtroNac, StringComparison.CurrentCultureIgnoreCase));
+
+    private bool EsNuevo => _editando switch
+    {
+        TipoServicioCat t => t.Id == null, MotivoCat m => m.Id == null, NacionalidadCat n => n.Id == null, EstatusCat e => e.Id == null, _ => true
+    };
+
+    private string NombreEditando => _editando switch
+    {
+        TipoServicioCat => "tipo de servicio", MotivoCat => "motivo de cancelación", NacionalidadCat => "nacionalidad", EstatusCat => "estatus migratorio", _ => ""
+    };
+
+    private void Nuevo() => _editando = _tab switch
+    {
+        0 => new TipoServicioCat(),
+        1 => new MotivoCat { OrdenVisual = (_motivos?.Count > 0 ? _motivos.Max(m => m.OrdenVisual) : 0) + 1 },
+        _ => new NacionalidadCat()
+    };
+
+    // Se edita una copia: si cancela, la tabla no cambia.
+    private void Editar(object o) => _editando = o switch
+    {
+        TipoServicioCat t => new TipoServicioCat { Id = t.Id, Nombre = t.Nombre, Descripcion = t.Descripcion, Icono = t.Icono, Activo = t.Activo },
+        MotivoCat m => new MotivoCat { Id = m.Id, Descripcion = m.Descripcion, Activo = m.Activo, OrdenVisual = m.OrdenVisual },
+        NacionalidadCat n => new NacionalidadCat { Id = n.Id, Nombre = n.Nombre, Pais = n.Pais, CodigoIso = n.CodigoIso, Activo = n.Activo },
+        EstatusCat e => new EstatusCat { Id = e.Id, Nombre = e.Nombre, Activo = e.Activo },
+        _ => null
+    };
+
+    private void Cerrar() => _editando = null;
+
+    private bool Valido() => _editando switch
+    {
+        TipoServicioCat t => !string.IsNullOrWhiteSpace(t.Nombre),
+        MotivoCat m => !string.IsNullOrWhiteSpace(m.Descripcion),
+        NacionalidadCat n => !string.IsNullOrWhiteSpace(n.Nombre) && !string.IsNullOrWhiteSpace(n.Pais) && (n.CodigoIso ?? "").Trim().Length == 2,
+        EstatusCat e => !string.IsNullOrWhiteSpace(e.Nombre),
+        _ => false
+    };
+
+    private async Task Guardar()
+    {
+        _guardando = true;
+        var r = _editando switch
+        {
+            TipoServicioCat t => await Api.GuardarTipoServicioAsync(t),
+            MotivoCat m => await Api.GuardarMotivoAsync(m),
+            NacionalidadCat n => await Api.GuardarNacionalidadAsync(n),
+            EstatusCat e => await Api.GuardarEstatusAsync(e),
+            _ => new ResultadoAccion(false, "Nada que guardar.")
+        };
+        _guardando = false;
+        Toasts.Mostrar(r);
+        if (!r.Ok) return;
+        if (_editando is EstatusCat) _tab = 3;
+        _editando = null;
+        await Cargar();
+    }
+
+    private async Task AgregarRequisito(EstatusCat e)
+    {
+        var texto = _nuevoReq.GetValueOrDefault(e.Id!.Value)?.Trim();
+        if (string.IsNullOrEmpty(texto)) return;
+        var r = await Api.AgregarRequisitoAsync(e.Id.Value, texto);
+        Toasts.Mostrar(r);
+        if (!r.Ok) return;
+        _nuevoReq.Remove(e.Id.Value);
+        await Cargar();
+    }
+
+    private async Task QuitarRequisito(RequisitoCat req, EstatusCat e)
+    {
+        if (!await Confirmacion.PreguntarAsync("¿Quitar este documento?",
+                $"Los nuevos registros con estatus «{e.Nombre}» ya no tendrán que subir «{req.TipoDocumento}». Los documentos ya subidos no se borran.",
+                "Quitar", peligro: true))
+            return;
+        var r = await Api.QuitarRequisitoAsync(req.Id);
+        Toasts.Mostrar(r);
+        if (r.Ok) await Cargar();
+    }
+}

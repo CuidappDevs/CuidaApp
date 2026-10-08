@@ -1,0 +1,21 @@
+@* Marcador de carga con brillo (en lugar de "Cargando..."). *@
+<div class="pn-skel-wrap" aria-busy="true" aria-label="Cargando">
+    @for (var i = 0; i < Filas; i++)
+    {
+        <div class="pn-skel-row">
+            @if (ConAvatar)
+            {
+                <span class="pn-skel pn-skel-circle"></span>
+            }
+            <div class="d-flex flex-column" style="gap:8px; flex:1;">
+                <span class="pn-skel" style="width:@(40 + (i * 13) % 35)%;"></span>
+                <span class="pn-skel pn-skel-sm" style="width:@(25 + (i * 17) % 30)%;"></span>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Filas { get; set; } = 5;
+    [Parameter] public bool ConAvatar { get; set; } = true;
+}

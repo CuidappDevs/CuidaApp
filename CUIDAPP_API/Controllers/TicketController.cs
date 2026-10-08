@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using CUIDAPP_API.Seguridad;
 using CUIDAPP_API.DTOs.Ticket;
 using CUIDAPP_API.Interfaces.Ticket;
 
@@ -43,6 +45,8 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [Authorize(Policy = PoliticasAdmin.Operaciones)]
+        [AuditarAdmin]
         [HttpGet]
         public async Task<IActionResult> ObtenerTodos([FromQuery] int? estado)
         {
@@ -92,6 +96,8 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [Authorize(Policy = PoliticasAdmin.Operaciones)]
+        [AuditarAdmin]
         [HttpPut("{ticketId}/estado")]
         public async Task<IActionResult> ActualizarEstado(int ticketId, [FromBody] ActualizarEstadoTicketDto dto)
         {

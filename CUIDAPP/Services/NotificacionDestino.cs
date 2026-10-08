@@ -104,6 +104,10 @@ namespace CUIDAPP.Services
                             await Shell.Current.GoToAsync("VerificacionPendientePage");
                         break;
 
+                    case "checkin":
+                        await CheckinApp.MostrarPendienteAsync();
+                        break;
+
                     case Dinero when esCuidador:
                         await Shell.Current.GoToAsync("DineroPage");
                         break;

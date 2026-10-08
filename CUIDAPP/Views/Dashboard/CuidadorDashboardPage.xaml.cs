@@ -11,6 +11,12 @@ namespace CUIDAPP.Views.Dashboard
         // Cuenta aprobada por la administración: sin esto no puede ponerse visible (aunque sus documentos estén aprobados).
         private bool cuentaAprobada = true;
         private bool suprimirEventoToggle;
+        // El interruptor está dentro de una tarjeta que también responde al toque: un solo toque puede
+        // disparar dos cambios. Mientras se muestra un aviso, los cambios repetidos se ignoran.
+        private bool avisoAbierto;
+        // Horario automático: la visibilidad la decide el servidor según su horario (interruptor bloqueado).
+        private Models.Cuidador.HorarioCuidador? horario;
+        private bool ModoHorario => horario?.Activo == true;
         private bool estaVisible;
         private bool pollingUbicacionIniciado;
 
@@ -90,19 +96,8 @@ namespace CUIDAPP.Views.Dashboard
                 return;
             pollingUbicacionIniciado = true;
 
-            // Mientras el cuidador esté "Disponible" y con esta pantalla abierta, subimos su
-            // GPS periódicamente para que el punto verde en el mapa del cliente refleje su
-            // posición real en vez de quedar congelado en la dirección de registro.
-            Dispatcher.StartTimer(TimeSpan.FromSeconds(30), () =>
-            {
-                if (!estaVisible)
-                    return false;
-
-                if (disponibleActual)
-                    _ = ActualizarUbicacionActualAsync();
-
-                return true;
-            });
+            // El envío periódico (cada 20 s, también en segundo plano) lo hace RastreoUbicacion.
+            RastreoUbicacion.Iniciar();
         }
 
         private async Task ActualizarUbicacionActualAsync()
@@ -110,11 +105,9 @@ namespace CUIDAPP.Views.Dashboard
             if (!disponibleActual)
                 return;
 
-            var ubicacion = await LocationService.ObtenerUbicacionActualAsync();
-            if (ubicacion == null)
-                return;
-
-            await _apiService.ActualizarUbicacionCuidadorAsync(cuidadorId, ubicacion.Latitude, ubicacion.Longitude);
+            // Pide el permiso si hace falta (aquí sí hay pantalla) y envía al momento.
+            if (await LocationService.ObtenerUbicacionActualAsync() != null)
+                await RastreoUbicacion.EnviarAhoraAsync();
         }
 
         private async Task CargarDashboard()
@@ -169,6 +162,15 @@ namespace CUIDAPP.Views.Dashboard
 
                 if (!string.IsNullOrWhiteSpace(perfil.FotoUrl))
                     ImgFotoPerfil.Source = $"{ApiService.ServerOrigin}{perfil.FotoUrl}";
+
+                horario = await _apiService.ObtenerHorarioAsync(cuidadorId);
+                if (horario != null)
+                {
+                    EstadoCuidador.EstablecerHorarioAutomatico(horario.Activo);
+                    // Renueva los avisos de inicio/fin de los próximos 7 días (o los quita si volvió a manual).
+                    Recordatorios.ProgramarHorario(horario);
+                }
+                LblHorarioTile.Text = Localizador.T(ModoHorario ? "horario_tile_auto" : "disponibilidad");
 
                 cuentaAprobada = perfil.EstadoAprobacion == 2;
                 EstadoCuidador.EstablecerCuentaAprobada(cuentaAprobada);
@@ -230,6 +232,25 @@ namespace CUIDAPP.Views.Dashboard
                 LblDisponible.TextColor = (Color)Application.Current!.Resources["ColorTextStrong"];
                 LblDisponibleSubtitulo.Text = Localizador.T(cuentaAprobada ? "estas_desconectado_los_clientes_no" : "perfil_en_validacion_subtitulo");
             }
+
+            if (ModoHorario && cuentaAprobada)
+                LblDisponibleSubtitulo.Text = TextoHorario();
+        }
+
+        // "Por horario · visible hasta las 5:00 PM" o "Por horario · vuelves a estar visible mañana a las 8:00 AM".
+        private string TextoHorario()
+        {
+            var (visible, cambio) = horario!.Estado(DateTime.Now);
+            if (cambio == null)
+                return Localizador.T("horario_sub_sin");
+            var hora = cambio.Value.ToString("h:mm tt", Localizador.Cultura);
+            if (disponibleActual || visible)
+                return Localizador.F("horario_sub_visible", hora);
+
+            var cuando = cambio.Value.Date == DateTime.Today ? Localizador.F("horario_hoy_a", hora)
+                       : cambio.Value.Date == DateTime.Today.AddDays(1) ? Localizador.F("horario_manana_a", hora)
+                       : Localizador.F("horario_dia_a", Localizador.T($"dia_{(int)cambio.Value.DayOfWeek}").ToLower(Localizador.Cultura), hora);
+            return Localizador.F("horario_sub_oculto", cuando);
         }
 
         // Onda verde alrededor del ícono mientras el cuidador está disponible
@@ -279,6 +300,8 @@ namespace CUIDAPP.Views.Dashboard
         private void OnDisponibilidadTapped(object sender, EventArgs e)
         {
             // Alterna el Switch; la lógica real corre en OnDisponibilidadToggled.
+            if (avisoAbierto)
+                return;
             SwitchDisponible.IsToggled = !SwitchDisponible.IsToggled;
         }
 
@@ -286,16 +309,49 @@ namespace CUIDAPP.Views.Dashboard
         {
             if (suprimirEventoToggle)
                 return;
+            if (avisoAbierto)
+            {
+                Revertir();
+                return;
+            }
 
             var nuevoValor = e.Value;
+
+            // Horario automático: no se cambia a mano. El interruptor vuelve a su estado y se explica por qué.
+            if (ModoHorario)
+            {
+                Revertir();
+                avisoAbierto = true;
+                bool irAlHorario;
+                try
+                {
+                    irAlHorario = await Alerta.MostrarAsync(Localizador.T("horario_bloqueado_titulo"), Localizador.T("horario_bloqueado_texto"),
+                        Localizador.T("ver_mi_horario"), Localizador.T("entendido"));
+                }
+                finally
+                {
+                    avisoAbierto = false;
+                    Revertir();
+                }
+                if (irAlHorario)
+                    await Shell.Current.GoToAsync("MiHorarioPage");
+                return;
+            }
 
             // Perfil todavía en validación: el interruptor vuelve a apagado y se explica por qué.
             if (nuevoValor && !cuentaAprobada)
             {
-                suprimirEventoToggle = true;
-                SwitchDisponible.IsToggled = false;
-                suprimirEventoToggle = false;
-                await Alerta.MostrarAsync(Localizador.T("perfil_en_validacion_titulo"), Localizador.T("perfil_en_validacion_texto"), Localizador.T("entendido"), TipoAlerta.Info);
+                Revertir();
+                avisoAbierto = true;
+                try
+                {
+                    await Alerta.MostrarAsync(Localizador.T("perfil_en_validacion_titulo"), Localizador.T("perfil_en_validacion_texto"), Localizador.T("entendido"), TipoAlerta.Info);
+                }
+                finally
+                {
+                    avisoAbierto = false;
+                    Revertir();
+                }
                 return;
             }
 
@@ -324,11 +380,33 @@ namespace CUIDAPP.Views.Dashboard
             }
         }
 
+        // Deja el interruptor como está la visibilidad real, sin volver a disparar el evento.
+        private void Revertir()
+        {
+            suprimirEventoToggle = true;
+            SwitchDisponible.IsToggled = disponibleActual;
+            suprimirEventoToggle = false;
+        }
+
         private async void OnProximoTrabajoTapped(object sender, EventArgs e)
         {
             await CardProximoTrabajo.ScaleTo(0.96, 80, Easing.CubicOut);
             _ = CardProximoTrabajo.ScaleTo(1, 160, Easing.CubicOut);
             await Shell.Current.GoToAsync("TrabajosPage");
+        }
+
+        private async void OnAyudaTapped(object sender, EventArgs e)
+        {
+            await AccesoAyuda.ScaleTo(0.96, 80, Easing.CubicOut);
+            _ = AccesoAyuda.ScaleTo(1, 160, Easing.CubicOut);
+            await Shell.Current.GoToAsync("AyudaPage");
+        }
+
+        private async void OnHorarioTapped(object sender, EventArgs e)
+        {
+            await AccesoHorario.ScaleTo(0.96, 80, Easing.CubicOut);
+            _ = AccesoHorario.ScaleTo(1, 160, Easing.CubicOut);
+            await Shell.Current.GoToAsync("MiHorarioPage");
         }
 
         private async void OnPerfilTapped(object sender, EventArgs e)

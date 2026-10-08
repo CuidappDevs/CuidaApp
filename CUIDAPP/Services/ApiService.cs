@@ -116,13 +116,13 @@ namespace CUIDAPP.Services
             }
         }
 
-        public async Task<string?> UploadFileAsync(string localFilePath, string carpeta)
+        public async Task<string?> UploadFileAsync(string localFilePath, string carpeta, IProgress<double>? progreso = null)
         {
-            var (url, _) = await UploadFileConDiagnosticoAsync(localFilePath, carpeta);
+            var (url, _) = await UploadFileConDiagnosticoAsync(localFilePath, carpeta, progreso);
             return url;
         }
 
-        public async Task<(string? Url, string? Error)> UploadFileConDiagnosticoAsync(string localFilePath, string carpeta)
+        public async Task<(string? Url, string? Error)> UploadFileConDiagnosticoAsync(string localFilePath, string carpeta, IProgress<double>? progreso = null)
         {
             try
             {
@@ -131,7 +131,7 @@ namespace CUIDAPP.Services
 
                 using var content = new MultipartFormDataContent();
                 var bytes = await File.ReadAllBytesAsync(localFilePath);
-                var fileContent = new ByteArrayContent(bytes);
+                HttpContent fileContent = progreso == null ? new ByteArrayContent(bytes) : new ContenidoConProgreso(bytes, progreso);
                 content.Add(fileContent, "file", Path.GetFileName(localFilePath));
                 content.Add(new StringContent(carpeta), "carpeta");
 
@@ -385,11 +385,11 @@ namespace CUIDAPP.Services
             }
         }
 
-        public async Task<bool> ActualizarUbicacionCuidadorAsync(int cuidadorId, double latitud, double longitud)
+        public async Task<bool> ActualizarUbicacionCuidadorAsync(int cuidadorId, double latitud, double longitud, int? bateria = null)
         {
             try
             {
-                var response = await _httpClient.PutAsJsonAsync("cuidador/ubicacion", new { CuidadorId = cuidadorId, Latitud = latitud, Longitud = longitud });
+                var response = await _httpClient.PutAsJsonAsync("cuidador/ubicacion", new { CuidadorId = cuidadorId, Latitud = latitud, Longitud = longitud, Bateria = bateria });
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
@@ -1125,6 +1125,56 @@ namespace CUIDAPP.Services
             }
         }
 
+        /// <summary>Respuesta al "¿Estás bien?" del centro de mando del panel.</summary>
+        public async Task<bool> ResponderCheckinAsync(int usuarioId, int avisoId, bool estaBien)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"usuario/{usuarioId}/checkin/{avisoId}", new { EstaBien = estaBien });
+                // 409: ya estaba respondida o venció; no hay nada más que hacer.
+                return response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.Conflict;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error respondiendo checkin: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<Models.Cuidador.HorarioCuidador?> ObtenerHorarioAsync(int cuidadorId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"cuidador/{cuidadorId}/horario");
+                if (!response.IsSuccessStatusCode)
+                    return null;
+                return await response.Content.ReadFromJsonAsync<Models.Cuidador.HorarioCuidador>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo horario: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<(bool Success, string? Error)> GuardarHorarioAsync(int cuidadorId, Models.Cuidador.HorarioCuidador horario)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync($"cuidador/{cuidadorId}/horario", horario);
+                if (response.IsSuccessStatusCode)
+                    return (true, null);
+
+                var error = await response.Content.ReadFromJsonAsync<IniciarTrabajoErrorDto>();
+                return (false, MensajeServidor(error?.Message));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error guardando horario: {ex.Message}");
+                return (false, Localizador.T("ocurrio_un_error_al_conectar"));
+            }
+        }
+
         /// <summary>Alerta automática de "hombre muerto": el cuidador no confirmó que estaba bien tras una posible caída.</summary>
         public async Task<bool> EnviarDeadManAsync(int trabajoId, int usuarioId, double latitud, double longitud, double? impactoG, int? segundosInmovil)
         {
@@ -1168,6 +1218,37 @@ namespace CUIDAPP.Services
                 Console.WriteLine($"Error enviando SOS: {ex.Message}");
                 return false;
             }
+        }
+    }
+
+    /// <summary>Cuerpo de subida que avisa qué fracción (0..1) del archivo ya se envió.</summary>
+    internal sealed class ContenidoConProgreso : HttpContent
+    {
+        private readonly byte[] _datos;
+        private readonly IProgress<double> _progreso;
+
+        public ContenidoConProgreso(byte[] datos, IProgress<double> progreso)
+        {
+            _datos = datos;
+            _progreso = progreso;
+            Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+        }
+
+        protected override async Task SerializeToStreamAsync(Stream stream, System.Net.TransportContext? context)
+        {
+            const int Trozo = 16 * 1024;
+            for (int enviado = 0; enviado < _datos.Length; enviado += Trozo)
+            {
+                await stream.WriteAsync(_datos.AsMemory(enviado, Math.Min(Trozo, _datos.Length - enviado)));
+                _progreso.Report(Math.Min(1.0, (enviado + Trozo) / (double)_datos.Length));
+            }
+            _progreso.Report(1.0);
+        }
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = _datos.Length;
+            return true;
         }
     }
 }

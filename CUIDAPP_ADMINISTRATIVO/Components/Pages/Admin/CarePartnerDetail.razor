@@ -5,6 +5,7 @@
 @using CUIDAPP_ADMINISTRATIVO.Services
 @inject CuidadorAdminApiService CuidadorService
 @inject NavigationManager Nav
+@inject ConfirmacionService Confirmacion
 
 <PageTitle>Ficha de Care Partner · Cuidapp Admin</PageTitle>
 
@@ -366,6 +367,13 @@ else
             return;
         }
 
+        var nombre = _cuidador?.NombreCompleto ?? "esta Care Partner";
+        var confirmado = nuevoEstado == 2
+            ? await Confirmacion.PreguntarAsync($"¿Aprobar a {nombre}?", "Podrá ponerse visible y recibir solicitudes de servicio de inmediato.", "Aprobar acceso")
+            : await Confirmacion.PreguntarAsync($"¿Rechazar a {nombre}?", "No podrá recibir servicios. Verá el motivo que escribiste en la app.", "Rechazar solicitud", peligro: true);
+        if (!confirmado)
+            return;
+
         _procesando = true;
         _mensajeAccion = null;
 
@@ -418,6 +426,11 @@ else
                 return;
             }
         }
+
+        var duracion = fechaFin is { } fin ? $"hasta el {FechaRD(fin)}" : "de forma indefinida";
+        if (!await Confirmacion.PreguntarAsync("¿Suspender esta cuenta?",
+                $"No podrá iniciar sesión {duracion}. El motivo queda registrado en su historial y en la auditoría.", "Suspender cuenta", peligro: true))
+            return;
 
         _procesandoCuenta = true;
         _mensajeAccion = null;

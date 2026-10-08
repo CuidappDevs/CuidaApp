@@ -1,0 +1,22 @@
+@* Foto de la persona sobre sus iniciales: si la foto no existe o no carga, quedan las iniciales. *@
+<span class="pn-avatar pn-avatar-ini" style="width:@(Tam)px; height:@(Tam)px; font-size:@((Tam * 0.36).ToString("0", System.Globalization.CultureInfo.InvariantCulture))px; position:relative; overflow:hidden;">
+    @Iniciales(Nombre)
+    @if (!string.IsNullOrWhiteSpace(Url))
+    {
+        <img src="@Url" alt="" loading="lazy" onerror="this.style.display='none'"
+             style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;" />
+    }
+</span>
+
+@code {
+    [Parameter] public string? Url { get; set; }
+    [Parameter] public string? Nombre { get; set; }
+    [Parameter] public int Tam { get; set; } = 38;
+
+    public static string Iniciales(string? nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre)) return "?";
+        var partes = nombre.Split(new[] { ' ', '@', '.' }, StringSplitOptions.RemoveEmptyEntries);
+        return string.Concat(partes.Take(2).Select(p => char.ToUpperInvariant(p[0])));
+    }
+}

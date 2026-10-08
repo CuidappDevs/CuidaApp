@@ -1,0 +1,98 @@
+@page "/auditoria"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@inject PanelApiService Api
+
+<PageTitle>Auditoría · Cuidapp Admin</PageTitle>
+
+<div class="pn-page">
+    @if (!_permitido)
+    {
+        <div class="adm-card"><EstadoVacio Titulo="Sin acceso" Texto="La bitácora solo la pueden ver los Superadmin." /></div>
+    }
+    else
+    {
+        <div class="pn-toolbar">
+            <div class="pn-search pn-grow" style="max-width:420px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+                <input class="pn-input" type="search" placeholder="Administrador, acción, motivo o número de registro" @bind="_buscar" @bind:event="oninput" @onkeydown="Tecla" />
+            </div>
+            <span class="pn-muted">Se registra todo lo que cambia datos desde el panel. Las consultas no se registran.</span>
+        </div>
+
+        <div class="adm-card overflow-hidden">
+            @if (_datos == null)
+            {
+                <Esqueleto Filas="8" ConAvatar="false" />
+            }
+            else if (_datos.Filas.Count == 0)
+            {
+                <EstadoVacio Titulo="Sin registros" Texto="Las acciones del panel aparecerán aquí a partir de ahora." />
+            }
+            else
+            {
+                <div class="pn-table-wrap">
+                    <table class="pn-table">
+                        <thead><tr><th>Cuándo</th><th>Administrador</th><th>Acción</th><th>Registro</th><th>Detalle</th><th>Resultado</th></tr></thead>
+                        <tbody>
+                            @foreach (var a in _datos.Filas)
+                            {
+                                <tr>
+                                    <td style="white-space:nowrap;">@a.Fecha.ToString("dd MMM yyyy")<br /><span class="pn-muted">@a.Fecha.ToString("h:mm:ss tt")</span></td>
+                                    <td class="pn-strong">@(a.AdminNombre ?? $"#{a.AdminId}")</td>
+                                    <td>@a.Accion</td>
+                                    <td>@if (Enlace(a) is { } link) { <a class="pn-link" href="@link">#@a.EntidadId</a> } else { <span class="pn-muted">@(a.EntidadId is null ? "—" : $"#{a.EntidadId}")</span> }</td>
+                                    <td style="max-width:320px;">@(a.Detalle ?? "—")</td>
+                                    <td><span class="pn-pill @(a.Exito ? "tone-ok" : "tone-danger")">@(a.Exito ? "Hecho" : "Falló")</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <Paginador Pagina="_pagina" Tamano="Tamano" Total="_datos.Total" PaginaCambiada="Ir" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private const int Tamano = 25;
+    private Pagina<AuditoriaFila>? _datos;
+    private bool _permitido;
+    private string? _buscar;
+    private int _pagina = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthStateTask != null) _permitido = SesionAdmin.EsSuperadmin((await AuthStateTask).User);
+        if (_permitido) await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        _datos = null;
+        _datos = await Api.AuditoriaAsync(_buscar, _pagina, Tamano) ?? new();
+    }
+
+    private async Task Ir(int p) { _pagina = p; await Cargar(); }
+
+    private async Task Tecla(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter") return;
+        _pagina = 1;
+        await Cargar();
+    }
+
+    // Lleva al registro afectado cuando se puede deducir de la acción.
+    private static string? Enlace(AuditoriaFila a)
+    {
+        if (a.EntidadId == null) return null;
+        var t = a.Accion.ToLowerInvariant();
+        if (t.Contains("servicio") && !t.Contains("tipo")) return $"servicios/{a.EntidadId}";
+        if (t.Contains("care partner")) return $"care-partners/{a.EntidadId}";
+        if (t.Contains("cliente")) return $"clientes/{a.EntidadId}";
+        if (t.Contains("reporte")) return $"soporte/{a.EntidadId}";
+        return null;
+    }
+}

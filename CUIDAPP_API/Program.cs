@@ -29,6 +29,7 @@ using CUIDAPP_API.Services.Realtime;
 using CUIDAPP_API.Hubs;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.StaticFiles;
+using CUIDAPP_API.Seguridad;
 
 // Asegurar que exista la carpeta wwwroot/uploads ANTES de crear el builder,
 // para que ASP.NET Core detecte el WebRootPath correctamente al iniciar.
@@ -42,6 +43,9 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddSignalR();
+
+// JWT y permisos del panel administrativo (Seguridad/PoliticasAdmin.cs).
+builder.Services.AddSeguridadAdmin(builder.Configuration);
 
 // Inyección de dependencias
 builder.Services.AddSingleton<ITrabajoNotifier, TrabajoNotifier>();
@@ -61,6 +65,10 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IPagoAdminService, PagoAdminService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<ISOSAlertService, SOSAlertService>();
+// Aplica cada minuto el horario automático de visibilidad de los Care Partners.
+builder.Services.AddHostedService<CUIDAPP_API.Services.Cuidador.HorarioVisibilidadService>();
+builder.Services.AddScoped<CUIDAPP_API.Interfaces.Admin.IAdminOperacionesService, CUIDAPP_API.Services.Admin.AdminOperacionesService>();
+builder.Services.AddScoped<CUIDAPP_API.Services.Admin.CentroMandoService>();
 
 var app = builder.Build();
 
@@ -90,6 +98,7 @@ app.UseStaticFiles(new StaticFileOptions
     ServeUnknownFileTypes = true
 });
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

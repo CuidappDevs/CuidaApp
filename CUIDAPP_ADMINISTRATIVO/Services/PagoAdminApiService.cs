@@ -7,9 +7,10 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
     {
         private readonly HttpClient _httpClient;
 
-        public PagoAdminApiService(HttpClient httpClient)
+        public PagoAdminApiService(HttpClient httpClient, Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider estado)
         {
             _httpClient = httpClient;
+            SesionAdmin.Adjuntar(_httpClient, estado);
         }
 
         public async Task<List<PagoAdmin>> ObtenerPagosAsync(int? estado)

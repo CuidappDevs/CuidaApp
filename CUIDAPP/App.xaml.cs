@@ -47,6 +47,24 @@ namespace CUIDAPP
             RealtimeService.CuentaActualizada += estado => AvisosApp.CuentaActualizada(estado);
             RealtimeService.PagoAprobado += (trabajoId, monto) => AvisosApp.PagoAprobado(trabajoId, monto);
             RealtimeService.TicketActualizado += (ticketId, respuesta, estado, asunto) => AvisosApp.TicketActualizado(ticketId, respuesta, estado, asunto);
+            RealtimeService.AvisoGeneral += AvisosApp.AvisoGeneral;
+            RealtimeService.AvisoDirecto += (id, tipo, titulo, mensaje, minutos) =>
+            {
+                if (tipo == "checkin")
+                    CheckinApp.Recibir(id, mensaje, minutos);
+                else
+                    AvisosApp.AvisoDirecto(titulo, mensaje);
+            };
+            // Visibilidad del propio cuidador cambiada en el servidor (su horario automático empezó o terminó).
+            RealtimeService.DisponibilidadCambio += (cuidadorId, disponible) =>
+            {
+                if (Preferences.Default.Get("RolId", 0) != 3 || cuidadorId != Preferences.Default.Get("UserId", 0))
+                    return;
+                var cambio = EstadoCuidador.Disponible != disponible;
+                EstadoCuidador.Establecer(disponible);
+                if (cambio)
+                    AvisosApp.CambioPorHorario(disponible);
+            };
         }
 
         private void OnPropinaRecibidaGlobal(int trabajoId, decimal monto)
@@ -169,6 +187,7 @@ namespace CUIDAPP
                 if (usuarioId != 0)
                     _ = RealtimeService.ConectarAsync(usuarioId);
                 DeadManService.MostrarSiPendiente();
+                _ = CheckinApp.MostrarPendienteAsync();
             };
 
             window.Stopped += (s, e) => EstaEnPrimerPlano = false;

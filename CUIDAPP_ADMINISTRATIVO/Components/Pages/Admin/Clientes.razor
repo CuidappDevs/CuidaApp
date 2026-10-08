@@ -40,7 +40,7 @@
                 <span></span>
             </div>
 
-            @foreach (var c in _clientes)
+            @foreach (var c in Paginador.Cortar(_clientes, _pag, 15))
             {
                 <div class="adm-trow">
                     <div class="d-flex flex-column" style="gap:2px; min-width:0;">
@@ -55,11 +55,13 @@
                     <a href="@($"clientes/{c.UsuarioId}")" class="adm-btn adm-btn-ghost-line" style="justify-self:end;">Ver ficha</a>
                 </div>
             }
+            <Paginador Pagina="_pag" Tamano="15" Total="_clientes.Count" PaginaCambiada="p => _pag = p" />
         </div>
     }
 </div>
 
 @code {
+    private int _pag = 1;
     private bool? _activoFiltro;
     private List<ClienteAdmin> _clientes = new();
     private bool _cargando = true;
@@ -68,6 +70,7 @@
 
     private async Task CambiarFiltro(bool? activo)
     {
+        _pag = 1;
         _activoFiltro = activo;
         await Cargar();
     }

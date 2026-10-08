@@ -130,6 +130,42 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        /// <summary>Horario automático de visibilidad del cuidador.</summary>
+        [HttpGet("{cuidadorId}/horario")]
+        public async Task<IActionResult> ObtenerHorario(int cuidadorId)
+        {
+            try
+            {
+                var horario = await _cuidadorService.ObtenerHorarioAsync(cuidadorId);
+                return horario == null ? NotFound() : Ok(horario);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
+        [HttpPut("{cuidadorId}/horario")]
+        public async Task<IActionResult> GuardarHorario(int cuidadorId, [FromBody] HorarioCuidadorDto dto)
+        {
+            try
+            {
+                var resultado = await _cuidadorService.GuardarHorarioAsync(cuidadorId, dto);
+                return resultado switch
+                {
+                    "OK" => Ok(new { Message = "Horario guardado" }),
+                    "NO_ENCONTRADO" => NotFound(new { Codigo = resultado, Message = "El cuidador no existe." }),
+                    "SIN_FRANJAS" => BadRequest(new { Codigo = resultado, Message = "Elige al menos un día con su horario." }),
+                    "FRANJAS_SOLAPADAS" => BadRequest(new { Codigo = resultado, Message = "Hay horarios del mismo día que se pisan." }),
+                    _ => BadRequest(new { Codigo = resultado, Message = "Revisa los horarios: la hora de fin debe ser después de la de inicio." })
+                };
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
+
         [HttpPut("ubicacion")]
         public async Task<IActionResult> ActualizarUbicacion([FromBody] ActualizarUbicacionDto dto)
         {

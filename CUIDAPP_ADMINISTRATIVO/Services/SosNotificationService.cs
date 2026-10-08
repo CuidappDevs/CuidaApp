@@ -6,16 +6,62 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
     public class SosNotificationService : IAsyncDisposable
     {
         private readonly NavigationManager _navigation;
+        private readonly PanelApiService _api;
+        private readonly IConfiguration _config;
         private HubConnection? _hubConnection;
         private readonly List<SosAlerta> _alertasPendientes = new();
 
         public event Action? OnAlertaRecibida;
         public event Action? OnAlertaAtendida;
-        public IReadOnlyList<SosAlerta> AlertasPendientes => _alertasPendientes.AsReadOnly();
+        /// <summary>Un Care Partner se activó o desactivó (interruptor, notificación o su horario automático).</summary>
+        public event Action<int, bool>? OnDisponibilidadCambio;
+        /// <summary>Un Care Partner envió una ubicación nueva (CuidadorId, latitud, longitud).</summary>
+        public event Action<int, double, double>? OnUbicacionCambio;
+        /// <summary>Se perdió o se recuperó la conexión en tiempo real con la API.</summary>
+        public event Action<bool>? OnConexionCambio;
+        /// <summary>Respuesta a un "¿Estás bien?" del centro de mando (UsuarioId, nombre, "ok" / "ayuda" / "vencido").</summary>
+        public event Action<int, string, string>? OnCheckinRespondido;
+        public bool Conectado => _hubConnection?.State == HubConnectionState.Connected;
+        public IReadOnlyList<SosAlerta> AlertasPendientes { get { lock (_alertasPendientes) return _alertasPendientes.ToList(); } }
 
-        public SosNotificationService(NavigationManager navigation)
+        public SosNotificationService(NavigationManager navigation, PanelApiService api, IConfiguration config)
         {
+            _config = config;
             _navigation = navigation;
+            _api = api;
+        }
+
+        /// <summary>
+        /// Trae de la base las alertas pendientes. Así una alerta no se pierde al recargar la página,
+        /// al abrir otra pestaña o si llegó mientras ningún administrador estaba conectado.
+        /// </summary>
+        public async Task RecargarAsync()
+        {
+            var pendientes = await _api.SosPendientesAsync();
+            if (pendientes == null)
+                return;
+            lock (_alertasPendientes)
+            {
+                _alertasPendientes.Clear();
+                _alertasPendientes.AddRange(pendientes.OrderByDescending(a => a.FechaCreacion));
+            }
+            OnAlertaRecibida?.Invoke();
+        }
+
+        /// <summary>Marca la alerta como atendida en el servidor (queda en el historial con el nombre de quien la atendió).</summary>
+        public async Task<ResultadoAccion> AtenderAsync(int alertaId, string atendidoPor)
+        {
+            var r = await _api.AtenderSosAsync(alertaId, atendidoPor);
+            if (r.Ok) Quitar(alertaId);
+            return r;
+        }
+
+        /// <summary>Descarta una alerta (falsa alarma). Queda en el historial como descartada.</summary>
+        public async Task<ResultadoAccion> DescartarAsync(int alertaId)
+        {
+            var r = await _api.DescartarSosAsync(alertaId);
+            if (r.Ok) Quitar(alertaId);
+            return r;
         }
 
         public async Task IniciarAsync()
@@ -56,10 +102,29 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
                     ContactoEmail = GetString(alerta, "ContactoEmail")
                 };
 
-                _alertasPendientes.Add(sos);
+                lock (_alertasPendientes)
+                {
+                    if (_alertasPendientes.Any(a => a.Id == sos.Id))
+                        return;
+                    _alertasPendientes.Insert(0, sos);
+                }
                 OnAlertaRecibida?.Invoke();
                 await Task.CompletedTask;
             });
+
+            // Al reconectar se vuelve a leer la base por si llegó algo durante el corte.
+            // Eventos globales que la API ya emite a todos: los usa el mapa en vivo.
+            _hubConnection.On<object>("DisponibilidadCambio", payload =>
+                OnDisponibilidadCambio?.Invoke(GetInt(payload, "CuidadorId"), Leer(payload, "Disponible")?.ToString()?.ToLowerInvariant() == "true"));
+            _hubConnection.On<object>("UbicacionCuidadorCambio", payload =>
+                OnUbicacionCambio?.Invoke(GetInt(payload, "CuidadorId"), GetDouble(payload, "Latitud"), GetDouble(payload, "Longitud")));
+
+            _hubConnection.On<object>("CheckinRespondido", payload =>
+                OnCheckinRespondido?.Invoke(GetInt(payload, "UsuarioId"), GetString(payload, "Nombre") ?? "", GetString(payload, "Respuesta") ?? ""));
+
+            _hubConnection.Reconnecting += _ => { OnConexionCambio?.Invoke(false); return Task.CompletedTask; };
+            _hubConnection.Closed += _ => { OnConexionCambio?.Invoke(false); return Task.CompletedTask; };
+            _hubConnection.Reconnected += async _ => { OnConexionCambio?.Invoke(true); await RecargarAsync(); };
 
             try
             {
@@ -69,30 +134,18 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
             {
                 Console.WriteLine($"Error conectando al hub SOS: {ex.Message}");
             }
+
+            await RecargarAsync();
         }
 
-        public void MarcarAtendida(int alertaId)
+        private void Quitar(int alertaId)
         {
-            var alerta = _alertasPendientes.FirstOrDefault(a => a.Id == alertaId);
-            if (alerta != null)
-            {
-                _alertasPendientes.Remove(alerta);
-                OnAlertaAtendida?.Invoke();
-            }
+            lock (_alertasPendientes)
+                _alertasPendientes.RemoveAll(a => a.Id == alertaId);
+            OnAlertaAtendida?.Invoke();
         }
 
-        private string GetHubUrl()
-        {
-            try
-            {
-                var config = new ConfigurationBuilder()
-                    .AddJsonFile("appsettings.json", optional: true)
-                    .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: true)
-                    .Build();
-                return config["SignalRHubUrl"] ?? "";
-            }
-            catch { return ""; }
-        }
+        private string GetHubUrl() => _config["SignalRHubUrl"] ?? "";
 
         public async ValueTask DisposeAsync()
         {
@@ -154,6 +207,8 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
         public string? ContactoNombre { get; set; }
         public string? ContactoTelefono { get; set; }
         public string? ContactoEmail { get; set; }
+        public DateTime? FechaAtencion { get; set; }
+        public string? AtendidoPor { get; set; }
         public bool EsAutomatica => Origen == "Automatica";
     }
 }

@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using CUIDAPP_API.Seguridad;
 using CUIDAPP_API.DTOs.Pago;
 using CUIDAPP_API.Interfaces.Pago;
 
@@ -6,6 +8,8 @@ namespace CUIDAPP_API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Policy = PoliticasAdmin.Finanzas)]
+    [AuditarAdmin]
     public class PagoAdminController : ControllerBase
     {
         private readonly IPagoAdminService _pagoAdminService;

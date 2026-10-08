@@ -23,6 +23,8 @@ namespace CUIDAPP.Services
         public static event Action<int>? CuentaActualizada; // Estado (2=Aprobado, 3=Rechazado)
         public static event Action<int, decimal>? PagoAprobado; // TrabajoId, Monto
         public static event Action<int, bool, int?, string?>? TicketActualizado; // TicketId, Respuesta, Estado, Asunto
+        public static event Action<int, string, string, string, int>? AvisoDirecto; // Id, Tipo ("mensaje"/"checkin"), Título, Mensaje, Minutos
+        public static event Action<int, string?, string, string>? AvisoGeneral; // Destino (0 todos, 2 clientes, 3 cuidadores), Idioma (null todos), Título, Mensaje
 
         public static bool EstaConectado => _connection?.State == HubConnectionState.Connected;
 
@@ -79,6 +81,30 @@ namespace CUIDAPP.Services
                 int? estado = json.TryGetProperty("estado", out var e) && e.ValueKind == System.Text.Json.JsonValueKind.Number ? e.GetInt32() : null;
                 var asunto = json.TryGetProperty("asunto", out var a) && a.ValueKind == System.Text.Json.JsonValueKind.String ? a.GetString() : null;
                 MainThread.BeginInvokeOnMainThread(() => TicketActualizado?.Invoke(ticketId, respuesta, estado, asunto));
+            });
+
+            // Aviso directo a esta persona desde el centro de mando del panel.
+            _connection.On<object>("AvisoDirecto", payload =>
+            {
+                var json = (System.Text.Json.JsonElement)payload;
+                var id = json.TryGetProperty("id", out var i) && i.ValueKind == System.Text.Json.JsonValueKind.Number ? i.GetInt32() : 0;
+                var tipo = json.TryGetProperty("tipo", out var t) ? t.GetString() ?? "mensaje" : "mensaje";
+                var titulo = json.TryGetProperty("titulo", out var ti) ? ti.GetString() ?? "" : "";
+                var mensaje = json.TryGetProperty("mensaje", out var m) ? m.GetString() ?? "" : "";
+                var minutos = json.TryGetProperty("minutos", out var mi) && mi.ValueKind == System.Text.Json.JsonValueKind.Number ? mi.GetInt32() : 0;
+                MainThread.BeginInvokeOnMainThread(() => AvisoDirecto?.Invoke(id, tipo, titulo, mensaje, minutos));
+            });
+
+            // Aviso masivo enviado desde el panel administrativo.
+            _connection.On<object>("AvisoGeneral", payload =>
+            {
+                Console.WriteLine($"[Realtime] Evento recibido: AvisoGeneral {payload}");
+                var json = (System.Text.Json.JsonElement)payload;
+                var destino = json.TryGetProperty("destino", out var d) && d.ValueKind == System.Text.Json.JsonValueKind.Number ? d.GetInt32() : 0;
+                var idioma = json.TryGetProperty("idioma", out var i) && i.ValueKind == System.Text.Json.JsonValueKind.String ? i.GetString() : null;
+                var titulo = json.TryGetProperty("titulo", out var t) ? t.GetString() ?? "" : "";
+                var mensaje = json.TryGetProperty("mensaje", out var m) ? m.GetString() ?? "" : "";
+                MainThread.BeginInvokeOnMainThread(() => AvisoGeneral?.Invoke(destino, idioma, titulo, mensaje));
             });
 
             _connection.Reconnecting += ex =>

@@ -1,0 +1,19 @@
+@* Mensaje cuando una lista no tiene elementos. *@
+<div class="pn-empty">
+    <div class="pn-empty-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="@Icono"></path></svg>
+    </div>
+    <span class="pn-empty-title">@Titulo</span>
+    @if (!string.IsNullOrWhiteSpace(Texto))
+    {
+        <span class="pn-empty-text">@Texto</span>
+    }
+    @ChildContent
+</div>
+
+@code {
+    [Parameter] public string Titulo { get; set; } = "Nada por aquí";
+    [Parameter] public string? Texto { get; set; }
+    [Parameter] public string Icono { get; set; } = "M20 13V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6m16 0v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4m16 0h-4l-2 3h-4l-2-3H4";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

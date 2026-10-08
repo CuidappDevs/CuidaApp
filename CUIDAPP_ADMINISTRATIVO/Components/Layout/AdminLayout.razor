@@ -21,8 +21,12 @@
             </div>
 
             <nav class="adm-nav">
-                @foreach (var item in _navItems)
+                @foreach (var item in NavVisible())
                 {
+                    @if (item.Grupo != null && !_collapsed)
+                    {
+                        <span class="adm-nav-group">@item.Grupo</span>
+                    }
                     <a class="adm-nav-item @(IsActive(item.Section) ? "active" : "")"
                        href="@item.Href" title="@item.Label">
                         <span class="adm-nav-icon">
@@ -34,9 +38,9 @@
                         @if (!_collapsed)
                         {
                             <span class="adm-nav-label">@item.Label</span>
-                            @if (item.Count is int c)
+                            @if (item.Section == "sos" && SosService.AlertasPendientes.Count > 0)
                             {
-                                <span class="adm-nav-count">@c</span>
+                                <span class="adm-nav-count is-alert">@SosService.AlertasPendientes.Count</span>
                             }
                         }
                     </a>
@@ -71,41 +75,36 @@
                         <circle cx="11" cy="11" r="7"></circle>
                         <path d="m20 20-3.5-3.5"></path>
                     </svg>
-                    <input type="text" placeholder="Buscar por nombre o cédula" />
+                    <input type="search" placeholder="Buscar persona o servicio #" aria-label="Buscar"
+                           @bind="_busqueda" @bind:event="oninput" @onkeydown="Buscar" />
                 </div>
                 <div class="adm-divider-v"></div>
                 <div class="d-flex align-items-center gap-2" style="cursor:pointer;" @onclick="CerrarSesion" title="Cerrar sesión">
                     <div class="adm-avatar">@Iniciales(_nombre)</div>
                     <div class="d-flex flex-column">
                         <span style="font-size:13px; font-weight:600;">@_nombre</span>
-                        <span style="font-size:12px; color:var(--adm-muted);">Administrador</span>
+                        <span style="font-size:12px; color:var(--adm-muted);">@SesionAdmin.NombreNivel(_nivel) · Cerrar sesión</span>
                     </div>
                 </div>
             </div>
         </header>
 
-        @* ---------- SOS Alert Banner ---------- *@
-        @if (SosService.AlertasPendientes.Any())
+        @* ---------- Barra de emergencia SOS ---------- *@
+        @if (SosService.AlertasPendientes.Count > 0 && CurrentSection() != "sos")
         {
-            <div class="sos-banner" style="background:#C62828; color:white; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; animation: sos-pulse 1.5s ease-in-out infinite;">
-                <div class="d-flex align-items-center" style="gap:12px;">
-                    <span style="font-size:22px; animation: sos-blink 0.8s ease-in-out infinite;">🚨</span>
-                    <div>
-                        <strong style="font-size:15px;">ALERTA SOS - @SosService.AlertasPendientes.Count activa(s)</strong>
-                        <div style="font-size:12px; opacity:0.9;">
-                            @foreach (var a in SosService.AlertasPendientes.Take(3))
-                            {
-                                <span>@a.NombreUsuario (@a.TipoUsuario) — @a.FechaCreacion.ToString("HH:mm")&nbsp;&nbsp;</span>
-                            }
-                        </div>
+            var alertas = SosService.AlertasPendientes;
+            <div class="pn-sos-bar" role="alert">
+                <div class="d-flex align-items-center" style="gap:12px; min-width:0;">
+                    <span class="pn-sos-beacon"></span>
+                    <div class="d-flex flex-column" style="min-width:0;">
+                        <strong style="font-size:14px;">@(alertas.Count == 1 ? "1 emergencia SOS activa" : $"{alertas.Count} emergencias SOS activas")</strong>
+                        <span style="font-size:12px; opacity:.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            @ResumenSos(alertas)
+                        </span>
                     </div>
                 </div>
-                <a href="sos-alertas" style="color:white; text-decoration:underline; font-weight:600; font-size:14px;">Ver detalle</a>
+                <a href="sos-alertas">Atender ahora</a>
             </div>
-            <style>
-                @@keyframes sos-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.85; } }
-                @@keyframes sos-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-            </style>
         }
 
         <div class="adm-content">
@@ -116,6 +115,8 @@
         </div>
     </div>
 </div>
+
+<DialogoConfirmacion />
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
@@ -133,18 +134,69 @@
     private string _title = "";
     private string _subtitle = "";
 
-    private record NavItem(string Section, string Label, string Href, string IconPath, int? Count);
+    private string? _busqueda;
+    private int _nivel = SesionAdmin.Operaciones;
+
+    // Nivel mínimo para ver cada sección del menú.
+    private enum Permiso { Todos, Operar, Finanzas, Super }
+
+    private record NavItem(string Section, string Label, string Href, string IconPath, Permiso Permiso = Permiso.Todos, string? Grupo = null);
 
     private readonly NavItem[] _navItems =
     {
-        new("dash", "Dashboard", "dashboard", "M4 13h6V4H4zM14 20h6v-9h-6zM4 20h6v-4H4zM14 8h6V4h-6z", null),
-        new("sos", "Emergencias SOS", "sos-alertas", "M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z", null),
-        new("partners", "Care Partners", "care-partners", "M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M18 8l2 2 3-3", null),
-        new("clients", "Clientes", "clientes", "M3 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M9 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M17 20v-2a4 4 0 0 0-2-3.4M16 3.5a3.5 3.5 0 0 1 0 7", null),
-        new("pagos", "Pagos y finanzas", "pagos", "M2 7h20M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2M2 7v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7M6 15h4", null),
-        new("soporte", "Soporte", "soporte", "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z", null),
-        new("admins", "Administradores", "administradores", "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z", null),
+        new("dash", "Dashboard", "dashboard", "M4 13h6V4H4zM14 20h6v-9h-6zM4 20h6v-4H4zM14 8h6V4h-6z", Grupo: "Operación"),
+        new("sos", "Emergencias SOS", "sos-alertas", "M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"),
+        new("servicios", "Servicios", "servicios", "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2ZM9 16l2 2 4-4"),
+        new("mapa", "Mapa en vivo", "mapa", "M9 20l-5.4-2.7A1 1 0 0 1 3 16.4V4.6a1 1 0 0 1 1.4-.9L9 6m0 14 6-3m-6 3V6m6 11 4.6 2.3a1 1 0 0 0 1.4-.9V7.6a1 1 0 0 0-.6-.9L15 4m0 13V4m0 0L9 6"),
+        new("verificacion", "Verificación", "verificacion", "M9 12l2 2 4-4M12 3l7 3v6c0 4.5-3 7.7-7 9-4-1.3-7-4.5-7-9V6z", Grupo: "Personas"),
+        new("partners", "Care Partners", "care-partners", "M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M18 8l2 2 3-3"),
+        new("clients", "Clientes", "clientes", "M3 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M9 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M17 20v-2a4 4 0 0 0-2-3.4M16 3.5a3.5 3.5 0 0 1 0 7"),
+        new("calificaciones", "Calificaciones", "calificaciones", "M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"),
+        new("soporte", "Soporte", "soporte", "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"),
+        new("avisos", "Avisos masivos", "avisos", "M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1ZM16 8.5a5 5 0 0 1 0 7M19 5.5a9 9 0 0 1 0 13"),
+        new("pagos", "Pagos", "pagos", "M2 7h20M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2M2 7v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7M6 15h4", Permiso.Finanzas, "Dinero"),
+        new("finanzas", "Finanzas", "finanzas", "M3 3v18h18M7 15l4-4 3 3 5-6", Permiso.Finanzas),
+        new("catalogos", "Catálogos", "catalogos", "M4 6h16M4 12h16M4 18h10", Permiso.Todos, "Sistema"),
+        new("auditoria", "Auditoría", "auditoria", "M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4", Permiso.Super),
+        new("admins", "Administradores", "administradores", "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z", Permiso.Super),
     };
+
+    private bool Permitido(Permiso p) => p switch
+    {
+        Permiso.Operar => _nivel is SesionAdmin.Superadmin or SesionAdmin.Operaciones,
+        Permiso.Finanzas => _nivel is SesionAdmin.Superadmin or SesionAdmin.Finanzas,
+        Permiso.Super => _nivel == SesionAdmin.Superadmin,
+        _ => true
+    };
+
+    // Al ocultar ítems por permisos, el título del grupo pasa al primer ítem visible de ese grupo.
+    private IEnumerable<NavItem> NavVisible()
+    {
+        string? grupo = null, grupoMostrado = null;
+        foreach (var item in _navItems)
+        {
+            grupo = item.Grupo ?? grupo;
+            if (!Permitido(item.Permiso)) continue;
+            if (grupo != grupoMostrado)
+            {
+                grupoMostrado = grupo;
+                yield return item with { Grupo = grupo };
+            }
+            else
+            {
+                yield return item with { Grupo = null };
+            }
+        }
+    }
+
+    private static string ResumenSos(IEnumerable<SosAlerta> alertas)
+        => string.Join("  ·  ", alertas.Take(3).Select(a => $"{a.NombreUsuario} ({a.TipoUsuario}) {a.FechaCreacion:HH:mm}"));
+
+    private void Buscar(KeyboardEventArgs e)
+    {
+        if (e.Key != "Enter" || string.IsNullOrWhiteSpace(_busqueda)) return;
+        Nav.NavigateTo($"buscar?q={Uri.EscapeDataString(_busqueda.Trim())}");
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -156,8 +208,17 @@
             return;
         }
 
+        // El token de la API vence a las 8 h: si ya venció (o la sesión es de antes de este cambio), se pide entrar otra vez.
+        var token = user.FindFirst(SesionAdmin.ClaimToken)?.Value;
+        if (string.IsNullOrEmpty(token) || SesionAdmin.LeerToken(token).Vence is { } vence && vence <= DateTimeOffset.UtcNow)
+        {
+            Nav.NavigateTo("/account/logout", forceLoad: true);
+            return;
+        }
+
         _autorizado = true;
         _nombre = user.FindFirst(ClaimTypes.Name)?.Value ?? "";
+        _nivel = SesionAdmin.Nivel(user);
 
         SosService.OnAlertaRecibida += OnSosRecibida;
         SosService.OnAlertaAtendida += OnSosAtendida;
@@ -207,6 +268,15 @@
     {
         var seg = Segment();
         if (seg.StartsWith("sos")) return "sos";
+        if (seg.StartsWith("servicios")) return "servicios";
+        if (seg.StartsWith("mapa")) return "mapa";
+        if (seg.StartsWith("verificacion")) return "verificacion";
+        if (seg.StartsWith("calificaciones")) return "calificaciones";
+        if (seg.StartsWith("avisos")) return "avisos";
+        if (seg.StartsWith("finanzas")) return "finanzas";
+        if (seg.StartsWith("catalogos")) return "catalogos";
+        if (seg.StartsWith("auditoria")) return "auditoria";
+        if (seg.StartsWith("buscar")) return "buscar";
         if (seg.StartsWith("care-partners")) return "partners";
         if (seg.StartsWith("clientes")) return "clients";
         if (seg.StartsWith("pagos")) return "pagos";
@@ -223,11 +293,21 @@
         (_title, _subtitle) = seg switch
         {
             "sos" => ("Emergencias SOS", "Alertas de emergencia activas"),
+            "servicios" => ("Servicios", "Todos los servicios, su estado y sus incidencias"),
+            _ when seg.StartsWith("servicios/") => ("Detalle del servicio", "Línea de tiempo, pagos, chat e incidencias"),
+            "mapa" => ("Mapa en vivo", "Care Partners visibles, servicios en curso y SOS"),
+            "verificacion" => ("Verificación", "Care Partners esperando revisión"),
+            "calificaciones" => ("Calificaciones", "Reseñas y Care Partners con nota baja"),
+            "avisos" => ("Avisos masivos", "Mensajes a los usuarios de la app"),
+            "finanzas" => ("Finanzas", "Facturación, pagos y ganancias por Care Partner"),
+            "catalogos" => ("Catálogos", "Tipos de servicio, motivos, nacionalidades y documentos"),
+            "auditoria" => ("Auditoría", "Quién hizo qué en el panel y cuándo"),
+            "buscar" => ("Búsqueda", "Personas y servicios"),
             "care-partners" => ("Care Partners registradas", "Verifica identidad y documentos"),
             _ when seg.StartsWith("care-partners/") => ("Ficha de Care Partner", "Revisión de documentos"),
             "clientes" => ("Clientes registrados", "Gestiona cuentas e información de contacto"),
             _ when seg.StartsWith("clientes/") => ("Ficha de cliente", "Cuenta y servicios contratados"),
-            "pagos" => ("Pagos y finanzas", "Autoriza y confirma los pagos a Care Partners"),
+            "pagos" => ("Pagos", "Autoriza y confirma los pagos a Care Partners"),
             "soporte" => ("Soporte", "Reportes de clientes y Care Partners"),
             _ when seg.StartsWith("soporte/") => ("Reporte", "Detalle y seguimiento"),
             "administradores" => ("Administradores", "Gestiona quién tiene acceso al panel"),

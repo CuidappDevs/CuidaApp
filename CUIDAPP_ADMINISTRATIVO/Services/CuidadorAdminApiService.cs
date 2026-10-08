@@ -8,16 +8,17 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
     {
         private readonly HttpClient _httpClient;
 
-        public CuidadorAdminApiService(HttpClient httpClient)
+        public CuidadorAdminApiService(HttpClient httpClient, Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider estado)
         {
             _httpClient = httpClient;
+            SesionAdmin.Adjuntar(_httpClient, estado);
         }
 
         // Origen del servidor (sin /api/), para armar la URL completa de los documentos
         // (que la API devuelve como ruta relativa, ej. "/uploads/...").
-        public string ServerOrigin => _httpClient.BaseAddress is { } uri
-            ? $"{uri.Scheme}://{uri.Authority}"
-            : "";
+        // Las fotos y documentos se sirven a través del panel (/archivo/...): la API está en http y el
+        // navegador bloquea imágenes http dentro de una página https.
+        public string ServerOrigin => "/archivo";
 
         public async Task<List<CuidadorAdmin>> ObtenerCuidadoresAsync(int? estado)
         {
