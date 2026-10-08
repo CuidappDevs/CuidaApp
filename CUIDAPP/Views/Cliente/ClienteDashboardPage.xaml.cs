@@ -87,6 +87,9 @@ namespace CUIDAPP.Views.Cliente
                 OverlayCarga.IsVisible = false;
                 await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_cargar_tu"), Localizador.T("ok"));
             }
+
+            // Bienvenida animada: solo la primera vez que esta cuenta entra a la app.
+            _ = BienvenidaApp.MostrarSiCorrespondeAsync();
         }
 
         private async Task CargarPantallaAsync()

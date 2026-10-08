@@ -112,7 +112,9 @@ namespace CUIDAPP.Platforms.Android
             if (EstadoCuidador.EsCuidador)
             {
                 bool visible = EstadoCuidador.Disponible;
-                var estado = cambiando ? Localizador.T("notif_actualizando_visibilidad")
+                bool aprobada = EstadoCuidador.CuentaAprobada;
+                var estado = !aprobada ? Localizador.T("notif_perfil_en_validacion")
+                           : cambiando ? Localizador.T("notif_actualizando_visibilidad")
                            : error ? Localizador.T("notif_error_visibilidad")
                            : Localizador.T(visible ? "notif_visible_clientes" : "notif_oculto_clientes");
 
@@ -120,7 +122,7 @@ namespace CUIDAPP.Platforms.Android
                 builder.SetSubText(estado)
                        .SetStyle(new NotificationCompat.BigTextStyle().BigText(Localizador.T("recibiendo_avisos_tiempo_real")));
 
-                if (!cambiando)
+                if (!cambiando && aprobada)
                 {
                     var alCambiar = PendingIntent.GetService(this, 1,
                         new Intent(this, typeof(ConexionForegroundService)).SetAction(AccionCambiarVisibilidad), flags);

@@ -8,6 +8,8 @@ namespace CUIDAPP.Views.Dashboard
         private readonly ApiService _apiService = new ApiService();
         private int cuidadorId;
         private bool disponibleActual;
+        // Cuenta aprobada por la administración: sin esto no puede ponerse visible (aunque sus documentos estén aprobados).
+        private bool cuentaAprobada = true;
         private bool suprimirEventoToggle;
         private bool estaVisible;
         private bool pollingUbicacionIniciado;
@@ -47,6 +49,9 @@ namespace CUIDAPP.Views.Dashboard
             await CargarDashboard();
             _ = ActualizarUbicacionActualAsync();
             IniciarPollingUbicacionSiHaceFalta();
+
+            // Bienvenida animada: solo la primera vez que esta cuenta entra a su panel (ya aprobada).
+            _ = BienvenidaApp.MostrarSiCorrespondeAsync();
         }
 
         protected override void OnDisappearing()
@@ -165,7 +170,12 @@ namespace CUIDAPP.Views.Dashboard
                 if (!string.IsNullOrWhiteSpace(perfil.FotoUrl))
                     ImgFotoPerfil.Source = $"{ApiService.ServerOrigin}{perfil.FotoUrl}";
 
-                disponibleActual = perfil.Disponible;
+                cuentaAprobada = perfil.EstadoAprobacion == 2;
+                EstadoCuidador.EstablecerCuentaAprobada(cuentaAprobada);
+                disponibleActual = cuentaAprobada && perfil.Disponible;
+                // Perfil en validación que quedó visible de antes: se apaga también en el servidor.
+                if (!cuentaAprobada && perfil.Disponible)
+                    _ = _apiService.ActualizarDisponibilidadAsync(cuidadorId, false);
                 EstadoCuidador.Establecer(disponibleActual);
                 ActualizarUiDisponibilidad();
             }
@@ -218,7 +228,7 @@ namespace CUIDAPP.Views.Dashboard
                 LblDisponible.Text = Localizador.T("no_disponible");
                 DetenerPulsoDisponible();
                 LblDisponible.TextColor = (Color)Application.Current!.Resources["ColorTextStrong"];
-                LblDisponibleSubtitulo.Text = Localizador.T("estas_desconectado_los_clientes_no");
+                LblDisponibleSubtitulo.Text = Localizador.T(cuentaAprobada ? "estas_desconectado_los_clientes_no" : "perfil_en_validacion_subtitulo");
             }
         }
 
@@ -278,6 +288,17 @@ namespace CUIDAPP.Views.Dashboard
                 return;
 
             var nuevoValor = e.Value;
+
+            // Perfil todavía en validación: el interruptor vuelve a apagado y se explica por qué.
+            if (nuevoValor && !cuentaAprobada)
+            {
+                suprimirEventoToggle = true;
+                SwitchDisponible.IsToggled = false;
+                suprimirEventoToggle = false;
+                await Alerta.MostrarAsync(Localizador.T("perfil_en_validacion_titulo"), Localizador.T("perfil_en_validacion_texto"), Localizador.T("entendido"), TipoAlerta.Info);
+                return;
+            }
+
             SwitchDisponible.IsEnabled = false;
             LblDisponibleSubtitulo.Text = Localizador.T("actualizando");
 

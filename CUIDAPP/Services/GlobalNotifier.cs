@@ -6,10 +6,11 @@ namespace CUIDAPP.Services
     // usuario no tiene esa conversación abierta.
     public static class GlobalNotifier
     {
-        public static void MostrarBanner(string titulo, string mensaje)
+        public static void MostrarBanner(string titulo, string mensaje, TipoSonido sonido = TipoSonido.Aviso)
         {
             MainThread.BeginInvokeOnMainThread(async () =>
             {
+                SonidoAviso.Reproducir(sonido);
                 try
                 {
                     var currentPage = Shell.Current?.CurrentPage;

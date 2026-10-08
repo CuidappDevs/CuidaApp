@@ -163,3 +163,17 @@ No hay SPs ni tablas nuevas. Hay que publicar el API.
 - El diseño común está en `Services/Email/PlantillaCorreo.cs`, del que heredan `ReciboService` y `BienvenidaService`.
 - Los íconos nuevos están en `wwwroot/email/`: `hero_hogar`, `hero_revision`, `pendiente` y `paso`.
 - No hay tablas ni SPs nuevos. Si el envío falla, no afecta el registro.
+
+## Bienvenida animada (una vez por cuenta)
+
+- BD: columna `Usuarios.BienvenidaVista BIT NOT NULL DEFAULT 0`, más los SPs `sp_ObtenerBienvenidaVista` y `sp_MarcarBienvenidaVista` (`docs/sql/usuarios-bienvenida.sql`). Al correr el script, **los usuarios existentes quedan marcados como vistos**: solo la ven las cuentas nuevas.
+- Endpoints nuevos: `GET api/usuario/{id}/bienvenida` → `{ bienvenidaVista }` y `PUT api/usuario/{id}/bienvenida` (la marca como vista).
+- App:
+  - Al entrar al panel (el cliente siempre; el cuidador solo cuando ya está aprobado), `Services/BienvenidaApp.cs` consulta al servidor y, si no la vio, abre `Views/Comun/BienvenidaPage`. Al terminar o saltar se marca en el servidor, así que no vuelve a salir en ningún teléfono. Si no hay conexión, no se muestra y se intenta la próxima vez.
+  - Animaciones Lottie en `CUIDAPP/Resources/Raw/bienvenida/*.json`, reproducidas con `SkiaSharp.Extended.UI.Maui` (`SKLottieView`). Las animaciones de marca se generan con `docs/lottie_bienvenida_gen.py`.
+
+## Visibilidad solo con la cuenta aprobada
+
+- `sp_ActualizarDisponibilidadCuidador` (`docs/sql/disponibilidad-solo-aprobados.sql`) solo deja ponerse **Disponible** a un cuidador con `EstadoAprobacion = 2`. Siempre puede ponerse no disponible. El script además apaga la visibilidad de los cuidadores que hoy están disponibles sin estar aprobados.
+- La búsqueda de cuidadores (mapa, lista por servicio y servicios cercanos) sigue exigiendo la cuenta aprobada.
+- App: el cuidador con todos los documentos aprobados pero la cuenta pendiente entra a su panel con el interruptor **apagado**. Si intenta activarlo, ve "Tu perfil está en validación" y la notificación fija no ofrece el botón "Hacerme visible". Cuando la administración aprueba la cuenta (evento `CuentaActualizada`), se destraba.

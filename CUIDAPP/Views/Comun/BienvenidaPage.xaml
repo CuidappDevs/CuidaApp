@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:CUIDAPP.Localization"
+             xmlns:skia="clr-namespace:SkiaSharp.Extended.UI.Controls;assembly=SkiaSharp.Extended.UI"
+             x:Class="CUIDAPP.Views.Comun.BienvenidaPage"
+             Shell.NavBarIsVisible="False"
+             SafeAreaEdges="None"
+             BackgroundColor="{StaticResource ColorBackground}">
+
+    <Grid SafeAreaEdges="None">
+        <Grid.GestureRecognizers>
+            <SwipeGestureRecognizer Direction="Left" Swiped="OnDeslizarIzquierda"/>
+            <SwipeGestureRecognizer Direction="Right" Swiped="OnDeslizarDerecha"/>
+        </Grid.GestureRecognizers>
+
+        <!-- Fondo vivo: manchas de color que flotan (motion graphics) -->
+        <Ellipse x:Name="Mancha1" Fill="{StaticResource ColorPrimarySoft}" WidthRequest="420" HeightRequest="420" HorizontalOptions="Start" VerticalOptions="Start" Margin="-160,-120,0,0" Opacity="0.9"/>
+        <Ellipse x:Name="Mancha2" Fill="{StaticResource ColorSuccessSoft}" WidthRequest="300" HeightRequest="300" HorizontalOptions="End" VerticalOptions="Center" Margin="0,0,-140,80" Opacity="0.8"/>
+        <Ellipse x:Name="Mancha3" Fill="{StaticResource ColorWarningSoft}" WidthRequest="260" HeightRequest="260" HorizontalOptions="Start" VerticalOptions="End" Margin="-100,0,0,-60" Opacity="0.7"/>
+
+        <Grid x:Name="Contenido" RowDefinitions="Auto,*,Auto,Auto,Auto,Auto" Padding="24,0">
+            <!-- Saltar -->
+            <Label x:Name="BtnSaltar" Grid.Row="0" Text="{loc:T ob_saltar}" FontFamily="OpenSansSemibold" FontSize="15" TextColor="{StaticResource ColorTextMuted}"
+                   HorizontalOptions="End" Padding="12,10">
+                <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnSaltarTapped"/></Label.GestureRecognizers>
+            </Label>
+
+            <!-- Animación -->
+            <Grid x:Name="EscenaAnimacion" Grid.Row="1" VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="320" HeightRequest="320">
+                <skia:SKLottieView x:Name="Animacion" RepeatCount="-1" WidthRequest="320" HeightRequest="320"/>
+            </Grid>
+
+            <!-- Textos -->
+            <Label x:Name="LblTitulo" Grid.Row="2" FontFamily="OpenSansSemibold" FontSize="27" TextColor="{StaticResource ColorTextStrong}"
+                   HorizontalTextAlignment="Center" Margin="0,8,0,10"/>
+            <Label x:Name="LblTexto" Grid.Row="3" FontFamily="OpenSansRegular" FontSize="16" TextColor="{StaticResource ColorTextMuted}"
+                   HorizontalTextAlignment="Center" Margin="8,0,8,28" MinimumHeightRequest="72"/>
+
+            <!-- Progreso -->
+            <HorizontalStackLayout x:Name="Puntos" Grid.Row="4" HorizontalOptions="Center" Spacing="8" Margin="0,0,0,22"/>
+
+            <!-- Acción principal + espacio de la barra de gestos -->
+            <VerticalStackLayout Grid.Row="5" Spacing="0">
+                <Button x:Name="BtnSiguiente" Text="{loc:T ob_siguiente}" Clicked="OnSiguienteClicked" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White"
+                        FontFamily="OpenSansSemibold" FontSize="17" CornerRadius="18" HeightRequest="58" Pressed="OnBotonPresionado" Released="OnBotonSoltado">
+                    <Button.Shadow>
+                        <Shadow Brush="{StaticResource ColorPrimary}" Offset="0,10" Radius="18" Opacity="0.3"/>
+                    </Button.Shadow>
+                </Button>
+                <ContentView x:Name="EspacioInferior" HeightRequest="24"/>
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
+</ContentPage>

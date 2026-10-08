@@ -189,6 +189,38 @@ namespace CUIDAPP.Services
             }
         }
 
+        /// <summary>Si el usuario ya vio la bienvenida animada (una vez por cuenta). Null si no se pudo consultar.</summary>
+        public async Task<bool?> ObtenerBienvenidaVistaAsync(int usuarioId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"usuario/{usuarioId}/bienvenida");
+                if (!response.IsSuccessStatusCode)
+                    return null;
+                var json = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+                return json.TryGetProperty("bienvenidaVista", out var v) ? v.GetBoolean() : null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error consultando la bienvenida: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<bool> MarcarBienvenidaVistaAsync(int usuarioId)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsync($"usuario/{usuarioId}/bienvenida", null);
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error marcando la bienvenida: {ex.Message}");
+                return false;
+            }
+        }
+
         public async Task<bool> RegisterCuidadorAsync(RegisterCaregiverRequest request)
         {
             try

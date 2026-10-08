@@ -165,9 +165,9 @@ namespace CUIDAPP.Services
 
             NotificacionHistorial.Agregar(Localizador.T("nuevo_mensaje"), texto, "mensaje", trabajoId > 0 ? trabajoId : null);
             if (App.EstaEnPrimerPlano)
-                GlobalNotifier.MostrarBanner(titulo, texto);
+                GlobalNotifier.MostrarBanner(titulo, texto, TipoSonido.Mensaje);
             else
-                NativeNotifier.Mostrar(titulo, texto, trabajoId > 0 ? NotificacionDestino.Chat(trabajoId) : null);
+                NativeNotifier.Mostrar(titulo, texto, trabajoId > 0 ? NotificacionDestino.Chat(trabajoId) : null, TipoSonido.Mensaje);
         }
 
         private static async Task<(int TrabajoId, string Nombre)> ResolverConversacionAsync(int conversacionId)
@@ -207,6 +207,7 @@ namespace CUIDAPP.Services
             if (estado == 2)
             {
                 Preferences.Default.Set("EstadoAprobacion", 2);
+                EstadoCuidador.EstablecerCuentaAprobada(true); // ya puede ponerse visible
                 Avisar(Localizador.T("notif_cuenta_aprobada_titulo"), Localizador.T("notif_cuenta_aprobada_texto"), "verificacion", null, NotificacionDestino.Verificacion);
             }
             else if (estado == 3)

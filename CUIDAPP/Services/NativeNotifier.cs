@@ -8,23 +8,33 @@ namespace CUIDAPP.Services
     {
         private static int _proximoId = 1000;
 
-        public static void Mostrar(string titulo, string mensaje, string? destino = null)
+        public static void Mostrar(string titulo, string mensaje, string? destino = null, TipoSonido sonido = TipoSonido.Aviso)
         {
 #if ANDROID
             try
             {
                 var contexto = Android.App.Application.Context;
-                const string canalId = "cuidapp_mensajes";
+                // Un canal por sonido: Android fija el sonido al crear el canal y no deja cambiarlo después.
+                var canalId = sonido == TipoSonido.Mensaje ? "cuidapp_chat" : "cuidapp_avisos";
+                var sonidoUri = SonidoAviso.Uri(sonido);
 
                 if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.O)
                 {
                     var manager = (Android.App.NotificationManager)contexto.GetSystemService(Android.Content.Context.NotificationService)!;
+                    if (manager.GetNotificationChannel("cuidapp_mensajes") != null)
+                        manager.DeleteNotificationChannel("cuidapp_mensajes"); // canal viejo, con el sonido genérico
                     if (manager.GetNotificationChannel(canalId) == null)
                     {
-                        var canal = new Android.App.NotificationChannel(canalId, Localizador.T("canal_mensajes_actividad"), Android.App.NotificationImportance.High)
+                        var canal = new Android.App.NotificationChannel(canalId,
+                            Localizador.T(sonido == TipoSonido.Mensaje ? "canal_chat" : "canal_mensajes_actividad"), Android.App.NotificationImportance.High)
                         {
-                            Description = Localizador.T("notificaciones_de_chat_solicitudes_y")
+                            Description = Localizador.T(sonido == TipoSonido.Mensaje ? "canal_chat_desc" : "notificaciones_de_chat_solicitudes_y")
                         };
+                        canal.SetSound(sonidoUri, new Android.Media.AudioAttributes.Builder()
+                            .SetUsage(Android.Media.AudioUsageKind.Notification)!
+                            .SetContentType(Android.Media.AudioContentType.Sonification)!
+                            .Build());
+                        canal.EnableVibration(true);
                         manager.CreateNotificationChannel(canal);
                     }
                 }
@@ -45,6 +55,7 @@ namespace CUIDAPP.Services
                     .SetSmallIcon(_iconoResId)
                     .SetColor(Android.Graphics.Color.ParseColor("#1C4D96"))
                     .SetAutoCancel(true)
+                    .SetSound(sonidoUri) // Android 7 o anterior (sin canales)
                     .SetPriority((int)Android.App.NotificationPriority.High)
                     .SetContentIntent(pendingIntent)
                     .Build();

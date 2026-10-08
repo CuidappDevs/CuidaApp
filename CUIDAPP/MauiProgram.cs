@@ -1,3 +1,4 @@
+using SkiaSharp.Views.Maui.Controls.Hosting;
 using Microsoft.Extensions.Logging;
 using Plugin.Maui.Audio;
 
@@ -10,6 +11,7 @@ namespace CUIDAPP
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .UseSkiaSharp() // Lottie (SKLottieView) para la bienvenida animada
                 .AddAudio()
                 .ConfigureFonts(fonts =>
                 {
