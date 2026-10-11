@@ -1,0 +1,177 @@
+@page "/configuracion-pagos"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@inject PanelApiService Api
+@inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
+
+<PageTitle>Configuración de pagos · Cuidapp Admin</PageTitle>
+
+<div class="pn-page" style="max-width:920px;">
+    <a class="adm-back" href="finanzas">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"></path></svg>
+        Volver a Finanzas
+    </a>
+
+    @if (!_permitido)
+    {
+        <div class="adm-card"><EstadoVacio Titulo="Sin acceso" Texto="Esta sección es solo para administradores de Finanzas o Superadmin." /></div>
+    }
+    else if (_comisiones == null)
+    {
+        <div class="adm-card"><Esqueleto Filas="6" ConAvatar="false" /></div>
+    }
+    else
+    {
+        @* ---------- Comisión general ---------- *@
+        <section class="adm-card pn-cfg">
+            <div class="pn-cfg-info">
+                <span class="adm-card-title">Comisión de la plataforma</span>
+                <span class="adm-card-sub">Porcentaje de la tarifa que se queda CuidApp. Se aplica a los pagos que se creen desde ahora; los pagos existentes no cambian.</span>
+                @if (_comisiones.General?.AdminNombre != null)
+                {
+                    <span class="pn-muted" style="font-size:11.5px;">Último cambio: @_comisiones.General.AdminNombre · @_comisiones.General.FechaActualizacion?.ToString("dd MMM yyyy")</span>
+                }
+            </div>
+            <div class="pn-cfg-control">
+                <span class="d-inline-flex align-items-center" style="gap:6px;">
+                    <input class="pn-input" type="number" min="0" max="100" step="0.5" inputmode="decimal" @bind="_general" @bind:event="oninput" style="width:96px;" aria-label="Comisión general" />
+                    <span class="pn-muted">%</span>
+                </span>
+                <button type="button" class="pn-btn pn-btn-primary pn-btn-sm" disabled="@(_guardando || _general == _comisiones.General?.Porcentaje)" @onclick="GuardarGeneral">Guardar</button>
+            </div>
+        </section>
+
+        @* ---------- Comisión por tipo ---------- *@
+        <section class="adm-card overflow-hidden">
+            <div class="pn-card-head">
+                <div class="d-flex flex-column" style="gap:2px;">
+                    <span class="adm-card-title">Comisión por tipo de servicio</span>
+                    <span class="adm-card-sub">Opcional. Vacío = usa la general (@(_comisiones.General?.Porcentaje?.ToString("0.##") ?? "0")%). Se guarda al salir de la casilla.</span>
+                </div>
+            </div>
+            @foreach (var tipo in _comisiones.Tipos)
+            {
+                <div class="pn-cfg-fila">
+                    <span style="flex:1; @(tipo.Activo ? "" : "color:var(--adm-muted-2);")">
+                        @tipo.Nombre
+                        @if (!tipo.Activo) { <span class="pn-pill tone-muted no-dot" style="margin-left:6px;">Oculto</span> }
+                    </span>
+                    <span class="pn-muted" style="font-size:12px; min-width:110px; text-align:right;">@(tipo.ComisionPorcentaje is decimal p ? "Propia" : "Usa la general")</span>
+                    <span class="d-inline-flex align-items-center" style="gap:6px;">
+                        <input class="pn-input" type="number" min="0" max="100" step="0.5" inputmode="decimal" placeholder="@(_comisiones.General?.Porcentaje?.ToString("0.##") ?? "0")"
+                               value="@tipo.ComisionPorcentaje?.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)"
+                               @onchange="e => GuardarTipo(tipo, e.Value?.ToString())" style="width:86px;" aria-label="Comisión de @tipo.Nombre" />
+                        <span class="pn-muted">%</span>
+                    </span>
+                </div>
+            }
+        </section>
+
+        @* ---------- Efectivo ---------- *@
+        <section class="adm-card pn-cfg">
+            <div class="pn-cfg-info">
+                <span class="adm-card-title">Tope de deuda en efectivo</span>
+                <span class="adm-card-sub">Cuando un cliente paga en efectivo, el Care Partner le debe la comisión a CuidApp. Si su deuda llega a este monto, no puede aceptar servicios en efectivo hasta ponerse al día. La deuda se descuenta sola de su próximo pago por transferencia.</span>
+            </div>
+            <div class="pn-cfg-control">
+                <span class="d-inline-flex align-items-center" style="gap:6px;">
+                    <span class="pn-muted">RD$</span>
+                    <input class="pn-input" type="number" min="0" step="100" inputmode="decimal" @bind="_tope" @bind:event="oninput" style="width:120px;" aria-label="Tope de deuda" />
+                </span>
+                <button type="button" class="pn-btn pn-btn-primary pn-btn-sm" disabled="@(_guardandoCfg || _tope == _cfg?.TopeDeudaEfectivo)" @onclick="GuardarConfig">Guardar</button>
+            </div>
+        </section>
+
+        @* ---------- Transferencia ---------- *@
+        <section class="adm-card adm-card-pad d-flex flex-column" style="gap:12px;">
+            <div class="d-flex flex-column" style="gap:2px;">
+                <span class="adm-card-title">Instrucciones para pagar por transferencia</span>
+                <span class="adm-card-sub">El cliente las ve en la app cuando elige pagar por transferencia y en el detalle de su servicio.</span>
+            </div>
+            <div class="pn-grid-2-eq" style="display:grid; gap:16px; align-items:start;">
+                <textarea class="adm-textarea" rows="5" maxlength="1000" @bind="_instrucciones" @bind:event="oninput"
+                          placeholder="Ej.: Banreservas · Cta. corriente 123-456789-0 · CuidApp SRL · RNC 1-23-45678-9. Envía el comprobante por WhatsApp al 829-861-1275."></textarea>
+                <div class="pn-cfg-preview">
+                    <span class="pn-muted" style="font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em;">Así lo ve el cliente</span>
+                    <div class="pn-cfg-preview-caja">
+                        <span style="font-size:12px; font-weight:600; color:var(--info);">Cómo pagar por transferencia</span>
+                        <span style="font-size:13px; white-space:pre-wrap;">@(string.IsNullOrWhiteSpace(_instrucciones) ? "(sin instrucciones: el cliente no verá este recuadro)" : _instrucciones)</span>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex align-items-center" style="gap:10px;">
+                <button type="button" class="pn-btn pn-btn-primary pn-btn-sm" disabled="@(_guardandoCfg || (_instrucciones ?? "") == (_cfg?.InstruccionesTransferencia ?? ""))" @onclick="GuardarConfig">Guardar instrucciones</button>
+                <span class="pn-hint">@((_instrucciones ?? "").Length) / 1000</span>
+            </div>
+        </section>
+    }
+</div>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private bool _permitido, _guardando, _guardandoCfg;
+    private ComisionesPanel? _comisiones;
+    private ConfigPagos? _cfg;
+    private decimal? _general, _tope;
+    private string _instrucciones = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthStateTask != null) _permitido = SesionAdmin.PuedeFinanzas((await AuthStateTask).User);
+        if (_permitido) await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        var com = Api.ComisionesAsync();
+        var cfg = Api.ConfigPagosAsync();
+        await Task.WhenAll(com, cfg);
+        _comisiones = com.Result ?? new();
+        _cfg = cfg.Result ?? new() { TopeDeudaEfectivo = 2000 };
+        _general = _comisiones.General?.Porcentaje ?? 0;
+        _tope = _cfg.TopeDeudaEfectivo;
+        _instrucciones = _cfg.InstruccionesTransferencia ?? "";
+    }
+
+    private async Task GuardarGeneral()
+    {
+        if (_general is not decimal g || g < 0 || g > 100) { Toasts.Mostrar("El porcentaje debe estar entre 0 y 100.", false); return; }
+        if (!await Confirmacion.PreguntarAsync($"¿Cambiar la comisión general a {g:0.##}%?",
+                "Aplica a los pagos que se creen desde ahora en los tipos de servicio sin comisión propia.", "Cambiar"))
+            return;
+        _guardando = true;
+        var r = await Api.GuardarComisionGeneralAsync(g);
+        _guardando = false;
+        Toasts.Mostrar(r);
+        if (r.Ok) await Cargar();
+    }
+
+    private async Task GuardarTipo(TipoComision tipo, string? valor)
+    {
+        decimal? pct = null;
+        if (!string.IsNullOrWhiteSpace(valor))
+        {
+            if (!decimal.TryParse(valor, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var v) || v < 0 || v > 100)
+            {
+                Toasts.Mostrar("El porcentaje debe estar entre 0 y 100.", false);
+                return;
+            }
+            pct = v;
+        }
+        if (pct == tipo.ComisionPorcentaje) return;
+        var r = await Api.GuardarComisionTipoAsync(tipo.Id, pct);
+        Toasts.Mostrar(r);
+        if (r.Ok) tipo.ComisionPorcentaje = pct;
+    }
+
+    private async Task GuardarConfig()
+    {
+        if (_tope is not decimal tope || tope < 0) { Toasts.Mostrar("El tope no puede ser negativo.", false); return; }
+        _guardandoCfg = true;
+        var r = await Api.GuardarConfigPagosAsync(tope, (_instrucciones ?? "").Trim());
+        _guardandoCfg = false;
+        Toasts.Mostrar(r);
+        if (r.Ok) await Cargar();
+    }
+}

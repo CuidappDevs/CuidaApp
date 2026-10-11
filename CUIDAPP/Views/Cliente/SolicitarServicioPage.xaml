@@ -130,6 +130,20 @@
                             <VerticalStackLayout x:Name="ListaTareas" Spacing="8"/>
                         </VerticalStackLayout>
 
+                        <!-- Método de pago: el cuidador lo ve antes de aceptar -->
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{loc:T metodo_pago_titulo}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                            <Label Text="{loc:T metodo_pago_sub}" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
+                            <Grid x:Name="OpcionesPago" ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,4,0,0"/>
+                            <Label x:Name="LblNotaPago" Text="" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
+                            <Border x:Name="CajaInstrucciones" IsVisible="False" Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 14" Padding="14,10">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{loc:T como_pagar_transferencia}" FontSize="12" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}"/>
+                                    <Label x:Name="LblInstrucciones" Text="" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextStrong}"/>
+                                </VerticalStackLayout>
+                            </Border>
+                        </VerticalStackLayout>
+
                         <!-- Total y envío (dentro del contenido: nada queda anclado al borde inferior) -->
                         <Border x:Name="PieAccion" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="16">
                             <VerticalStackLayout Spacing="14">

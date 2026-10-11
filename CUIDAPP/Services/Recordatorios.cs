@@ -39,6 +39,8 @@ namespace CUIDAPP.Services
                     foreach (var t in await api.ObtenerTrabajosAsync(usuarioId))
                         if (t.Estado == 2)
                             proximos.Add((t.Id, t.Fecha.Date + t.HoraInicio, t.ClienteNombre, t.TipoServicio));
+                    // Horas de inicio de los servicios aceptados: con esto RastreoUbicacion sabe cuándo va en camino.
+                    RastreoUbicacion.GuardarServiciosAceptados(proximos.Select(p => p.Inicio));
                 }
                 else
                 {

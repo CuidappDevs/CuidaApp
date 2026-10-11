@@ -51,10 +51,19 @@ namespace CUIDAPP_API.Seguridad
             ["DescartarAlerta"] = "Descartó una alerta SOS",
             ["CambiarEstado"] = "Cambió el estado de un reporte",
             ["ActualizarEstado"] = "Cambió el estado de un reporte",
+            ["FijarVencimiento"] = "Fijó el vencimiento de un documento",
+            ["RevisarDocumento"] = "Revisó un documento renovado",
+            ["GuardarComisionGeneral"] = "Cambió la comisión general",
+            ["GuardarComisionTipo"] = "Cambió la comisión de un tipo de servicio",
+            ["FijarMetodoPago"] = "Registró el método de pago de un servicio",
+            ["AbrirDisputa"] = "Abrió una disputa",
+            ["ResolverDisputa"] = "Resolvió una disputa",
+            ["RegistrarAbono"] = "Registró un abono de deuda de efectivo",
+            ["GuardarConfigPagos"] = "Cambió el tope de deuda o las instrucciones de transferencia",
         };
 
         private static readonly string[] ClavesId = { "id", "usuarioId", "pagoId", "trabajoId", "ticketId", "cuidadorId" };
-        private static readonly string[] CamposDetalle = { "Motivo", "Justificacion", "Observaciones", "ObservacionesAdmin", "Titulo", "Nombre", "Descripcion", "TipoDocumento" };
+        private static readonly string[] CamposDetalle = { "Motivo", "Justificacion", "Observaciones", "ObservacionesAdmin", "Titulo", "Nombre", "Descripcion", "TipoDocumento", "Nota", "Resolucion", "Porcentaje", "MetodoPago" };
 
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {

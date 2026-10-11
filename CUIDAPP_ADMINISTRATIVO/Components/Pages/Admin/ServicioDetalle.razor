@@ -29,6 +29,7 @@
                     <span style="font-size:20px; font-weight:600;">@s.TipoServicio</span>
                     <span class="pn-pill @EstadoServicio.Tono(s.Estado)">@EstadoServicio.Texto(s.Estado)</span>
                     @if (s.PagoDisputado) { <span class="pn-pill tone-warn">Pago en disputa</span> }
+                    @if (s.DisputaId is int did) { <a class="pn-pill tone-violet" href="disputas/@did" style="text-decoration:none;">Disputa #@did</a> }
                     @if (_d.Sos.Count > 0) { <span class="pn-pill tone-danger">@_d.Sos.Count alerta(s) SOS</span> }
                 </div>
                 <span class="pn-muted" style="font-size:13.5px;">
@@ -48,6 +49,10 @@
                     }
                     <button type="button" class="pn-btn pn-btn-danger-soft" disabled="@_procesando" @onclick="Cancelar">Cancelar servicio</button>
                 </div>
+            }
+            @if (s.DisputaId == null && s.Estado is 3 or 4 or 7)
+            {
+                <button type="button" class="pn-btn pn-btn-quiet" disabled="@_procesando" @onclick="AbrirDisputa">Abrir disputa</button>
             }
         </div>
 
@@ -145,7 +150,19 @@
 
                 @* Pago *@
                 <div class="adm-card adm-card-pad d-flex flex-column" style="gap:10px;">
-                    <span class="adm-card-title">Pago al Care Partner</span>
+                    <div class="d-flex align-items-center justify-content-between" style="gap:10px; flex-wrap:wrap;">
+                        <span class="adm-card-title">Pago al Care Partner</span>
+                        <label class="d-inline-flex align-items-center pn-muted" style="gap:6px;">
+                            El cliente pagó con
+                            <select class="pn-select" value="@(s.MetodoPago ?? "")" @onchange="e => CambiarMetodo(e.Value?.ToString())" disabled="@_procesando">
+                                <option value="">Sin registrar</option>
+                                @foreach (var (id, texto) in MetodosPago.Todos)
+                                {
+                                    <option value="@id">@texto</option>
+                                }
+                            </select>
+                        </label>
+                    </div>
                     @if (_d.Pagos.Count == 0)
                     {
                         <span class="pn-muted">Aún no hay pago. Se crea cuando el cliente confirma que el servicio terminó.</span>
@@ -155,8 +172,19 @@
                         <dl class="pn-kv" style="margin:0; grid-template-columns:110px 1fr;">
                             <dt>Estado</dt><dd><span class="pn-pill @p.Tono">@p.EstadoTexto</span></dd>
                             <dt>Tarifa</dt><dd>RD$ @p.Monto.ToString("N2")</dd>
-                            <dt>Propina</dt><dd>RD$ @p.Propina.ToString("N2")</dd>
-                            <dt>Total</dt><dd class="pn-strong">RD$ @((p.Monto + p.Propina).ToString("N2"))</dd>
+                            @if (p.Estado == 4)
+                            {
+                                <dt>Propina</dt><dd>RD$ @p.Propina.ToString("N2")</dd>
+                                <dt>Cobró en mano</dt><dd class="pn-strong">RD$ @((p.Monto + p.Propina).ToString("N2"))</dd>
+                                <dt>Debe a CuidApp</dt><dd style="color:var(--violet); font-weight:600;">RD$ @p.Comision.ToString("N2") <span class="pn-muted" style="font-weight:400;">(@p.ComisionPorcentaje.ToString("0.##")%, se descuenta de su próximo pago)</span></dd>
+                            }
+                            else
+                            {
+                                <dt>Comisión</dt><dd>− RD$ @p.Comision.ToString("N2") <span class="pn-muted">(@p.ComisionPorcentaje.ToString("0.##")%)</span></dd>
+                                <dt>Propina</dt><dd>RD$ @p.Propina.ToString("N2")</dd>
+                                @if (p.DescuentoSaldo > 0) { <dt>Deuda efectivo</dt><dd>− RD$ @p.DescuentoSaldo.ToString("N2")</dd> }
+                                <dt>Recibe</dt><dd class="pn-strong">RD$ @p.Neto.ToString("N2")</dd>
+                            }
                             @if (p.FechaPago is { } fp) { <dt>Pagado</dt><dd>@fp.ToString("dd MMM yyyy, h:mm tt", Es)</dd> }
                         </dl>
                     }
@@ -174,6 +202,39 @@
                         </div>
                     }
                 </div>
+
+                @* Grabación de seguridad (caja negra) — solo Superadmin *@
+                @if (_esSuper && (s.GrabacionActiva || _grab?.Segmentos.Count > 0))
+                {
+                    <div class="adm-card adm-card-pad d-flex flex-column" style="gap:10px;">
+                        <div class="d-flex align-items-center" style="gap:8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0M12 17v4"></path></svg>
+                            <span class="adm-card-title">Grabación de seguridad</span>
+                        </div>
+                        @if (_grab == null)
+                        {
+                            <button type="button" class="pn-btn pn-btn-quiet" @onclick="CargarGrabacion" disabled="@_cargandoGrab">
+                                @(_cargandoGrab ? "Cargando…" : "Escuchar la grabación")
+                            </button>
+                            <span class="pn-muted" style="font-size:11.5px;">Al abrirla queda registrado en la auditoría quién y cuándo la escuchó.</span>
+                        }
+                        else if (_grab.Segmentos.Count == 0)
+                        {
+                            <span class="pn-muted">@(_grab.Info?.HayBorrados == true ? "La grabación ya se borró (pasaron más de 30 días sin disputa ni SOS)." : _grab.Info?.Estado is 3 or 7 ? "El servicio está en curso: la grabación aparecerá al terminar." : "No hay audio para este servicio.")</span>
+                        }
+                        else
+                        {
+                            <span class="pn-muted" style="font-size:12px;">@_grab.Segmentos.Count tramo(s) · @FormatoDuracion(_grab.Info?.DuracionTotal ?? 0) en total. Confidencial: úsalo solo para resolver un reclamo.</span>
+                            @foreach (var g in _grab.Segmentos)
+                            {
+                                <div class="d-flex align-items-center" style="gap:10px;">
+                                    <span class="pn-muted" style="font-size:11.5px; width:54px;">@g.Fecha.ToString("h:mm tt", Es)</span>
+                                    <audio controls preload="none" src="@Api.Archivo(g.UrlArchivo)" style="flex:1; height:36px;"></audio>
+                                </div>
+                            }
+                        }
+                    </div>
+                }
 
                 @* Incidencias *@
                 @if (_d.Sos.Count > 0 || _d.Tickets.Count > 0 || !string.IsNullOrWhiteSpace(s.MotivoCancelacion) || !string.IsNullOrWhiteSpace(s.JustificacionFinalizacion))
@@ -224,13 +285,20 @@
     private bool _cargando = true;
     private bool _procesando;
     private bool _puedeOperar;
+    private bool _esSuper;
+    private GrabacionServicio? _grab;
+    private bool _cargandoGrab;
 
     private record Evento(DateTime Fecha, string Texto, string Tono, string Icono);
 
     protected override async Task OnParametersSetAsync()
     {
         if (AuthStateTask != null)
-            _puedeOperar = SesionAdmin.PuedeOperar((await AuthStateTask).User);
+        {
+            var user = (await AuthStateTask).User;
+            _puedeOperar = SesionAdmin.PuedeOperar(user);
+            _esSuper = SesionAdmin.EsSuperadmin(user);
+        }
         await Cargar();
     }
 
@@ -245,6 +313,7 @@
     {
         var s = _d!.Servicio;
         var e = new List<Evento> { new(s.FechaCreacion, $"{s.ClienteNombre} solicitó el servicio", "tone-info", "M12 5v14M5 12h14") };
+        if (s.FechaLlegada is { } lle) e.Add(new(lle, $"{s.CuidadorNombre} llegó al lugar (se avisó al cliente)", "tone-info", "M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12Zm0-9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"));
         if (s.FechaInicioReal is { } ini) e.Add(new(ini, $"{s.CuidadorNombre} inició el servicio con el PIN", "tone-live", "M5 3l14 9-14 9V3z"));
         e.AddRange(_d.Tareas.Where(t => t.FechaCompletada != null).Select(t => new Evento(t.FechaCompletada!.Value, $"Tarea completada: {t.Descripcion}", "tone-ok", "m5 12 5 5L20 7")));
         e.AddRange(_d.Actividades.Select(a => new Evento(a.FechaHora, $"Bitácora: {a.Descripcion}", "tone-muted", "M4 6h16M4 12h16M4 18h10")));
@@ -278,6 +347,27 @@
         if (r.Ok) await Cargar();
     }
 
+    private async Task CambiarMetodo(string? metodo)
+    {
+        _procesando = true;
+        var r = await Api.FijarMetodoPagoAsync(Id, string.IsNullOrEmpty(metodo) ? null : metodo);
+        _procesando = false;
+        Toasts.Mostrar(r);
+        if (r.Ok) _d!.Servicio.MetodoPago = string.IsNullOrEmpty(metodo) ? null : metodo;
+    }
+
+    private async Task AbrirDisputa()
+    {
+        var motivo = await Confirmacion.PedirMotivoAsync("¿Abrir una disputa?",
+            "El caso queda en Disputas para revisarlo con la evidencia del servicio y decidir el pago.", "Abrir disputa", peligro: false);
+        if (motivo == null) return;
+        _procesando = true;
+        var r = await Api.AbrirDisputaAsync(Id, motivo);
+        _procesando = false;
+        Toasts.Mostrar(r);
+        if (r.Ok) await Cargar();
+    }
+
     private async Task Completar()
     {
         var motivo = await Confirmacion.PedirMotivoAsync("¿Dar el servicio por completado?",
@@ -289,5 +379,18 @@
         Toasts.Mostrar(r);
         _procesando = false;
         if (r.Ok) await Cargar();
+    }
+
+    private async Task CargarGrabacion()
+    {
+        _cargandoGrab = true;
+        _grab = await Api.GrabacionesServicioAsync(Id) ?? new();
+        _cargandoGrab = false;
+    }
+
+    private static string FormatoDuracion(int seg)
+    {
+        var t = TimeSpan.FromSeconds(seg);
+        return t.TotalHours >= 1 ? $"{(int)t.TotalHours} h {t.Minutes} min" : t.TotalMinutes >= 1 ? $"{t.Minutes} min" : $"{t.Seconds} s";
     }
 }

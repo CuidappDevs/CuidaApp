@@ -42,6 +42,7 @@ namespace CUIDAPP
             RealtimeService.TrabajoActualizado += OnTrabajoActualizadoGlobal;
             RealtimeService.ActividadAgregada += OnActividadAgregadaGlobal;
             RealtimeService.AlertaGeocerca += OnAlertaGeocercaGlobal;
+            RealtimeService.CuidadorLlego += AvisosApp.CuidadorLlego;
             RealtimeService.TareaCompletada += OnTareaCompletadaGlobal;
             RealtimeService.PropinaRecibida += OnPropinaRecibidaGlobal;
             RealtimeService.CuentaActualizada += estado => AvisosApp.CuentaActualizada(estado);

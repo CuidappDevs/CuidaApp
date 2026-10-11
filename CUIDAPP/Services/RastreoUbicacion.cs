@@ -25,6 +25,27 @@ namespace CUIDAPP.Services
             _timer = null;
         }
 
+        private const string ClaveAceptados = "ServiciosAceptadosInicio";
+
+        /// <summary>Guarda las horas de inicio de los servicios aceptados (lo llama Recordatorios al sincronizar).</summary>
+        public static void GuardarServiciosAceptados(IEnumerable<DateTime> inicios)
+            => Preferences.Default.Set(ClaveAceptados, string.Join(",", inicios.Select(i => i.Ticks)));
+
+        // Entre 2 h antes y 3 h después de la hora de un servicio aceptado, aunque esté oculto: así el
+        // servidor puede avisarle al cliente cuando llega.
+        private static bool VaEnCamino()
+        {
+            var ahora = DateTime.Now;
+            foreach (var parte in Preferences.Default.Get(ClaveAceptados, "").Split(',', StringSplitOptions.RemoveEmptyEntries))
+                if (long.TryParse(parte, out var ticks))
+                {
+                    var inicio = new DateTime(ticks);
+                    if (ahora >= inicio.AddHours(-2) && ahora <= inicio.AddHours(3))
+                        return true;
+                }
+            return false;
+        }
+
         /// <summary>Envía la ubicación ahora mismo (p. ej. al ponerse visible).</summary>
         public static Task EnviarAhoraAsync() => EnviarAsync();
 
@@ -38,7 +59,7 @@ namespace CUIDAPP.Services
                 var cuidadorId = Preferences.Default.Get("UserId", 0);
                 if (cuidadorId == 0 || Preferences.Default.Get("RolId", 0) != 3)
                     return;
-                if (!EstadoCuidador.Disponible && !DeadManService.Activo)
+                if (!EstadoCuidador.Disponible && !DeadManService.Activo && !VaEnCamino())
                     return;
 
                 var permiso = await MainThread.InvokeOnMainThreadAsync(() => Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>());

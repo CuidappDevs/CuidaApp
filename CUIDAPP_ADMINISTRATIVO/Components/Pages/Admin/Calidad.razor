@@ -1,0 +1,217 @@
+@page "/calidad"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@inject PanelApiService Api
+@inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
+
+<PageTitle>Calidad · Cuidapp Admin</PageTitle>
+
+<div class="pn-page">
+    <div class="pn-toolbar">
+        <div class="pn-seg">
+            <button type="button" class="@(_dias == 7 ? "on" : "")" @onclick="() => Periodo(7)">7 días</button>
+            <button type="button" class="@(_dias == 30 ? "on" : "")" @onclick="() => Periodo(30)">30 días</button>
+            <button type="button" class="@(_dias == 90 ? "on" : "")" @onclick="() => Periodo(90)">90 días</button>
+        </div>
+        <div class="pn-seg">
+            <button type="button" class="@(_filtro == null ? "on" : "")" @onclick="() => _filtro = null">Todos <span class="pn-seg-n">@(_filas?.Count ?? 0)</span></button>
+            <button type="button" class="@(_filtro == "rojo" ? "on" : "")" @onclick="@(() => _filtro = "rojo")">Revisar ya <span class="pn-seg-n">@Cuenta("rojo")</span></button>
+            <button type="button" class="@(_filtro == "amarillo" ? "on" : "")" @onclick="@(() => _filtro = "amarillo")">Atención <span class="pn-seg-n">@Cuenta("amarillo")</span></button>
+            <button type="button" class="@(_filtro == "verde" ? "on" : "")" @onclick="@(() => _filtro = "verde")">Bien <span class="pn-seg-n">@Cuenta("verde")</span></button>
+        </div>
+        <span class="pn-grow"></span>
+        <input class="pn-input" placeholder="Buscar Care Partner…" @bind="_buscar" @bind:event="oninput" style="width:220px;" />
+    </div>
+
+    @if (_filas == null)
+    {
+        <div class="adm-card"><Esqueleto Filas="6" /></div>
+    }
+    else
+    {
+        <div class="pn-grid pn-grid-kpi">
+            <div class="pn-kpi"><span class="pn-kpi-label">Puntaje promedio</span><span class="pn-kpi-value">@(_filas.Count == 0 ? "—" : _filas.Average(f => f.Puntaje).ToString("0"))</span><span class="pn-kpi-sub">De 100, últimos @_dias días</span></div>
+            <div class="pn-kpi @(Cuenta("rojo") > 0 ? "is-alert" : "")"><span class="pn-kpi-label">Para revisar ya</span><span class="pn-kpi-value" style="color:@(Cuenta("rojo") > 0 ? "var(--danger)" : "inherit");">@Cuenta("rojo")</span><span class="pn-kpi-sub">Semáforo en rojo</span></div>
+            <div class="pn-kpi"><span class="pn-kpi-label">Cancelaciones propias</span><span class="pn-kpi-value">@_filas.Sum(f => f.Cancelados)</span><span class="pn-kpi-sub">@_filas.Sum(f => f.NoSePresento) sin presentarse</span></div>
+            <div class="pn-kpi"><span class="pn-kpi-label">Llegadas tarde</span><span class="pn-kpi-value">@_filas.Sum(f => f.Tarde)</span><span class="pn-kpi-sub">Inicio con PIN 10+ min después</span></div>
+        </div>
+
+        <div class="adm-card overflow-hidden">
+            <div class="pn-card-head">
+                <div class="d-flex flex-column" style="gap:2px;">
+                    <span class="adm-card-title">Care Partners aprobados</span>
+                    <span class="adm-card-sub">De menor a mayor puntaje · toca una fila para ver qué pasó</span>
+                </div>
+            </div>
+            @if (!Visibles().Any())
+            {
+                <EstadoVacio Titulo="Nadie en este filtro" Texto="Prueba con otro período o semáforo." />
+            }
+            else
+            {
+                <div class="pn-table-wrap">
+                    <table class="pn-table">
+                        <thead>
+                            <tr>
+                                <th>Care Partner</th><th>Semáforo</th><th class="pn-num">Puntaje</th><th class="pn-num">Servicios</th>
+                                <th class="pn-num">Aceptación</th><th class="pn-num">Cancela</th><th class="pn-num">Tarde</th><th class="pn-num">Disputas</th><th class="pn-num">Nota</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var f in Paginador.Cortar(Visibles().ToList(), _pagina, 15))
+                            {
+                                <tr class="pn-row-link" @onclick="() => Abrir(f)">
+                                    <td>
+                                        <div class="pn-who">
+                                            <Avatar Url="@Api.Archivo(f.FotoUrl)" Nombre="@f.Nombre" Tam="32" />
+                                            <div class="pn-who-text"><span>@f.Nombre</span><span class="pn-muted">@(f.Especialidad ?? "Care Partner")</span></div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="pn-pill @f.Tono">@f.SemaforoTexto</span>
+                                        @if (f.DocsVencidos > 0) { <span class="pn-pill tone-warn no-dot" style="margin-left:4px;">Doc. vencido</span> }
+                                    </td>
+                                    <td class="pn-num">
+                                        <span class="d-inline-flex align-items-center" style="gap:8px;">
+                                            <span class="pn-progress" style="width:56px;"><span style="width:@(f.Puntaje)%; background:@f.Color;"></span></span>
+                                            <span class="pn-strong" style="min-width:24px;">@f.Puntaje</span>
+                                        </span>
+                                    </td>
+                                    <td class="pn-num">@f.Completados<span class="pn-muted">/@f.Solicitudes</span></td>
+                                    <td class="pn-num">@(f.TasaAceptacion is decimal t ? $"{t:0}%" : "—")</td>
+                                    <td class="pn-num" style="@Alerta(f.Cancelados + f.NoSePresento)">@(f.Cancelados + f.NoSePresento)</td>
+                                    <td class="pn-num" style="@Alerta(f.Tarde)">@f.Tarde</td>
+                                    <td class="pn-num" style="@Alerta(f.Disputas)">@f.Disputas</td>
+                                    <td class="pn-num">@(f.Nota is decimal n ? $"{n:0.0} ★" : f.NotaGeneral is decimal g ? $"({g:0.0})" : "—")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <Paginador Pagina="_pagina" Tamano="15" Total="Visibles().Count()" PaginaCambiada="p => _pagina = p" />
+            }
+        </div>
+
+        <span class="pn-muted">Cómo se calcula: parte de 100 y resta 15 por cancelación propia, 20 si no se presentó, 10 si el cliente rechazó el final, 6 por llegada tarde, 3 por solicitud rechazada y lo que falte de la nota para 4.5 (×20). Rojo: menos de 60, 3+ cancelaciones, 2+ ausencias o nota menor a 3.5 con 3+ reseñas. Amarillo: menos de 80 o un documento vencido.</span>
+    }
+</div>
+
+@if (_sel != null)
+{
+    <div class="pn-drawer-overlay" @onclick="Cerrar"></div>
+    <div class="pn-drawer" role="dialog" aria-modal="true" aria-label="Calidad de @_sel.Nombre">
+        <div class="pn-drawer-head">
+            <div class="pn-who">
+                <Avatar Url="@Api.Archivo(_sel.FotoUrl)" Nombre="@_sel.Nombre" Tam="40" />
+                <div class="pn-who-text"><span class="pn-strong" style="font-size:15px;">@_sel.Nombre</span><span class="pn-muted">Últimos @_dias días</span></div>
+            </div>
+            <button type="button" class="pn-cerrar" @onclick="Cerrar" aria-label="Cerrar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div class="pn-drawer-body">
+            <div class="d-flex align-items-center" style="gap:14px;">
+                <span style="font-size:40px; font-weight:700; line-height:1; color:@_sel.Color; font-variant-numeric:tabular-nums;">@_sel.Puntaje</span>
+                <div class="d-flex flex-column" style="gap:4px;">
+                    <span class="pn-pill @_sel.Tono" style="align-self:flex-start;">@_sel.SemaforoTexto</span>
+                    <span class="pn-muted">@(_sel.Nota is decimal n ? $"Nota del período {n:0.0} ({_sel.Resenas} reseña(s))" : "Sin reseñas en el período")</span>
+                </div>
+            </div>
+
+            <div class="pn-stats">
+                <div class="pn-stat"><span class="pn-stat-k">Completados</span><span class="pn-stat-v">@_sel.Completados de @_sel.Solicitudes</span></div>
+                <div class="pn-stat"><span class="pn-stat-k">Cancelaciones</span><span class="pn-stat-v">@_sel.Cancelados</span></div>
+                <div class="pn-stat"><span class="pn-stat-k">No se presentó</span><span class="pn-stat-v">@_sel.NoSePresento</span></div>
+                <div class="pn-stat"><span class="pn-stat-k">Alertas SOS</span><span class="pn-stat-v">@_sel.Sos</span></div>
+            </div>
+
+            <div class="d-flex" style="gap:8px; flex-wrap:wrap;">
+                <a class="pn-btn pn-btn-quiet pn-btn-sm" href="care-partners/@_sel.UsuarioId">Ver ficha</a>
+                @if (!string.IsNullOrWhiteSpace(_sel.Telefono))
+                {
+                    <a class="pn-btn pn-btn-quiet pn-btn-sm" href="https://wa.me/1@(SoloDigitos(_sel.Telefono))" target="_blank" rel="noopener">WhatsApp</a>
+                }
+                <button type="button" class="pn-btn pn-btn-primary pn-btn-sm" disabled="@_enviando" @onclick="Avisar">Enviar aviso a su teléfono</button>
+            </div>
+
+            <span class="pn-section-title">Qué pasó</span>
+            @if (_incidencias == null)
+            {
+                <Esqueleto Filas="3" ConAvatar="false" />
+            }
+            else if (_incidencias.Count == 0)
+            {
+                <span class="pn-muted">Sin incidencias en el período. 👏</span>
+            }
+            else
+            {
+                @foreach (var i in _incidencias)
+                {
+                    <div class="pn-aviso-fila">
+                        <span class="d-flex flex-column" style="flex:1; min-width:0; gap:1px;">
+                            <span style="font-weight:600; color:var(--adm-ink-2);">@i.TipoTexto</span>
+                            <span class="pn-muted" style="font-size:11.5px;">@i.Fecha.ToString("dd MMM, h:mm tt")@(i.ClienteNombre != null ? $" · {i.ClienteNombre}" : "")@(i.Detalle != null ? $" · {i.Detalle}" : "")</span>
+                        </span>
+                        @if (i.TrabajoId is int tid) { <a class="pn-link" href="servicios/@tid" style="font-size:12px;">#@tid</a> }
+                    </div>
+                }
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private List<CalidadCuidador>? _filas;
+    private List<IncidenciaCalidad>? _incidencias;
+    private CalidadCuidador? _sel;
+    private int _dias = 30;
+    private string? _filtro;
+    private string _buscar = "";
+    private int _pagina = 1;
+    private bool _enviando;
+
+    protected override async Task OnInitializedAsync() => await Cargar();
+
+    private async Task Periodo(int dias)
+    {
+        _dias = dias;
+        _pagina = 1;
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        _filas = null;
+        _filas = await Api.CalidadAsync(_dias) ?? new();
+    }
+
+    private int Cuenta(string semaforo) => _filas?.Count(f => f.Semaforo == semaforo) ?? 0;
+
+    private IEnumerable<CalidadCuidador> Visibles() => (_filas ?? new())
+        .Where(f => _filtro == null || f.Semaforo == _filtro)
+        .Where(f => string.IsNullOrWhiteSpace(_buscar) || f.Nombre.Contains(_buscar.Trim(), StringComparison.OrdinalIgnoreCase));
+
+    private static string Alerta(int n) => n > 0 ? "color:var(--danger); font-weight:600;" : "color:var(--adm-muted-2);";
+    private static string SoloDigitos(string t) => new(t.Where(char.IsDigit).ToArray());
+
+    private async Task Abrir(CalidadCuidador f)
+    {
+        _sel = f;
+        _incidencias = null;
+        _incidencias = await Api.CalidadDetalleAsync(f.UsuarioId, _dias) ?? new();
+    }
+
+    private void Cerrar() => _sel = null;
+
+    private async Task Avisar()
+    {
+        if (_sel == null) return;
+        var texto = await Confirmacion.PedirMotivoAsync($"Aviso para {_sel.Nombre}",
+            "Le llega como notificación al teléfono y queda en su ficha del mapa.", "Enviar", "Mensaje", peligro: false);
+        if (texto == null) return;
+        _enviando = true;
+        var r = await Api.NotificarAsync(new[] { _sel.UsuarioId }, "Mensaje de CuidApp", texto);
+        _enviando = false;
+        Toasts.Mostrar(r);
+    }
+}

@@ -148,7 +148,7 @@ namespace CUIDAPP_API.Controllers
             var h = hasta?.Date ?? HoyRD.ToDateTime(TimeOnly.MinValue);
             var d = desde?.Date ?? h.AddDays(-29);
             var r = await _svc.ConsultarAsync("sp_AdminFinanzas", ("@Desde", d), ("@Hasta", h));
-            return new { Desde = d, Hasta = h, Totales = r[0].FirstOrDefault(), PorCuidador = r[1], Serie = r[2] };
+            return new { Desde = d, Hasta = h, Totales = r[0].FirstOrDefault(), PorCuidador = r[1], Serie = r[2], PorMetodo = r[3] };
         });
 
         // ---------------- Auditoría y administradores

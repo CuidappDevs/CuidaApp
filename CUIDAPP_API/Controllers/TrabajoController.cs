@@ -309,9 +309,11 @@ namespace CUIDAPP_API.Controllers
         {
             try
             {
-                var success = await _trabajoService.ActualizarEstadoTrabajoAsync(dto);
+                var (success, motivo) = await _trabajoService.ActualizarEstadoTrabajoAsync(dto);
                 if (success)
                     return Ok(new { Message = "Estado actualizado correctamente" });
+                if (motivo == "DEUDA_EFECTIVO")
+                    return BadRequest(new { Motivo = motivo, Message = "Tienes comisiones de servicios en efectivo pendientes por pagar. Ponte al día para aceptar servicios en efectivo." });
                 return BadRequest("No se pudo actualizar el estado. Verifica el ID.");
             }
             catch (Exception ex)

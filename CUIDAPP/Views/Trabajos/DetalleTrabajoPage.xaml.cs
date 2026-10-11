@@ -309,6 +309,7 @@ namespace CUIDAPP.Views.Trabajos
             LblHora.Text = $"{FormatearHora(trabajo.HoraInicio)} - {FormatearHora(trabajo.HoraFin)}";
             LblDireccion.Text = string.IsNullOrWhiteSpace(trabajo.Direccion) ? Localizador.T("sin_direccion") : trabajo.Direccion;
             LblPago.Text = Localizador.F("rd", trabajo.Tarifa);
+            MetodoPagoVista.Mostrar(ChipMetodoPago, IconoMetodoPago, LblMetodoPago, trabajo.MetodoPago, paraCuidador: true);
 
             var (colorFondo, colorTexto, texto) = trabajo.Estado switch
             {
@@ -651,7 +652,7 @@ namespace CUIDAPP.Views.Trabajos
                 return;
 
             AvisosApp.MarcarAccionPropia(trabajo.Id, nuevoEstado);
-            var success = await _apiService.ActualizarEstadoTrabajoAsync(trabajo.Id, nuevoEstado);
+            var (success, motivo) = await _apiService.ActualizarEstadoTrabajoConMotivoAsync(trabajo.Id, nuevoEstado);
 
             if (success)
             {
@@ -660,6 +661,10 @@ namespace CUIDAPP.Views.Trabajos
                 await Shell.Current.GoToAsync("..");
                 if (irAPerfil)
                     await Shell.Current.GoToAsync("CuidadorPerfilPage");
+            }
+            else if (motivo == "DEUDA_EFECTIVO")
+            {
+                await Alerta.MostrarAsync(Localizador.T("deuda_efectivo_titulo"), Localizador.T("deuda_efectivo_texto"), Localizador.T("ok"), TipoAlerta.Advertencia);
             }
             else
             {

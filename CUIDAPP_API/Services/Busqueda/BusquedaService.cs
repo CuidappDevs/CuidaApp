@@ -67,7 +67,8 @@ namespace CUIDAPP_API.Services.Busqueda
                     Bio = reader["Bio"] as string,
                     Latitud = Convert.ToDecimal(reader["Latitud"]),
                     Longitud = Convert.ToDecimal(reader["Longitud"]),
-                    DistanciaKm = Convert.ToDouble(reader["DistanciaKm"])
+                    DistanciaKm = Convert.ToDouble(reader["DistanciaKm"]),
+                    PuedeAceptarEfectivo = reader["PuedeAceptarEfectivo"] is not bool b || b
                 });
             }
 

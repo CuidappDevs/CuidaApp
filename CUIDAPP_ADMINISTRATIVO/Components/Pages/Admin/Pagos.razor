@@ -2,130 +2,420 @@
 @layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
 @using System.Security.Claims
 @using CUIDAPP_ADMINISTRATIVO.Models.Pago
-@using CUIDAPP_ADMINISTRATIVO.Services
 @inject PagoAdminApiService PagoService
+@inject PanelApiService Api
 @inject ConfirmacionService Confirmacion
 @inject AvisoToastService Toasts
+@inject IJSRuntime JS
 
-<PageTitle>Pagos y finanzas · Cuidapp Admin</PageTitle>
+<PageTitle>Pagos · Cuidapp Admin</PageTitle>
 
-<div class="d-flex flex-column" style="gap:20px;">
-
-    @* ----- Filtro por estado ----- *@
-    <div class="d-flex" style="gap:8px;">
-        @foreach (var tab in _tabs)
-        {
-            <button type="button" class="adm-btn @(_estadoFiltro == tab.Estado ? "" : "adm-btn-outline")"
-                    style="@(_estadoFiltro == tab.Estado ? "background:var(--cuid-blue); color:#fff; border:none;" : "")"
-                    @onclick="() => CambiarFiltro(tab.Estado)">
-                @tab.Label
-            </button>
-        }
-    </div>
-
-    @if (_cargando)
+<div class="pn-page">
+    @if (_pagos == null)
     {
-        <div class="adm-card adm-card-pad text-center" style="color:var(--adm-muted);">Cargando pagos...</div>
-    }
-    else if (_pagos.Count == 0)
-    {
-        <div class="adm-card adm-card-pad text-center" style="color:var(--adm-muted);">No hay pagos en este estado.</div>
+        <div class="adm-card"><Esqueleto Filas="6" /></div>
     }
     else
     {
-        <div class="adm-card overflow-hidden">
-            @foreach (var pago in Paginador.Cortar(_pagos, _pag, 15))
+        @* ---------- Resumen: cada tarjeta es también un filtro ---------- *@
+        <div class="pn-grid pn-grid-kpi">
+            <button type="button" class="pn-kpi pn-kpi-btn @(_estado == 1 ? "on" : "")" @onclick="() => Filtrar(1)">
+                <span class="pn-kpi-label">1 · Por autorizar</span>
+                <span class="pn-kpi-value" style="color:@(Cuenta(1) > 0 ? "var(--warn)" : "inherit");">RD$ @Suma(1).ToString("N0")</span>
+                <span class="pn-kpi-sub">@Cuenta(1) pago(s) esperando revisión</span>
+            </button>
+            <button type="button" class="pn-kpi pn-kpi-btn @(_estado == 3 ? "on" : "")" @onclick="() => Filtrar(3)">
+                <span class="pn-kpi-label">2 · Por enviar</span>
+                <span class="pn-kpi-value" style="color:@(Cuenta(3) > 0 ? "var(--info)" : "inherit");">RD$ @Suma(3).ToString("N0")</span>
+                <span class="pn-kpi-sub">@Cuenta(3) autorizado(s): falta transferir</span>
+            </button>
+            <button type="button" class="pn-kpi pn-kpi-btn @(_estado == 2 ? "on" : "")" @onclick="() => Filtrar(2)">
+                <span class="pn-kpi-label">3 · Pagado este mes</span>
+                <span class="pn-kpi-value" style="color:var(--ok);">RD$ @PagadoMes().ToString("N0")</span>
+                <span class="pn-kpi-sub">@_pagos.Count(p => p.Estado == 2 && EsDelMes(p.FechaPago)) pago(s) enviados</span>
+            </button>
+            <button type="button" class="pn-kpi pn-kpi-btn @(_estado == -1 ? "on" : "")" @onclick="() => Filtrar(-1)">
+                <span class="pn-kpi-label">Comisiones de efectivo por cobrar</span>
+                <span class="pn-kpi-value" style="color:@(DeudaTotal > 0 ? "var(--violet)" : "inherit");">RD$ @DeudaTotal.ToString("N0")</span>
+                <span class="pn-kpi-sub">@(_saldos?.Count(s => s.Saldo > 0) ?? 0) Care Partner(s) deben · se descuenta sola</span>
+            </button>
+            <div class="pn-kpi">
+                <span class="pn-kpi-label">Comisión del mes</span>
+                <span class="pn-kpi-value">RD$ @_pagos.Where(p => EsDelMes(p.FechaCreacion)).Sum(p => p.Comision).ToString("N0")</span>
+                <span class="pn-kpi-sub">Ingreso de la plataforma · <a class="pn-link" href="finanzas">ver Finanzas</a></span>
+            </div>
+        </div>
+
+        @* ---------- Barra de herramientas ---------- *@
+        <div class="pn-toolbar">
+            <div class="pn-seg">
+                <button type="button" class="@(_estado == 1 ? "on" : "")" @onclick="() => Filtrar(1)">Por autorizar <span class="pn-seg-n">@Cuenta(1)</span></button>
+                <button type="button" class="@(_estado == 3 ? "on" : "")" @onclick="() => Filtrar(3)">Por enviar <span class="pn-seg-n">@Cuenta(3)</span></button>
+                <button type="button" class="@(_estado == 2 ? "on" : "")" @onclick="() => Filtrar(2)">Pagados</button>
+                <button type="button" class="@(_estado == 4 ? "on" : "")" @onclick="() => Filtrar(4)">En efectivo <span class="pn-seg-n">@Cuenta(4)</span></button>
+                <button type="button" class="@(_estado == -1 ? "on" : "")" @onclick="() => Filtrar(-1)">Deudas <span class="pn-seg-n">@(_saldos?.Count(s => s.Saldo > 0) ?? 0)</span></button>
+                <button type="button" class="@(_estado == null ? "on" : "")" @onclick="() => Filtrar(null)">Todos</button>
+            </div>
+            <div class="pn-seg" style="@(_estado == -1 ? "display:none;" : "")">
+                <button type="button" class="@(!_agrupar ? "on" : "")" @onclick="() => _agrupar = false">Lista</button>
+                <button type="button" class="@(_agrupar ? "on" : "")" @onclick="() => _agrupar = true">Por Care Partner</button>
+            </div>
+            <span class="pn-grow"></span>
+            <input class="pn-input" placeholder="Buscar Care Partner, cliente o #servicio…" @bind="_buscar" @bind:event="oninput" style="width:260px;" />
+            <button type="button" class="pn-btn pn-btn-quiet" disabled="@(!Visibles().Any())" @onclick="Exportar">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"></path></svg>
+                CSV
+            </button>
+        </div>
+
+        @if (_estado is 1 or 3 && Cuenta(_estado.Value) > 0)
+        {
+            <div class="pn-callout @(_estado == 1 ? "tone-warn" : "tone-info")">
+                <span>
+                    @if (_estado == 1)
+                    {
+                        <text><b>Paso 1:</b> revisa cada pago (monto, servicio, si tuvo disputa) y autorízalo. Puedes marcar varios y autorizarlos juntos.</text>
+                    }
+                    else
+                    {
+                        <text><b>Paso 2:</b> transfiere el dinero desde el banco y después confirma el envío aquí; el Care Partner recibe el aviso en la app. Con <b>Por Care Partner</b> pagas todo lo de una persona en una sola transferencia.</text>
+                    }
+                </span>
+            </div>
+        }
+
+        @if (_estado == -1)
+        {
+            <div class="pn-callout tone-info">
+                <span>Cuando un cliente paga <b>en efectivo</b>, el Care Partner se queda con el dinero y le debe la comisión a CuidApp. Esa deuda se <b>descuenta sola</b> al autorizar su próximo pago por transferencia. Si te paga directo, regístralo con <b>Registrar abono</b>. Al llegar al tope (RD$ @Tope.ToString("N0"), se cambia en <a class="pn-link" href="configuracion-pagos">Configuración de pagos</a>) no puede aceptar servicios en efectivo.</span>
+            </div>
+            @if (_saldos == null)
             {
-                <div class="d-flex flex-wrap align-items-center" style="gap:12px 16px; padding:16px 24px; border-bottom:1px solid var(--adm-line-soft);">
-
-                    <div class="d-flex flex-column" style="flex:1; min-width:220px; gap:3px;">
-                        <span style="font-size:14.5px; font-weight:600;">@pago.CuidadorNombre</span>
-                        <span class="adm-card-sub">@pago.TipoServicio · Cliente: @pago.ClienteNombre</span>
-                        @if (pago.PagoDisputado)
-                        {
-                            <span style="font-size:12px; font-weight:600; color:#DC2626;">⚠ Pago disputado</span>
-                        }
-                    </div>
-
-                    <div class="d-flex flex-column flex-shrink-0" style="width:130px;">
-                        <span style="font-size:15px; font-weight:700; color:var(--adm-ink);">RD$ @pago.Total.ToString("N2")</span>
-                        @if (pago.Propina > 0)
-                        {
-                            <span style="font-size:11.5px; font-weight:600; color:#059669;">incl. propina RD$ @pago.Propina.ToString("N2")</span>
-                        }
-                    </div>
-
-                    <span class="flex-shrink-0" style="padding:5px 11px; border-radius:999px; font-size:12px; font-weight:600;
-                                 background:@EstadoBg(pago.Estado); color:@EstadoColor(pago.Estado);">
-                        @pago.EstadoTexto
-                    </span>
-
-                    <div class="d-flex flex-column flex-shrink-0 text-end" style="width:150px; font-size:12px; color:var(--adm-muted-2);">
-                        <span>Creado: @pago.FechaCreacion.ToString("dd MMM yyyy")</span>
-                        @if (pago.FechaAutorizacion is not null)
-                        {
-                            <span>Autorizado: @pago.FechaAutorizacion.Value.ToString("dd MMM yyyy")</span>
-                        }
-                        @if (pago.FechaPago is not null)
-                        {
-                            <span>Pagado: @pago.FechaPago.Value.ToString("dd MMM yyyy")</span>
-                        }
-                    </div>
-
-                    <div class="flex-shrink-0" style="width:150px; text-align:right;">
-                        @if (pago.Estado == 1)
-                        {
-                            <button type="button" class="adm-btn" style="height:36px; padding:0 16px; border:none; border-radius:11px; background:var(--cuid-blue); color:#fff; font-size:13px;"
-                                    disabled="@(_procesando == pago.Id)" @onclick="() => Autorizar(pago)">
-                                @(_procesando == pago.Id ? "..." : "Autorizar")
-                            </button>
-                        }
-                        else if (pago.Estado == 3)
-                        {
-                            <button type="button" class="adm-btn" style="height:36px; padding:0 16px; border:none; border-radius:11px; background:#16A34A; color:#fff; font-size:13px;"
-                                    disabled="@(_procesando == pago.Id)" @onclick="() => Aprobar(pago)">
-                                @(_procesando == pago.Id ? "..." : "Confirmar envío")
-                            </button>
-                        }
-                        else
-                        {
-                            <span style="font-size:12px; color:var(--adm-muted-2);">
-                                @if (!string.IsNullOrWhiteSpace(pago.AprobadoPorNombre))
+                <div class="adm-card"><Esqueleto Filas="4" /></div>
+            }
+            else if (!_saldos.Any(s => s.Saldo > 0))
+            {
+                <div class="adm-card"><EstadoVacio Titulo="Nadie debe comisiones" Texto="Todo al día. 👌" /></div>
+            }
+            else
+            {
+                <div class="adm-card overflow-hidden">
+                    <div class="pn-table-wrap">
+                        <table class="pn-table">
+                            <thead><tr><th>Care Partner</th><th>Deuda</th><th class="pn-num">Servicios en efectivo</th><th>Estado</th><th></th></tr></thead>
+                            <tbody>
+                                @foreach (var s in _saldos.Where(x => x.Saldo > 0))
                                 {
-                                    <text>Por @pago.AprobadoPorNombre</text>
+                                    var pct = Tope <= 0 ? 100 : Math.Min(100, (double)(s.Saldo / Tope * 100));
+                                    <tr class="pn-row-link" @onclick="() => AbrirSaldo(s)">
+                                        <td><div class="pn-who"><Avatar Url="@Api.Archivo(s.FotoUrl)" Nombre="@s.Nombre" Tam="30" /><span class="pn-who-text"><span>@s.Nombre</span><span class="pn-muted">@(s.Telefono ?? "")</span></span></div></td>
+                                        <td style="min-width:180px;">
+                                            <span class="pn-strong">RD$ @s.Saldo.ToString("N2")</span>
+                                            <div class="pn-progress" style="margin-top:6px;"><span style="width:@(pct.ToString("0", System.Globalization.CultureInfo.InvariantCulture))%; background:@(s.PuedeAceptarEfectivo ? "var(--violet)" : "var(--danger)");"></span></div>
+                                        </td>
+                                        <td class="pn-num">@s.ServiciosEfectivo</td>
+                                        <td>@if (s.PuedeAceptarEfectivo) { <span class="pn-pill tone-violet">Debe</span> } else { <span class="pn-pill tone-danger">En el tope · sin efectivo</span> }</td>
+                                        <td class="pn-num" @onclick:stopPropagation="true">
+                                            @if (_puedeFinanzas) { <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" @onclick="() => AbrirAbono(s)">Registrar abono</button> }
+                                        </td>
+                                    </tr>
                                 }
-                            </span>
-                        }
+                            </tbody>
+                        </table>
                     </div>
-
                 </div>
             }
-            <Paginador Pagina="_pag" Tamano="15" Total="_pagos.Count" PaginaCambiada="p => _pag = p" />
-        </div>
+        }
+        else if (!Visibles().Any())
+        {
+            <div class="adm-card">
+                <EstadoVacio Titulo="@(_estado switch { 1 => "Nada por autorizar", 3 => "Nada pendiente de envío", _ => "Sin pagos" })"
+                             Texto="@(_estado is 1 or 3 ? "Todo al día. 👌" : "Prueba con otro filtro.")"
+                             Icono="M2 7h20M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2M2 7v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7M6 15h4" />
+            </div>
+        }
+        else if (_agrupar)
+        {
+            @* ---------- Vista por Care Partner (liquidación) ---------- *@
+            <div class="pn-liquidaciones">
+                @foreach (var g in Visibles().GroupBy(p => p.CuidadorId).OrderByDescending(g => g.Sum(p => p.Total)))
+                {
+                    var lista = g.ToList();
+                    var nombre = lista[0].CuidadorNombre;
+                    var accion = lista.All(p => p.Estado == 1) ? 1 : lista.All(p => p.Estado == 3) ? 3 : 0;
+                    <div class="adm-card pn-liq">
+                        <div class="pn-liq-head">
+                            <Avatar Nombre="@nombre" Tam="40" />
+                            <div class="d-flex flex-column" style="flex:1; min-width:0; gap:2px;">
+                                <a class="pn-strong pn-link" href="care-partners/@g.Key" style="font-size:15px;">@nombre</a>
+                                <span class="pn-muted">@lista.Count servicio(s)@(lista.Any(p => p.PagoDisputado) ? " · ⚠ incluye disputa" : "")</span>
+                            </div>
+                            <div class="d-flex flex-column align-items-end">
+                                <span class="pn-muted" style="font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:600;">Total a pagar</span>
+                                <span style="font-size:22px; font-weight:700; font-variant-numeric:tabular-nums;">RD$ @lista.Sum(p => p.Total).ToString("N2")</span>
+                            </div>
+                        </div>
+                        <div class="pn-liq-desglose">
+                            <span>Tarifas <b>RD$ @lista.Sum(p => p.Monto).ToString("N0")</b></span>
+                            <span>− Comisión <b>RD$ @lista.Sum(p => p.Comision).ToString("N0")</b></span>
+                            <span>+ Propinas <b>RD$ @lista.Sum(p => p.Propina).ToString("N0")</b></span>
+                        </div>
+                        <div class="d-flex flex-column">
+                            @foreach (var p in lista)
+                            {
+                                <button type="button" class="pn-liq-fila" @onclick="() => _detalle = p">
+                                    <span class="pn-muted" style="width:62px; text-align:left;">#@p.TrabajoId</span>
+                                    <span style="flex:1; text-align:left; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">@p.TipoServicio · @p.ClienteNombre</span>
+                                    <span class="pn-pill no-dot @Tono(p.Estado)">@Texto(p.Estado)</span>
+                                    <span class="pn-strong" style="width:110px; text-align:right;">RD$ @p.Total.ToString("N2")</span>
+                                </button>
+                            }
+                        </div>
+                        @if (accion != 0)
+                        {
+                            <div class="pn-liq-pie">
+                                <button type="button" class="pn-btn @(accion == 1 ? "pn-btn-primary" : "pn-btn-ok")" disabled="@_procesando" @onclick="() => Avanzar(lista)">
+                                    @(accion == 1 ? (lista.Count == 1 ? "Autorizar" : $"Autorizar los {lista.Count}") : $"Confirmar envío de RD$ {lista.Sum(p => p.Total):N0}")
+                                </button>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            @* ---------- Vista de lista ---------- *@
+            <div class="adm-card overflow-hidden">
+                <div class="pn-table-wrap">
+                    <table class="pn-table">
+                        <thead>
+                            <tr>
+                                @if (Seleccionable)
+                                {
+                                    <th style="width:36px;"><input type="checkbox" aria-label="Seleccionar todos" checked="@TodosMarcados" @onchange="MarcarTodos" /></th>
+                                }
+                                <th>Care Partner</th><th>Servicio</th><th>Estado</th><th class="pn-num">Tarifa</th><th class="pn-num">Comisión</th><th class="pn-num">Propina</th><th class="pn-num">A pagar</th><th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in Paginador.Cortar(Visibles().ToList(), _pag, 20))
+                            {
+                                <tr class="pn-row-link @(_marcados.Contains(p.Id) ? "is-sel" : "")" @onclick="() => _detalle = p">
+                                    @if (Seleccionable)
+                                    {
+                                        <td @onclick:stopPropagation="true"><input type="checkbox" aria-label="Seleccionar pago @p.Id" checked="@_marcados.Contains(p.Id)" @onchange="() => Marcar(p.Id)" /></td>
+                                    }
+                                    <td>
+                                        <div class="pn-who">
+                                            <Avatar Nombre="@p.CuidadorNombre" Tam="30" />
+                                            <span class="pn-who-text"><span>@p.CuidadorNombre</span><span class="pn-muted">@p.FechaCreacion.ToString("dd MMM yyyy")</span></span>
+                                        </div>
+                                    </td>
+                                    <td>@p.TipoServicio<div class="pn-muted" style="font-size:11.5px;">#@p.TrabajoId · @p.ClienteNombre</div></td>
+                                    <td>
+                                        <span class="pn-pill @Tono(p.Estado)">@Texto(p.Estado)</span>
+                                        @if (p.PagoDisputado) { <span class="pn-pill tone-danger no-dot" style="margin-left:4px;">Disputa</span> }
+                                    </td>
+                                    <td class="pn-num">@p.Monto.ToString("N0")</td>
+                                    <td class="pn-num pn-muted">@(p.Comision > 0 ? $"−{p.Comision:N0}" : "—")</td>
+                                    <td class="pn-num" style="color:@(p.Propina > 0 ? "var(--ok)" : "var(--adm-muted-2)");">@(p.Propina > 0 ? $"+{p.Propina:N0}" : "—")</td>
+                                    <td class="pn-num">
+                                        @if (p.EsEfectivo)
+                                        {
+                                            <span class="pn-muted">Cobró en mano</span>
+                                            @if (p.Comision > 0) { <div style="font-size:11.5px; color:var(--violet); font-weight:600;">Debe RD$ @p.Comision.ToString("N0")</div> }
+                                        }
+                                        else
+                                        {
+                                            <span class="pn-strong">RD$ @p.Total.ToString("N2")</span>
+                                            @if (p.DescuentoSaldo > 0) { <div class="pn-muted" style="font-size:11.5px;">− RD$ @p.DescuentoSaldo.ToString("N0") de deuda</div> }
+                                            else if (p.Estado == 1 && p.SaldoCuidador > 0) { <div style="font-size:11.5px; color:var(--violet);">Al autorizar: − hasta RD$ @Math.Min(p.SaldoCuidador, p.Total).ToString("N0") de deuda</div> }
+                                        }
+                                    </td>
+                                    <td class="pn-num" @onclick:stopPropagation="true">
+                                        @if (p.Estado == 1)
+                                        {
+                                            <button type="button" class="pn-btn pn-btn-primary pn-btn-sm" disabled="@_procesando" @onclick="() => Avanzar(new() { p })">Autorizar</button>
+                                        }
+                                        else if (p.Estado == 3)
+                                        {
+                                            <button type="button" class="pn-btn pn-btn-ok pn-btn-sm" disabled="@_procesando" @onclick="() => Avanzar(new() { p })">Confirmar envío</button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <Paginador Pagina="_pag" Tamano="20" Total="Visibles().Count()" PaginaCambiada="x => _pag = x" />
+            </div>
+        }
     }
-
 </div>
 
+@* ---------- Barra de acción para los seleccionados ---------- *@
+@if (Seleccionados.Count > 0 && !_agrupar)
+{
+    <div class="pn-barra-sel" role="region" aria-label="Pagos seleccionados">
+        <span><b>@Seleccionados.Count</b> seleccionado(s) · RD$ @Seleccionados.Sum(p => p.Total).ToString("N2")</span>
+        <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" @onclick="() => _marcados.Clear()">Quitar selección</button>
+        <button type="button" class="pn-btn @(_estado == 1 ? "pn-btn-primary" : "pn-btn-ok") pn-btn-sm" disabled="@_procesando" @onclick="() => Avanzar(Seleccionados)">
+            @(_estado == 1 ? "Autorizar seleccionados" : "Confirmar envío")
+        </button>
+    </div>
+}
+
+@* ---------- Detalle de un pago ---------- *@
+@if (_detalle != null)
+{
+    var d = _detalle;
+    <div class="pn-drawer-overlay" @onclick="() => _detalle = null"></div>
+    <div class="pn-drawer" role="dialog" aria-modal="true" aria-labelledby="pg-t">
+        <div class="pn-drawer-head">
+            <div class="d-flex flex-column" style="gap:2px;">
+                <span id="pg-t" class="adm-card-title" style="font-size:16px;">Pago #@d.Id</span>
+                <span class="pn-muted">@d.TipoServicio · servicio #@d.TrabajoId</span>
+            </div>
+            <button type="button" class="pn-cerrar" @onclick="() => _detalle = null" aria-label="Cerrar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div class="pn-drawer-body">
+            <div class="d-flex flex-column align-items-center" style="gap:6px; padding:8px 0 4px;">
+                <span class="pn-pill @Tono(d.Estado)">@Texto(d.Estado)</span>
+                <span style="font-size:32px; font-weight:700; font-variant-numeric:tabular-nums;">RD$ @d.Total.ToString("N2")</span>
+                <span class="pn-muted">para <a class="pn-link" href="care-partners/@d.CuidadorId">@d.CuidadorNombre</a></span>
+            </div>
+            @if (d.PagoDisputado)
+            {
+                <div class="pn-callout tone-danger"><span>Este servicio tuvo una <b>disputa</b>. Revísala antes de pagar.</span></div>
+            }
+
+            @if (d.EsEfectivo)
+            {
+                <div class="pn-callout tone-violet"><span>El cliente pagó <b>en efectivo</b> directo al Care Partner: no hay nada que transferir. La comisión queda en su deuda y se descuenta sola de su próximo pago por transferencia.</span></div>
+                <div class="pn-recibo">
+                    <div><span>Tarifa del servicio</span><span>RD$ @d.Monto.ToString("N2")</span></div>
+                    <div><span>Propina del cliente</span><span style="color:var(--ok);">+ RD$ @d.Propina.ToString("N2")</span></div>
+                    <div><span>Cobró en mano</span><span>RD$ @((d.Monto + d.Propina).ToString("N2"))</span></div>
+                    <div class="total"><span>Debe a CuidApp (comisión @d.ComisionPorcentaje.ToString("0.##")%)</span><span style="color:var(--violet);">RD$ @d.Comision.ToString("N2")</span></div>
+                </div>
+            }
+            else
+            {
+                <div class="pn-recibo">
+                    <div><span>Tarifa del servicio</span><span>RD$ @d.Monto.ToString("N2")</span></div>
+                    <div><span>Comisión CuidApp (@d.ComisionPorcentaje.ToString("0.##")%)</span><span>− RD$ @d.Comision.ToString("N2")</span></div>
+                    <div><span>Propina del cliente</span><span style="color:var(--ok);">+ RD$ @d.Propina.ToString("N2")</span></div>
+                    @if (d.DescuentoSaldo > 0)
+                    {
+                        <div><span>Descuento por deuda de efectivo</span><span style="color:var(--violet);">− RD$ @d.DescuentoSaldo.ToString("N2")</span></div>
+                    }
+                    <div class="total"><span>Recibe el Care Partner</span><span>RD$ @d.Total.ToString("N2")</span></div>
+                </div>
+                @if (d.Estado == 1 && d.SaldoCuidador > 0)
+                {
+                    <div class="pn-callout tone-violet"><span>Este Care Partner debe <b>RD$ @d.SaldoCuidador.ToString("N2")</b> de comisiones en efectivo. Al autorizar se descontarán hasta <b>RD$ @Math.Min(d.SaldoCuidador, d.Total).ToString("N2")</b> de este pago.</span></div>
+                }
+            }
+
+            <span class="pn-section-title">Recorrido del pago</span>
+            <div class="pn-pasos">
+                <div class="pn-paso hecho"><span class="pn-paso-dot"></span><div><b>Creado</b><span>@d.FechaCreacion.ToString("dd MMM yyyy, h:mm tt") · @d.ClienteNombre confirmó el servicio</span></div></div>
+                <div class="pn-paso @(d.FechaAutorizacion != null ? "hecho" : "actual")"><span class="pn-paso-dot"></span><div><b>Autorizado</b><span>@(d.FechaAutorizacion is { } fa ? $"{fa:dd MMM yyyy, h:mm tt} · {d.AutorizadoPorNombre}" : "Pendiente")</span></div></div>
+                <div class="pn-paso @(d.FechaPago != null ? "hecho" : d.Estado == 3 ? "actual" : "")"><span class="pn-paso-dot"></span><div><b>Dinero enviado</b><span>@(d.FechaPago is { } fp ? $"{fp:dd MMM yyyy, h:mm tt} · {d.AprobadoPorNombre}" : "Pendiente")</span></div></div>
+            </div>
+
+            <a class="pn-btn pn-btn-quiet" href="servicios/@d.TrabajoId" style="justify-content:center;">Ver el servicio</a>
+        </div>
+        @if (d.Estado is 1 or 3)
+        {
+            <div class="pn-drawer-foot">
+                <button type="button" class="pn-btn @(d.Estado == 1 ? "pn-btn-primary" : "pn-btn-ok")" style="flex:1; justify-content:center;" disabled="@_procesando" @onclick="() => Avanzar(new() { d })">
+                    @(d.Estado == 1 ? "Autorizar pago" : "Confirmar que ya lo envié")
+                </button>
+            </div>
+        }
+    </div>
+}
+
+@* ---------- Historial de deuda ---------- *@
+@if (_saldoSel != null)
+{
+    <div class="pn-drawer-overlay" @onclick="() => _saldoSel = null"></div>
+    <div class="pn-drawer" role="dialog" aria-modal="true" aria-labelledby="sd-t">
+        <div class="pn-drawer-head">
+            <div class="d-flex flex-column" style="gap:2px;">
+                <span id="sd-t" class="adm-card-title" style="font-size:16px;">@_saldoSel.Nombre</span>
+                <span class="pn-muted">Debe RD$ @_saldoSel.Saldo.ToString("N2") de comisiones en efectivo</span>
+            </div>
+            <button type="button" class="pn-cerrar" @onclick="() => _saldoSel = null" aria-label="Cerrar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div class="pn-drawer-body">
+            @if (_movimientos == null) { <Esqueleto Filas="4" ConAvatar="false" /> }
+            else
+            {
+                @foreach (var m in _movimientos)
+                {
+                    <div class="pn-aviso-fila">
+                        <span class="d-flex flex-column" style="flex:1; min-width:0; gap:1px;">
+                            <span style="font-weight:600; color:var(--adm-ink-2);">@m.TipoTexto</span>
+                            <span class="pn-muted" style="font-size:11.5px;">@m.Fecha.ToString("dd MMM yyyy, h:mm tt")@(m.TrabajoId is int t ? $" · servicio #{t}" : "")@(m.AdminNombre != null ? $" · {m.AdminNombre}" : "")</span>
+                            @if (!string.IsNullOrWhiteSpace(m.Nota) && m.Tipo == "abono") { <span class="pn-muted" style="font-size:11.5px;">@m.Nota</span> }
+                        </span>
+                        <span class="pn-strong" style="color:@(m.Monto > 0 ? "var(--violet)" : "var(--ok)");">@(m.Monto > 0 ? "+" : "−") RD$ @Math.Abs(m.Monto).ToString("N2")</span>
+                    </div>
+                }
+            }
+        </div>
+        @if (_puedeFinanzas)
+        {
+            <div class="pn-drawer-foot">
+                <button type="button" class="pn-btn pn-btn-primary" style="flex:1; justify-content:center;" @onclick="() => { var s = _saldoSel; _saldoSel = null; AbrirAbono(s!); }">Registrar abono</button>
+            </div>
+        }
+    </div>
+}
+
+@* ---------- Registrar abono ---------- *@
+@if (_abono != null)
+{
+    <div class="pn-overlay" @onclick="() => _abono = null">
+        <div class="pn-dialog" role="dialog" aria-modal="true" aria-labelledby="ab-t" @onclick:stopPropagation="true">
+            <h2 id="ab-t" class="pn-dialog-title">Registrar abono</h2>
+            <p class="pn-dialog-text">@_abono.Nombre debe RD$ @_abono.Saldo.ToString("N2"). Registra lo que te pagó directo (transferencia o efectivo a la oficina).</p>
+            <label class="pn-label" for="ab-m">Monto (RD$)</label>
+            <input id="ab-m" class="pn-input" type="number" min="1" max="@_abono.Saldo" step="50" inputmode="decimal" @bind="_montoAbono" />
+            <label class="pn-label" for="ab-n">Nota (opcional)</label>
+            <input id="ab-n" class="pn-input" maxlength="300" placeholder="Ej.: transferencia Banreservas del 10/10" @bind="_notaAbono" />
+            <div class="pn-dialog-actions">
+                <button type="button" class="pn-btn pn-btn-quiet" @onclick="() => _abono = null">Cancelar</button>
+                <button type="button" class="pn-btn pn-btn-primary" disabled="@_guardandoAbono" @onclick="GuardarAbono">Registrar</button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
-    private int _pag = 1;
-    [CascadingParameter]
-    private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthStateTask { get; set; }
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
 
-    private record Tab(int? Estado, string Label);
+    private List<PagoAdmin>? _pagos;
+    private int? _estado = 1;
+    private bool _agrupar, _procesando;
+    private string _buscar = "";
+    private int _pag = 1, _adminId;
+    private PagoAdmin? _detalle;
+    private readonly HashSet<int> _marcados = new();
 
-    private readonly Tab[] _tabs =
-    {
-        new(1, "Pendientes"),
-        new(3, "Autorizados"),
-        new(2, "Pagados"),
-        new(null, "Todos"),
-    };
+    private static DateTime HoyRD => DateTime.UtcNow.AddHours(-4);
+    private static bool EsDelMes(DateTime? f) => f is { } x && x.Year == HoyRD.Year && x.Month == HoyRD.Month;
 
-    private int? _estadoFiltro = 1;
-    private List<PagoAdmin> _pagos = new();
-    private bool _cargando = true;
-    private int _adminId;
-    private int? _procesando;
+    private bool Seleccionable => _estado is 1 or 3;
+    private List<PagoAdmin> Seleccionados => Visibles().Where(p => _marcados.Contains(p.Id)).ToList();
+    private bool TodosMarcados => Visibles().Any() && Visibles().All(p => _marcados.Contains(p.Id));
 
     protected override async Task OnInitializedAsync()
     {
@@ -134,75 +424,158 @@
             var user = (await AuthStateTask).User;
             _adminId = int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : 0;
         }
-
-        await CargarPagos();
+        _puedeFinanzas = AuthStateTask != null && SesionAdmin.PuedeFinanzas((await AuthStateTask).User);
+        await Task.WhenAll(Cargar(), CargarSaldos());
+        // Abre en el paso que tenga trabajo pendiente.
+        _estado = Cuenta(1) > 0 ? 1 : Cuenta(3) > 0 ? 3 : 2;
     }
 
-    private async Task CambiarFiltro(int? estado)
+    private async Task Cargar() => _pagos = await PagoService.ObtenerPagosAsync(null);
+
+    private int Cuenta(int estado) => _pagos?.Count(p => p.Estado == estado) ?? 0;
+    private decimal Suma(int estado) => _pagos?.Where(p => p.Estado == estado).Sum(p => p.Total) ?? 0;
+    private decimal PagadoMes() => _pagos?.Where(p => p.Estado == 2 && EsDelMes(p.FechaPago)).Sum(p => p.Total) ?? 0;
+
+    private IEnumerable<PagoAdmin> Visibles()
     {
+        var q = (_pagos ?? new()).Where(p => _estado == null || p.Estado == _estado);
+        if (_estado == -1) q = Enumerable.Empty<PagoAdmin>();
+        var b = _buscar.Trim();
+        if (b.Length > 0)
+            q = q.Where(p => p.CuidadorNombre.Contains(b, StringComparison.OrdinalIgnoreCase) || p.ClienteNombre.Contains(b, StringComparison.OrdinalIgnoreCase)
+                          || p.TrabajoId.ToString() == b.TrimStart('#'));
+        return q.OrderByDescending(p => p.FechaCreacion);
+    }
+
+    private void Filtrar(int? estado)
+    {
+        _estado = estado;
         _pag = 1;
-        _estadoFiltro = estado;
-        await CargarPagos();
+        _marcados.Clear();
     }
 
-    private async Task CargarPagos()
+    private void Marcar(int id) { if (!_marcados.Add(id)) _marcados.Remove(id); }
+
+    private void MarcarTodos()
     {
-        _cargando = true;
-        StateHasChanged();
-
-        _pagos = await PagoService.ObtenerPagosAsync(_estadoFiltro);
-
-        _cargando = false;
+        if (TodosMarcados) _marcados.Clear();
+        else foreach (var p in Visibles()) _marcados.Add(p.Id);
     }
 
-    private async Task Autorizar(PagoAdmin pago)
+    private static string Texto(int estado) => estado switch { 1 => "Por autorizar", 3 => "Por enviar", 2 => "Pagado", 4 => "Cobrado en efectivo", _ => "—" };
+    private static string Tono(int estado) => estado switch { 1 => "tone-warn", 3 => "tone-info", 2 => "tone-ok", 4 => "tone-violet", _ => "tone-muted" };
+
+    // ---------- Deudas de efectivo
+    private List<SaldoCuidadorFila>? _saldos;
+    private decimal Tope;
+    private bool _puedeFinanzas;
+    private decimal DeudaTotal => _saldos?.Where(s => s.Saldo > 0).Sum(s => s.Saldo) ?? 0;
+    private SaldoCuidadorFila? _saldoSel;
+    private List<MovimientoSaldo>? _movimientos;
+    private SaldoCuidadorFila? _abono;
+    private decimal? _montoAbono;
+    private string _notaAbono = "";
+    private bool _guardandoAbono;
+
+    private async Task CargarSaldos()
     {
-        var aviso = pago.PagoDisputado ? " Atención: el pago está en disputa." : "";
-        if (!await Confirmacion.PreguntarAsync($"¿Autorizar RD$ {pago.Total:N2}?",
-                $"Pago a {pago.CuidadorNombre} por {pago.TipoServicio}.{aviso} Después hay que confirmar el envío del dinero.", "Autorizar pago", peligro: pago.PagoDisputado))
+        var saldos = Api.SaldosAsync();
+        var config = Api.ConfigPagosAsync();
+        await Task.WhenAll(saldos, config);
+        _saldos = saldos.Result ?? new();
+        Tope = config.Result?.TopeDeudaEfectivo ?? 2000;
+    }
+
+    private async Task AbrirSaldo(SaldoCuidadorFila s)
+    {
+        _saldoSel = s;
+        _movimientos = null;
+        _movimientos = await Api.MovimientosSaldoAsync(s.UsuarioId) ?? new();
+    }
+
+    private void AbrirAbono(SaldoCuidadorFila s)
+    {
+        _abono = s;
+        _montoAbono = s.Saldo;
+        _notaAbono = "";
+    }
+
+    private async Task GuardarAbono()
+    {
+        if (_abono == null || _montoAbono is not decimal m || m <= 0 || m > _abono.Saldo)
+        {
+            Toasts.Mostrar("El monto debe ser mayor que cero y no mayor que la deuda.", false);
             return;
-
-        var pagoId = pago.Id;
-        _procesando = pagoId;
-        StateHasChanged();
-
-        var ok = await PagoService.AutorizarPagoAsync(pagoId, _adminId);
-        Toasts.Mostrar(ok ? "Pago autorizado." : "No se pudo autorizar el pago.", ok);
-        await CargarPagos();
-
-        _procesando = null;
-    }
-
-    private async Task Aprobar(PagoAdmin pago)
-    {
-        if (!await Confirmacion.PreguntarAsync($"¿Ya enviaste RD$ {pago.Total:N2}?",
-                $"Confirma solo si el dinero ya salió hacia {pago.CuidadorNombre}. Se le avisará en la app que su pago fue enviado.", "Sí, confirmar envío"))
+        }
+        if (!await Confirmacion.PreguntarAsync($"¿Registrar abono de RD$ {m:N2}?", $"{_abono.Nombre} le pagó a CuidApp parte de su deuda. Queda en su historial y en la auditoría.", "Registrar"))
             return;
-
-        var pagoId = pago.Id;
-        _procesando = pagoId;
-        StateHasChanged();
-
-        var ok = await PagoService.AprobarPagoAsync(pagoId, _adminId);
-        Toasts.Mostrar(ok ? "Envío confirmado." : "No se pudo confirmar el envío.", ok);
-        await CargarPagos();
-
-        _procesando = null;
+        _guardandoAbono = true;
+        var r = await Api.RegistrarAbonoAsync(_abono.UsuarioId, m, _notaAbono.Trim());
+        _guardandoAbono = false;
+        Toasts.Mostrar(r);
+        if (r.Ok)
+        {
+            _abono = null;
+            await CargarSaldos();
+            await Cargar();
+        }
     }
 
-    private static string EstadoBg(int estado) => estado switch
+    // Autoriza (estado 1) o confirma el envío (estado 3) de uno o varios pagos del mismo paso.
+    private async Task Avanzar(List<PagoAdmin> lista)
     {
-        1 => "#FEF3C7",
-        3 => "#DBEAFE",
-        2 => "#DCFCE7",
-        _ => "#F3F4F6"
-    };
+        lista = lista.Where(p => p.Estado is 1 or 3).ToList();
+        if (lista.Count == 0) return;
+        if (lista.Select(p => p.Estado).Distinct().Count() > 1)
+        {
+            Toasts.Mostrar("Selecciona pagos del mismo paso (por autorizar o por enviar).", false);
+            return;
+        }
+        var autorizar = lista[0].Estado == 1;
+        var total = lista.Sum(p => p.Total);
+        var personas = lista.Select(p => p.CuidadorNombre).Distinct().ToList();
+        var quien = personas.Count == 1 ? personas[0] : $"{personas.Count} Care Partners";
+        var disputa = lista.Any(p => p.PagoDisputado) ? " Atención: incluye un servicio con disputa." : "";
+        if (autorizar && lista.Any(p => p.SaldoCuidador > 0))
+            disputa += " Se descontará la deuda de comisiones en efectivo de quien la tenga.";
 
-    private static string EstadoColor(int estado) => estado switch
+        var ok = autorizar
+            ? await Confirmacion.PreguntarAsync(lista.Count == 1 ? $"¿Autorizar RD$ {total:N2}?" : $"¿Autorizar {lista.Count} pagos?",
+                $"RD$ {total:N2} para {quien}.{disputa} Después hay que transferir y confirmar el envío.", "Autorizar", peligro: disputa.Length > 0)
+            : await Confirmacion.PreguntarAsync($"¿Ya enviaste RD$ {total:N2}?",
+                $"Confirma solo si el dinero ya salió hacia {quien}. Se le avisará en la app.", "Sí, ya lo envié");
+        if (!ok) return;
+
+        _procesando = true;
+        var fallidos = 0;
+        foreach (var p in lista)
+        {
+            var r = autorizar ? await PagoService.AutorizarPagoAsync(p.Id, _adminId) : await PagoService.AprobarPagoAsync(p.Id, _adminId);
+            if (!r) fallidos++;
+        }
+        _procesando = false;
+
+        var hechos = lista.Count - fallidos;
+        if (fallidos == 0)
+            Toasts.Mostrar(autorizar ? $"{hechos} pago(s) autorizado(s)." : $"Envío confirmado de {hechos} pago(s).");
+        else
+            Toasts.Mostrar($"{hechos} listo(s), {fallidos} no se pudieron procesar. Revisa e intenta de nuevo.", false);
+
+        _marcados.Clear();
+        _detalle = null;
+        await Cargar();
+    }
+
+    private async Task Exportar()
     {
-        1 => "#92400E",
-        3 => "#1D4ED8",
-        2 => "#166534",
-        _ => "#6B7280"
-    };
+        static string Csv(string? v) => "\"" + (v ?? "").Replace("\"", "\"\"") + "\"";
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        var sb = new System.Text.StringBuilder("Pago,Servicio,Care Partner,Cliente,Tipo,Estado,Tarifa,Comision,Propina,A pagar,Creado,Pagado\n");
+        foreach (var p in Visibles())
+            sb.AppendLine(string.Join(",", p.Id, p.TrabajoId, Csv(p.CuidadorNombre), Csv(p.ClienteNombre), Csv(p.TipoServicio), Csv(Texto(p.Estado)),
+                p.Monto.ToString(inv), p.Comision.ToString(inv), p.Propina.ToString(inv), p.Total.ToString(inv),
+                p.FechaCreacion.ToString("yyyy-MM-dd"), p.FechaPago?.ToString("yyyy-MM-dd") ?? ""));
+        await JS.InvokeVoidAsync("cuidPanel.descargar", $"pagos_{HoyRD:yyyyMMdd}.csv", sb.ToString());
+        Toasts.Mostrar("CSV descargado.");
+    }
 }

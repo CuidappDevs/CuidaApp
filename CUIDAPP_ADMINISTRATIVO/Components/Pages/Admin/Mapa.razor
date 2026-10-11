@@ -443,7 +443,8 @@
 
     private async Task Js(string fn, params object?[] args)
     {
-        try { await JS.InvokeVoidAsync(fn, args); } catch (JSDisconnectedException) { } catch (JSException ex) { Console.WriteLine($"[Mapa] {fn}: {ex.Message}"); }
+        // InvalidOperationException: la copia pre-renderizada en el servidor aún no tiene navegador (no hay JS).
+        try { await JS.InvokeVoidAsync(fn, args); } catch (JSDisconnectedException) { } catch (InvalidOperationException) { } catch (JSException ex) { Console.WriteLine($"[Mapa] {fn}: {ex.Message}"); }
     }
 
     private async Task Cargar(bool centrar)
@@ -821,7 +822,8 @@
         Tiempo.OnAlertaAtendida -= AlCambiarSos;
         Tiempo.OnConexionCambio -= AlCambiarConexion;
         Tiempo.OnCheckinRespondido -= AlResponderCheckin;
-        await Js("cuidPanel.destruir", "pn-mapa");
+        // Solo si llegó a dibujarse en el navegador (la copia pre-renderizada no tiene JS que limpiar).
+        if (_listo) await Js("cuidPanel.destruir", "pn-mapa");
         _ref?.Dispose();
     }
 }

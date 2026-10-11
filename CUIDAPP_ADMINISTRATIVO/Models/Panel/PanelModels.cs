@@ -123,6 +123,7 @@ namespace CUIDAPP_ADMINISTRATIVO.Models.Panel
         public double? Latitud { get; set; }
         public double? Longitud { get; set; }
         public DateTime FechaCreacion { get; set; }
+        public DateTime? FechaLlegada { get; set; }
         public DateTime? FechaInicioReal { get; set; }
         public DateTime? FechaFin { get; set; }
         public string? JustificacionFinalizacion { get; set; }
@@ -133,6 +134,32 @@ namespace CUIDAPP_ADMINISTRATIVO.Models.Panel
         public string? CuidadorEmail { get; set; }
         public string? CuidadorTelefono { get; set; }
         public string? CuidadorFoto { get; set; }
+        public string? MetodoPago { get; set; }
+        public int? DisputaId { get; set; }
+        public bool GrabacionActiva { get; set; }
+    }
+
+    public class GrabacionSegmento
+    {
+        public int Id { get; set; }
+        public string UrlArchivo { get; set; } = "";
+        public int Orden { get; set; }
+        public int? DuracionSeg { get; set; }
+        public DateTime Fecha { get; set; }
+    }
+
+    public class GrabacionServicio
+    {
+        public List<GrabacionSegmento> Segmentos { get; set; } = new();
+        public GrabacionInfo? Info { get; set; }
+    }
+
+    public class GrabacionInfo
+    {
+        public bool GrabacionActiva { get; set; }
+        public int? DuracionTotal { get; set; }
+        public int Estado { get; set; }
+        public bool HayBorrados { get; set; }
     }
 
     public class TareaInfo
@@ -159,9 +186,13 @@ namespace CUIDAPP_ADMINISTRATIVO.Models.Panel
         public DateTime FechaCreacion { get; set; }
         public DateTime? FechaAutorizacion { get; set; }
         public DateTime? FechaPago { get; set; }
+        public decimal ComisionPorcentaje { get; set; }
+        public decimal DescuentoSaldo { get; set; }
+        public decimal Comision => Math.Round(Monto * ComisionPorcentaje / 100, 2);
+        public decimal Neto => Monto - Comision + Propina - DescuentoSaldo;
 
-        public string EstadoTexto => Estado switch { 1 => "Por autorizar", 3 => "Autorizado", 2 => "Pagado", _ => "—" };
-        public string Tono => Estado switch { 1 => "tone-warn", 3 => "tone-info", 2 => "tone-ok", _ => "tone-muted" };
+        public string EstadoTexto => Estado switch { 1 => "Por autorizar", 3 => "Autorizado", 2 => "Pagado", 4 => "Cobrado en efectivo", _ => "—" };
+        public string Tono => Estado switch { 1 => "tone-warn", 3 => "tone-info", 2 => "tone-ok", 4 => "tone-violet", _ => "tone-muted" };
     }
 
     public class CalificacionInfo
@@ -405,6 +436,14 @@ namespace CUIDAPP_ADMINISTRATIVO.Models.Panel
         public TotalesFinanzas Totales { get; set; } = new();
         public List<FinanzasCuidador> PorCuidador { get; set; } = new();
         public List<FinanzasDia> Serie { get; set; } = new();
+        public List<FinanzasMetodo> PorMetodo { get; set; } = new();
+    }
+
+    public class FinanzasMetodo
+    {
+        public string Metodo { get; set; } = "";
+        public int Servicios { get; set; }
+        public decimal Facturado { get; set; }
     }
 
     public class TotalesFinanzas
@@ -416,6 +455,12 @@ namespace CUIDAPP_ADMINISTRATIVO.Models.Panel
         public decimal Pagado { get; set; }
         public decimal PorPagar { get; set; }
         public int Disputados { get; set; }
+        public decimal Comision { get; set; }
+        public int SinMetodo { get; set; }
+        public decimal ComisionGeneral { get; set; }
+        public decimal CobradoEfectivo { get; set; }
+        public decimal ComisionPorCobrar { get; set; }
+        public decimal TopeDeudaEfectivo { get; set; }
     }
 
     public class FinanzasCuidador
@@ -426,8 +471,11 @@ namespace CUIDAPP_ADMINISTRATIVO.Models.Panel
         public int Servicios { get; set; }
         public decimal Facturado { get; set; }
         public decimal Propinas { get; set; }
+        public decimal Comision { get; set; }
         public decimal Pagado { get; set; }
         public decimal PorPagar { get; set; }
+        public decimal Efectivo { get; set; }
+        public decimal Saldo { get; set; }
     }
 
     public class FinanzasDia
@@ -519,5 +567,209 @@ namespace CUIDAPP_ADMINISTRATIVO.Models.Panel
         public int Id { get; set; }
         public int EstatusMigratorioId { get; set; }
         public string TipoDocumento { get; set; } = "";
+    }
+
+    // ---------- Método de pago del cliente
+    public static class MetodosPago
+    {
+        public static readonly (string Id, string Texto)[] Todos = { ("efectivo", "Efectivo"), ("tarjeta", "Tarjeta"), ("transferencia", "Transferencia") };
+        public static string Texto(string? id) => Todos.FirstOrDefault(m => m.Id == id).Texto ?? "Sin registrar";
+    }
+
+    // ---------- Calidad de Care Partners
+    public class CalidadCuidador
+    {
+        public int UsuarioId { get; set; }
+        public string Nombre { get; set; } = "";
+        public string? FotoUrl { get; set; }
+        public string? Telefono { get; set; }
+        public string? Especialidad { get; set; }
+        public bool? Disponible { get; set; }
+        public int Solicitudes { get; set; }
+        public int Completados { get; set; }
+        public int Cancelados { get; set; }
+        public int Rechazados { get; set; }
+        public int NoSePresento { get; set; }
+        public int Tarde { get; set; }
+        public int Disputas { get; set; }
+        public int Sos { get; set; }
+        public int Resenas { get; set; }
+        public decimal? Nota { get; set; }
+        public int Malas { get; set; }
+        public decimal? NotaGeneral { get; set; }
+        public int DocsVencidos { get; set; }
+        public int Puntaje { get; set; }
+        public string Semaforo { get; set; } = "verde";
+        public decimal? TasaAceptacion { get; set; }
+
+        public string Tono => Semaforo switch { "rojo" => "tone-danger", "amarillo" => "tone-warn", _ => "tone-ok" };
+        public string SemaforoTexto => Semaforo switch { "rojo" => "Revisar ya", "amarillo" => "Atención", _ => "Bien" };
+        public string Color => Semaforo switch { "rojo" => "var(--danger)", "amarillo" => "var(--warn)", _ => "var(--ok)" };
+    }
+
+    public class IncidenciaCalidad
+    {
+        public int? TrabajoId { get; set; }
+        public DateTime Fecha { get; set; }
+        public string Tipo { get; set; } = "";
+        public string? Detalle { get; set; }
+        public string? ClienteNombre { get; set; }
+
+        public string TipoTexto => Tipo switch
+        {
+            "cancelo" => "Canceló el servicio",
+            "rechazo" => "Rechazó la solicitud",
+            "no_se_presento" => "No se presentó",
+            "disputa" => "El cliente rechazó el final",
+            "tarde" => "Llegó tarde",
+            "resena_baja" => "Reseña baja",
+            _ => Tipo
+        };
+        public string Tono => Tipo switch { "no_se_presento" or "cancelo" or "resena_baja" => "tone-danger", "disputa" or "tarde" => "tone-warn", _ => "tone-muted" };
+    }
+
+    // ---------- Documentos que vencen
+    public class DocumentoVencimiento
+    {
+        public int Id { get; set; }
+        public int CuidadorId { get; set; }
+        public string Nombre { get; set; } = "";
+        public string? FotoUrl { get; set; }
+        public string? Telefono { get; set; }
+        public string TipoDocumento { get; set; } = "";
+        public string? UrlArchivo { get; set; }
+        public int Estado { get; set; }
+        public string? ObservacionesAdmin { get; set; }
+        public DateTime? FechaSubida { get; set; }
+        public DateTime? FechaVencimiento { get; set; }
+        public int? DiasRestantes { get; set; }
+        public int AvisoVencimiento { get; set; }
+        public bool? Disponible { get; set; }
+
+        /// <summary>revisar · vencidos · pronto (30 días) · sinfecha · vigentes</summary>
+        public string Grupo => Estado == 1 ? "revisar"
+            : DiasRestantes < 0 ? "vencidos"
+            : DiasRestantes <= 30 ? "pronto"
+            : FechaVencimiento == null ? "sinfecha" : "vigentes";
+    }
+
+    // ---------- Comisión
+    public class ComisionesPanel
+    {
+        public ComisionGeneral? General { get; set; }
+        public List<TipoComision> Tipos { get; set; } = new();
+    }
+
+    public class ComisionGeneral
+    {
+        public decimal? Porcentaje { get; set; }
+        public DateTime? FechaActualizacion { get; set; }
+        public string? AdminNombre { get; set; }
+    }
+
+    public class TipoComision
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = "";
+        public bool Activo { get; set; }
+        public decimal? ComisionPorcentaje { get; set; }
+    }
+
+    // ---------- Disputas
+    public class DisputaFila
+    {
+        public int Id { get; set; }
+        public int TrabajoId { get; set; }
+        public string Origen { get; set; } = "";
+        public int Estado { get; set; }
+        public string? Motivo { get; set; }
+        public string? Resolucion { get; set; }
+        public decimal? MontoFinal { get; set; }
+        public string? Nota { get; set; }
+        public DateTime FechaApertura { get; set; }
+        public DateTime? FechaResolucion { get; set; }
+        public string? ResueltaPorNombre { get; set; }
+        public string? AbiertaPorNombre { get; set; }
+        public string TipoServicio { get; set; } = "";
+        public DateTime Fecha { get; set; }
+        public string HoraInicio { get; set; } = "";
+        public string HoraFin { get; set; } = "";
+        public int EstadoServicio { get; set; }
+        public decimal Tarifa { get; set; }
+        public string? JustificacionFinalizacion { get; set; }
+        public string? MetodoPago { get; set; }
+        public DateTime? FechaInicioReal { get; set; }
+        public DateTime? FechaFin { get; set; }
+        public int ClienteId { get; set; }
+        public string ClienteNombre { get; set; } = "";
+        public string? ClienteFoto { get; set; }
+        public string? ClienteTelefono { get; set; }
+        public int CuidadorId { get; set; }
+        public string CuidadorNombre { get; set; } = "";
+        public string? CuidadorFoto { get; set; }
+        public string? CuidadorTelefono { get; set; }
+        public decimal? PagoMonto { get; set; }
+        public decimal? PagoPropina { get; set; }
+        public int? PagoEstado { get; set; }
+        public int DiasAbierta { get; set; }
+        public int PuntosGps { get; set; }
+        public int Tareas { get; set; }
+        public int TareasHechas { get; set; }
+
+        public bool Abierta => Estado == 1;
+        public string OrigenTexto => Origen switch
+        {
+            "rechazo" => "El cliente rechazó el final",
+            "sin_pago" => "Cerrado sin pago",
+            _ => "Abierta por soporte"
+        };
+        public string ResolucionTexto => Resolucion switch
+        {
+            "completo" => "Pago completo",
+            "parcial" => "Pago parcial",
+            "sin_pago" => "Sin pago",
+            "acuerdo" => "Resuelta entre las partes",
+            "cancelado" => "Servicio cancelado",
+            _ => "—"
+        };
+    }
+
+    // ---------- Saldos de comisiones de efectivo
+    public class SaldoCuidadorFila
+    {
+        public int UsuarioId { get; set; }
+        public string Nombre { get; set; } = "";
+        public string? FotoUrl { get; set; }
+        public string? Telefono { get; set; }
+        public decimal Saldo { get; set; }
+        public int ServiciosEfectivo { get; set; }
+        public DateTime? UltimoMovimiento { get; set; }
+        public bool PuedeAceptarEfectivo { get; set; } = true;
+    }
+
+    public class MovimientoSaldo
+    {
+        public int Id { get; set; }
+        public string Tipo { get; set; } = "";
+        public decimal Monto { get; set; }
+        public string? Nota { get; set; }
+        public DateTime Fecha { get; set; }
+        public int? TrabajoId { get; set; }
+        public string? TipoServicio { get; set; }
+        public string? AdminNombre { get; set; }
+
+        public string TipoTexto => Tipo switch
+        {
+            "comision_efectivo" => "Comisión de servicio en efectivo",
+            "descuento_pago" => "Descontado de un pago",
+            "abono" => "Abono",
+            _ => Tipo
+        };
+    }
+
+    public class ConfigPagos
+    {
+        public decimal TopeDeudaEfectivo { get; set; }
+        public string? InstruccionesTransferencia { get; set; }
     }
 }

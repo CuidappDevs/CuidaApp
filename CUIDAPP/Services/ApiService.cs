@@ -385,6 +385,40 @@ namespace CUIDAPP.Services
             }
         }
 
+        // ---------- Caja negra (grabación de seguridad)
+        public async Task<bool> GrabacionSeguridadActivaAsync()
+        {
+            try
+            {
+                var r = await _httpClient.GetFromJsonAsync<GrabacionActivaResp>("grabacion/activa");
+                return r?.Activa == true;
+            }
+            catch { return false; }
+        }
+
+        public async Task MarcarGrabacionServicioAsync(int trabajoId, int cuidadorId)
+        {
+            try { await _httpClient.PutAsync($"grabacion/{trabajoId}/marcar?cuidadorId={cuidadorId}", null); }
+            catch (Exception ex) { Console.WriteLine($"Error marcando grabación: {ex.Message}"); }
+        }
+
+        public async Task<bool> RegistrarSegmentoGrabacionAsync(int trabajoId, int cuidadorId, string url, int duracionSeg)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("grabacion/segmento",
+                    new { TrabajoId = trabajoId, CuidadorId = cuidadorId, Url = url, DuracionSeg = duracionSeg });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error registrando segmento de grabación: {ex.Message}");
+                return false;
+            }
+        }
+
+        private sealed class GrabacionActivaResp { public bool Activa { get; set; } }
+
         public async Task<bool> ActualizarUbicacionCuidadorAsync(int cuidadorId, double latitud, double longitud, int? bateria = null)
         {
             try
@@ -933,6 +967,43 @@ namespace CUIDAPP.Services
                 return false;
             }
         }
+
+        /// <summary>Como <see cref="ActualizarEstadoTrabajoAsync"/>, pero devuelve el motivo si el servidor lo rechaza (p. ej. "DEUDA_EFECTIVO").</summary>
+        public async Task<(bool Success, string? Motivo)> ActualizarEstadoTrabajoConMotivoAsync(int trabajoId, int nuevoEstado)
+        {
+            try
+            {
+                var request = new ActualizarEstadoTrabajoRequest { TrabajoId = trabajoId, NuevoEstado = nuevoEstado };
+                var response = await _httpClient.PutAsJsonAsync("trabajo/estado", request);
+                if (response.IsSuccessStatusCode)
+                    return (true, null);
+                var cuerpo = await response.Content.ReadAsStringAsync();
+                return (false, cuerpo.Contains("DEUDA_EFECTIVO") ? "DEUDA_EFECTIVO" : null);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error actualizando estado de trabajo: {ex.Message}");
+                return (false, null);
+            }
+        }
+
+        public async Task<Models.Cuidador.SaldoCuidador?> ObtenerSaldoCuidadorAsync(int cuidadorId)
+        {
+            try { return await _httpClient.GetFromJsonAsync<Models.Cuidador.SaldoCuidador>($"pagos-app/saldo/{cuidadorId}"); }
+            catch (Exception ex) { Console.WriteLine($"Error obteniendo saldo: {ex.Message}"); return null; }
+        }
+
+        public async Task<string> ObtenerInstruccionesTransferenciaAsync()
+        {
+            try
+            {
+                var r = await _httpClient.GetFromJsonAsync<InstruccionesResp>("pagos-app/instrucciones-transferencia");
+                return r?.Instrucciones ?? "";
+            }
+            catch { return ""; }
+        }
+
+        private sealed class InstruccionesResp { public string? Instrucciones { get; set; } }
 
         public async Task<bool> ActualizarEstadoTrabajoAsync(int trabajoId, int nuevoEstado)
         {

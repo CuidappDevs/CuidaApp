@@ -56,8 +56,12 @@
             <Label x:Name="LblEscribiendo" Text="" FontSize="12" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextMuted}" VerticalOptions="Center"/>
         </HorizontalStackLayout>
 
-        <!-- Barra de escritura -->
-        <Grid x:Name="GridEnvio" Grid.Row="2" ColumnDefinitions="Auto, *, Auto" Padding="10,10,12,12" ColumnSpacing="8" BackgroundColor="{StaticResource ColorSurface}">
+        <!-- Mensajes rápidos + barra de escritura -->
+        <VerticalStackLayout Grid.Row="2" Spacing="0" BackgroundColor="{StaticResource ColorSurface}">
+        <ScrollView x:Name="ScrollRapidos" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" IsVisible="False">
+            <HorizontalStackLayout x:Name="ListaRapidos" Spacing="8" Padding="10,10,10,0"/>
+        </ScrollView>
+        <Grid x:Name="GridEnvio" ColumnDefinitions="Auto, *, Auto" Padding="10,10,12,12" ColumnSpacing="8" BackgroundColor="{StaticResource ColorSurface}">
 
             <!-- Adjuntar imagen -->
             <Border Grid.Column="0" Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" WidthRequest="44" HeightRequest="44" VerticalOptions="Center">
@@ -83,12 +87,18 @@
                 </Grid>
             </Border>
 
-            <!-- Grabando -->
-            <Border x:Name="PildoraGrabando" Grid.Column="1" Stroke="Transparent" BackgroundColor="{StaticResource ColorDangerSoft}" StrokeShape="RoundRectangle 24" Padding="16,0" IsVisible="{Binding Source={x:Reference LblGrabando}, Path=IsVisible}" InputTransparent="True" HeightRequest="48">
-                <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
+            <!-- Grabando: el botón Enviar termina y envía; "Cancelar" descarta -->
+            <Border x:Name="PildoraGrabando" Grid.Column="1" Stroke="Transparent" BackgroundColor="{StaticResource ColorDangerSoft}" StrokeShape="RoundRectangle 24" Padding="16,0,6,0" IsVisible="{Binding Source={x:Reference LblGrabando}, Path=IsVisible}" HeightRequest="48">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8" VerticalOptions="Center">
                     <Ellipse x:Name="PuntoGrabando" Fill="{StaticResource ColorDanger}" WidthRequest="9" HeightRequest="9" VerticalOptions="Center"/>
-                    <Label x:Name="LblGrabando" Text="{loc:T grabando_toca_el_microfono_para}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorDanger}" VerticalOptions="Center" IsVisible="False"/>
-                </HorizontalStackLayout>
+                    <Label x:Name="LblGrabando" Grid.Column="1" Text="" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorDanger}" VerticalOptions="Center" IsVisible="False" LineBreakMode="TailTruncation"/>
+                    <Border Grid.Column="2" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 16" Padding="12,6" VerticalOptions="Center">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnCancelarGrabacionTapped"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="{loc:T cancelar}" FontSize="12" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorDanger}"/>
+                    </Border>
+                </Grid>
             </Border>
 
             <!-- Enviar -->
@@ -100,6 +110,7 @@
                 <Path Data="M2 21L23 12L2 3V10L17 12L2 14V21Z" Fill="White" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center" Margin="3,0,0,0"/>
             </Border>
         </Grid>
+        </VerticalStackLayout>
 
     </Grid>
 

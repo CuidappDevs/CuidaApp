@@ -67,6 +67,8 @@ builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<ISOSAlertService, SOSAlertService>();
 // Aplica cada minuto el horario automático de visibilidad de los Care Partners.
 builder.Services.AddHostedService<CUIDAPP_API.Services.Cuidador.HorarioVisibilidadService>();
+builder.Services.AddHostedService<CUIDAPP_API.Services.Cuidador.VencimientoDocumentosService>();
+builder.Services.AddHostedService<CUIDAPP_API.Services.Admin.GrabacionRetencionService>();
 builder.Services.AddScoped<CUIDAPP_API.Interfaces.Admin.IAdminOperacionesService, CUIDAPP_API.Services.Admin.AdminOperacionesService>();
 builder.Services.AddScoped<CUIDAPP_API.Services.Admin.CentroMandoService>();
 

@@ -37,6 +37,7 @@ namespace CUIDAPP_API.Services.Trabajo
             command.Parameters.AddWithValue("@Latitud", (object?)dto.Latitud ?? DBNull.Value);
             command.Parameters.AddWithValue("@Longitud", (object?)dto.Longitud ?? DBNull.Value);
             command.Parameters.AddWithValue("@FechaCreacion", HoraLocalRD.Ahora);
+            command.Parameters.AddWithValue("@MetodoPago", dto.MetodoPago is "efectivo" or "transferencia" ? dto.MetodoPago : DBNull.Value);
 
             await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();
@@ -112,7 +113,7 @@ namespace CUIDAPP_API.Services.Trabajo
             return null;
         }
 
-        public async Task<bool> ActualizarEstadoTrabajoAsync(ActualizarEstadoTrabajoDto dto)
+        public async Task<(bool Success, string? Motivo)> ActualizarEstadoTrabajoAsync(ActualizarEstadoTrabajoDto dto)
         {
             var participantes = await ObtenerParticipantesAsync(dto.TrabajoId);
 
@@ -123,8 +124,14 @@ namespace CUIDAPP_API.Services.Trabajo
             command.Parameters.AddWithValue("@NuevoEstado", dto.NuevoEstado);
 
             await connection.OpenAsync();
-            var filasAfectadas = await command.ExecuteScalarAsync();
-            var success = Convert.ToInt32(filasAfectadas) > 0;
+            bool success;
+            string? motivo = null;
+            using (var reader = await command.ExecuteReaderAsync())
+            {
+                success = await reader.ReadAsync() && Convert.ToInt32(reader["FilasAfectadas"]) > 0;
+                if (!success && reader.HasRows)
+                    motivo = LeerTexto(reader, "Motivo");
+            }
 
             if (success && participantes.HasValue)
             {
@@ -132,7 +139,16 @@ namespace CUIDAPP_API.Services.Trabajo
                 await _notifier.NotificarAsync(participantes.Value.CuidadorId, "TrabajoActualizado", new { dto.TrabajoId, Estado = dto.NuevoEstado });
             }
 
-            return success;
+            return (success, motivo);
+        }
+
+        // Lee una columna de texto si el SP la devuelve (no todos los SPs que comparten un mapeo traen las mismas).
+        private static string? LeerTexto(SqlDataReader reader, string columna)
+        {
+            for (var i = 0; i < reader.FieldCount; i++)
+                if (string.Equals(reader.GetName(i), columna, StringComparison.OrdinalIgnoreCase))
+                    return reader.IsDBNull(i) ? null : reader.GetValue(i).ToString();
+            return null;
         }
 
         private static TrabajoClienteDto MapearTrabajoCliente(SqlDataReader reader)
@@ -157,7 +173,8 @@ namespace CUIDAPP_API.Services.Trabajo
                 PinFin = reader["PinFin"] as string,
                 FechaInicioReal = reader["FechaInicioReal"] as DateTime?,
                 JustificacionFinalizacion = reader["JustificacionFinalizacion"] as string,
-                RechazadoPorCliente = Convert.ToBoolean(reader["RechazadoPorCliente"])
+                RechazadoPorCliente = Convert.ToBoolean(reader["RechazadoPorCliente"]),
+                MetodoPago = LeerTexto(reader, "MetodoPago")
             };
         }
 
@@ -526,7 +543,8 @@ namespace CUIDAPP_API.Services.Trabajo
                 Latitud = reader["Latitud"] as decimal?,
                 Longitud = reader["Longitud"] as decimal?,
                 RechazadoPorCliente = Convert.ToBoolean(reader["RechazadoPorCliente"]),
-                PagoDisputado = Convert.ToBoolean(reader["PagoDisputado"])
+                PagoDisputado = Convert.ToBoolean(reader["PagoDisputado"]),
+                MetodoPago = LeerTexto(reader, "MetodoPago")
             };
         }
     }

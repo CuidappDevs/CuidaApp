@@ -30,7 +30,17 @@ namespace CUIDAPP.Views.Dinero
 
             var gananciasTask = _apiService.ObtenerGananciasAsync(cuidadorId);
             var pagosTask = _apiService.ObtenerPagosAsync(cuidadorId);
-            await Task.WhenAll(gananciasTask, pagosTask);
+            var saldoTask = _apiService.ObtenerSaldoCuidadorAsync(cuidadorId);
+            await Task.WhenAll(gananciasTask, pagosTask, saldoTask);
+
+            var saldo = saldoTask.Result;
+            TarjetaSaldo.IsVisible = saldo != null && saldo.Saldo > 0;
+            if (TarjetaSaldo.IsVisible)
+            {
+                LblSaldoMonto.Text = Localizador.F("rd_3", saldo!.Saldo);
+                LblSaldoTope.IsVisible = !saldo.PuedeAceptarEfectivo;
+                LblSaldoTope.Text = Localizador.F("saldo_tope_texto", Localizador.F("rd_3", saldo.Tope));
+            }
 
             LoadingIndicator.IsRunning = false;
 
@@ -64,9 +74,9 @@ namespace CUIDAPP.Views.Dinero
 
         private static View CrearTarjetaPago(Pago pago)
         {
-            var esPagado = pago.Estado == 2;
+            var esPagado = pago.EsCobrado;
             var colorMonto = esPagado ? Tema.C("ColorSuccess") : Tema.C("ColorWarning");
-            var textoEstado = esPagado ? Localizador.T("pagado") : Localizador.T("pendiente");
+            var textoEstado = pago.Estado == 4 ? Localizador.T("cobrado_en_efectivo") : esPagado ? Localizador.T("pagado") : Localizador.T("pendiente");
             var fecha = esPagado && pago.FechaPago.HasValue ? pago.FechaPago.Value : pago.FechaCreacion;
 
             // Pagado: check verde. Pendiente: reloj ámbar.

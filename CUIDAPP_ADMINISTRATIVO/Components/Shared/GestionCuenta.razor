@@ -1,0 +1,331 @@
+@using CUIDAPP_ADMINISTRATIVO.Models.Common
+@using CUIDAPP_ADMINISTRATIVO.Models.Cuidador
+@inject PanelApiService Api
+@inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
+
+@* Estado de la cuenta + suspensión temporal / baneo + historial. Lo usan las fichas de cliente y de Care Partner. *@
+<div class="adm-card overflow-hidden">
+    <div class="pn-card-head">
+        <span class="adm-card-title">Estado de la cuenta</span>
+        @if (Sanciones.Count > 0) { <span class="pn-muted">@Sanciones.Count sanción(es) en total</span> }
+    </div>
+
+    <div class="d-flex flex-column" style="padding:18px 20px; gap:14px;">
+        @* ---- Estado actual ---- *@
+        <div class="pn-cuenta @ClaseEstado">
+            <span class="pn-cuenta-icono">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    @if (Activa)
+                    {
+                        <path d="M12 3l7 3v6c0 4.5-3 7.7-7 9-4-1.3-7-4.5-7-9V6z"></path><path d="m9 12 2 2 4-4"></path>
+                    }
+                    else if (Vigente?.Tipo == "TEMPORAL")
+                    {
+                        <circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path>
+                    }
+                    else
+                    {
+                        <circle cx="12" cy="12" r="9"></circle><path d="m5.6 5.6 12.8 12.8"></path>
+                    }
+                </svg>
+            </span>
+            <div class="d-flex flex-column" style="gap:3px; min-width:0; flex:1;">
+                <span class="pn-cuenta-titulo">@TituloEstado</span>
+                <span class="pn-cuenta-texto">@TextoEstado</span>
+                @if (Vigente != null)
+                {
+                    <span class="pn-cuenta-motivo">“@Vigente.Motivo”</span>
+                    <span class="pn-muted" style="font-size:11.5px;">Por @Vigente.AdminNombre · @FechaRD(Vigente.FechaInicioUtc)</span>
+                }
+            </div>
+        </div>
+
+        @if (Vigente is { Tipo: "TEMPORAL", FechaFinUtc: { } finVig } && !Vigente.VencidaPendienteAcceso)
+        {
+            var total = (finVig - Vigente.FechaInicioUtc).TotalMinutes;
+            var hecho = (DateTimeOffset.UtcNow - Vigente.FechaInicioUtc).TotalMinutes;
+            <div class="d-flex flex-column" style="gap:6px;">
+                <div class="pn-progress"><span style="width:@(Math.Clamp(hecho / Math.Max(1, total) * 100, 2, 100).ToString("0", System.Globalization.CultureInfo.InvariantCulture))%; background:var(--warn);"></span></div>
+                <span class="pn-muted" style="font-size:11.5px;">@Restante(finVig)</span>
+            </div>
+        }
+
+        @* ---- Acciones ---- *@
+        @if (!PuedeOperar)
+        {
+            <span class="pn-muted">Tu nivel de administrador no permite suspender ni reactivar cuentas.</span>
+        }
+        else if (Activa)
+        {
+            <div class="pn-grid-2-eq" style="display:grid; gap:8px;">
+                <button type="button" class="pn-btn pn-btn-quiet" style="justify-content:center;" @onclick="() => Abrir(false)">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+                    Suspender
+                </button>
+                <button type="button" class="pn-btn pn-btn-danger-soft" style="justify-content:center;" @onclick="() => Abrir(true)">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="m5.6 5.6 12.8 12.8"></path></svg>
+                    Banear
+                </button>
+            </div>
+            <span class="pn-muted" style="font-size:11.5px;">Suspender = por un tiempo. Banear = indefinido, hasta que alguien lo reactive.</span>
+        }
+        else
+        {
+            <button type="button" class="pn-btn pn-btn-ok" style="justify-content:center;" disabled="@_procesando" @onclick="Reactivar">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"></path></svg>
+                @(_procesando ? "Reactivando…" : "Reactivar cuenta")
+            </button>
+        }
+
+        @* ---- Historial ---- *@
+        @if (Sanciones.Count > 0)
+        {
+            <span class="pn-section-title" style="margin-top:4px;">Historial</span>
+            <div class="pn-timeline">
+                @foreach (var s in Sanciones)
+                {
+                    <div class="pn-tl-item">
+                        <span class="pn-tl-icon @(s.Estado == "VIGENTE" && !s.VencidaPendienteAcceso ? "tone-danger" : s.Estado == "REVOCADA" ? "tone-ok" : "tone-muted")">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+                                @if (s.Tipo == "TEMPORAL") { <path d="M12 7v5l3 2"></path> } else { <path d="m6 6 12 12"></path> }
+                            </svg>
+                        </span>
+                        <div class="pn-tl-text">
+                            <span style="font-weight:600;">@(s.Tipo == "TEMPORAL" ? "Suspensión" : "Baneo") · @s.EstadoTexto</span>
+                            <span style="font-size:13px; color:var(--adm-ink-2);">@s.Motivo</span>
+                            <span class="pn-tl-when">
+                                @s.AdminNombre · @FechaRD(s.FechaInicioUtc)@(s.FechaFinUtc is { } f ? $" → {FechaRD(f)}" : "")
+                                @if (s.Estado == "REVOCADA" && s.FechaRevocacionUtc is { } r)
+                                {
+                                    <br />@($"Reactivada por {s.RevocadaPorAdminNombre} · {FechaRD(r)}")
+                                }
+                            </span>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@if (_abierto)
+{
+    <div class="pn-drawer-overlay" @onclick="Cerrar"></div>
+    <div class="pn-drawer" role="dialog" aria-modal="true" aria-labelledby="gc-t">
+        <div class="pn-drawer-head">
+            <div class="d-flex flex-column" style="gap:2px;">
+                <span id="gc-t" class="adm-card-title" style="font-size:16px;">@(_baneo ? "Banear cuenta" : "Suspender cuenta")</span>
+                <span class="pn-muted">@Nombre</span>
+            </div>
+            <button type="button" class="pn-cerrar" @onclick="Cerrar" aria-label="Cerrar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div class="pn-drawer-body">
+            <div class="pn-seg" style="align-self:flex-start;">
+                <button type="button" class="@(!_baneo ? "on" : "")" @onclick="() => _baneo = false">Suspensión temporal</button>
+                <button type="button" class="@(_baneo ? "on" : "")" @onclick="() => _baneo = true">Baneo indefinido</button>
+            </div>
+
+            @if (!_baneo)
+            {
+                <div class="d-flex flex-column" style="gap:8px;">
+                    <span class="pn-label">Duración</span>
+                    <div class="pn-chips">
+                        @foreach (var (dias, texto) in Duraciones)
+                        {
+                            <button type="button" class="pn-chip @(_dias == dias ? "on" : "")" @onclick="() => ElegirDuracion(dias)">@texto</button>
+                        }
+                    </div>
+                    @if (_dias == 0)
+                    {
+                        <input class="pn-input" type="datetime-local" min="@MinimoFechaFin()" @bind="_fechaFin" aria-label="Fin de la suspensión" />
+                    }
+                </div>
+            }
+
+            <div class="d-flex flex-column" style="gap:8px;">
+                <span class="pn-label">Motivo</span>
+                <div class="pn-chips">
+                    @foreach (var cat in Categorias)
+                    {
+                        <button type="button" class="pn-chip @(_categoria == cat ? "on" : "")" @onclick="() => _categoria = cat">@cat</button>
+                    }
+                </div>
+                <textarea class="adm-textarea" rows="4" maxlength="440" @bind="_detalle" @bind:event="oninput"
+                          placeholder="Describe qué pasó (fechas, servicio, reporte…). Queda en el historial y en la auditoría."></textarea>
+                <span class="pn-hint" style="color:@(MotivoFinal.Length < 10 ? "var(--adm-muted-2)" : "var(--ok)");">@MotivoFinal.Length / 500 · mínimo 10 caracteres</span>
+            </div>
+
+            <label class="d-flex align-items-start" style="gap:10px; cursor:pointer; font-size:13.5px;">
+                <input type="checkbox" @bind="_avisar" style="margin-top:3px;" />
+                <span>Enviarle una notificación con el motivo<br /><span class="pn-muted">Le llega al teléfono si tiene la app abierta o en segundo plano.</span></span>
+            </label>
+
+            @if (EsCuidador)
+            {
+                <div class="pn-callout tone-info"><span>Sale del mapa de los clientes en ese momento y no podrá ponerse visible mientras dure.</span></div>
+            }
+            @if (ServiciosPendientes > 0)
+            {
+                <div class="pn-callout tone-warn">
+                    <span>Tiene <b>@ServiciosPendientes servicio(s) pendiente(s) o en curso</b>. La sanción no los cancela: revísalos en la pestaña Servicios.</span>
+                </div>
+            }
+
+            <div class="pn-resumen-sancion">
+                <span class="pn-muted" style="font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; font-weight:600;">Resumen</span>
+                <span>@ResumenAccion</span>
+            </div>
+        </div>
+        <div class="pn-drawer-foot">
+            <button type="button" class="pn-btn pn-btn-quiet" @onclick="Cerrar">Cancelar</button>
+            <button type="button" class="pn-btn pn-btn-danger" disabled="@(!Valido || _procesando)" @onclick="Aplicar">
+                @(_procesando ? "Aplicando…" : _baneo ? "Banear cuenta" : "Suspender cuenta")
+            </button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int UsuarioId { get; set; }
+    [Parameter] public string Nombre { get; set; } = "";
+    [Parameter] public bool EsCuidador { get; set; }
+    [Parameter] public bool Activa { get; set; }
+    [Parameter] public bool PuedeOperar { get; set; }
+    [Parameter] public int ServiciosPendientes { get; set; }
+    [Parameter] public List<SancionCuidador> Sanciones { get; set; } = new();
+    [Parameter] public Func<string, DateTimeOffset?, Task<AdminActionResult>> Suspender { get; set; } = default!;
+    [Parameter] public Func<Task<AdminActionResult>> ReactivarCuenta { get; set; } = default!;
+    [Parameter] public EventCallback Cambio { get; set; }
+
+    private static readonly TimeSpan OffsetRD = TimeSpan.FromHours(-4);
+    private static readonly System.Globalization.CultureInfo Es = new("es-DO");
+    private static readonly (int Dias, string Texto)[] Duraciones = { (1, "24 horas"), (3, "3 días"), (7, "7 días"), (15, "15 días"), (30, "30 días"), (0, "Otra fecha") };
+    private static readonly string[] Categorias = { "Comportamiento inadecuado", "Incumplimiento de servicio", "Cancelaciones reiteradas", "Fraude o pagos", "Documentos falsos", "Riesgo de seguridad", "Otro" };
+
+    private bool _abierto, _baneo, _procesando, _avisar = true;
+    private int _dias = 7;
+    private DateTime? _fechaFin;
+    private string? _categoria;
+    private string _detalle = "";
+
+    private SancionCuidador? Vigente => Sanciones.FirstOrDefault(x => x.Estado == "VIGENTE");
+
+    private string ClaseEstado => Activa ? "is-ok" : Vigente?.VencidaPendienteAcceso == true ? "is-muted" : Vigente?.Tipo == "TEMPORAL" ? "is-warn" : "is-danger";
+
+    private string TituloEstado => Activa ? "Cuenta activa"
+        : Vigente?.VencidaPendienteAcceso == true ? "Suspensión vencida"
+        : Vigente?.Tipo == "TEMPORAL" ? "Suspendida temporalmente"
+        : "Baneada";
+
+    private string TextoEstado => Activa ? "Puede iniciar sesión y usar la app con normalidad."
+        : Vigente?.VencidaPendienteAcceso == true ? "Ya terminó; la cuenta se reactiva sola en su próximo inicio de sesión."
+        : Vigente is { Tipo: "TEMPORAL", FechaFinUtc: { } f } ? $"No puede iniciar sesión hasta el {FechaRD(f)}."
+        : "No puede iniciar sesión hasta que un administrador la reactive.";
+
+    private string MotivoFinal => string.Join(": ", new[] { _categoria, _detalle.Trim() }.Where(x => !string.IsNullOrWhiteSpace(x)));
+
+    private DateTimeOffset? FinElegido => _baneo ? null
+        : _dias > 0 ? DateTimeOffset.UtcNow.ToOffset(OffsetRD).AddDays(_dias)
+        : _fechaFin is { } f ? new DateTimeOffset(DateTime.SpecifyKind(f, DateTimeKind.Unspecified), OffsetRD) : null;
+
+    private bool Valido => MotivoFinal.Length is >= 10 and <= 500 && _detalle.Trim().Length >= 3
+        && (_baneo || (FinElegido is { } fin && fin > DateTimeOffset.UtcNow.AddMinutes(5)));
+
+    private string ResumenAccion => _baneo
+        ? $"{Nombre} no podrá iniciar sesión hasta que un administrador reactive la cuenta."
+        : FinElegido is { } fin ? $"{Nombre} no podrá iniciar sesión hasta el {FechaRD(fin)}. Después se reactiva sola."
+        : "Elige hasta cuándo dura la suspensión.";
+
+    private static string FechaRD(DateTimeOffset fecha) => fecha.ToOffset(OffsetRD).ToString("ddd d MMM yyyy, h:mm tt", Es);
+    private static string MinimoFechaFin() => DateTimeOffset.UtcNow.ToOffset(OffsetRD).AddMinutes(10).ToString("yyyy-MM-ddTHH:mm");
+
+    private static string Restante(DateTimeOffset fin)
+    {
+        var t = fin - DateTimeOffset.UtcNow;
+        if (t.TotalMinutes <= 0) return "Termina en breve";
+        if (t.TotalDays >= 1) return $"Faltan {(int)t.TotalDays} día(s) y {t.Hours} h";
+        return t.TotalHours >= 1 ? $"Faltan {(int)t.TotalHours} h {t.Minutes} min" : $"Faltan {t.Minutes} min";
+    }
+
+    private void Abrir(bool baneo)
+    {
+        _baneo = baneo;
+        _dias = 7;
+        _fechaFin = DateTime.UtcNow.AddHours(-4).AddDays(7);
+        _categoria = null;
+        _detalle = "";
+        _avisar = true;
+        _abierto = true;
+    }
+
+    private void Cerrar() { if (!_procesando) _abierto = false; }
+
+    private void ElegirDuracion(int dias)
+    {
+        _dias = dias;
+        if (dias == 0) _fechaFin ??= DateTime.UtcNow.AddHours(-4).AddDays(7);
+    }
+
+    private async Task Aplicar()
+    {
+        if (!Valido) return;
+        var motivo = MotivoFinal;
+        var fin = FinElegido;
+        if (!await Confirmacion.PreguntarAsync(_baneo ? $"¿Banear a {Nombre}?" : $"¿Suspender a {Nombre}?", ResumenAccion,
+                _baneo ? "Banear" : "Suspender", peligro: true))
+            return;
+
+        _procesando = true;
+        if (_avisar)
+        {
+            // Antes de suspender, mientras su sesión sigue abierta.
+            var texto = _baneo
+                ? $"Tu cuenta fue desactivada. Motivo: {motivo}. Si crees que es un error, escríbenos a soporte."
+                : $"Tu cuenta fue suspendida hasta el {FechaRD(fin!.Value)}. Motivo: {motivo}.";
+            await Api.NotificarAsync(new[] { UsuarioId }, _baneo ? "Cuenta desactivada" : "Cuenta suspendida", texto.Length > 500 ? texto[..500] : texto);
+        }
+        var r = await Suspender(motivo, fin);
+        _procesando = false;
+
+        if (!r.Success)
+        {
+            Toasts.Mostrar(Traducir(r), false);
+            return;
+        }
+        Toasts.Mostrar(_baneo ? "Cuenta baneada." : "Cuenta suspendida.");
+        _abierto = false;
+        await Cambio.InvokeAsync();
+    }
+
+    private async Task Reactivar()
+    {
+        if (!await Confirmacion.PreguntarAsync($"¿Reactivar a {Nombre}?",
+                "Se revoca la sanción vigente y podrá iniciar sesión de inmediato. Queda registrado en el historial.", "Reactivar"))
+            return;
+        _procesando = true;
+        var r = await ReactivarCuenta();
+        _procesando = false;
+        if (!r.Success)
+        {
+            Toasts.Mostrar(Traducir(r), false);
+            return;
+        }
+        if (_avisar)
+            await Api.NotificarAsync(new[] { UsuarioId }, "Cuenta reactivada", "Tu cuenta vuelve a estar activa. Ya puedes iniciar sesión.");
+        Toasts.Mostrar(r.Code == "ALREADY_COMPLETED" ? "La suspensión ya había vencido; la cuenta quedó activa." : "Cuenta reactivada.");
+        await Cambio.InvokeAsync();
+    }
+
+    private static string Traducir(AdminActionResult r) => r.Code switch
+    {
+        "ALREADY_SUSPENDED" => "Esta cuenta ya tiene una sanción vigente.",
+        "ALREADY_ACTIVE" => "La cuenta ya estaba activa.",
+        "INVALID_REASON" => "El motivo debe tener entre 10 y 500 caracteres.",
+        "INVALID_END_DATE" => "La fecha de fin debe ser posterior a ahora.",
+        "ADMIN_ROLE_REQUIRED" or "FORBIDDEN" => "Tu nivel de administrador no permite esta acción.",
+        _ => string.IsNullOrWhiteSpace(r.Message) ? "No se pudo completar la acción." : r.Message
+    };
+}

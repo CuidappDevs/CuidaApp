@@ -65,6 +65,18 @@
                     </Grid>
                 </Border>
 
+                <!-- Comisiones por pagar a CuidApp (servicios cobrados en efectivo) -->
+                <Border x:Name="TarjetaSaldo" IsVisible="False" Stroke="Transparent" BackgroundColor="{StaticResource ColorWarningSoft}" StrokeShape="RoundRectangle 20" Padding="16">
+                    <VerticalStackLayout Spacing="6">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="{loc:T saldo_titulo}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorWarning}" VerticalOptions="Center"/>
+                            <Label x:Name="LblSaldoMonto" Grid.Column="1" Text="" FontSize="20" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorWarning}"/>
+                        </Grid>
+                        <Label Text="{loc:T saldo_texto}" FontSize="12" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorWarning}"/>
+                        <Label x:Name="LblSaldoTope" Text="" FontSize="12" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorDanger}" IsVisible="False"/>
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- Historial de Ingresos -->
                 <VerticalStackLayout Spacing="15">
                     <Label Text="{loc:T historial_de_pagos}" FontSize="17" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>

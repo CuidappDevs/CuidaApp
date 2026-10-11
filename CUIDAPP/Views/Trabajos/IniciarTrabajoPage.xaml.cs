@@ -1,3 +1,4 @@
+using CUIDAPP.Helpers;
 using CUIDAPP.Localization;
 using CUIDAPP.Models.Trabajo;
 using CUIDAPP.Services;
@@ -112,6 +113,7 @@ namespace CUIDAPP.Views.Trabajos
                 if (success)
                 {
                     DeadManService.Iniciar(trabajo.Id);
+                    await IniciarGrabacionSiAplicaAsync();
                     var irAPerfil = await DeadManService.MostrarAvisoCelularAsync(this);
                     await Shell.Current.GoToAsync("../..");
                     if (irAPerfil)
@@ -136,5 +138,27 @@ namespace CUIDAPP.Views.Trabajos
                 ActualizarEstadoBoton();
             }
         }
-    }
+    
+        // Caja negra: si la administración la tiene encendida, avisa al Care Partner (consentimiento) y
+        // arranca la grabación de seguridad con notificación visible.
+        private async Task IniciarGrabacionSiAplicaAsync()
+        {
+            try
+            {
+                if (trabajo == null || !await GrabacionSeguridad.EncendidaEnServidorAsync())
+                    return;
+
+                await Alerta.MostrarAsync(Localizador.T("grabacion_aviso_titulo"), Localizador.T("grabacion_aviso_texto"), Localizador.T("entendido"), TipoAlerta.Info);
+
+                var cuidadorId = Preferences.Default.Get("UserId", 0);
+                var ok = await GrabacionSeguridad.IniciarAsync(trabajo.Id, cuidadorId);
+                if (!ok)
+                    await Alerta.MostrarAsync(Localizador.T("grabacion_sin_permiso_titulo"), Localizador.T("grabacion_sin_permiso_texto"), Localizador.T("ok"), TipoAlerta.Advertencia);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Grabacion] No se pudo iniciar: {ex.Message}");
+            }
+        }
+}
 }

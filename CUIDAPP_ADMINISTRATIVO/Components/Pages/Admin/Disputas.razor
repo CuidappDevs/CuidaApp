@@ -1,0 +1,83 @@
+@page "/disputas"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@inject PanelApiService Api
+@inject NavigationManager Nav
+
+<PageTitle>Disputas · Cuidapp Admin</PageTitle>
+
+<div class="pn-page">
+    <div class="pn-toolbar">
+        <div class="pn-seg">
+            <button type="button" class="@(_estado == 1 ? "on" : "")" @onclick="() => Filtrar(1)">Abiertas</button>
+            <button type="button" class="@(_estado == 2 ? "on" : "")" @onclick="() => Filtrar(2)">Resueltas</button>
+            <button type="button" class="@(_estado == null ? "on" : "")" @onclick="() => Filtrar(null)">Todas</button>
+        </div>
+        <span class="pn-grow"></span>
+        <span class="pn-muted">Se abren solas cuando el cliente rechaza el final o el Care Partner cierra sin pago. Para abrir una a mano, hazlo desde el detalle del servicio.</span>
+    </div>
+
+    <div class="adm-card overflow-hidden">
+        @if (_filas == null)
+        {
+            <Esqueleto Filas="5" />
+        }
+        else if (_filas.Count == 0)
+        {
+            <EstadoVacio Titulo="@(_estado == 1 ? "Sin disputas abiertas" : "Sin disputas")" Texto="@(_estado == 1 ? "Cuando un cliente rechace el final de un servicio, el caso aparecerá aquí." : null)"
+                         Icono="M12 3v18M5 7h14M5 7l-3 7a4 4 0 0 0 6 0L5 7Zm14 0-3 7a4 4 0 0 0 6 0l-3-7ZM8 21h8" />
+        }
+        else
+        {
+            <div class="pn-table-wrap">
+                <table class="pn-table">
+                    <thead><tr><th>Caso</th><th>Servicio</th><th>Cliente</th><th>Care Partner</th><th class="pn-num">Tarifa</th><th>Estado</th></tr></thead>
+                    <tbody>
+                        @foreach (var d in _filas)
+                        {
+                            <tr class="pn-row-link" @onclick="@(() => Nav.NavigateTo($"disputas/{d.Id}"))">
+                                <td>
+                                    <span class="pn-strong">#@d.Id</span>
+                                    <div class="pn-muted" style="font-size:11.5px;">@d.OrigenTexto</div>
+                                </td>
+                                <td>@d.TipoServicio<div class="pn-muted" style="font-size:11.5px;">#@d.TrabajoId · @d.Fecha.ToString("dd MMM") @d.HoraInicio</div></td>
+                                <td><div class="pn-who"><Avatar Url="@Api.Archivo(d.ClienteFoto)" Nombre="@d.ClienteNombre" Tam="28" /><span>@d.ClienteNombre</span></div></td>
+                                <td><div class="pn-who"><Avatar Url="@Api.Archivo(d.CuidadorFoto)" Nombre="@d.CuidadorNombre" Tam="28" /><span>@d.CuidadorNombre</span></div></td>
+                                <td class="pn-num">RD$ @d.Tarifa.ToString("N0")</td>
+                                <td>
+                                    @if (d.Abierta)
+                                    {
+                                        <span class="pn-pill @(d.DiasAbierta >= 3 ? "tone-danger" : "tone-warn")">Abierta · @(d.DiasAbierta == 0 ? "hoy" : $"{d.DiasAbierta} día(s)")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="pn-pill tone-ok">@d.ResolucionTexto</span>
+                                        @if (d.MontoFinal is decimal m && d.Resolucion is "parcial") { <div class="pn-muted" style="font-size:11.5px;">RD$ @m.ToString("N0")</div> }
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<DisputaFila>? _filas;
+    private int? _estado = 1;
+
+    protected override async Task OnInitializedAsync() => await Cargar();
+
+    private async Task Filtrar(int? estado)
+    {
+        _estado = estado;
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        _filas = null;
+        _filas = await Api.DisputasAsync(_estado) ?? new();
+    }
+}

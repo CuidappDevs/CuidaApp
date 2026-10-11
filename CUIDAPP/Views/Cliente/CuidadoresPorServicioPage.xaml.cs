@@ -218,6 +218,8 @@ namespace CUIDAPP.Views.Cliente
             };
             if (!string.IsNullOrWhiteSpace(cuidador.Bio))
                 info.Add(new Label { Text = cuidador.Bio, FontSize = 13, FontFamily = "OpenSansRegular", TextColor = R("ColorTextMuted"), MaxLines = 2, LineBreakMode = LineBreakMode.TailTruncation });
+            if (!cuidador.PuedeAceptarEfectivo)
+                info.Add(new Label { Text = Localizador.T("solo_transferencia_por_ahora"), FontSize = 12, FontFamily = "OpenSansSemibold", TextColor = R("ColorWarning") });
 
             var precio = new VerticalStackLayout
             {

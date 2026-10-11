@@ -81,4 +81,64 @@ namespace CUIDAPP_API.DTOs.AdminOperaciones
         [Required, StringLength(100)]
         public string TipoDocumento { get; set; } = "";
     }
+    // ---------- Calidad, vencimientos, comisión y disputas
+    public class FechaVencimientoDto
+    {
+        public DateTime? Fecha { get; set; }
+    }
+
+    public class RevisarDocumentoDto
+    {
+        public bool Aprobar { get; set; }
+        public DateTime? Fecha { get; set; }
+        [StringLength(500)]
+        public string? Observaciones { get; set; }
+    }
+
+    public class PorcentajeDto
+    {
+        [Range(0, 100)]
+        public decimal? Porcentaje { get; set; }
+    }
+
+    public class AbonoDto
+    {
+        public decimal Monto { get; set; }
+        [StringLength(300)]
+        public string? Nota { get; set; }
+    }
+
+    public class ConfigPagosDto
+    {
+        public decimal TopeDeudaEfectivo { get; set; }
+        [StringLength(1000)]
+        public string? InstruccionesTransferencia { get; set; }
+    }
+
+    public class ActivaDto
+    {
+        public bool Activa { get; set; }
+    }
+
+    public class MetodoPagoDto
+    {
+        [RegularExpression("^(efectivo|tarjeta|transferencia)$")]
+        public string? MetodoPago { get; set; }
+    }
+
+    public class AbrirDisputaDto
+    {
+        public int TrabajoId { get; set; }
+        [Required, StringLength(400, MinimumLength = 3)]
+        public string Motivo { get; set; } = "";
+    }
+
+    public class ResolverDisputaDto
+    {
+        [Required, RegularExpression("^(completo|parcial|sin_pago)$")]
+        public string Resolucion { get; set; } = "";
+        public decimal? Monto { get; set; }
+        [Required, StringLength(1000, MinimumLength = 3)]
+        public string Nota { get; set; } = "";
+    }
 }

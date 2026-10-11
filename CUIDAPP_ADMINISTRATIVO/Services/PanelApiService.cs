@@ -120,6 +120,35 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
             => Enviar(HttpMethod.Post, "admin/mapa/checkin", new { UsuarioId = usuarioId, Minutos = minutos, Mensaje = mensaje });
         public Task<ResultadoAccion> OcultarCuidadorAsync(int usuarioId) => Enviar(HttpMethod.Post, $"admin/mapa/ocultar/{usuarioId}");
 
+        // ---------- Calidad, vencimientos, comisión y disputas
+        public Task<List<CalidadCuidador>?> CalidadAsync(int dias) => Get<List<CalidadCuidador>>($"admin/calidad?dias={dias}");
+        public Task<List<IncidenciaCalidad>?> CalidadDetalleAsync(int cuidadorId, int dias) => Get<List<IncidenciaCalidad>>($"admin/calidad/{cuidadorId}?dias={dias}");
+        public Task<List<DocumentoVencimiento>?> VencimientosAsync() => Get<List<DocumentoVencimiento>>("admin/vencimientos");
+        public Task<ResultadoAccion> FijarVencimientoAsync(int documentoId, DateTime? fecha) => Enviar(HttpMethod.Put, $"admin/vencimientos/{documentoId}", new { Fecha = fecha });
+        public Task<ResultadoAccion> RevisarDocumentoAsync(int documentoId, bool aprobar, DateTime? fecha, string? observaciones)
+            => Enviar(HttpMethod.Put, $"admin/vencimientos/{documentoId}/revisar", new { Aprobar = aprobar, Fecha = fecha, Observaciones = observaciones });
+        public Task<ComisionesPanel?> ComisionesAsync() => Get<ComisionesPanel>("admin/comisiones");
+        public Task<ResultadoAccion> GuardarComisionGeneralAsync(decimal porcentaje) => Enviar(HttpMethod.Put, "admin/comisiones/general", new { Porcentaje = porcentaje });
+        public Task<ResultadoAccion> GuardarComisionTipoAsync(int tipoId, decimal? porcentaje) => Enviar(HttpMethod.Put, $"admin/comisiones/tipos/{tipoId}", new { Porcentaje = porcentaje });
+        public Task<ResultadoAccion> FijarMetodoPagoAsync(int trabajoId, string? metodo) => Enviar(HttpMethod.Put, $"admin/servicios/{trabajoId}/metodo-pago", new { MetodoPago = metodo });
+        public Task<GrabacionServicio?> GrabacionesServicioAsync(int trabajoId) => Get<GrabacionServicio>($"admin/servicios/{trabajoId}/grabaciones");
+        public Task<bool> GrabacionSeguridadAsync() => Get<ActivaResp>("admin/grabacion-seguridad").ContinueWith(t => t.Result?.Activa == true);
+        public Task<ResultadoAccion> GuardarGrabacionSeguridadAsync(bool activa) => Enviar(HttpMethod.Put, "admin/grabacion-seguridad", new { Activa = activa });
+        private sealed class ActivaResp { public bool Activa { get; set; } }
+
+        public Task<List<SaldoCuidadorFila>?> SaldosAsync() => Get<List<SaldoCuidadorFila>>("admin/saldos");
+        public Task<List<MovimientoSaldo>?> MovimientosSaldoAsync(int cuidadorId) => Get<List<MovimientoSaldo>>($"admin/saldos/{cuidadorId}");
+        public Task<ResultadoAccion> RegistrarAbonoAsync(int cuidadorId, decimal monto, string? nota) => Enviar(HttpMethod.Post, $"admin/saldos/{cuidadorId}/abono", new { Monto = monto, Nota = nota });
+        public Task<ConfigPagos?> ConfigPagosAsync() => Get<ConfigPagos>("admin/config-pagos");
+        public Task<ResultadoAccion> GuardarConfigPagosAsync(decimal tope, string? instrucciones) => Enviar(HttpMethod.Put, "admin/config-pagos", new { TopeDeudaEfectivo = tope, InstruccionesTransferencia = instrucciones });
+
+        public Task<List<ServicioFila>?> ServiciosUsuarioAsync(int usuarioId) => Get<List<ServicioFila>>($"admin/usuarios/{usuarioId}/servicios");
+        public Task<List<DisputaFila>?> DisputasAsync(int? estado) => Get<List<DisputaFila>>(estado.HasValue ? $"admin/disputas?estado={estado}" : "admin/disputas");
+        public Task<DisputaFila?> DisputaAsync(int id) => Get<DisputaFila>($"admin/disputas/{id}");
+        public Task<ResultadoAccion> AbrirDisputaAsync(int trabajoId, string motivo) => Enviar(HttpMethod.Post, "admin/disputas", new { TrabajoId = trabajoId, Motivo = motivo });
+        public Task<ResultadoAccion> ResolverDisputaAsync(int id, string resolucion, decimal? monto, string nota)
+            => Enviar(HttpMethod.Put, $"admin/disputas/{id}/resolver", new { Resolucion = resolucion, Monto = monto, Nota = nota });
+
         public Task<List<SosAlerta>?> SosPendientesAsync() => Get<List<SosAlerta>>("sos/pendientes");
         public Task<List<SosAlerta>?> SosHistorialAsync() => Get<List<SosAlerta>>("sos/historial?top=100");
 

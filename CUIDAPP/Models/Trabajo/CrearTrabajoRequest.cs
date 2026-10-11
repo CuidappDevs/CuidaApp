@@ -13,5 +13,7 @@ namespace CUIDAPP.Models.Trabajo
         public decimal? Latitud { get; set; }
         public decimal? Longitud { get; set; }
         public List<string>? Tareas { get; set; }
+        /// <summary>"efectivo" o "transferencia": el cuidador lo ve antes de aceptar.</summary>
+        public string? MetodoPago { get; set; }
     }
 }

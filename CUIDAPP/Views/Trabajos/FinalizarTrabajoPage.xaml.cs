@@ -116,6 +116,7 @@ namespace CUIDAPP.Views.Trabajos
                 if (success)
                 {
                     DeadManService.Detener();
+                    await GrabacionSeguridad.DetenerAsync();
                     await Alerta.MostrarAsync(Localizador.T("enviado"), Localizador.T("le_avisamos_al_cliente_para"), Localizador.T("ok"));
                     await Shell.Current.GoToAsync("../..");
                     return;

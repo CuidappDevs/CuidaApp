@@ -2,329 +2,365 @@
 @layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
 @using System.Security.Claims
 @using CUIDAPP_ADMINISTRATIVO.Models.Cuidador
-@using CUIDAPP_ADMINISTRATIVO.Services
 @inject CuidadorAdminApiService CuidadorService
-@inject NavigationManager Nav
+@inject PanelApiService Api
 @inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
 
-<PageTitle>Ficha de Care Partner · Cuidapp Admin</PageTitle>
+<PageTitle>@(_cuidador?.NombreCompleto ?? "Care Partner") · Cuidapp Admin</PageTitle>
 
-@if (_cargando)
-{
-    <div class="adm-card adm-card-pad">Cargando ficha...</div>
-}
-else if (_cuidador is null)
-{
-    <div class="adm-card adm-card-pad">
-        <p class="mb-2">No se encontró la Care Partner solicitada.</p>
-        <a href="care-partners" class="adm-btn adm-btn-outline">Volver a Care Partners</a>
-    </div>
-}
-else
-{
-    var p = _cuidador;
-    <div class="d-flex flex-column gap-4">
-        <a href="care-partners" class="adm-back">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m15 18-6-6 6-6"></path>
-            </svg>
-            Volver a Care Partners
-        </a>
+<div class="pn-page">
+    <a href="care-partners" class="adm-back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"></path></svg>
+        Volver a Care Partners
+    </a>
 
-        @if (!string.IsNullOrWhiteSpace(_mensajeAccion))
-        {
-            <div class="adm-card adm-card-pad" style="background:#EFF6FF; border-color:#BFDBFE;">@_mensajeAccion</div>
-        }
+    @if (_cargando && _cuidador == null)
+    {
+        <div class="adm-card"><Esqueleto Filas="6" /></div>
+    }
+    else if (_cuidador is null)
+    {
+        <div class="adm-card"><EstadoVacio Titulo="Care Partner no encontrado" Texto="Puede que la cuenta ya no exista." /></div>
+    }
+    else
+    {
+        var p = _cuidador;
+        var tel = _ficha?.Persona.Telefono;
 
-        <div class="d-grid gap-4 adm-two-col" style="grid-template-columns: 1.4fr 1fr; align-items: start;">
-
-            @* ----- Columna izquierda ----- *@
-            <div class="d-flex flex-column gap-4">
-
-                @* Perfil *@
-                <div class="adm-card d-flex" style="padding:28px; gap:22px;">
-                    @if (!string.IsNullOrWhiteSpace(p.FotoUrl))
-                    {
-                        <img src="@(CuidadorService.ServerOrigin + p.FotoUrl)" style="width:84px; height:84px; border-radius:16px; object-fit:cover; flex-shrink:0;" />
-                    }
-                    else
-                    {
-                        <div class="adm-photo-ph">
-                            <span style="font-size:18px; font-weight:600; color:var(--adm-muted-2);">@Iniciales(p.NombreCompleto)</span>
-                            <span style="font-size:10px; color:var(--adm-muted-2);">Sin foto</span>
-                        </div>
-                    }
-                    <div class="d-flex flex-column" style="flex:1; gap:16px;">
-                        <div class="d-flex align-items-start justify-content-between gap-3">
-                            <div class="d-flex flex-column" style="gap:5px;">
-                                <span style="font-size:24px; font-weight:600; letter-spacing:-0.01em;">@p.NombreCompleto</span>
-                                <span style="font-size:14px; color:var(--adm-muted);">@p.Especialidad &middot; Registrado el @p.FechaCreacion.ToString("dd MMM yyyy")</span>
-                            </div>
-                            <div class="d-flex flex-column flex-shrink-0" style="gap:6px; align-items:flex-end;">
-                                <span class="adm-pill" style="padding:6px 13px; background:@EstadoBg(p.EstadoAprobacion); color:@EstadoColor(p.EstadoAprobacion);">
-                                    <span class="adm-pill-dot" style="background:@EstadoColor(p.EstadoAprobacion);"></span>@p.EstadoTexto
-                                </span>
-                                <span class="adm-pill" style="padding:6px 13px; background:@(p.IsActive ? "#DCFCE7" : "#FEE2E2"); color:@(p.IsActive ? "#166534" : "#B91C1C");">
-                                    <span class="adm-pill-dot" style="background:@(p.IsActive ? "#166534" : "#B91C1C");"></span>Cuenta @p.CuentaTexto.ToLower()
-                                </span>
-                            </div>
-                        </div>
-                        <div class="d-grid" style="grid-template-columns:repeat(3,1fr); gap:18px 24px; padding-top:4px; border-top:1px solid var(--adm-line-soft);">
-                            <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
-                                <span class="adm-field-k">Correo</span>
-                                <span class="adm-field-v">@p.Email</span>
-                            </div>
-                            <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
-                                <span class="adm-field-k">Tarifa por hora</span>
-                                <span class="adm-field-v">RD$ @p.TarifaHora.ToString("N2")</span>
-                            </div>
-                            <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
-                                <span class="adm-field-k">Método de cobro</span>
-                                <span class="adm-field-v">@(p.MetodoCobro ?? "-")</span>
-                            </div>
-                            <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
-                                <span class="adm-field-k">Calificación</span>
-                                <span class="adm-field-v">@(p.PromedioCalificacion is null ? "Sin calificar" : $"{p.PromedioCalificacion:0.0} ★ ({p.TotalCalificaciones})")</span>
-                            </div>
-                            <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
-                                <span class="adm-field-k">Trabajos completados</span>
-                                <span class="adm-field-v">@p.TrabajosCompletados</span>
-                            </div>
-                            <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
-                                <span class="adm-field-k">Disponibilidad</span>
-                                <span class="adm-field-v">@(p.Disponible ? "Disponible ahora" : "No disponible")</span>
-                            </div>
-                        </div>
-                        @if (!string.IsNullOrWhiteSpace(p.Bio))
-                        {
-                            <div style="padding-top:12px; border-top:1px solid var(--adm-line-soft);">
-                                <span class="adm-field-k d-block mb-1">Biografía</span>
-                                <span style="font-size:14px; color:var(--adm-ink); line-height:1.5;">@p.Bio</span>
-                            </div>
-                        }
+        @* ---------- Encabezado ---------- *@
+        <div class="adm-card pn-perfil">
+            <div class="pn-perfil-cover @(p.IsActive ? "" : "is-off")"></div>
+            <div class="pn-perfil-main">
+                <span class="pn-perfil-foto"><Avatar Url="@Api.Archivo(p.FotoUrl)" Nombre="@p.NombreCompleto" Tam="88" /></span>
+                <div class="pn-perfil-info">
+                    <div class="d-flex flex-wrap align-items-center" style="gap:8px;">
+                        <span class="pn-perfil-nombre">@p.NombreCompleto</span>
+                        <span class="pn-pill @TonoAprobacion(p.EstadoAprobacion)">@p.EstadoTexto</span>
+                        @if (!p.IsActive) { <span class="pn-pill tone-danger">@(Vigente?.Tipo == "TEMPORAL" ? "Suspendida" : "Baneada")</span> }
+                        else if (p.Disponible) { <span class="pn-pill tone-live">Visible</span> }
+                        @if (_ficha?.Persona.HorarioAutomatico == true) { <span class="pn-pill tone-info no-dot">Por horario</span> }
+                    </div>
+                    <div class="pn-perfil-meta">
+                        <span>@(p.Especialidad ?? "Care Partner")</span>
+                        <a href="mailto:@p.Email">@p.Email</a>
+                        @if (!string.IsNullOrWhiteSpace(tel)) { <a href="tel:@tel">@tel</a> }
+                        <span>Desde @p.FechaCreacion.ToString("MMM yyyy", Es)</span>
                     </div>
                 </div>
-
-                @* Documentos *@
-                <div class="adm-card" style="padding:28px;">
-                    <div class="d-flex flex-column mb-4" style="gap:4px;">
-                        <span class="adm-card-title">Documentos aportados</span>
-                        <span class="adm-card-sub">Verifica que sean legibles, vigentes y correspondan a la misma persona.</span>
-                    </div>
-
-                    @if (_documentos.Count == 0)
+                <div class="pn-perfil-acciones">
+                    @if (!string.IsNullOrWhiteSpace(tel))
                     {
-                        <span class="adm-card-sub">Esta Care Partner todavía no ha subido documentos.</span>
+                        <a class="pn-btn pn-btn-quiet pn-btn-sm" href="https://wa.me/1@(Digitos(tel))" target="_blank" rel="noopener">WhatsApp</a>
+                        <a class="pn-btn pn-btn-quiet pn-btn-sm" href="tel:@tel">Llamar</a>
                     }
-                    else
+                    @if (_puedeOperar)
                     {
-                        <div class="d-grid" style="grid-template-columns:1fr 1fr; gap:20px;">
-                            @foreach (var doc in _documentos)
+                        <button type="button" class="pn-btn pn-btn-primary pn-btn-sm" @onclick="EnviarAviso">Enviar aviso</button>
+                    }
+                </div>
+            </div>
+            <div class="pn-perfil-stats">
+                <div><span class="k">Calificación</span><span class="v">@(p.PromedioCalificacion is decimal c ? $"{c:0.0} ★" : "—")</span><span class="pn-muted">@p.TotalCalificaciones reseña(s)</span></div>
+                <div><span class="k">Completados</span><span class="v">@p.TrabajosCompletados</span><span class="pn-muted">servicios</span></div>
+                <div><span class="k">Calidad</span><span class="v" style="color:@(_calidad?.Color ?? "inherit");">@(_calidad?.Puntaje.ToString() ?? "—")</span><span class="pn-muted">@(_calidad?.SemaforoTexto ?? "sin datos") · 30 días</span></div>
+                <div><span class="k">Tarifa</span><span class="v">RD$ @p.TarifaHora.ToString("N0")</span><span class="pn-muted">por hora</span></div>
+                <div><span class="k">Última señal</span><span class="v" style="font-size:15px;">@HaceCuanto(_ficha?.Persona.UltimaUbicacion)</span><span class="pn-muted">@(_ficha?.Persona.Bateria is int b ? $"Batería {b}%" : "—")</span></div>
+            </div>
+        </div>
+
+        <div class="pn-ficha-layout">
+            @* ---------- Columna principal ---------- *@
+            <div class="d-flex flex-column" style="gap:16px; min-width:0;">
+                <div class="pn-seg" style="align-self:flex-start;">
+                    <button type="button" class="@(_tab == "resumen" ? "on" : "")" @onclick="@(() => _tab = "resumen")">Resumen</button>
+                    <button type="button" class="@(_tab == "servicios" ? "on" : "")" @onclick="@(() => _tab = "servicios")">Servicios <span class="pn-seg-n">@(_serviciosError ? "—" : (_servicios?.Count ?? 0).ToString())</span></button>
+                    <button type="button" class="@(_tab == "documentos" ? "on" : "")" @onclick="@(() => _tab = "documentos")">Documentos <span class="pn-seg-n">@_documentos.Count</span></button>
+                    @if (_puedeOperar) { <button type="button" class="@(_tab == "editar" ? "on" : "")" @onclick="@(() => _tab = "editar")">Editar</button> }
+                </div>
+
+                @switch (_tab)
+                {
+                    case "resumen":
+                        <div class="adm-card adm-card-pad d-flex flex-column" style="gap:18px;">
+                            <span class="adm-card-title">Datos</span>
+                            <dl class="pn-datos">
+                                <div><dt>Especialidad</dt><dd>@(p.Especialidad ?? "—")</dd></div>
+                                <div><dt>Método de cobro</dt><dd>@(p.MetodoCobro ?? "—")</dd></div>
+                                <div><dt>Correo</dt><dd>@p.Email</dd></div>
+                                <div><dt>Teléfono</dt><dd>@(tel ?? "—")</dd></div>
+                                <div><dt>Registrado</dt><dd>@p.FechaCreacion.ToString("d 'de' MMMM yyyy", Es)</dd></div>
+                                <div><dt>Servicios hoy</dt><dd>@(_ficha?.Persona.ServiciosHoy ?? 0)</dd></div>
+                            </dl>
+                            @if (!string.IsNullOrWhiteSpace(p.Bio))
                             {
-                                var url = CuidadorService.ServerOrigin + doc.UrlArchivo;
-                                <div class="d-flex flex-column" style="gap:12px;">
-                                    <a href="@url" target="_blank" class="adm-doc-preview" style="text-decoration:none; overflow:hidden; padding:0;">
-                                        <img src="@url" style="width:100%; height:100%; object-fit:cover;" />
-                                    </a>
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <div class="d-flex flex-column" style="gap:2px;">
-                                            <span style="font-size:14px; font-weight:600;">@doc.TipoTexto</span>
-                                            <span style="font-size:12.5px; color:var(--adm-muted);">Subido el @doc.FechaSubida.ToString("dd MMM yyyy")</span>
-                                        </div>
-                                        <a href="@url" target="_blank" class="adm-btn adm-btn-ghost-line">Descargar</a>
-                                    </div>
+                                <div class="d-flex flex-column" style="gap:4px; padding-top:14px; border-top:1px solid var(--adm-line-soft);">
+                                    <span class="pn-label" style="margin:0;">Sobre mí</span>
+                                    <span style="font-size:14px; line-height:1.55; color:var(--adm-ink-2);">@p.Bio</span>
                                 </div>
                             }
                         </div>
-                    }
-                </div>
 
-                @* Editar información *@
-                <div class="adm-card" style="padding:28px;">
-                    <div class="d-flex flex-column mb-4" style="gap:4px;">
-                        <span class="adm-card-title">Editar información</span>
-                        <span class="adm-card-sub">Cambios visibles de inmediato para clientes y en la app de la Care Partner.</span>
-                    </div>
+                        @if (_calidad != null)
+                        {
+                            <a class="adm-card adm-card-pad d-flex align-items-center" href="calidad" style="gap:16px; text-decoration:none; color:inherit;">
+                                <span style="font-size:34px; font-weight:700; color:@_calidad.Color; font-variant-numeric:tabular-nums; min-width:56px;">@_calidad.Puntaje</span>
+                                <div class="d-flex flex-column" style="gap:4px; flex:1;">
+                                    <span class="d-flex align-items-center" style="gap:8px;"><span class="adm-card-title">Calidad (30 días)</span><span class="pn-pill @_calidad.Tono">@_calidad.SemaforoTexto</span></span>
+                                    <span class="pn-muted">@_calidad.Completados de @_calidad.Solicitudes completados · @_calidad.Cancelados cancelación(es) · @_calidad.Tarde llegada(s) tarde · @_calidad.Disputas disputa(s)</span>
+                                </div>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="color:var(--adm-muted-2);"><path d="m9 18 6-6-6-6"></path></svg>
+                            </a>
+                        }
 
-                    <div class="d-flex flex-column" style="gap:16px;">
-                        <div class="d-grid" style="grid-template-columns:1fr 1fr; gap:16px;">
-                            <div class="d-flex flex-column" style="gap:6px;">
-                                <span class="adm-field-k">Nombre completo</span>
-                                <input class="adm-input" @bind="_editNombre" />
+                        @if (_servicios?.Count > 0)
+                        {
+                            <div class="adm-card overflow-hidden">
+                                <div class="pn-card-head"><span class="adm-card-title">Últimos servicios</span><button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" @onclick="@(() => _tab = "servicios")">Ver todos</button></div>
+                                @TablaServicios(_servicios.Take(5))
                             </div>
-                            <div class="d-flex flex-column" style="gap:6px;">
-                                <span class="adm-field-k">Especialidad</span>
-                                <input class="adm-input" @bind="_editEspecialidad" />
-                            </div>
-                            <div class="d-flex flex-column" style="gap:6px;">
-                                <span class="adm-field-k">Tarifa por hora (RD$)</span>
-                                <input class="adm-input" type="number" step="0.01" @bind="_editTarifa" />
-                            </div>
-                            <div class="d-flex flex-column" style="gap:6px;">
-                                <span class="adm-field-k">Método de cobro</span>
-                                <input class="adm-input" @bind="_editMetodoCobro" />
-                            </div>
-                        </div>
-                        <div class="d-flex flex-column" style="gap:6px;">
-                            <span class="adm-field-k">Biografía</span>
-                            <textarea class="adm-textarea" @bind="_editBio"></textarea>
-                        </div>
-                        <button type="button" class="adm-btn" style="align-self:flex-start; height:42px; padding:0 22px; border:none; border-radius:11px; background:var(--cuid-blue); color:#fff; font-size:14px;"
-                                disabled="@_guardandoInfo" @onclick="GuardarInfo">
-                            @(_guardandoInfo ? "Guardando..." : "Guardar cambios")
-                        </button>
-                    </div>
-                </div>
-            </div>
+                        }
+                        break;
 
-            @* ----- Columna derecha ----- *@
-            <div class="d-flex flex-column gap-4">
-
-                @* Verificación de documentos *@
-                <div class="adm-card d-flex flex-column" style="padding:26px; gap:20px;">
-                    <div class="d-flex flex-column" style="gap:4px;">
-                        <span class="adm-card-title">Impedir acceso</span>
-                        <span class="adm-card-sub" style="line-height:1.55;">Aprobar habilita a la Care Partner a recibir solicitudes de servicio.</span>
-                    </div>
-                    <textarea @bind="_observaciones" class="adm-textarea" placeholder="Motivo (obligatorio si vas a rechazar)"></textarea>
-                    <div class="d-flex flex-column" style="gap:10px;">
-                        <button type="button" class="adm-btn adm-btn-lg adm-btn-approve" disabled="@_procesando" @onclick="() => CambiarEstado(2)">
-                            Aprobar acceso
-                        </button>
-                        <button type="button" class="adm-btn adm-btn-lg adm-btn-danger" disabled="@_procesando" @onclick="() => CambiarEstado(3)">
-                            Rechazar solicitud
-                        </button>
-                    </div>
-                </div>
-
-                @* Estado de la cuenta (suspensión / baneo) *@
-                <div class="adm-card d-flex flex-column" style="padding:26px; gap:18px;">
-                    <div class="d-flex flex-column" style="gap:4px;">
-                        <span class="adm-card-title">Estado de la cuenta</span>
-                        <span class="adm-card-sub" style="line-height:1.55;">
-                            @if (p.IsActive)
+                    case "servicios":
+                        <div class="adm-card overflow-hidden">
+                            @if (_serviciosError) { <EstadoVacio Titulo="No se pudo cargar el historial" Texto="El servidor todavía no tiene esta función: aparece cuando se publique la API nueva." /> }
+                            else if (_servicios == null) { <Esqueleto Filas="5" ConAvatar="false" /> }
+                            else if (_servicios.Count == 0) { <EstadoVacio Titulo="Todavía no tiene servicios" /> }
+                            else
                             {
-                                <text>Suspender bloquea el inicio de sesión. Puede ser indefinida o temporal; no borra el historial.</text>
+                                @TablaServicios(Paginador.Cortar(_servicios, _pagServ, 15))
+                                <Paginador Pagina="_pagServ" Tamano="15" Total="_servicios.Count" PaginaCambiada="x => _pagServ = x" />
                             }
-                            else if (_vigente is { VencidaPendienteAcceso: true })
+                        </div>
+                        break;
+
+                    case "documentos":
+                        <div class="adm-card adm-card-pad d-flex flex-column" style="gap:14px;">
+                            <div class="d-flex align-items-center justify-content-between" style="gap:10px; flex-wrap:wrap;">
+                                <div class="d-flex flex-column" style="gap:2px;">
+                                    <span class="adm-card-title">Documentos</span>
+                                    <span class="adm-card-sub">Verifica que sean legibles, vigentes y de la misma persona.</span>
+                                </div>
+                                <a class="pn-btn pn-btn-quiet pn-btn-sm" href="vencimientos">Fechas de vencimiento</a>
+                            </div>
+                            @if (_documentos.Count == 0)
                             {
-                                <text>La suspensión temporal ya venció. La cuenta se reactivará en su próximo inicio de sesión válido.</text>
+                                <EstadoVacio Titulo="No ha subido documentos" />
                             }
                             else
                             {
-                                <text>Esta cuenta está suspendida — no puede iniciar sesión hasta que termine la sanción o la reactives.</text>
-                            }
-                        </span>
-                    </div>
-
-                    @if (_vigente != null)
-                    {
-                        <div class="d-flex flex-column" style="gap:4px;">
-                            <span class="adm-field-k">Sanción actual (@_vigente.EstadoTexto)</span>
-                            <span class="adm-timeline-text">@_vigente.Motivo</span>
-                            <span class="adm-timeline-when">
-                                @(_vigente.Tipo == "TEMPORAL" ? "Temporal" : "Indefinida")
-                                · desde @FechaRD(_vigente.FechaInicioUtc)
-                                @(_vigente.FechaFinUtc.HasValue ? $"· hasta {FechaRD(_vigente.FechaFinUtc.Value)}" : "")
-                            </span>
-                        </div>
-                    }
-
-                    @if (p.IsActive)
-                    {
-                        <div class="d-flex flex-column" style="gap:6px;">
-                            <span class="adm-field-k">Modalidad</span>
-                            <select class="adm-input" @bind="_tipoSancion">
-                                <option value="INDEFINIDA">Indefinida</option>
-                                <option value="TEMPORAL">Temporal</option>
-                            </select>
-                        </div>
-                        @if (_tipoSancion == "TEMPORAL")
-                        {
-                            <div class="d-flex flex-column" style="gap:6px;">
-                                <span class="adm-field-k">Fin de la suspensión (hora de RD)</span>
-                                <input class="adm-input" type="datetime-local" min="@MinimoFechaFin()" @bind="_fechaFinLocal" />
-                            </div>
-                        }
-                        <textarea @bind="_motivoSancion" class="adm-textarea" placeholder="Motivo de la suspensión (10 a 500 caracteres)"></textarea>
-                        <button type="button" class="adm-btn adm-btn-lg adm-btn-danger" disabled="@_procesandoCuenta" @onclick="Suspender">
-                            @(_procesandoCuenta ? "Procesando..." : "Suspender cuenta")
-                        </button>
-                    }
-                    else if (_confirmandoReactivar)
-                    {
-                        <span class="adm-card-sub" style="line-height:1.55;">
-                            Reactivar revocará la sanción vigente y la cuenta podrá iniciar sesión de inmediato. ¿Confirmas?
-                        </span>
-                        <div class="d-flex" style="gap:10px;">
-                            <button type="button" class="adm-btn adm-btn-lg adm-btn-approve" disabled="@_procesandoCuenta" @onclick="Reactivar">
-                                @(_procesandoCuenta ? "Procesando..." : "Confirmar reactivación")
-                            </button>
-                            <button type="button" class="adm-btn adm-btn-lg adm-btn-ghost-line" disabled="@_procesandoCuenta" @onclick="() => _confirmandoReactivar = false">
-                                Cancelar
-                            </button>
-                        </div>
-                    }
-                    else
-                    {
-                        <button type="button" class="adm-btn adm-btn-lg adm-btn-approve" disabled="@_procesandoCuenta" @onclick="() => _confirmandoReactivar = true">
-                            Reactivar cuenta
-                        </button>
-                    }
-
-                    @if (_sanciones.Count > 0)
-                    {
-                        <div class="d-flex flex-column" style="gap:14px; padding-top:14px; border-top:1px solid var(--adm-line-soft);">
-                            <span class="adm-card-title" style="font-size:13px;">Historial de sanciones</span>
-                            @foreach (var s in _sanciones)
-                            {
-                                <div class="d-flex" style="gap:12px;">
-                                    <span class="adm-timeline-dot" style="background:@(s.Estado == "VIGpE" ? "#DC2626" : s.Estado == "REVOCADA" ? "#16A34A" : "#6B7280");"></span>
-                                    <div class="d-flex flex-column" style="gap:2px;">
-                                        <span class="adm-timeline-text">@s.EstadoTexto · @(s.Tipo == "TEMPORAL" ? "Temporal" : "Indefinida") — @s.Motivo</span>
-                                        <span class="adm-timeline-when">
-                                            @s.AdminNombre · @FechaRD(s.FechaInicioUtc)
-                                            @(s.FechaFinUtc.HasValue ? $"→ {FechaRD(s.FechaFinUtc.Value)}" : "")
-                                        </span>
-                                        @if (s.Estado == "REVOCADA" && s.FechaRevocacionUtc.HasValue)
-                                        {
-                                            <span class="adm-timeline-when">Revocada por @s.RevocadaPorAdminNombre · @FechaRD(s.FechaRevocacionUtc.Value)</span>
-                                        }
-                                    </div>
+                                <div class="pn-doc-lista">
+                                    @foreach (var doc in _documentos)
+                                    {
+                                        var d = doc;
+                                        <button type="button" class="pn-doc-item" @onclick="() => _vista = d" title="Vista previa">
+                                            <span class="pn-doc-ico @(EsPdf(d) ? "is-pdf" : "is-img")">
+                                                @if (EsPdf(d))
+                                                {
+                                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"></path><path d="M14 3v5h5M9 13h6M9 17h4"></path></svg>
+                                                }
+                                                else
+                                                {
+                                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><path d="m21 16-5-5-9 9"></path></svg>
+                                                }
+                                                <span class="pn-doc-ext">@Extension(d)</span>
+                                            </span>
+                                            <span class="d-flex flex-column" style="gap:2px; min-width:0; flex:1; text-align:left;">
+                                                <span class="pn-strong pn-doc-nombre">@d.TipoTexto</span>
+                                                <span class="pn-muted" style="font-size:11.5px;">Subido el @d.FechaSubida.ToString("dd MMM yyyy")</span>
+                                                @if (!string.IsNullOrWhiteSpace(d.ObservacionesAdmin)) { <span class="pn-muted" style="font-size:11.5px;">@d.ObservacionesAdmin</span> }
+                                            </span>
+                                            <span class="pn-pill no-dot @TonoDoc(d.Estado)">@TextoDoc(d.Estado)</span>
+                                            <svg class="pn-doc-ojo" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                        </button>
+                                    }
                                 </div>
+                            }
+                        </div>
+                        break;
+
+                    case "editar":
+                        <div class="adm-card adm-card-pad d-flex flex-column" style="gap:16px;">
+                            <div class="d-flex flex-column" style="gap:2px;">
+                                <span class="adm-card-title">Editar información</span>
+                                <span class="adm-card-sub">Los cambios se ven de inmediato en la app del Care Partner y de los clientes.</span>
+                            </div>
+                            <div class="pn-grid-2-eq" style="display:grid; gap:14px;">
+                                <div><label class="pn-label" for="e-n">Nombre completo</label><input id="e-n" class="adm-input" maxlength="150" @bind="_editNombre" /></div>
+                                <div>
+                                    <label class="pn-label" for="e-e">Especialidad</label>
+                                    <select id="e-e" class="adm-input" @bind="_editEspecialidad">
+                                        @foreach (var t in Especialidades()) { <option value="@t">@t</option> }
+                                    </select>
+                                </div>
+                                <div><label class="pn-label" for="e-t">Tarifa por hora (RD$)</label><input id="e-t" class="adm-input" type="number" min="0" step="50" inputmode="decimal" @bind="_editTarifa" /></div>
+                                <div>
+                                    <label class="pn-label" for="e-m">Método de cobro</label>
+                                    <select id="e-m" class="adm-input" @bind="_editMetodoCobro">
+                                        <option value="">Sin definir</option>
+                                        @foreach (var m in MetodosCobro()) { <option value="@m">@m</option> }
+                                    </select>
+                                </div>
+                            </div>
+                            <div><label class="pn-label" for="e-b">Sobre mí</label><textarea id="e-b" class="adm-textarea" rows="4" maxlength="1000" @bind="_editBio"></textarea></div>
+                            <div class="d-flex" style="gap:8px;">
+                                <button type="button" class="pn-btn pn-btn-primary" disabled="@(_guardando || !HayCambios)" @onclick="GuardarInfo">@(_guardando ? "Guardando…" : "Guardar cambios")</button>
+                                <button type="button" class="pn-btn pn-btn-quiet" disabled="@(!HayCambios)" @onclick="RestaurarEdicion">Descartar</button>
+                            </div>
+                        </div>
+                        break;
+                }
+            </div>
+
+            @* ---------- Columna lateral ---------- *@
+            <div class="d-flex flex-column" style="gap:16px; min-width:0;">
+                <div class="adm-card adm-card-pad d-flex flex-column" style="gap:12px;">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="adm-card-title">Verificación</span>
+                        <span class="pn-pill @TonoAprobacion(p.EstadoAprobacion)">@p.EstadoTexto</span>
+                    </div>
+                    <span class="pn-muted" style="font-size:13px; line-height:1.5;">
+                        @(p.EstadoAprobacion switch
+                        {
+                            2 => "Puede ponerse visible y recibir solicitudes.",
+                            3 => "No puede recibir servicios. Ve el motivo en la app y puede corregir sus documentos.",
+                            _ => $"Revisa sus documentos ({_documentos.Count(d => d.Estado == 2)} de {_documentos.Count} aprobados) antes de decidir."
+                        })
+                    </span>
+                    @if (_puedeOperar)
+                    {
+                        <div class="d-flex" style="gap:8px; flex-wrap:wrap;">
+                            @if (p.EstadoAprobacion != 2)
+                            {
+                                <button type="button" class="pn-btn pn-btn-ok" style="flex:1; justify-content:center;" disabled="@_procesando" @onclick="Aprobar">Aprobar</button>
+                            }
+                            @if (p.EstadoAprobacion != 3)
+                            {
+                                <button type="button" class="pn-btn pn-btn-danger-soft" style="flex:1; justify-content:center;" disabled="@_procesando" @onclick="Rechazar">@(p.EstadoAprobacion == 2 ? "Revocar verificación" : "Rechazar")</button>
                             }
                         </div>
                     }
                 </div>
 
+                <GestionCuenta UsuarioId="Id" Nombre="@p.NombreCompleto" EsCuidador="true" Activa="p.IsActive" PuedeOperar="_puedeOperar"
+                               ServiciosPendientes="Pendientes" Sanciones="_sanciones"
+                               Suspender="(motivo, fin) => CuidadorService.SuspenderAsync(Id, _adminId, motivo, fin)"
+                               ReactivarCuenta="() => CuidadorService.ReactivarAsync(Id, _adminId)"
+                               Cambio="Cargar" />
+
+                @if (!string.IsNullOrWhiteSpace(_ficha?.Persona.ContactoEmergenciaNombre))
+                {
+                    <div class="adm-card adm-card-pad d-flex flex-column" style="gap:6px;">
+                        <span class="adm-card-title">Contacto de emergencia</span>
+                        <span style="font-size:14px;">@_ficha.Persona.ContactoEmergenciaNombre</span>
+                        @if (!string.IsNullOrWhiteSpace(_ficha.Persona.ContactoEmergenciaTelefono))
+                        {
+                            <a class="pn-link" href="tel:@_ficha.Persona.ContactoEmergenciaTelefono">@_ficha.Persona.ContactoEmergenciaTelefono</a>
+                        }
+                    </div>
+                }
             </div>
+        </div>
+    }
+</div>
+
+@if (_vista != null)
+{
+    var url = Api.Archivo(_vista.UrlArchivo);
+    var pos = _documentos.IndexOf(_vista);
+    <div class="pn-visor" role="dialog" aria-modal="true" aria-label="Vista previa de @_vista.TipoTexto" @onclick="() => _vista = null" @onkeydown="TeclaVisor" tabindex="-1">
+        <div class="pn-visor-barra" @onclick:stopPropagation="true">
+            <div class="d-flex flex-column" style="gap:2px; min-width:0;">
+                <span class="pn-visor-titulo">@_vista.TipoTexto</span>
+                <span class="pn-visor-sub">@(pos + 1) de @_documentos.Count · subido el @_vista.FechaSubida.ToString("dd MMM yyyy") · @TextoDoc(_vista.Estado)</span>
+            </div>
+            <span class="pn-grow"></span>
+            <a class="pn-visor-btn" href="@url" target="_blank" rel="noopener" title="Abrir en otra pestaña">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></svg>
+            </a>
+            <a class="pn-visor-btn" href="@url" download title="Descargar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"></path></svg>
+            </a>
+            <button type="button" class="pn-visor-btn" @onclick="() => _vista = null" aria-label="Cerrar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div class="pn-visor-cuerpo">
+            @if (_documentos.Count > 1)
+            {
+                <button type="button" class="pn-visor-nav izq" @onclick="() => Mover(-1)" @onclick:stopPropagation="true" aria-label="Anterior">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m15 18-6-6 6-6"></path></svg>
+                </button>
+            }
+            @if (EsPdf(_vista))
+            {
+                <iframe class="pn-visor-pdf" src="@url" title="@_vista.TipoTexto" @onclick:stopPropagation="true"></iframe>
+            }
+            else
+            {
+                <img class="pn-visor-img" src="@url" alt="@_vista.TipoTexto" @onclick:stopPropagation="true" />
+            }
+            @if (_documentos.Count > 1)
+            {
+                <button type="button" class="pn-visor-nav der" @onclick="() => Mover(1)" @onclick:stopPropagation="true" aria-label="Siguiente">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m9 18 6-6-6-6"></path></svg>
+                </button>
+            }
         </div>
     </div>
 }
 
 @code {
     [Parameter] public int Id { get; set; }
+    private DocumentoAdmin? _vista;
 
-    [CascadingParameter]
-    private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthStateTask { get; set; }
+    private static bool EsPdf(DocumentoAdmin d) => d.UrlArchivo.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
+    private static string Extension(DocumentoAdmin d)
+    {
+        var ext = System.IO.Path.GetExtension(d.UrlArchivo).TrimStart('.').ToUpperInvariant();
+        return string.IsNullOrEmpty(ext) ? "DOC" : ext == "JPEG" ? "JPG" : ext;
+    }
+    private static string TonoDoc(int estado) => estado switch { 2 => "tone-ok", 3 => "tone-danger", _ => "tone-warn" };
+    private static string TextoDoc(int estado) => estado switch { 2 => "Aprobado", 3 => "Rechazado", _ => "Pendiente" };
+
+    private void Mover(int paso)
+    {
+        if (_vista == null || _documentos.Count == 0) return;
+        var i = (_documentos.IndexOf(_vista) + paso + _documentos.Count) % _documentos.Count;
+        _vista = _documentos[i];
+    }
+
+    private void TeclaVisor(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape") _vista = null;
+        else if (e.Key == "ArrowRight") Mover(1);
+        else if (e.Key == "ArrowLeft") Mover(-1);
+    }
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private static readonly System.Globalization.CultureInfo Es = new("es-DO");
 
     private CuidadorAdmin? _cuidador;
+    private FichaMapa? _ficha;
+    private CalidadCuidador? _calidad;
     private List<DocumentoAdmin> _documentos = new();
     private List<SancionCuidador> _sanciones = new();
-    private bool _cargando = true;
-    private bool _procesando;
-    private bool _procesandoCuenta;
-    private bool _guardandoInfo;
-    private string _observaciones = "";
-    private string _motivoSancion = "";
-    private string? _mensajeAccion;
-    private int _adminId;
+    private List<ServicioFila>? _servicios;
+    private bool _serviciosError;
+    private List<string> _tipos = new();
+    private bool _cargando = true, _procesando, _guardando, _puedeOperar;
+    private int _adminId, _pagServ = 1;
+    private string _tab = "resumen";
 
-    private string _editNombre = "";
-    private string _editEspecialidad = "";
+    private string _editNombre = "", _editEspecialidad = "", _editBio = "", _editMetodoCobro = "";
     private decimal _editTarifa;
-    private string _editBio = "";
-    private string _editMetodoCobro = "";
+
+    private SancionCuidador? Vigente => _sanciones.FirstOrDefault(x => x.Estado == "VIGENTE");
+    private int Pendientes => _servicios?.Count(s => s.CuidadorId == Id && s.Estado is 1 or 2 or 3 or 7) ?? 0;
+
+    private bool HayCambios => _cuidador != null && (_editNombre.Trim() != _cuidador.NombreCompleto || _editEspecialidad != (_cuidador.Especialidad ?? "")
+        || _editTarifa != _cuidador.TarifaHora || _editBio.Trim() != (_cuidador.Bio ?? "") || _editMetodoCobro != (_cuidador.MetodoCobro ?? ""));
 
     protected override async Task OnParametersSetAsync()
     {
@@ -332,193 +368,142 @@ else
         {
             var user = (await AuthStateTask).User;
             _adminId = int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : 0;
+            _puedeOperar = SesionAdmin.PuedeOperar(user);
         }
-
         await Cargar();
     }
 
     private async Task Cargar()
     {
         _cargando = true;
-        StateHasChanged();
+        var detalle = CuidadorService.ObtenerDetalleAsync(Id);
+        var docs = CuidadorService.ObtenerDocumentosAsync(Id);
+        var sanciones = CuidadorService.ObtenerSancionesAsync(Id);
+        var ficha = Api.FichaMapaAsync(Id);
+        var servicios = Api.ServiciosUsuarioAsync(Id);
+        var calidad = Api.CalidadAsync(30);
+        var tipos = Api.TiposServicioAsync();
+        await Task.WhenAll(detalle, docs, sanciones, ficha, servicios, calidad, tipos);
 
-        _cuidador = await CuidadorService.ObtenerDetalleAsync(Id);
-
-        if (_cuidador != null)
-        {
-            _documentos = await CuidadorService.ObtenerDocumentosAsync(Id);
-            _sanciones = await CuidadorService.ObtenerSancionesAsync(Id);
-
-            _editNombre = _cuidador.NombreCompleto;
-            _editEspecialidad = _cuidador.Especialidad ?? "";
-            _editTarifa = _cuidador.TarifaHora;
-            _editBio = _cuidador.Bio ?? "";
-            _editMetodoCobro = _cuidador.MetodoCobro ?? "";
-        }
-
+        _cuidador = detalle.Result;
+        _documentos = docs.Result;
+        _sanciones = sanciones.Result;
+        _ficha = ficha.Result;
+        _servicios = servicios.Result;
+        _serviciosError = _servicios == null;
+        _calidad = calidad.Result?.FirstOrDefault(c => c.UsuarioId == Id);
+        _tipos = tipos.Result?.Select(t => t.Nombre).ToList() ?? new();
+        RestaurarEdicion();
         _cargando = false;
     }
 
-    private async Task CambiarEstado(int nuevoEstado)
+    private void RestaurarEdicion()
     {
-        if (nuevoEstado == 3 && string.IsNullOrWhiteSpace(_observaciones))
-        {
-            _mensajeAccion = "Escribe el motivo del rechazo antes de continuar.";
-            return;
-        }
+        if (_cuidador == null) return;
+        _editNombre = _cuidador.NombreCompleto;
+        _editEspecialidad = _cuidador.Especialidad ?? "";
+        _editTarifa = _cuidador.TarifaHora;
+        _editBio = _cuidador.Bio ?? "";
+        _editMetodoCobro = _cuidador.MetodoCobro ?? "";
+    }
 
-        var nombre = _cuidador?.NombreCompleto ?? "esta Care Partner";
-        var confirmado = nuevoEstado == 2
-            ? await Confirmacion.PreguntarAsync($"¿Aprobar a {nombre}?", "Podrá ponerse visible y recibir solicitudes de servicio de inmediato.", "Aprobar acceso")
-            : await Confirmacion.PreguntarAsync($"¿Rechazar a {nombre}?", "No podrá recibir servicios. Verá el motivo que escribiste en la app.", "Rechazar solicitud", peligro: true);
-        if (!confirmado)
-            return;
+    private IEnumerable<string> Especialidades() => _tipos.Append(_cuidador?.Especialidad ?? "").Where(x => !string.IsNullOrWhiteSpace(x)).Distinct();
+    private IEnumerable<string> MetodosCobro() => new[] { "Cuenta bancaria", "Billetera CuidApp", "Efectivo", _cuidador?.MetodoCobro ?? "" }.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct();
 
+    private RenderFragment TablaServicios(IEnumerable<ServicioFila> filas) => __builder =>
+    {
+        <div class="pn-table-wrap">
+            <table class="pn-table">
+                <thead><tr><th>Servicio</th><th>Fecha</th><th>Cliente</th><th>Estado</th><th class="pn-num">Tarifa</th></tr></thead>
+                <tbody>
+                    @foreach (var s in filas)
+                    {
+                        <tr class="pn-row-link" @onclick="@(() => Ir($"servicios/{s.Id}"))">
+                            <td><span class="pn-strong">@s.TipoServicio</span><div class="pn-muted" style="font-size:11.5px;">#@s.Id</div></td>
+                            <td>@s.Fecha.ToString("dd MMM yyyy")<div class="pn-muted" style="font-size:11.5px;">@s.HoraInicio – @s.HoraFin</div></td>
+                            <td>@s.ClienteNombre</td>
+                            <td>
+                                <span class="pn-pill @EstadoServicio.Tono(s.Estado)">@EstadoServicio.Texto(s.Estado)</span>
+                                @if (s.TieneSos) { <span class="pn-pill tone-danger no-dot" style="margin-left:4px;">SOS</span> }
+                            </td>
+                            <td class="pn-num">RD$ @s.Tarifa.ToString("N0")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    };
+
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+    private void Ir(string url) => Nav.NavigateTo(url);
+
+    private static string TonoAprobacion(int estado) => estado switch { 2 => "tone-ok", 3 => "tone-danger", _ => "tone-warn" };
+    private static string Digitos(string t) => new(t.Where(char.IsDigit).ToArray());
+
+    private static string HaceCuanto(DateTime? fecha)
+    {
+        if (fecha is not { } f) return "—";
+        var t = DateTime.UtcNow.AddHours(-4) - f;
+        if (t.TotalMinutes < 1) return "Ahora";
+        if (t.TotalHours < 1) return $"Hace {(int)t.TotalMinutes} min";
+        if (t.TotalDays < 1) return $"Hace {(int)t.TotalHours} h";
+        return $"Hace {(int)t.TotalDays} d";
+    }
+
+    private async Task EnviarAviso()
+    {
+        var texto = await Confirmacion.PedirMotivoAsync($"Aviso para {_cuidador!.NombreCompleto}",
+            "Le llega como notificación al teléfono.", "Enviar", "Mensaje", peligro: false);
+        if (texto == null) return;
+        Toasts.Mostrar(await Api.NotificarAsync(new[] { Id }, "Mensaje de CuidApp", texto));
+    }
+
+    private async Task Aprobar()
+    {
+        var texto = _documentos.Any(d => d.Estado != 2)
+            ? "Todos sus documentos quedarán aprobados y podrá ponerse visible y recibir solicitudes de inmediato."
+            : "Podrá ponerse visible y recibir solicitudes de inmediato.";
+        if (!await Confirmacion.PreguntarAsync($"¿Aprobar a {_cuidador!.NombreCompleto}?", texto, "Aprobar"))
+            return;
+        await CambiarEstado(2, null);
+    }
+
+    private async Task Rechazar()
+    {
+        var revocar = _cuidador!.EstadoAprobacion == 2;
+        var motivo = await Confirmacion.PedirMotivoAsync(revocar ? "¿Revocar la verificación?" : $"¿Rechazar a {_cuidador.NombreCompleto}?",
+            "No podrá recibir servicios. Verá este motivo en la app para corregir lo necesario.", revocar ? "Revocar" : "Rechazar");
+        if (motivo == null) return;
+        await CambiarEstado(3, motivo);
+    }
+
+    private async Task CambiarEstado(int estado, string? motivo)
+    {
         _procesando = true;
-        _mensajeAccion = null;
-
-        var success = await CuidadorService.ActualizarEstadoAsync(Id, nuevoEstado, string.IsNullOrWhiteSpace(_observaciones) ? null : _observaciones);
-
+        var ok = await CuidadorService.ActualizarEstadoAsync(Id, estado, motivo);
         _procesando = false;
-        _mensajeAccion = success
-            ? (nuevoEstado == 2 ? "Care Partner aprobada correctamente." : "Solicitud rechazada.")
-            : "No se pudo actualizar el estado. Intenta de nuevo.";
-
-        if (success)
-            await Cargar();
-    }
-
-    private string _tipoSancion = "INDEFINIDA";
-    private DateTime? _fechaFinLocal;
-    private bool _confirmandoReactivar;
-
-    private SancionCuidador? _vigente => _sanciones.FirstOrDefault(x => x.Estado == "VIGENTE");
-
-    // Horario de RD (UTC-4 fijo), igual que HoraLocalRD en la API.
-    private static readonly TimeSpan OffsetRD = TimeSpan.FromHours(-4);
-
-    private static string FechaRD(DateTimeOffset fecha) => fecha.ToOffset(OffsetRD).ToString("dd MMM yyyy, HH:mm");
-
-    private static string MinimoFechaFin()
-        => DateTimeOffset.UtcNow.ToOffset(OffsetRD).AddMinutes(5).ToString("yyyy-MM-ddTHH:mm");
-
-    private async Task Suspender()
-    {
-        if (string.IsNullOrWhiteSpace(_motivoSancion))
-        {
-            _mensajeAccion = "Escribe el motivo de la suspensión antes de continuar.";
-            return;
-        }
-
-        DateTimeOffset? fechaFin = null;
-        if (_tipoSancion == "TEMPORAL")
-        {
-            if (_fechaFinLocal is null)
-            {
-                _mensajeAccion = "Indica la fecha y hora de fin de la suspensión temporal.";
-                return;
-            }
-
-            fechaFin = new DateTimeOffset(DateTime.SpecifyKind(_fechaFinLocal.Value, DateTimeKind.Unspecified), OffsetRD);
-            if (fechaFin.Value < DateTimeOffset.UtcNow.AddMinutes(5))
-            {
-                _mensajeAccion = "La fecha de fin debe ser al menos 5 minutos posterior a la hora actual.";
-                return;
-            }
-        }
-
-        var duracion = fechaFin is { } fin ? $"hasta el {FechaRD(fin)}" : "de forma indefinida";
-        if (!await Confirmacion.PreguntarAsync("¿Suspender esta cuenta?",
-                $"No podrá iniciar sesión {duracion}. El motivo queda registrado en su historial y en la auditoría.", "Suspender cuenta", peligro: true))
-            return;
-
-        _procesandoCuenta = true;
-        _mensajeAccion = null;
-
-        var resultado = await CuidadorService.SuspenderAsync(Id, _adminId, _motivoSancion.Trim(), fechaFin);
-
-        _procesandoCuenta = false;
-
-        if (!resultado.Success)
-        {
-            // El formulario se conserva para poder corregir y reintentar.
-            _mensajeAccion = $"No se pudo suspender la cuenta ({resultado.Code}): {resultado.Message}";
-            return;
-        }
-
-        _mensajeAccion = "Cuenta suspendida — ya no puede iniciar sesión.";
-        _motivoSancion = "";
-        _tipoSancion = "INDEFINIDA";
-        _fechaFinLocal = null;
-        await Cargar();
-    }
-
-    private async Task Reactivar()
-    {
-        _procesandoCuenta = true;
-        _mensajeAccion = null;
-
-        var resultado = await CuidadorService.ReactivarAsync(Id, _adminId);
-
-        _procesandoCuenta = false;
-        _confirmandoReactivar = false;
-
-        if (!resultado.Success)
-        {
-            _mensajeAccion = $"No se pudo reactivar la cuenta ({resultado.Code}): {resultado.Message}";
-            return;
-        }
-
-        _mensajeAccion = resultado.Code == "ALREADY_COMPLETED"
-            ? "La suspensión temporal ya había vencido; la cuenta quedó activa."
-            : "Cuenta reactivada.";
-        await Cargar();
+        Toasts.Mostrar(ok ? (estado == 2 ? "Care Partner aprobado." : "Verificación rechazada.") : "No se pudo actualizar el estado.", ok);
+        if (ok) await Cargar();
     }
 
     private async Task GuardarInfo()
     {
         if (string.IsNullOrWhiteSpace(_editNombre) || string.IsNullOrWhiteSpace(_editEspecialidad))
         {
-            _mensajeAccion = "El nombre y la especialidad no pueden quedar vacíos.";
+            Toasts.Mostrar("El nombre y la especialidad no pueden quedar vacíos.", false);
             return;
         }
-
-        _guardandoInfo = true;
-        _mensajeAccion = null;
-
-        var success = await CuidadorService.ActualizarInfoAsync(Id, _editNombre.Trim(), _editEspecialidad.Trim(), _editTarifa,
+        if (_editTarifa < 0)
+        {
+            Toasts.Mostrar("La tarifa no puede ser negativa.", false);
+            return;
+        }
+        _guardando = true;
+        var ok = await CuidadorService.ActualizarInfoAsync(Id, _editNombre.Trim(), _editEspecialidad.Trim(), _editTarifa,
             string.IsNullOrWhiteSpace(_editBio) ? null : _editBio.Trim(),
-            string.IsNullOrWhiteSpace(_editMetodoCobro) ? null : _editMetodoCobro.Trim());
-
-        _guardandoInfo = false;
-        _mensajeAccion = success ? "Información actualizada." : "No se pudo guardar. Intenta de nuevo.";
-
-        if (success)
-            await Cargar();
+            string.IsNullOrWhiteSpace(_editMetodoCobro) ? null : _editMetodoCobro);
+        _guardando = false;
+        Toasts.Mostrar(ok ? "Información actualizada." : "No se pudo guardar. Intenta de nuevo.", ok);
+        if (ok) await Cargar();
     }
-
-    private static string Iniciales(string nombre)
-    {
-        if (string.IsNullOrWhiteSpace(nombre))
-            return "";
-
-        var partes = nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return string.Concat(partes.Take(2).Select(p => char.ToUpperInvariant(p[0])));
-    }
-
-    private static string EstadoBg(int estado) => estado switch
-    {
-        1 => "#FEF3C7",
-        2 => "#DCFCE7",
-        3 => "#FEE2E2",
-        _ => "#F3F4F6"
-    };
-
-    private static string EstadoColor(int estado) => estado switch
-    {
-        1 => "#B45309",
-        2 => "#166534",
-        3 => "#B91C1C",
-        _ => "#6B7280"
-    };
 }

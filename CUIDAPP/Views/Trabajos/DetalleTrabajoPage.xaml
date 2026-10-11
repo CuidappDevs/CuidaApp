@@ -108,9 +108,15 @@
 
                         <!-- Sección de Pago -->
                         <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 16" Padding="16,14">
-                            <Grid ColumnDefinitions="*, Auto">
+                            <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto" RowSpacing="6" ColumnSpacing="12">
                                 <Label Grid.Column="0" Text="{loc:T pago_total}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimaryDark}" VerticalOptions="Center"/>
-                                <Label x:Name="LblPago" Grid.Column="1" Text="" FontSize="24" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" VerticalOptions="Center"/>
+                                <Label x:Name="LblPago" Grid.Column="1" Text="" FontSize="24" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" VerticalOptions="Center" HorizontalOptions="End"/>
+                                <Border x:Name="ChipMetodoPago" Grid.Row="1" Grid.ColumnSpan="2" IsVisible="False" Stroke="Transparent" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 12" Padding="10,5" HorizontalOptions="End">
+                                    <HorizontalStackLayout Spacing="6">
+                                        <Path x:Name="IconoMetodoPago" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="14" HeightRequest="14" VerticalOptions="Center"/>
+                                        <Label x:Name="LblMetodoPago" Text="" FontSize="12" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" VerticalOptions="Center"/>
+                                    </HorizontalStackLayout>
+                                </Border>
                             </Grid>
                         </Border>
 

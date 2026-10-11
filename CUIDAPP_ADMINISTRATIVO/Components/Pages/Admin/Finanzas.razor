@@ -38,10 +38,62 @@
             var t = _datos.Totales;
             <div class="pn-grid pn-grid-kpi">
                 <div class="pn-kpi"><span class="pn-kpi-label">Facturado (servicios completados)</span><span class="pn-kpi-value" style="font-size:24px;">RD$ @t.Facturado.ToString("N0")</span><span class="pn-kpi-sub">@t.ServiciosCompletados servicio(s) · promedio RD$ @(t.ServiciosCompletados == 0 ? "0" : (t.Facturado / t.ServiciosCompletados).ToString("N0"))</span></div>
+                <div class="pn-kpi"><span class="pn-kpi-label">Ingreso de la plataforma</span><span class="pn-kpi-value" style="font-size:24px; color:var(--info);">RD$ @t.Comision.ToString("N0")</span><span class="pn-kpi-sub">Comisión sobre la tarifa · general @t.ComisionGeneral.ToString("0.##")%</span></div>
                 <div class="pn-kpi"><span class="pn-kpi-label">Propinas</span><span class="pn-kpi-value" style="font-size:24px;">RD$ @t.Propinas.ToString("N0")</span><span class="pn-kpi-sub">Van íntegras al Care Partner</span></div>
-                <div class="pn-kpi"><span class="pn-kpi-label">Pagado a Care Partners</span><span class="pn-kpi-value" style="font-size:24px; color:var(--ok);">RD$ @t.Pagado.ToString("N0")</span><span class="pn-kpi-sub">Tarifa + propina, pagos confirmados</span></div>
+                <div class="pn-kpi"><span class="pn-kpi-label">Pagado a Care Partners</span><span class="pn-kpi-value" style="font-size:24px; color:var(--ok);">RD$ @t.Pagado.ToString("N0")</span><span class="pn-kpi-sub">Tarifa − comisión + propina</span></div>
                 <a class="pn-kpi @(t.PorPagar > 0 ? "" : "")" href="pagos"><span class="pn-kpi-label">Por pagar</span><span class="pn-kpi-value" style="font-size:24px; color:@(t.PorPagar > 0 ? "var(--warn)" : "inherit");">RD$ @t.PorPagar.ToString("N0")</span><span class="pn-kpi-sub">Pendientes o autorizados · ir a Pagos</span></a>
-                <div class="pn-kpi @(t.Disputados > 0 ? "is-alert" : "")"><span class="pn-kpi-label">Cancelados / en disputa</span><span class="pn-kpi-value" style="font-size:24px;">@t.ServiciosCancelados / @t.Disputados</span><span class="pn-kpi-sub">En el período</span></div>
+                <div class="pn-kpi"><span class="pn-kpi-label">Cobrado en efectivo</span><span class="pn-kpi-value" style="font-size:24px;">RD$ @t.CobradoEfectivo.ToString("N0")</span><span class="pn-kpi-sub">El cliente pagó directo al Care Partner</span></div>
+                <a class="pn-kpi" href="pagos"><span class="pn-kpi-label">Comisiones de efectivo por cobrar</span><span class="pn-kpi-value" style="font-size:24px; color:@(t.ComisionPorCobrar > 0 ? "var(--violet)" : "inherit");">RD$ @t.ComisionPorCobrar.ToString("N0")</span><span class="pn-kpi-sub">Se descuentan solas · ir a Pagos → Deudas</span></a>
+                <a class="pn-kpi @(t.Disputados > 0 ? "is-alert" : "")" href="disputas"><span class="pn-kpi-label">Cancelados / en disputa</span><span class="pn-kpi-value" style="font-size:24px;">@t.ServiciosCancelados / @t.Disputados</span><span class="pn-kpi-sub">En el período · ir a Disputas</span></a>
+            </div>
+
+            <div class="pn-grid pn-grid-2-eq">
+                <div class="adm-card adm-card-pad d-flex flex-column" style="gap:12px;">
+                    <div class="d-flex flex-column" style="gap:2px;">
+                        <span class="adm-card-title">Cómo pagaron los clientes</span>
+                        <span class="adm-card-sub">Servicios completados del período por método de pago</span>
+                    </div>
+                    @{ var totalMetodos = Math.Max(1m, _datos.PorMetodo.Sum(m => m.Facturado)); }
+                    @if (_datos.PorMetodo.Count > 0)
+                    {
+                        <div class="pn-progress" style="height:10px;">
+                            @foreach (var m in _datos.PorMetodo)
+                            {
+                                <span style="width:@((m.Facturado / totalMetodos * 100).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture))%; background:@ColorMetodo(m.Metodo);" title="@MetodosPago.Texto(m.Metodo)"></span>
+                            }
+                        </div>
+                    }
+                    @foreach (var m in _datos.PorMetodo)
+                    {
+                        <div class="d-flex align-items-center" style="gap:10px; font-size:13.5px;">
+                            <span style="width:10px; height:10px; border-radius:3px; background:@ColorMetodo(m.Metodo);"></span>
+                            <span style="flex:1;">@MetodosPago.Texto(m.Metodo)</span>
+                            <span class="pn-muted">@m.Servicios servicio(s)</span>
+                            <span class="pn-strong" style="min-width:90px; text-align:right;">RD$ @m.Facturado.ToString("N0")</span>
+                        </div>
+                    }
+                    @if (t.SinMetodo > 0)
+                    {
+                        <span class="pn-muted">@t.SinMetodo servicio(s) sin método registrado: regístralo en el detalle de cada servicio.</span>
+                    }
+                </div>
+
+                <div class="adm-card adm-card-pad d-flex flex-column" style="gap:12px;">
+                    <div class="d-flex align-items-start justify-content-between" style="gap:10px;">
+                        <div class="d-flex flex-column" style="gap:2px;">
+                            <span class="adm-card-title">Configuración de pagos</span>
+                            <span class="adm-card-sub">Lo que se aplica hoy a los pagos nuevos</span>
+                        </div>
+                        <a class="pn-btn pn-btn-quiet pn-btn-sm" href="configuracion-pagos">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"></path></svg>
+                            Cambiar
+                        </a>
+                    </div>
+                    <div class="pn-stats">
+                        <div class="pn-stat"><span class="pn-stat-k">Comisión general</span><span class="pn-stat-v">@t.ComisionGeneral.ToString("0.##")%</span></div>
+                        <div class="pn-stat"><span class="pn-stat-k">Tope deuda efectivo</span><span class="pn-stat-v">RD$ @t.TopeDeudaEfectivo.ToString("N0")</span></div>
+                    </div>
+                </div>
             </div>
 
             <div class="adm-card adm-card-pad d-flex flex-column" style="gap:16px;">
@@ -62,7 +114,7 @@
                 {
                     <div class="pn-table-wrap">
                         <table class="pn-table">
-                            <thead><tr><th>Care Partner</th><th>Método de cobro</th><th class="pn-num">Servicios</th><th class="pn-num">Facturado</th><th class="pn-num">Propinas</th><th class="pn-num">Pagado</th><th class="pn-num">Por pagar</th></tr></thead>
+                            <thead><tr><th>Care Partner</th><th>Método de cobro</th><th class="pn-num">Servicios</th><th class="pn-num">Facturado</th><th class="pn-num">Comisión</th><th class="pn-num">Propinas</th><th class="pn-num">Pagado</th><th class="pn-num">Por pagar</th><th class="pn-num">Efectivo</th><th class="pn-num">Debe</th></tr></thead>
                             <tbody>
                                 @foreach (var c in _datos.PorCuidador)
                                 {
@@ -71,9 +123,12 @@
                                         <td>@(c.MetodoCobro ?? "—")</td>
                                         <td class="pn-num">@c.Servicios</td>
                                         <td class="pn-num">RD$ @c.Facturado.ToString("N2")</td>
+                                        <td class="pn-num">RD$ @c.Comision.ToString("N2")</td>
                                         <td class="pn-num">RD$ @c.Propinas.ToString("N2")</td>
                                         <td class="pn-num" style="color:var(--ok);">RD$ @c.Pagado.ToString("N2")</td>
                                         <td class="pn-num pn-strong" style="color:@(c.PorPagar > 0 ? "var(--warn)" : "inherit");">RD$ @c.PorPagar.ToString("N2")</td>
+                                        <td class="pn-num">RD$ @c.Efectivo.ToString("N2")</td>
+                                        <td class="pn-num" style="color:@(c.Saldo > 0 ? "var(--violet)" : "var(--adm-muted-2)"); font-weight:@(c.Saldo > 0 ? "600" : "400");">@(c.Saldo > 0 ? $"RD$ {c.Saldo:N2}" : "—")</td>
                                     </tr>
                                 }
                             </tbody>
@@ -82,7 +137,7 @@
                 }
             </div>
 
-            <span class="pn-muted">Nota: la app no guarda con qué método pagó el cliente (efectivo, tarjeta…), solo el método con el que cobra cada Care Partner.</span>
+            <span class="pn-muted">"Pagado" y "Por pagar" son lo que recibe cada Care Partner: tarifa − comisión + propina. El método de pago del cliente lo registra soporte en el detalle de cada servicio (la app todavía no lo pregunta).</span>
         }
     }
 </div>
@@ -103,6 +158,14 @@
         if (AuthStateTask != null) _permitido = SesionAdmin.PuedeFinanzas((await AuthStateTask).User);
         if (_permitido) await Rango(30);
     }
+
+    private static string ColorMetodo(string metodo) => metodo switch
+    {
+        "efectivo" => "#10B981",
+        "tarjeta" => "#3B82F6",
+        "transferencia" => "#8B5CF6",
+        _ => "#CBD5E1"
+    };
 
     private async Task Rango(int dias)
     {

@@ -2,6 +2,76 @@
 
 Todo lo listado aquí requiere **republicar la API** (ver [deployment.md](./deployment.md)) para que tome efecto en producción.
 
+## Método de pago al pedir + saldo de comisiones de efectivo
+
+SQL: `docs/sql/metodo-pago-saldo.sql`. Correr **después** de `caja-negra-grabacion.sql`. Nuevo: config `TopeDeudaEfectivo` (2000) e `InstruccionesTransferencia`, `Pagos.DescuentoSaldo`, tabla `MovimientosSaldoCuidador`, funciones `fn_SaldoCuidador`/`fn_PuedeAceptarEfectivo`, `sp_RecalcularPagoEfectivo`; reemplaza `sp_CrearTrabajo` (+`@MetodoPago`), `sp_ActualizarEstadoTrabajo` (rechaza aceptar efectivo con deuda en el tope: `DEUDA_EFECTIVO`), `sp_ConfirmarFinalizacionTrabajo`, `sp_AdminCompletarTrabajo`, `sp_AdminFijarMetodoPago`, `sp_AdminResolverDisputa`, `sp_AutorizarPago` (descuenta la deuda), `sp_ObtenerPagosAdmin`, `sp_AdminFinanzas`, `sp_AdminTrabajoDetalle`, `sp_ObtenerTrabajosPorCuidador`, `sp_ObtenerTrabajoPorId`, `sp_ObtenerTrabajosActivosPorCliente`, `sp_ObtenerCuidadoresPorServicio` (+`PuedeAceptarEfectivo`), `sp_ObtenerPagosPorCuidador` y `sp_ObtenerGananciasCuidador` (netos de comisión).
+
+- `POST /api/trabajo` acepta `metodoPago` (`efectivo`/`transferencia`). Los servicios que devuelve la API traen `metodoPago`.
+- Efectivo: al confirmar, el pago queda en **Estado 4 = Cobrado en efectivo** (sin transferir) y la comisión suma al saldo del Care Partner. Al **autorizar** su próximo pago por transferencia se descuenta (`DescuentoSaldo`).
+- `PUT /api/trabajo/estado` devuelve 400 `{ motivo: "DEUDA_EFECTIVO" }` si intenta aceptar un servicio en efectivo con la deuda en el tope.
+
+| Método | Ruta | Nivel | Qué hace |
+|---|---|---|---|
+| GET | `/api/pagos-app/saldo/{cuidadorId}` | (app) | Saldo, tope y si puede aceptar efectivo |
+| GET | `/api/pagos-app/instrucciones-transferencia` | (app) | Texto para pagar por transferencia |
+| GET | `/api/admin/saldos` / `/api/admin/saldos/{id}` | Admin | Deudas y movimientos |
+| POST | `/api/admin/saldos/{id}/abono` `{ monto, nota }` | Finanzas | Registra un abono |
+| GET/PUT | `/api/admin/config-pagos` `{ topeDeudaEfectivo, instruccionesTransferencia }` | Admin / Finanzas | Tope e instrucciones (se editan en Finanzas) |
+
+## Caja negra: grabación de audio de seguridad (transparente y consentida)
+
+SQL: `docs/sql/caja-negra-grabacion.sql` (config `GrabacionSeguridad`, tabla `GrabacionesServicio`, `Trabajos.GrabacionActiva`, SPs de activación/registro/retención). Correr **después** de `llegada-cuidador.sql`.
+
+**Transparencia/consentimiento (Play Store + ley RD):** no es oculta. Apagada por defecto; la enciende el Superadmin. Mientras graba, la app del Care Partner corre un servicio en primer plano con tipo `microphone` y **notificación visible** (y el punto verde del sistema). Al iniciar el servicio se le muestra un aviso de consentimiento. El audio es confidencial: solo Superadmin lo escucha, cada escucha se audita, y se borra a los 30 días si no hubo disputa ni SOS. **Falta (producto + abogado): incluirlo en los Términos y en el consentimiento del cliente al registrarse/pedir servicio.**
+
+App (sin token):
+| Método | Ruta | Qué hace |
+|---|---|---|
+| GET | `/api/grabacion/activa` | ¿La administración la tiene encendida? |
+| PUT | `/api/grabacion/{trabajoId}/marcar?cuidadorId=` | Marca el servicio como grabado (al iniciar con el PIN) |
+| POST | `/api/grabacion/segmento` `{ trabajoId, cuidadorId, url, duracionSeg }` | Registra un tramo ya subido a /uploads |
+
+Panel:
+| Método | Ruta | Nivel | Qué hace |
+|---|---|---|---|
+| GET | `/api/admin/grabacion-seguridad` | Admin | Estado del interruptor |
+| PUT | `/api/admin/grabacion-seguridad` `{ activa }` | SuperAdmin | Enciende/apaga |
+| GET | `/api/admin/servicios/{id}/grabaciones` | SuperAdmin | Segmentos del servicio (registra la escucha en auditoría) |
+
+- App: `Services/GrabacionSeguridad.cs` graba en tramos de 3 min (AAC mono 16 kHz) y los sube; `Platforms/Android/GrabacionForegroundService.cs` (tipo microphone, notificación visible). Permiso `FOREGROUND_SERVICE_MICROPHONE`. Arranca al iniciar con el PIN, se detiene al finalizar.
+- API: `GrabacionRetencionService` (BackgroundService, cada 6 h) borra del disco los tramos de más de 30 días sin disputa abierta ni SOS. El interruptor y la escucha están en la página **Auditoría** y en el detalle del servicio.
+
+## Aviso de llegada del Care Partner
+
+SQL: `docs/sql/llegada-cuidador.sql` (columna `Trabajos.FechaLlegada`, `sp_DetectarLlegadaCuidador`, nueva versión de `sp_AdminTrabajoDetalle`). Correr **después** de `calidad-documentos-comision-disputas.sql`.
+
+- `PUT /api/cuidador/ubicacion`: si el Care Partner está a 150 m o menos de un servicio aceptado (Estado 2) que empieza entre 2 h antes y 3 h después, marca `FechaLlegada` (una sola vez) y emite `CuidadorLlego { trabajoId, nombre, pin }` al grupo del cliente.
+- La app del Care Partner ahora envía su ubicación también en esa ventana de tiempo aunque esté oculto (`RastreoUbicacion.VaEnCamino`).
+
+## Calidad, documentos que vencen, comisión y disputas
+
+SQL: `docs/sql/calidad-documentos-comision-disputas.sql`. Correr **después** de `panel-admin.sql`, `horario-cuidador.sql` y `centro-mando.sql` (reemplaza `sp_ConfirmarFinalizacionTrabajo`, `sp_AdminCompletarTrabajo`, `sp_AdminTrabajoDetalle`, `sp_AdminFinanzas`, `sp_ObtenerPagosAdmin`, `sp_ReemplazarDocumentoCuidador`, `sp_ActualizarDisponibilidadCuidador` y `sp_AplicarHorariosCuidadores`). Nuevo: tabla `ConfiguracionPlataforma` (comisión general, arranca en 0 %), `TiposTrabajos.ComisionPorcentaje`, `Pagos.ComisionPorcentaje` (los pagos existentes quedan en 0 %), `Trabajos.MetodoPago`, `DocumentosCuidador.FechaVencimiento` y `AvisoVencimiento`, tabla `Disputas`; `AvisosDirectos.AdminId` pasa a aceptar NULL (avisos del sistema).
+
+| Método | Ruta | Nivel | Qué hace |
+|---|---|---|---|
+| GET | `/api/admin/calidad?dias=` | Admin | Puntaje 0–100 y semáforo de cada Care Partner aprobado |
+| GET | `/api/admin/calidad/{cuidadorId}?dias=` | Admin | Incidencias que explican el puntaje |
+| GET | `/api/admin/vencimientos` | Admin | Documentos de Care Partners aprobados con su vencimiento |
+| PUT | `/api/admin/vencimientos/{id}` `{ fecha }` | Operaciones | Fija o quita la fecha de vencimiento |
+| PUT | `/api/admin/vencimientos/{id}/revisar` `{ aprobar, fecha, observaciones }` | Operaciones | Aprueba (con fecha nueva) o rechaza un documento renovado; avisa al Care Partner |
+| GET | `/api/admin/comisiones` | Admin | Comisión general y por tipo de servicio |
+| PUT | `/api/admin/comisiones/general` `{ porcentaje }` | Finanzas | Cambia la comisión general |
+| PUT | `/api/admin/comisiones/tipos/{id}` `{ porcentaje }` | Finanzas | Comisión propia de un tipo (null = usa la general) |
+| PUT | `/api/admin/servicios/{id}/metodo-pago` `{ metodoPago }` | Admin | `efectivo`, `tarjeta`, `transferencia` o null |
+| GET | `/api/admin/disputas?estado=` / `/api/admin/disputas/{id}` | Admin | Casos (se crean solos desde `RechazadoPorCliente`/`PagoDisputado`) |
+| POST | `/api/admin/disputas` `{ trabajoId, motivo }` | Admin | Abre un caso a mano |
+| PUT | `/api/admin/disputas/{id}/resolver` `{ resolucion, monto, nota }` | Admin | `completo`, `parcial` o `sin_pago`: completa el servicio, ajusta el pago y avisa a ambos |
+| GET | `/api/admin/usuarios/{usuarioId}/servicios` | Admin | Últimos 100 servicios de un cliente o Care Partner (fichas) |
+
+- `GET /api/admin/finanzas` devuelve también `comision`, `sinMetodo`, `comisionGeneral` en los totales, `comision` por Care Partner y `porMetodo`. "Pagado" y "Por pagar" ya son netos (tarifa − comisión + propina).
+- Suspender (`PUT /api/admin/{cuidadores|clientes}/{id}/suspender`) ahora también oculta al Care Partner del mapa (`sp_OcultarUsuarioSuspendido` + `DisponibilidadCambio`), y `sp_ActualizarDisponibilidadCuidador` no deja ponerse visible a una cuenta suspendida.
+- `Services/Cuidador/VencimientoDocumentosService.cs` (BackgroundService, cada hora): avisa 30 y 7 días antes; al vencer, el documento pasa a rechazado (se reemplaza desde la app como cualquier rechazado) y el Care Partner queda oculto. Mientras tenga un documento con fecha pasada, ni el interruptor manual ni el horario automático lo ponen visible.
+
 ## Centro de mando del panel ("Ojo de Dios")
 
 SQL: `docs/sql/centro-mando.sql` (tablas `UbicacionesHistorial` y `AvisosDirectos`, columnas `PerfilCuidador.UltimaUbicacion` y `Bateria`, nueva versión de `sp_ActualizarUbicacionCuidador` y `sp_AdminMapa`). Correr **después** de `panel-admin.sql` y `horario-cuidador.sql`.

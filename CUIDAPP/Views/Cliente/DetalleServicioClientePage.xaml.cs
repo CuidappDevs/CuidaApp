@@ -197,6 +197,8 @@ namespace CUIDAPP.Views.Cliente
             LblFechaHora.Text = Localizador.F("fecha_hora_rango", Localizador.FechaLarga(t.Fecha), FormatearHora(t.HoraInicio), FormatearHora(t.HoraFin));
             LblDireccion.Text = string.IsNullOrWhiteSpace(t.Direccion) ? Localizador.T("sin_direccion") : t.Direccion;
             LblPago.Text = Localizador.F("rd_monto", t.Tarifa);
+            MetodoPagoVista.Mostrar(ChipMetodoPago, IconoMetodoPago, LblMetodoPago, t.MetodoPago, paraCuidador: false);
+            _ = MostrarInstruccionesPagoAsync(t);
 
             var (colorFondo, colorTexto, texto) = t.Estado switch
             {
@@ -622,6 +624,19 @@ namespace CUIDAPP.Views.Cliente
                 BtnSOS.IsEnabled = true;
                 BtnSOS.Text = Localizador.T("sos_pedir_auxilio");
             }
+        }
+    
+        // Transferencia: muestra cómo pagarle a CuidApp (texto que define Finanzas en el panel).
+        private async Task MostrarInstruccionesPagoAsync(Models.Trabajo.TrabajoCliente t)
+        {
+            CajaInstruccionesPago.IsVisible = false;
+            if (t.MetodoPago != "transferencia" || t.Estado is 5 or 6)
+                return;
+            var texto = await _apiService.ObtenerInstruccionesTransferenciaAsync();
+            if (string.IsNullOrWhiteSpace(texto))
+                return;
+            LblInstruccionesPago.Text = texto;
+            CajaInstruccionesPago.IsVisible = true;
         }
     }
 }

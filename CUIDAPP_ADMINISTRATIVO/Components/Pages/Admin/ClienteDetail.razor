@@ -3,253 +3,183 @@
 @using System.Security.Claims
 @using CUIDAPP_ADMINISTRATIVO.Models.Cliente
 @using CUIDAPP_ADMINISTRATIVO.Models.Cuidador
-@using CUIDAPP_ADMINISTRATIVO.Services
 @inject ClienteAdminApiService ClienteService
+@inject PanelApiService Api
 @inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
+@inject NavigationManager Nav
 
-<PageTitle>Ficha de cliente · Cuidapp Admin</PageTitle>
+<PageTitle>@(_cliente?.NombreCompleto ?? "Cliente") · Cuidapp Admin</PageTitle>
 
-@if (_cargando)
-{
-    <div class="adm-card adm-card-pad">Cargando ficha...</div>
-}
-else if (_cliente is null)
-{
-    <div class="adm-card adm-card-pad">
-        <p class="mb-2">No se encontró el cliente solicitado.</p>
-        <a href="clientes" class="adm-btn adm-btn-outline">Volver a Clientes</a>
-    </div>
-}
-else
-{
-    var c = _cliente;
-    <div class="d-flex flex-column gap-4">
-        <a href="clientes" class="adm-back">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m15 18-6-6 6-6"></path>
-            </svg>
-            Volver a Clientes
-        </a>
+<div class="pn-page">
+    <a href="clientes" class="adm-back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"></path></svg>
+        Volver a Clientes
+    </a>
 
-        @if (!string.IsNullOrWhiteSpace(_mensajeAccion))
-        {
-            <div class="adm-card adm-card-pad" style="background:#EFF6FF; border-color:#BFDBFE;">@_mensajeAccion</div>
-        }
+    @if (_cargando && _cliente == null)
+    {
+        <div class="adm-card"><Esqueleto Filas="6" /></div>
+    }
+    else if (_cliente is null)
+    {
+        <div class="adm-card"><EstadoVacio Titulo="Cliente no encontrado" Texto="Puede que la cuenta ya no exista." /></div>
+    }
+    else
+    {
+        var c = _cliente;
+        var tel = _ficha?.Persona.Telefono;
 
-        <div class="d-grid gap-4 adm-two-col" style="grid-template-columns: 1.4fr 1fr; align-items: start;">
-
-            @* ----- Columna izquierda ----- *@
-            <div class="d-flex flex-column gap-4">
-
-                @* Perfil *@
-                <div class="adm-card d-flex" style="padding:28px; gap:22px;">
-                    @if (!string.IsNullOrWhiteSpace(c.FotoUrl))
-                    {
-                        <img src="@(ClienteService.ServerOrigin + c.FotoUrl)" style="width:84px; height:84px; border-radius:16px; object-fit:cover; flex-shrink:0;" />
-                    }
-                    else
-                    {
-                        <div class="adm-photo-ph">
-                            <span style="font-size:18px; font-weight:600; color:var(--adm-muted-2);">@Iniciales(c.NombreCompleto)</span>
-                            <span style="font-size:10px; color:var(--adm-muted-2);">Sin foto</span>
-                        </div>
-                    }
-                    <div class="d-flex flex-column" style="flex:1; gap:16px;">
-                        <div class="d-flex align-items-start justify-content-between gap-3">
-                            <div class="d-flex flex-column" style="gap:5px;">
-                                <span style="font-size:24px; font-weight:600; letter-spacing:-0.01em;">@c.NombreCompleto</span>
-                                <span style="font-size:14px; color:var(--adm-muted);">Registrado el @c.FechaCreacion.ToString("dd MMM yyyy")</span>
-                            </div>
-                            <span class="adm-pill flex-shrink-0" style="padding:6px 13px; background:@(c.IsActive ? "#DCFCE7" : "#FEE2E2"); color:@(c.IsActive ? "#166534" : "#B91C1C");">
-                                <span class="adm-pill-dot" style="background:@(c.IsActive ? "#166534" : "#B91C1C");"></span>Cuenta @c.CuentaTexto.ToLower()
-                            </span>
-                        </div>
-                        <div class="d-grid" style="grid-template-columns:repeat(3,1fr); gap:18px 24px; padding-top:4px; border-top:1px solid var(--adm-line-soft);">
-                            <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
-                                <span class="adm-field-k">Correo</span>
-                                <span class="adm-field-v">@c.Email</span>
-                            </div>
-                            <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
-                                <span class="adm-field-k">Dirección principal</span>
-                                <span class="adm-field-v">@(c.DireccionPrincipal ?? "-")</span>
-                            </div>
-                            <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
-                                <span class="adm-field-k">Contacto de emergencia</span>
-                                <span class="adm-field-v">@(c.ContactoEmergenciaNombre ?? "-") @(string.IsNullOrWhiteSpace(c.ContactoEmergenciaTelefono) ? "" : $"({c.ContactoEmergenciaTelefono})")</span>
-                            </div>
-                            <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
-                                <span class="adm-field-k">Servicios solicitados</span>
-                                <span class="adm-field-v">@c.TotalServiciosSolicitados</span>
-                            </div>
-                            <div class="d-flex flex-column" style="gap:4px; padding-top:14px;">
-                                <span class="adm-field-k">Servicios completados</span>
-                                <span class="adm-field-v">@c.ServiciosCompletados</span>
-                            </div>
-                        </div>
+        @* ---------- Encabezado ---------- *@
+        <div class="adm-card pn-perfil">
+            <div class="pn-perfil-cover @(c.IsActive ? "" : "is-off")"></div>
+            <div class="pn-perfil-main">
+                <span class="pn-perfil-foto"><Avatar Url="@Api.Archivo(c.FotoUrl)" Nombre="@c.NombreCompleto" Tam="88" /></span>
+                <div class="pn-perfil-info">
+                    <div class="d-flex flex-wrap align-items-center" style="gap:8px;">
+                        <span class="pn-perfil-nombre">@c.NombreCompleto</span>
+                        <span class="pn-pill tone-info no-dot">Cliente</span>
+                        @if (!c.IsActive) { <span class="pn-pill tone-danger">@(Vigente?.Tipo == "TEMPORAL" ? "Suspendido" : "Baneado")</span> }
+                        else { <span class="pn-pill tone-ok">Activo</span> }
+                    </div>
+                    <div class="pn-perfil-meta">
+                        <a href="mailto:@c.Email">@c.Email</a>
+                        @if (!string.IsNullOrWhiteSpace(tel)) { <a href="tel:@tel">@tel</a> }
+                        <span>Desde @c.FechaCreacion.ToString("MMM yyyy", Es)</span>
                     </div>
                 </div>
-
-                @* Editar información *@
-                <div class="adm-card" style="padding:28px;">
-                    <div class="d-flex flex-column mb-4" style="gap:4px;">
-                        <span class="adm-card-title">Editar información</span>
-                        <span class="adm-card-sub">Cambios visibles de inmediato en la app del cliente.</span>
-                    </div>
-
-                    <div class="d-flex flex-column" style="gap:16px;">
-                        <div class="d-grid" style="grid-template-columns:1fr 1fr; gap:16px;">
-                            <div class="d-flex flex-column" style="gap:6px;">
-                                <span class="adm-field-k">Nombre completo</span>
-                                <input class="adm-input" @bind="_editNombre" />
-                            </div>
-                            <div class="d-flex flex-column" style="gap:6px;">
-                                <span class="adm-field-k">Dirección principal</span>
-                                <input class="adm-input" @bind="_editDireccion" />
-                            </div>
-                            <div class="d-flex flex-column" style="gap:6px;">
-                                <span class="adm-field-k">Contacto de emergencia</span>
-                                <input class="adm-input" @bind="_editContactoNombre" />
-                            </div>
-                            <div class="d-flex flex-column" style="gap:6px;">
-                                <span class="adm-field-k">Teléfono de emergencia</span>
-                                <input class="adm-input" @bind="_editContactoTelefono" />
-                            </div>
-                        </div>
-                        <button type="button" class="adm-btn" style="align-self:flex-start; height:42px; padding:0 22px; border:none; border-radius:11px; background:var(--cuid-blue); color:#fff; font-size:14px;"
-                                disabled="@_guardandoInfo" @onclick="GuardarInfo">
-                            @(_guardandoInfo ? "Guardando..." : "Guardar cambios")
-                        </button>
-                    </div>
+                <div class="pn-perfil-acciones">
+                    @if (!string.IsNullOrWhiteSpace(tel))
+                    {
+                        <a class="pn-btn pn-btn-quiet pn-btn-sm" href="https://wa.me/1@(Digitos(tel))" target="_blank" rel="noopener">WhatsApp</a>
+                        <a class="pn-btn pn-btn-quiet pn-btn-sm" href="tel:@tel">Llamar</a>
+                    }
+                    @if (_puedeOperar)
+                    {
+                        <button type="button" class="pn-btn pn-btn-primary pn-btn-sm" @onclick="EnviarAviso">Enviar aviso</button>
+                    }
                 </div>
             </div>
-
-            @* ----- Columna derecha ----- *@
-            <div class="d-flex flex-column gap-4">
-
-                @* Estado de la cuenta (suspensión / baneo) *@
-                <div class="adm-card d-flex flex-column" style="padding:26px; gap:18px;">
-                    <div class="d-flex flex-column" style="gap:4px;">
-                        <span class="adm-card-title">Estado de la cuenta</span>
-                        <span class="adm-card-sub" style="line-height:1.55;">
-                            @if (c.IsActive)
-                            {
-                                <text>Suspender bloquea el inicio de sesión. Puede ser indefinida o temporal; no borra el historial.</text>
-                            }
-                            else if (_vigente is { VencidaPendienteAcceso: true })
-                            {
-                                <text>La suspensión temporal ya venció. La cuenta se reactivará en su próximo inicio de sesión válido.</text>
-                            }
-                            else
-                            {
-                                <text>Esta cuenta está suspendida — no puede iniciar sesión hasta que termine la sanción o la reactives.</text>
-                            }
-                        </span>
-                    </div>
-
-                    @if (_vigente != null)
-                    {
-                        <div class="d-flex flex-column" style="gap:4px;">
-                            <span class="adm-field-k">Sanción actual (@_vigente.EstadoTexto)</span>
-                            <span class="adm-timeline-text">@_vigente.Motivo</span>
-                            <span class="adm-timeline-when">
-                                @(_vigente.Tipo == "TEMPORAL" ? "Temporal" : "Indefinida")
-                                · desde @FechaRD(_vigente.FechaInicioUtc)
-                                @(_vigente.FechaFinUtc.HasValue ? $"· hasta {FechaRD(_vigente.FechaFinUtc.Value)}" : "")
-                            </span>
-                        </div>
-                    }
-
-                    @if (c.IsActive)
-                    {
-                        <div class="d-flex flex-column" style="gap:6px;">
-                            <span class="adm-field-k">Modalidad</span>
-                            <select class="adm-input" @bind="_tipoSancion">
-                                <option value="INDEFINIDA">Indefinida</option>
-                                <option value="TEMPORAL">Temporal</option>
-                            </select>
-                        </div>
-                        @if (_tipoSancion == "TEMPORAL")
-                        {
-                            <div class="d-flex flex-column" style="gap:6px;">
-                                <span class="adm-field-k">Fin de la suspensión (hora de RD)</span>
-                                <input class="adm-input" type="datetime-local" min="@MinimoFechaFin()" @bind="_fechaFinLocal" />
-                            </div>
-                        }
-                        <textarea @bind="_motivoSancion" class="adm-textarea" placeholder="Motivo de la suspensión (10 a 500 caracteres)"></textarea>
-                        <button type="button" class="adm-btn adm-btn-lg adm-btn-danger" disabled="@_procesandoCuenta" @onclick="Suspender">
-                            @(_procesandoCuenta ? "Procesando..." : "Suspender cuenta")
-                        </button>
-                    }
-                    else if (_confirmandoReactivar)
-                    {
-                        <span class="adm-card-sub" style="line-height:1.55;">
-                            Reactivar revocará la sanción vigente y la cuenta podrá iniciar sesión de inmediato. ¿Confirmas?
-                        </span>
-                        <div class="d-flex" style="gap:10px;">
-                            <button type="button" class="adm-btn adm-btn-lg adm-btn-approve" disabled="@_procesandoCuenta" @onclick="Reactivar">
-                                @(_procesandoCuenta ? "Procesando..." : "Confirmar reactivación")
-                            </button>
-                            <button type="button" class="adm-btn adm-btn-lg adm-btn-ghost-line" disabled="@_procesandoCuenta" @onclick="() => _confirmandoReactivar = false">
-                                Cancelar
-                            </button>
-                        </div>
-                    }
-                    else
-                    {
-                        <button type="button" class="adm-btn adm-btn-lg adm-btn-approve" disabled="@_procesandoCuenta" @onclick="() => _confirmandoReactivar = true">
-                            Reactivar cuenta
-                        </button>
-                    }
-
-                    @if (_sanciones.Count > 0)
-                    {
-                        <div class="d-flex flex-column" style="gap:14px; padding-top:14px; border-top:1px solid var(--adm-line-soft);">
-                            <span class="adm-card-title" style="font-size:13px;">Historial de sanciones</span>
-                            @foreach (var s in _sanciones)
-                            {
-                                <div class="d-flex" style="gap:12px;">
-                                    <span class="adm-timeline-dot" style="background:@(s.Estado == "VIGcE" ? "#DC2626" : s.Estado == "REVOCADA" ? "#16A34A" : "#6B7280");"></span>
-                                    <div class="d-flex flex-column" style="gap:2px;">
-                                        <span class="adm-timeline-text">@s.EstadoTexto · @(s.Tipo == "TEMPORAL" ? "Temporal" : "Indefinida") — @s.Motivo</span>
-                                        <span class="adm-timeline-when">
-                                            @s.AdminNombre · @FechaRD(s.FechaInicioUtc)
-                                            @(s.FechaFinUtc.HasValue ? $"→ {FechaRD(s.FechaFinUtc.Value)}" : "")
-                                        </span>
-                                        @if (s.Estado == "REVOCADA" && s.FechaRevocacionUtc.HasValue)
-                                        {
-                                            <span class="adm-timeline-when">Revocada por @s.RevocadaPorAdminNombre · @FechaRD(s.FechaRevocacionUtc.Value)</span>
-                                        }
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    }
-                </div>
-
+            <div class="pn-perfil-stats">
+                <div><span class="k">Solicitados</span><span class="v">@c.TotalServiciosSolicitados</span><span class="pn-muted">servicios</span></div>
+                <div><span class="k">Completados</span><span class="v">@c.ServiciosCompletados</span><span class="pn-muted">@Porcentaje(c.ServiciosCompletados, c.TotalServiciosSolicitados) del total</span></div>
+                <div><span class="k">Cancelados</span><span class="v">@(_servicios?.Count(s => s.Estado == 5) ?? 0)</span><span class="pn-muted">servicios</span></div>
+                <div><span class="k">Gastado</span><span class="v">RD$ @((_servicios?.Where(s => s.Estado == 4).Sum(s => s.Tarifa) ?? 0).ToString("N0"))</span><span class="pn-muted">en completados</span></div>
+                <div><span class="k">Disputas</span><span class="v" style="color:@(Disputas > 0 ? "var(--warn)" : "inherit");">@Disputas</span><span class="pn-muted">rechazos del final</span></div>
             </div>
         </div>
-    </div>
-}
+
+        <div class="pn-ficha-layout">
+            <div class="d-flex flex-column" style="gap:16px; min-width:0;">
+                <div class="pn-seg" style="align-self:flex-start;">
+                    <button type="button" class="@(_tab == "resumen" ? "on" : "")" @onclick="@(() => _tab = "resumen")">Resumen</button>
+                    <button type="button" class="@(_tab == "servicios" ? "on" : "")" @onclick="@(() => _tab = "servicios")">Servicios <span class="pn-seg-n">@(_serviciosError ? "—" : (_servicios?.Count ?? 0).ToString())</span></button>
+                    @if (_puedeOperar) { <button type="button" class="@(_tab == "editar" ? "on" : "")" @onclick="@(() => _tab = "editar")">Editar</button> }
+                </div>
+
+                @switch (_tab)
+                {
+                    case "resumen":
+                        <div class="adm-card adm-card-pad d-flex flex-column" style="gap:18px;">
+                            <span class="adm-card-title">Datos</span>
+                            <dl class="pn-datos">
+                                <div><dt>Correo</dt><dd>@c.Email</dd></div>
+                                <div><dt>Teléfono</dt><dd>@(tel ?? "—")</dd></div>
+                                <div><dt>Dirección principal</dt><dd>@(c.DireccionPrincipal ?? "—")</dd></div>
+                                <div><dt>Registrado</dt><dd>@c.FechaCreacion.ToString("d 'de' MMMM yyyy", Es)</dd></div>
+                                <div><dt>Último servicio</dt><dd>@(_servicios?.FirstOrDefault()?.Fecha.ToString("d MMM yyyy", Es) ?? "—")</dd></div>
+                                <div><dt>Care Partner más frecuente</dt><dd>@(Frecuente() ?? "—")</dd></div>
+                            </dl>
+                        </div>
+                        @if (_servicios?.Count > 0)
+                        {
+                            <div class="adm-card overflow-hidden">
+                                <div class="pn-card-head"><span class="adm-card-title">Últimos servicios</span><button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" @onclick="@(() => _tab = "servicios")">Ver todos</button></div>
+                                @TablaServicios(_servicios.Take(5))
+                            </div>
+                        }
+                        break;
+
+                    case "servicios":
+                        <div class="adm-card overflow-hidden">
+                            @if (_serviciosError) { <EstadoVacio Titulo="No se pudo cargar el historial" Texto="El servidor todavía no tiene esta función: aparece cuando se publique la API nueva." /> }
+                            else if (_servicios == null) { <Esqueleto Filas="5" ConAvatar="false" /> }
+                            else if (_servicios.Count == 0) { <EstadoVacio Titulo="Todavía no ha pedido servicios" /> }
+                            else
+                            {
+                                @TablaServicios(Paginador.Cortar(_servicios, _pagServ, 15))
+                                <Paginador Pagina="_pagServ" Tamano="15" Total="_servicios.Count" PaginaCambiada="x => _pagServ = x" />
+                            }
+                        </div>
+                        break;
+
+                    case "editar":
+                        <div class="adm-card adm-card-pad d-flex flex-column" style="gap:16px;">
+                            <div class="d-flex flex-column" style="gap:2px;">
+                                <span class="adm-card-title">Editar información</span>
+                                <span class="adm-card-sub">Los cambios se ven de inmediato en la app del cliente.</span>
+                            </div>
+                            <div class="pn-grid-2-eq" style="display:grid; gap:14px;">
+                                <div><label class="pn-label" for="e-n">Nombre completo</label><input id="e-n" class="adm-input" maxlength="150" @bind="_editNombre" /></div>
+                                <div><label class="pn-label" for="e-d">Dirección principal</label><input id="e-d" class="adm-input" maxlength="300" @bind="_editDireccion" /></div>
+                                <div><label class="pn-label" for="e-cn">Contacto de emergencia</label><input id="e-cn" class="adm-input" maxlength="150" @bind="_editContactoNombre" /></div>
+                                <div><label class="pn-label" for="e-ct">Teléfono de emergencia</label><input id="e-ct" class="adm-input" type="tel" inputmode="tel" maxlength="20" @bind="_editContactoTelefono" /></div>
+                            </div>
+                            <div class="d-flex" style="gap:8px;">
+                                <button type="button" class="pn-btn pn-btn-primary" disabled="@(_guardando || !HayCambios)" @onclick="GuardarInfo">@(_guardando ? "Guardando…" : "Guardar cambios")</button>
+                                <button type="button" class="pn-btn pn-btn-quiet" disabled="@(!HayCambios)" @onclick="RestaurarEdicion">Descartar</button>
+                            </div>
+                        </div>
+                        break;
+                }
+            </div>
+
+            <div class="d-flex flex-column" style="gap:16px; min-width:0;">
+                <GestionCuenta UsuarioId="Id" Nombre="@c.NombreCompleto" EsCuidador="false" Activa="c.IsActive" PuedeOperar="_puedeOperar"
+                               ServiciosPendientes="Pendientes" Sanciones="_sanciones"
+                               Suspender="(motivo, fin) => ClienteService.SuspenderAsync(Id, _adminId, motivo, fin)"
+                               ReactivarCuenta="() => ClienteService.ReactivarAsync(Id, _adminId)"
+                               Cambio="Cargar" />
+
+                <div class="adm-card adm-card-pad d-flex flex-column" style="gap:6px;">
+                    <span class="adm-card-title">Contacto de emergencia</span>
+                    @if (string.IsNullOrWhiteSpace(c.ContactoEmergenciaNombre))
+                    {
+                        <span class="pn-muted">No ha registrado uno.</span>
+                    }
+                    else
+                    {
+                        <span style="font-size:14px;">@c.ContactoEmergenciaNombre</span>
+                        @if (!string.IsNullOrWhiteSpace(c.ContactoEmergenciaTelefono)) { <a class="pn-link" href="tel:@c.ContactoEmergenciaTelefono">@c.ContactoEmergenciaTelefono</a> }
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
 
 @code {
     [Parameter] public int Id { get; set; }
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
 
-    [CascadingParameter]
-    private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthStateTask { get; set; }
+    private static readonly System.Globalization.CultureInfo Es = new("es-DO");
 
     private ClienteAdmin? _cliente;
+    private FichaMapa? _ficha;
     private List<SancionCuidador> _sanciones = new();
-    private bool _cargando = true;
-    private bool _procesandoCuenta;
-    private bool _guardandoInfo;
-    private string _motivoSancion = "";
-    private string? _mensajeAccion;
-    private int _adminId;
+    private List<ServicioFila>? _servicios;
+    private bool _serviciosError;
+    private bool _cargando = true, _guardando, _puedeOperar;
+    private int _adminId, _pagServ = 1;
+    private string _tab = "resumen";
+    private string _editNombre = "", _editDireccion = "", _editContactoNombre = "", _editContactoTelefono = "";
 
-    private string _editNombre = "";
-    private string _editDireccion = "";
-    private string _editContactoNombre = "";
-    private string _editContactoTelefono = "";
+    private SancionCuidador? Vigente => _sanciones.FirstOrDefault(x => x.Estado == "VIGENTE");
+    private int Pendientes => _servicios?.Count(s => s.ClienteId == Id && s.Estado is 1 or 2 or 3 or 7) ?? 0;
+    private int Disputas => _servicios?.Count(s => s.RechazadoPorCliente || s.PagoDisputado) ?? 0;
+
+    private bool HayCambios => _cliente != null && (_editNombre.Trim() != _cliente.NombreCompleto || _editDireccion.Trim() != (_cliente.DireccionPrincipal ?? "")
+        || _editContactoNombre.Trim() != (_cliente.ContactoEmergenciaNombre ?? "") || _editContactoTelefono.Trim() != (_cliente.ContactoEmergenciaTelefono ?? ""));
 
     protected override async Task OnParametersSetAsync()
     {
@@ -257,147 +187,90 @@ else
         {
             var user = (await AuthStateTask).User;
             _adminId = int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : 0;
+            _puedeOperar = SesionAdmin.PuedeOperar(user);
         }
-
         await Cargar();
     }
 
     private async Task Cargar()
     {
         _cargando = true;
-        StateHasChanged();
+        var detalle = ClienteService.ObtenerDetalleAsync(Id);
+        var sanciones = ClienteService.ObtenerSancionesAsync(Id);
+        var ficha = Api.FichaMapaAsync(Id);
+        var servicios = Api.ServiciosUsuarioAsync(Id);
+        await Task.WhenAll(detalle, sanciones, ficha, servicios);
 
-        _cliente = await ClienteService.ObtenerDetalleAsync(Id);
-
-        if (_cliente != null)
-        {
-            _sanciones = await ClienteService.ObtenerSancionesAsync(Id);
-
-            _editNombre = _cliente.NombreCompleto;
-            _editDireccion = _cliente.DireccionPrincipal ?? "";
-            _editContactoNombre = _cliente.ContactoEmergenciaNombre ?? "";
-            _editContactoTelefono = _cliente.ContactoEmergenciaTelefono ?? "";
-        }
-
+        _cliente = detalle.Result;
+        _sanciones = sanciones.Result;
+        _ficha = ficha.Result;
+        _servicios = servicios.Result;
+        _serviciosError = _servicios == null;
+        RestaurarEdicion();
         _cargando = false;
     }
 
-    private string _tipoSancion = "INDEFINIDA";
-    private DateTime? _fechaFinLocal;
-    private bool _confirmandoReactivar;
-
-    private SancionCuidador? _vigente => _sanciones.FirstOrDefault(x => x.Estado == "VIGENTE");
-
-    // Horario de RD (UTC-4 fijo), igual que HoraLocalRD en la API.
-    private static readonly TimeSpan OffsetRD = TimeSpan.FromHours(-4);
-
-    private static string FechaRD(DateTimeOffset fecha) => fecha.ToOffset(OffsetRD).ToString("dd MMM yyyy, HH:mm");
-
-    private static string MinimoFechaFin()
-        => DateTimeOffset.UtcNow.ToOffset(OffsetRD).AddMinutes(5).ToString("yyyy-MM-ddTHH:mm");
-
-    private async Task Suspender()
+    private void RestaurarEdicion()
     {
-        if (string.IsNullOrWhiteSpace(_motivoSancion))
-        {
-            _mensajeAccion = "Escribe el motivo de la suspensión antes de continuar.";
-            return;
-        }
-
-        DateTimeOffset? fechaFin = null;
-        if (_tipoSancion == "TEMPORAL")
-        {
-            if (_fechaFinLocal is null)
-            {
-                _mensajeAccion = "Indica la fecha y hora de fin de la suspensión temporal.";
-                return;
-            }
-
-            fechaFin = new DateTimeOffset(DateTime.SpecifyKind(_fechaFinLocal.Value, DateTimeKind.Unspecified), OffsetRD);
-            if (fechaFin.Value < DateTimeOffset.UtcNow.AddMinutes(5))
-            {
-                _mensajeAccion = "La fecha de fin debe ser al menos 5 minutos posterior a la hora actual.";
-                return;
-            }
-        }
-
-        var duracion = fechaFin is { } fin ? $"hasta el {FechaRD(fin)}" : "de forma indefinida";
-        if (!await Confirmacion.PreguntarAsync("¿Suspender esta cuenta?",
-                $"No podrá iniciar sesión {duracion}. El motivo queda registrado en su historial y en la auditoría.", "Suspender cuenta", peligro: true))
-            return;
-
-        _procesandoCuenta = true;
-        _mensajeAccion = null;
-
-        var resultado = await ClienteService.SuspenderAsync(Id, _adminId, _motivoSancion.Trim(), fechaFin);
-
-        _procesandoCuenta = false;
-
-        if (!resultado.Success)
-        {
-            // El formulario se conserva para poder corregir y reintentar.
-            _mensajeAccion = $"No se pudo suspender la cuenta ({resultado.Code}): {resultado.Message}";
-            return;
-        }
-
-        _mensajeAccion = "Cuenta suspendida — ya no puede iniciar sesión.";
-        _motivoSancion = "";
-        _tipoSancion = "INDEFINIDA";
-        _fechaFinLocal = null;
-        await Cargar();
+        if (_cliente == null) return;
+        _editNombre = _cliente.NombreCompleto;
+        _editDireccion = _cliente.DireccionPrincipal ?? "";
+        _editContactoNombre = _cliente.ContactoEmergenciaNombre ?? "";
+        _editContactoTelefono = _cliente.ContactoEmergenciaTelefono ?? "";
     }
 
-    private async Task Reactivar()
+    private string? Frecuente() => _servicios?.Where(s => s.Estado == 4).GroupBy(s => s.CuidadorNombre)
+        .OrderByDescending(g => g.Count()).Select(g => $"{g.Key} ({g.Count()})").FirstOrDefault();
+
+    private static string Porcentaje(int a, int b) => b == 0 ? "0%" : $"{100.0 * a / b:0}%";
+    private static string Digitos(string t) => new(t.Where(char.IsDigit).ToArray());
+
+    private RenderFragment TablaServicios(IEnumerable<ServicioFila> filas) => __builder =>
     {
-        _procesandoCuenta = true;
-        _mensajeAccion = null;
+        <div class="pn-table-wrap">
+            <table class="pn-table">
+                <thead><tr><th>Servicio</th><th>Fecha</th><th>Care Partner</th><th>Estado</th><th class="pn-num">Tarifa</th></tr></thead>
+                <tbody>
+                    @foreach (var s in filas)
+                    {
+                        <tr class="pn-row-link" @onclick="@(() => Nav.NavigateTo($"servicios/{s.Id}"))">
+                            <td><span class="pn-strong">@s.TipoServicio</span><div class="pn-muted" style="font-size:11.5px;">#@s.Id</div></td>
+                            <td>@s.Fecha.ToString("dd MMM yyyy")<div class="pn-muted" style="font-size:11.5px;">@s.HoraInicio – @s.HoraFin</div></td>
+                            <td>@s.CuidadorNombre</td>
+                            <td>
+                                <span class="pn-pill @EstadoServicio.Tono(s.Estado)">@EstadoServicio.Texto(s.Estado)</span>
+                                @if (s.TieneSos) { <span class="pn-pill tone-danger no-dot" style="margin-left:4px;">SOS</span> }
+                            </td>
+                            <td class="pn-num">RD$ @s.Tarifa.ToString("N0")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    };
 
-        var resultado = await ClienteService.ReactivarAsync(Id, _adminId);
-
-        _procesandoCuenta = false;
-        _confirmandoReactivar = false;
-
-        if (!resultado.Success)
-        {
-            _mensajeAccion = $"No se pudo reactivar la cuenta ({resultado.Code}): {resultado.Message}";
-            return;
-        }
-
-        _mensajeAccion = resultado.Code == "ALREADY_COMPLETED"
-            ? "La suspensión temporal ya había vencido; la cuenta quedó activa."
-            : "Cuenta reactivada.";
-        await Cargar();
+    private async Task EnviarAviso()
+    {
+        var texto = await Confirmacion.PedirMotivoAsync($"Aviso para {_cliente!.NombreCompleto}",
+            "Le llega como notificación al teléfono.", "Enviar", "Mensaje", peligro: false);
+        if (texto == null) return;
+        Toasts.Mostrar(await Api.NotificarAsync(new[] { Id }, "Mensaje de CuidApp", texto));
     }
 
     private async Task GuardarInfo()
     {
         if (string.IsNullOrWhiteSpace(_editNombre))
         {
-            _mensajeAccion = "El nombre no puede quedar vacío.";
+            Toasts.Mostrar("El nombre no puede quedar vacío.", false);
             return;
         }
-
-        _guardandoInfo = true;
-        _mensajeAccion = null;
-
-        var success = await ClienteService.ActualizarInfoAsync(Id, _editNombre.Trim(),
+        _guardando = true;
+        var ok = await ClienteService.ActualizarInfoAsync(Id, _editNombre.Trim(),
             string.IsNullOrWhiteSpace(_editDireccion) ? null : _editDireccion.Trim(),
             string.IsNullOrWhiteSpace(_editContactoNombre) ? null : _editContactoNombre.Trim(),
             string.IsNullOrWhiteSpace(_editContactoTelefono) ? null : _editContactoTelefono.Trim());
-
-        _guardandoInfo = false;
-        _mensajeAccion = success ? "Información actualizada." : "No se pudo guardar. Intenta de nuevo.";
-
-        if (success)
-            await Cargar();
-    }
-
-    private static string Iniciales(string nombre)
-    {
-        if (string.IsNullOrWhiteSpace(nombre))
-            return "";
-
-        var partes = nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return string.Concat(partes.Take(2).Select(p => char.ToUpperInvariant(p[0])));
+        _guardando = false;
+        Toasts.Mostrar(ok ? "Información actualizada." : "No se pudo guardar. Intenta de nuevo.", ok);
+        if (ok) await Cargar();
     }
 }

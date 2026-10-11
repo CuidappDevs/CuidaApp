@@ -64,12 +64,166 @@ window.cuidPanel = (function () {
         return lista;
     }
 
+    // Fondo del mapa: Mapbox (el mismo de la app) con selector de estilo; si no hay token, OpenStreetMap.
+    const ESTILOS = [
+        ["Claro", "light-v11"], ["Calles", "streets-v12"], ["Satélite", "satellite-streets-v12"], ["Oscuro", "dark-v11"]
+    ];
+    function fondos(mapa) {
+        const token = (window.cuidMapa && window.cuidMapa.token) || "";
+        if (!token) {
+            L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(mapa);
+            return;
+        }
+        const capas = {};
+        ESTILOS.forEach(([nombre, estilo]) => {
+            capas[nombre] = L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/${estilo}/tiles/{z}/{x}/{y}{r}?access_token=${token}`, {
+                maxZoom: 20, tileSize: 512, zoomOffset: -1,
+                attribution: '&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            });
+        });
+        let elegido = "Claro";
+        try { const g = localStorage.getItem("cuidMapaEstilo"); if (g && capas[g]) elegido = g; } catch { }
+        capas[elegido].addTo(mapa);
+        L.control.layers(capas, null, { position: "topleft", collapsed: true }).addTo(mapa);
+        mapa.on("baselayerchange", e => { try { localStorage.setItem("cuidMapaEstilo", e.name); } catch { } });
+    }
+
+    // ---------- Vista 3D (Mapbox GL, se carga solo la primera vez que se usa)
+    const GL_VERSION = "3.7.0";
+    let cargaGL = null;
+    function cargarGL() {
+        if (window.mapboxgl) return Promise.resolve();
+        if (cargaGL) return cargaGL;
+        cargaGL = new Promise((ok, falla) => {
+            const css = document.createElement("link");
+            css.rel = "stylesheet";
+            css.href = `https://api.mapbox.com/mapbox-gl-js/v${GL_VERSION}/mapbox-gl.css`;
+            document.head.appendChild(css);
+            const js = document.createElement("script");
+            js.src = `https://api.mapbox.com/mapbox-gl-js/v${GL_VERSION}/mapbox-gl.js`;
+            js.onload = ok;
+            js.onerror = () => { cargaGL = null; falla(); };
+            document.head.appendChild(js);
+        });
+        return cargaGL;
+    }
+
+    function control3d(m) {
+        const Ctl = L.Control.extend({
+            onAdd() {
+                const b = L.DomUtil.create("button", "pn-btn3d leaflet-bar");
+                b.type = "button";
+                b.title = "Vista 3D";
+                b.setAttribute("aria-pressed", "false");
+                b.textContent = "3D";
+                L.DomEvent.disableClickPropagation(b);
+                L.DomEvent.on(b, "click", () => alternar3d(m, b));
+                return b;
+            }
+        });
+        new Ctl({ position: "topleft" }).addTo(m.mapa);
+    }
+
+    async function alternar3d(m, boton) {
+        if (m.gl) { salir3d(m); boton.classList.remove("on"); boton.setAttribute("aria-pressed", "false"); return; }
+        const token = (window.cuidMapa && window.cuidMapa.token) || "";
+        if (!token) return;
+        boton.classList.add("cargando");
+        try { await cargarGL(); } catch { boton.classList.remove("cargando"); return; }
+        boton.classList.remove("cargando");
+        boton.classList.add("on");
+        boton.setAttribute("aria-pressed", "true");
+
+        // Mapbox GL pone "position: relative" a su contenedor: por eso va dentro de una capa absoluta
+        // que ocupa todo el mapa (si no, queda con alto 0 y se ve en blanco).
+        const capa = document.createElement("div");
+        capa.className = "pn-mapa3d";
+        const div = document.createElement("div");
+        div.style.cssText = "width:100%;height:100%;";
+        capa.appendChild(div);
+        m._contenedor.appendChild(capa);
+        window.mapboxgl.accessToken = token;
+        const c = m.mapa.getCenter();
+        const gl = new window.mapboxgl.Map({
+            container: div,
+            style: "mapbox://styles/mapbox/standard",
+            center: [c.lng, c.lat],
+            zoom: Math.max(m.mapa.getZoom() - 1, 14),
+            pitch: 62,
+            bearing: -18,
+            antialias: true,
+            attributionControl: true
+        });
+        gl.addControl(new window.mapboxgl.NavigationControl({ visualizePitch: true }), "bottom-right");
+        m.gl = gl;
+        m.gl3d = {};
+        m.mapa.getPane("mapPane").style.visibility = "hidden";
+        gl.on("style.load", () => {
+            try { gl.setConfigProperty("basemap", "lightPreset", "day"); gl.setConfigProperty("basemap", "show3dObjects", true); } catch { }
+        });
+        gl.on("load", () => { gl.resize(); sincronizar3d(m); encuadrar3d(m); });
+        // Arrastrar en 3D también deja de seguir.
+        gl.on("dragstart", () => { if (m.siguiendo) { m.siguiendo = null; m.dotnet?.invokeMethodAsync("DejoDeSeguir"); } });
+    }
+
+    function salir3d(m) {
+        if (!m.gl) return;
+        const c = m.gl.getCenter();
+        m.mapa.getPane("mapPane").style.visibility = "";
+        m.mapa.setView([c.lat, c.lng], Math.min(Math.round(m.gl.getZoom() + 1), 19), { animate: false });
+        const capa = m.gl.getContainer().parentElement;
+        m.gl.remove();
+        capa?.remove();
+        m.gl = null;
+        m.gl3d = null;
+    }
+
+    // Al entrar al 3D: centra en quien se está siguiendo o en todo lo visible, sin perder la inclinación.
+    function encuadrar3d(m) {
+        if (!m.gl || !m.datos) return;
+        const lista = elementos(m.datos).filter(n => m.visibles[n.capa] !== false);
+        const sig = m.siguiendo != null ? lista.find(n => n.clave === "c" + m.siguiendo) : null;
+        if (sig || lista.length === 1) {
+            const n = sig || lista[0];
+            m.gl.jumpTo({ center: [n.ll[1], n.ll[0]], zoom: 16.5 });
+        } else if (lista.length > 1) {
+            const b = new window.mapboxgl.LngLatBounds();
+            lista.forEach(n => b.extend([n.ll[1], n.ll[0]]));
+            m.gl.fitBounds(b, { padding: 90, maxZoom: 16.5, pitch: 62, bearing: -18, duration: 0 });
+        }
+    }
+
+    // Marcadores del 3D a partir de los mismos datos y capas visibles del mapa normal.
+    function sincronizar3d(m) {
+        if (!m.gl || !m.datos) return;
+        const lista = elementos(m.datos).filter(n => m.visibles[n.capa] !== false);
+        const vigentes = new Set(lista.map(n => n.clave));
+        Object.keys(m.gl3d).forEach(k => { if (!vigentes.has(k)) { m.gl3d[k].remove(); delete m.gl3d[k]; } });
+        lista.forEach(n => {
+            const firma = n.color + n.texto + (n.extra || "");
+            let mk = m.gl3d[n.clave];
+            if (mk && mk._firma !== firma) { mk.remove(); mk = null; }
+            if (!mk) {
+                const el = document.createElement("div");
+                el.innerHTML = `<div class="pn-marker ${n.extra || ""}" style="background:${n.color}">${esc(n.texto)}</div>`;
+                el.title = n.tooltip.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&");
+                el.style.cursor = "pointer";
+                el.addEventListener("click", e => { e.stopPropagation(); m.dotnet?.invokeMethodAsync("Seleccionar", n.tipo, n.id); });
+                mk = new window.mapboxgl.Marker({ element: el }).setLngLat([n.ll[1], n.ll[0]]).addTo(m.gl);
+                mk._firma = firma;
+                m.gl3d[n.clave] = mk;
+            } else {
+                mk.setLngLat([n.ll[1], n.ll[0]]);
+            }
+        });
+    }
+
     function crear(id, el, dotnet) {
         const mapa = L.map(el, { zoomControl: true, attributionControl: true }).setView([18.4861, -69.9312], 12);
-        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        }).addTo(mapa);
+        fondos(mapa);
         const g = {};
         ["calor", "geocercas", "rutas", "estelas", "servicios", "cuidadores", "sos", "dibujo", "replay"].forEach(n => g[n] = L.layerGroup().addTo(mapa));
         const m = { mapa, g, marcadores: {}, rutas: {}, estelas: {}, _contenedor: el, centrado: false, primeraVez: true, dotnet,
@@ -77,6 +231,7 @@ window.cuidPanel = (function () {
                     siguiendo: null, datos: null };
         // Si el usuario arrastra el mapa, deja de seguir.
         mapa.on("dragstart", () => { if (m.siguiendo) { m.siguiendo = null; dotnet?.invokeMethodAsync("DejoDeSeguir"); } });
+        if (window.cuidMapa && window.cuidMapa.token) control3d(m);
         mapas[id] = m;
         return m;
     }
@@ -176,6 +331,7 @@ window.cuidPanel = (function () {
                 m.centrado = true;
             }
             m.primeraVez = false;
+            sincronizar3d(m);
             setTimeout(() => m.mapa.invalidateSize(), 50);
         },
 
@@ -189,6 +345,10 @@ window.cuidPanel = (function () {
             if (est) est.addLatLng([lat, lng]);
             deslizar(mk, [lat, lng], 900, ll => actualizarRuta(m, cuidadorId, ll));
             if (m.siguiendo === cuidadorId) m.mapa.panTo([lat, lng], { animate: true, duration: 0.9 });
+            if (m.gl) {
+                m.gl3d?.["c" + cuidadorId]?.setLngLat([lng, lat]);
+                if (m.siguiendo === cuidadorId) m.gl.easeTo({ center: [lng, lat], duration: 900 });
+            }
         },
 
         capas(id, visibles) {
@@ -196,6 +356,7 @@ window.cuidPanel = (function () {
             if (!m) return;
             Object.assign(m.visibles, visibles);
             aplicarVisibilidad(m);
+            sincronizar3d(m);
         },
 
         estelas(id, puntos) {
@@ -367,6 +528,7 @@ window.cuidPanel = (function () {
             const m = mapas[id];
             if (!m) return;
             this.detenerReproduccion(id);
+            if (m.gl) { m.gl.remove(); m.gl = null; }
             m.mapa.remove();
             delete mapas[id];
         },

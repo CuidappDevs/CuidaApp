@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CuidaApp en movimiento</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--p:#1C4D96;--pl:#4C94D8;--pd:#0F4761;--soft:#EAF1FB;--ok:#2E7D32;--warn:#E8A33D;--bad:#C62828;--ink:#0E1B2E;--mut:#5B6B80;--bg:#F4F7FC}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#050B16;overflow:hidden;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+#wrap{position:fixed;inset:0;display:grid;place-items:center}
+#stage{width:1920px;height:1080px;position:absolute;left:50%;top:50%;overflow:hidden;transform-origin:center;
+  background:radial-gradient(1200px 800px at 75% 30%,#24589f 0%,#0F2D5C 45%,#081A36 100%)}
+.blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.35;animation:float 14s ease-in-out infinite alternate}
+@keyframes float{to{transform:translate(80px,-60px) scale(1.15)}}
+.scene{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .5s ease-out}
+.scene.on{opacity:1}
+/* text side */
+.copy{position:absolute;left:150px;top:50%;transform:translateY(-50%);width:820px;color:#fff}
+.kicker{font-size:26px;letter-spacing:.2em;text-transform:uppercase;color:#9CC4F2;font-weight:600}
+.copy h2{font-size:92px;line-height:1.02;font-weight:800;margin:22px 0 28px;letter-spacing:-.02em}
+.copy p{font-size:34px;line-height:1.4;color:#C9D9EE;max-width:760px}
+.chips{display:flex;gap:14px;flex-wrap:wrap;margin-top:36px}
+.chip{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:12px 22px;border-radius:999px;font-size:24px;color:#fff}
+.on .rise{animation:rise .7s cubic-bezier(.2,.8,.2,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+.d1{animation-delay:.15s!important}.d2{animation-delay:.3s!important}.d3{animation-delay:.45s!important}.d4{animation-delay:.6s!important}.d5{animation-delay:.75s!important}
+/* phone */
+.phone{position:absolute;right:230px;top:50%;width:440px;height:900px;margin-top:-450px;border-radius:64px;background:#0b0f17;padding:16px;
+  box-shadow:0 60px 120px rgba(0,0,0,.5),inset 0 0 0 2px #2a3242}
+.on .phone{animation:phoneIn .9s cubic-bezier(.2,.8,.2,1) both}
+@keyframes phoneIn{from{opacity:0;transform:translateY(80px) rotate(4deg)}to{opacity:1;transform:none}}
+.screen{position:relative;width:100%;height:100%;border-radius:50px;overflow:hidden;background:var(--bg)}
+.notch{position:absolute;top:14px;left:50%;width:120px;height:32px;margin-left:-60px;background:#0b0f17;border-radius:20px;z-index:9}
+.hdr{background:var(--p);color:#fff;padding:70px 28px 26px}
+.hdr small{opacity:.75;font-size:18px}.hdr b{display:block;font-size:30px;margin-top:4px}
+.body{padding:22px}
+.card{background:#fff;border-radius:22px;padding:18px;box-shadow:0 6px 18px rgba(14,27,46,.08);margin-bottom:14px;font-size:19px;color:var(--ink)}
+.row{display:flex;align-items:center;gap:14px}
+.av{width:56px;height:56px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-weight:800;font-size:22px}
+.mut{color:var(--mut);font-size:16px}
+.btn{background:var(--p);color:#fff;border-radius:16px;padding:18px;text-align:center;font-weight:800;font-size:20px}
+.pop{opacity:0}
+.on .pop{animation:pop .5s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes pop{from{opacity:0;transform:scale(.8) translateY(20px)}to{opacity:1;transform:none}}
+/* map */
+.map{position:absolute;inset:0;background:
+  linear-gradient(90deg,transparent 48%,#fff 48%,#fff 52%,transparent 52%) 0 0/160px 160px,
+  linear-gradient(0deg,transparent 48%,#fff 48%,#fff 52%,transparent 52%) 0 0/160px 160px,#DDE8F3}
+.map.dark{filter:none}
+.pin{position:absolute;width:44px;height:44px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--p);box-shadow:0 6px 12px rgba(0,0,0,.25)}
+.pin::after{content:"";position:absolute;inset:12px;border-radius:50%;background:#fff}
+.me{position:absolute;width:26px;height:26px;border-radius:50%;background:var(--pl);border:4px solid #fff;box-shadow:0 0 0 0 rgba(76,148,216,.6)}
+.on .me{animation:pulse 1.6s infinite}
+@keyframes pulse{to{box-shadow:0 0 0 40px rgba(76,148,216,0)}}
+.radar{position:absolute;border:3px solid var(--pl);border-radius:50%;opacity:0}
+.on .radar{animation:radar 2.4s ease-out infinite}
+@keyframes radar{from{opacity:.8;transform:scale(.2)}to{opacity:0;transform:scale(1)}}
+.sheet{position:absolute;left:12px;right:12px;bottom:12px;background:#fff;border-radius:28px;padding:20px;box-shadow:0 -8px 30px rgba(0,0,0,.15)}
+.on .sheet{animation:up .7s 1.6s cubic-bezier(.2,.8,.2,1) both}
+@keyframes up{from{transform:translateY(120%)}to{transform:none}}
+/* tracking */
+.route{position:absolute;inset:0}
+.route path{fill:none;stroke:var(--p);stroke-width:8;stroke-linecap:round;stroke-dasharray:1200;stroke-dashoffset:1200}
+.on .route path{animation:draw 4s 0.6s ease-in-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.car{position:absolute;offset-path:path("M60 700 C 120 520, 300 560, 260 400 S 140 220, 300 140");offset-distance:0%;width:46px;height:46px;border-radius:50%;background:var(--ok);border:5px solid #fff;box-shadow:0 6px 14px rgba(0,0,0,.3)}
+.on .car{animation:drive 4s .6s ease-in-out forwards}
+@keyframes drive{to{offset-distance:100%}}
+.fence{position:absolute;left:220px;top:80px;width:170px;height:170px;border-radius:50%;background:rgba(46,125,50,.15);border:3px dashed var(--ok)}
+.toast{position:absolute;left:16px;right:16px;top:60px;background:#fff;border-radius:20px;padding:16px 18px;box-shadow:0 12px 30px rgba(0,0,0,.2);font-size:18px;color:var(--ink);z-index:5;opacity:0}
+.on .toast{animation:toast 5s both}
+@keyframes toast{0%{opacity:0;transform:translateY(-40px)}10%,85%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-40px)}}
+/* chat */
+.msgs{display:flex;flex-direction:column;gap:12px;padding:20px}
+.b{max-width:76%;padding:14px 18px;border-radius:22px;font-size:19px;opacity:0}
+.b.in{background:#fff;color:var(--ink);border-bottom-left-radius:6px;align-self:flex-start;box-shadow:0 3px 8px rgba(0,0,0,.06)}
+.b.out{background:var(--p);color:#fff;border-bottom-right-radius:6px;align-self:flex-end}
+.on .b{animation:pop .45s cubic-bezier(.2,1.4,.4,1) both}
+.wave{display:flex;gap:4px;align-items:center;height:30px}
+.wave i{width:5px;background:#fff;border-radius:3px;height:30%}
+.on .wave i{animation:wv 1s ease-in-out infinite alternate}
+@keyframes wv{to{height:100%}}
+.dots span{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--mut);margin:0 3px}
+.on .dots span{animation:bl 1s infinite}
+.dots span:nth-child(2){animation-delay:.15s!important}.dots span:nth-child(3){animation-delay:.3s!important}
+@keyframes bl{50%{opacity:.2;transform:translateY(-5px)}}
+/* earnings bars */
+.bars{display:flex;align-items:flex-end;gap:12px;height:170px;padding-top:10px}
+.bars i{flex:1;background:linear-gradient(var(--pl),var(--p));border-radius:8px 8px 4px 4px;height:0}
+.on .bars i{animation:grow .9s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes grow{to{height:var(--h)}}
+.toggle{width:70px;height:40px;border-radius:20px;background:#ccd5e1;position:relative;flex:none}
+.toggle::after{content:"";position:absolute;top:4px;left:4px;width:32px;height:32px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+.on .toggle{animation:tgbg .4s 1.8s forwards}.on .toggle::after{animation:tg .4s 1.8s forwards}
+@keyframes tgbg{to{background:var(--ok)}}@keyframes tg{to{left:34px}}
+/* checkin */
+.check{position:absolute;inset:0;background:linear-gradient(160deg,var(--p),var(--pd));color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px;gap:22px}
+.heart{width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.15);display:grid;place-items:center;font-size:76px}
+.on .heart{animation:beat 1.1s ease-in-out infinite}
+@keyframes beat{50%{transform:scale(1.1)}}
+.sos{background:var(--bad);color:#fff;border-radius:18px;padding:18px;width:100%;font-weight:800;font-size:22px}
+/* stars */
+.stars{font-size:52px;letter-spacing:6px;color:#d6dde8}
+.stars span{display:inline-block}
+.on .stars span{animation:star .4s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes star{to{color:#F5B301;transform:scale(1.15)}}
+.lang{display:inline-block;padding:10px 18px;border-radius:14px;background:var(--soft);color:var(--p);font-weight:800;font-size:20px;margin-right:8px}
+.themeflip{position:absolute;inset:0;background:#0E1626}
+.themeflip{clip-path:circle(0% at 85% 8%)}
+.on .themeflip{animation:flip 1.2s 3.2s cubic-bezier(.6,0,.2,1) forwards}
+@keyframes flip{to{clip-path:circle(150% at 85% 8%)}}
+/* intro */
+.center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center}
+.logo{width:200px;height:200px;border-radius:56px;background:linear-gradient(140deg,var(--pl),var(--p));display:grid;place-items:center;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.on .logo{animation:logo 1.1s cubic-bezier(.2,1.3,.3,1) both}
+@keyframes logo{from{transform:scale(0) rotate(-30deg)}to{transform:none}}
+.center h1{font-size:140px;font-weight:800;letter-spacing:-.03em;margin-top:40px}
+.center p{font-size:40px;color:#C9D9EE;margin-top:10px}
+/* chrome */
+#bar{position:absolute;left:0;bottom:0;height:8px;background:var(--pl);width:0}
+#ctl{position:fixed;right:16px;bottom:16px;display:flex;gap:8px;z-index:20}
+#ctl button{font:600 14px 'Plus Jakarta Sans',sans-serif;background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:8px 14px;cursor:pointer}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important}}
+</style>
+</head>
+<body>
+<div id="wrap"><div id="stage">
+  <div class="blob" style="width:600px;height:600px;background:#4C94D8;left:-150px;top:-150px"></div>
+  <div class="blob" style="width:500px;height:500px;background:#2E7D32;right:-100px;bottom:-200px;animation-delay:-5s"></div>
+
+  <!-- 1 Intro -->
+  <section class="scene" data-dur="4500">
+    <div class="center">
+      <div class="logo"><svg width="110" height="110" viewBox="0 0 24 24" fill="#fff"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2 0 3.6 1.1 4.3 2.6h2c.7-1.5 2.3-2.6 4.3-2.6 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg></div>
+      <h1 class="rise d2">CuidaApp</h1>
+      <p class="rise d3">Cuidado de confianza, a un toque de distancia</p>
+    </div>
+  </section>
+
+  <!-- 2 Buscar -->
+  <section class="scene" data-dur="7000">
+    <div class="copy"><div class="kicker rise">01 · Buscar</div><h2 class="rise d1">Encuentra Care Partners cerca de ti</h2>
+      <p class="rise d2">Búsqueda por GPS, filtrada por especialidad, con disponibilidad en tiempo real.</p>
+      <div class="chips rise d3"><span class="chip">📍 Ubicaciones guardadas</span><span class="chip">🩺 Especialidades</span><span class="chip">⭐ Calificaciones</span></div></div>
+    <div class="phone"><div class="screen"><div class="notch"></div>
+      <div class="map"></div>
+      <div class="radar" style="left:70px;top:200px;width:270px;height:270px"></div>
+      <div class="radar" style="left:70px;top:200px;width:270px;height:270px;animation-delay:1.2s"></div>
+      <div class="me" style="left:192px;top:322px"></div>
+      <div class="pin pop d2" style="left:90px;top:230px"></div>
+      <div class="pin pop d3" style="left:290px;top:260px;background:var(--ok)"></div>
+      <div class="pin pop d4" style="left:150px;top:420px"></div>
+      <div class="pin pop d5" style="left:300px;top:450px;background:var(--pl)"></div>
+      <div class="sheet"><div class="row"><div class="av" style="background:var(--ok)">MR</div><div style="flex:1"><b style="font-size:21px">María R.</b><div class="mut">Adulto mayor · 0.8 km</div></div><div style="color:#F5B301;font-weight:800;font-size:20px">★ 4.9</div></div>
+        <div class="btn" style="margin-top:16px">Solicitar servicio</div></div>
+    </div></div>
+  </section>
+
+  <!-- 3 Solicitar -->
+  <section class="scene" data-dur="7000">
+    <div class="copy"><div class="kicker rise">02 · Solicitar</div><h2 class="rise d1">Agenda en segundos</h2>
+      <p class="rise d2">Elige fecha, horas y punto en el mapa. El Care Partner recibe la solicitud al instante y responde.</p>
+      <div class="chips rise d3"><span class="chip">🗓️ Fecha y horario</span><span class="chip">🔔 Notificación instantánea</span><span class="chip">💳 Método de pago</span></div></div>
+    <div class="phone"><div class="screen"><div class="notch"></div>
+      <div class="hdr"><small>Nuevo servicio</small><b>Solicitar cuidado</b></div>
+      <div class="body">
+        <div class="card pop d1"><div class="mut">Servicio</div><b>Cuidado de adulto mayor</b></div>
+        <div class="card pop d2"><div class="mut">Fecha</div><b>Sáb 12 oct · 9:00 – 13:00</b></div>
+        <div class="card pop d3"><div class="mut">Ubicación</div><b>📍 Casa · Piantini</b></div>
+        <div class="card pop d4"><div class="mut">Total estimado</div><b style="font-size:28px;color:var(--p)">RD$ 2,400</b></div>
+        <div class="btn pop d5">Confirmar solicitud</div>
+      </div>
+      <div class="toast" style="animation-delay:2.6s!important"><div class="row"><div class="av" style="background:var(--ok);width:44px;height:44px;font-size:20px">✓</div><div><b>¡Solicitud aceptada!</b><div class="mut">María va en camino</div></div></div></div>
+    </div></div>
+  </section>
+
+  <!-- 4 Seguimiento -->
+  <section class="scene" data-dur="7500">
+    <div class="copy"><div class="kicker rise">03 · En servicio</div><h2 class="rise d1">Sigue cada paso en vivo</h2>
+      <p class="rise d2">Ubicación en tiempo real, geocerca de llegada, inicio con PIN y actividades registradas durante el servicio.</p>
+      <div class="chips rise d3"><span class="chip">🛰️ GPS en vivo</span><span class="chip">🔐 PIN de inicio</span><span class="chip">📝 Actividades</span><span class="chip">⏰ Recordatorios</span></div></div>
+    <div class="phone"><div class="screen"><div class="notch"></div>
+      <div class="map"></div>
+      <div class="fence"></div>
+      <svg class="route" viewBox="0 0 408 868"><path d="M60 700 C 120 520, 300 560, 260 400 S 140 220, 300 140"/></svg>
+      <div class="car" style="margin:-23px 0 0 -23px"></div>
+      <div class="toast" style="animation-delay:4.4s!important"><div class="row"><div class="av" style="background:var(--p);width:44px;height:44px;font-size:18px">🔐</div><div><b>María llegó · PIN 4821</b><div class="mut">Compártelo para iniciar</div></div></div></div>
+    </div></div>
+  </section>
+
+  <!-- 5 Chat -->
+  <section class="scene" data-dur="7000">
+    <div class="copy"><div class="kicker rise">04 · Chat</div><h2 class="rise d1">Comunicación directa</h2>
+      <p class="rise d2">Mensajes de texto, fotos y notas de voz, con indicador de “escribiendo…” y notificaciones con sonido propio.</p>
+      <div class="chips rise d3"><span class="chip">💬 Texto</span><span class="chip">📷 Imágenes</span><span class="chip">🎙️ Audio</span></div></div>
+    <div class="phone"><div class="screen"><div class="notch"></div>
+      <div class="hdr" style="padding-bottom:20px"><div class="row"><div class="av" style="background:var(--ok)">MR</div><div><b style="margin:0;font-size:24px">María R.</b><small>En línea</small></div></div></div>
+      <div class="msgs">
+        <div class="b in" style="animation-delay:.4s">¡Hola! Ya estoy con su mamá 😊</div>
+        <div class="b in" style="animation-delay:1.1s;padding:8px"><div style="width:220px;height:140px;border-radius:16px;background:linear-gradient(135deg,#9CC4F2,#2E7D32)"></div></div>
+        <div class="b out" style="animation-delay:1.9s">¡Gracias! ¿Ya almorzó?</div>
+        <div class="b in" style="animation-delay:2.7s"><div class="row"><span>▶</span><div class="wave" style="filter:invert(1)"><i></i><i style="animation-delay:.1s"></i><i style="animation-delay:.2s"></i><i style="animation-delay:.3s"></i><i style="animation-delay:.15s"></i><i style="animation-delay:.05s"></i><i style="animation-delay:.25s"></i></div><span class="mut">0:12</span></div></div>
+        <div class="b out" style="animation-delay:3.5s">Perfecto 🙌</div>
+        <div class="b in dots" style="animation-delay:4.2s"><span></span><span></span><span></span></div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- 6 Cuidador -->
+  <section class="scene" data-dur="7500">
+    <div class="copy"><div class="kicker rise">05 · Para Care Partners</div><h2 class="rise d1">Tu trabajo, a tu ritmo</h2>
+      <p class="rise d2">Horario automático de visibilidad, solicitudes en tiempo real, documentos verificados y control de tus ganancias.</p>
+      <div class="chips rise d3"><span class="chip">🕘 Horario automático</span><span class="chip">💰 Ganancias</span><span class="chip">📄 Documentos</span></div></div>
+    <div class="phone"><div class="screen"><div class="notch"></div>
+      <div class="hdr"><small>Hola, María</small><b>Panel de Care Partner</b></div>
+      <div class="body">
+        <div class="card pop d1 row"><div style="flex:1"><b>Disponible</b><div class="mut">Horario: Lun–Vie 8:00–17:00</div></div><div class="toggle"></div></div>
+        <div class="card pop d2"><div class="mut">Ganancias esta semana</div><b style="font-size:34px;color:var(--ok)">RD$ 14,750</b>
+          <div class="bars"><i style="--h:40%"></i><i style="--h:65%;animation-delay:.1s"></i><i style="--h:50%;animation-delay:.2s"></i><i style="--h:85%;animation-delay:.3s"></i><i style="--h:70%;animation-delay:.4s"></i><i style="--h:95%;animation-delay:.5s"></i><i style="--h:30%;animation-delay:.6s"></i></div></div>
+        <div class="card pop d4 row"><div class="av" style="background:var(--warn)">!</div><div><b>Nueva solicitud</b><div class="mut">Cuidado infantil · 1.2 km</div></div></div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- 7 Seguridad -->
+  <section class="scene" data-dur="6500">
+    <div class="copy"><div class="kicker rise">06 · Seguridad</div><h2 class="rise d1">Nadie está solo</h2>
+      <p class="rise d2">Check-in “¿Estás bien?” desde el centro de mando, botón SOS, verificación de identidad y soporte con tickets.</p>
+      <div class="chips rise d3"><span class="chip">🆘 SOS</span><span class="chip">✅ Verificación</span><span class="chip">🎧 Soporte</span></div></div>
+    <div class="phone"><div class="screen"><div class="notch"></div>
+      <div class="check">
+        <div class="heart">💙</div>
+        <h3 style="font-size:40px" class="rise d1">¿Estás bien?</h3>
+        <p style="font-size:20px;opacity:.85" class="rise d2">El equipo de CuidaApp quiere confirmar que todo va bien.</p>
+        <div class="btn pop d3" style="background:#fff;color:var(--p);width:100%">Sí, estoy bien</div>
+        <div class="sos pop d4">Necesito ayuda</div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- 8 Calificar + idiomas -->
+  <section class="scene" data-dur="7500">
+    <div class="copy"><div class="kicker rise">07 · Experiencia</div><h2 class="rise d1">Hecha para todos</h2>
+      <p class="rise d2">Califica cada servicio, usa la app en español, inglés o creol haitiano, y elige modo claro u oscuro.</p>
+      <div class="chips rise d3"><span class="chip">⭐ Calificaciones</span><span class="chip">🌐 ES · EN · HT</span><span class="chip">🌙 Modo oscuro</span></div></div>
+    <div class="phone"><div class="screen"><div class="notch"></div>
+      <div class="hdr"><small>Servicio completado</small><b>¿Cómo te fue?</b></div>
+      <div class="body" style="text-align:center">
+        <div class="card pop d1"><div class="av" style="background:var(--ok);margin:6px auto 12px;width:80px;height:80px;font-size:30px">MR</div><b>María R.</b>
+          <div class="stars" style="margin:14px 0"><span style="animation-delay:.9s">★</span><span style="animation-delay:1.05s">★</span><span style="animation-delay:1.2s">★</span><span style="animation-delay:1.35s">★</span><span style="animation-delay:1.5s">★</span></div></div>
+        <div class="card pop d3"><div class="mut" style="margin-bottom:10px">Idioma</div><span class="lang">ES</span><span class="lang">EN</span><span class="lang">HT</span></div>
+      </div>
+      <div class="themeflip"><div class="hdr" style="background:#13284a"><small>Servicio completado</small><b>How did it go?</b></div>
+        <div class="body" style="text-align:center"><div class="card" style="background:#1A2438;color:#E6EDF7"><div class="av" style="background:var(--ok);margin:6px auto 12px;width:80px;height:80px;font-size:30px">MR</div><b>María R.</b><div class="stars" style="margin:14px 0;color:#F5B301">★★★★★</div></div>
+        <div class="card" style="background:#1A2438;color:#E6EDF7"><div style="opacity:.6;margin-bottom:10px">Language</div><span class="lang" style="background:#24365a;color:#9CC4F2">ES</span><span class="lang" style="background:var(--pl);color:#fff">EN</span><span class="lang" style="background:#24365a;color:#9CC4F2">HT</span></div></div></div>
+    </div></div>
+  </section>
+
+  <!-- 9 Outro -->
+  <section class="scene" data-dur="5000">
+    <div class="center">
+      <div class="logo"><svg width="110" height="110" viewBox="0 0 24 24" fill="#fff"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2 0 3.6 1.1 4.3 2.6h2c.7-1.5 2.3-2.6 4.3-2.6 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg></div>
+      <h1 class="rise d2">CuidaApp</h1>
+      <p class="rise d3">Buscar · Solicitar · Seguir · Conversar · Cuidar</p>
+    </div>
+  </section>
+
+  <div id="bar"></div>
+</div></div>
+<div id="ctl"><button id="pp">Pausa</button><button id="rs">Reiniciar</button></div>
+<script>
+const stage=document.getElementById('stage'),scenes=[...document.querySelectorAll('.scene')],bar=document.getElementById('bar');
+function fit(){const s=Math.min(innerWidth/1920,innerHeight/1080);stage.style.transform='translate(-50%,-50%) scale('+s+')'}
+addEventListener('resize',fit);fit();
+const durs=scenes.map(s=>+s.dataset.dur),total=durs.reduce((a,b)=>a+b,0);
+let i=-1,t0=0,elapsed=0,paused=false,timer;
+function show(n){scenes.forEach(s=>s.classList.remove('on'));void stage.offsetWidth;scenes[n].classList.add('on');
+  scenes.forEach(s=>s.querySelectorAll('*').forEach(e=>e.style.animationPlayState=''));}
+function next(){i=(i+1)%scenes.length;if(i===0)elapsed=0;show(i);t0=performance.now();timer=setTimeout(()=>{elapsed+=durs[i];next()},durs[i])}
+function tick(){if(!paused){const p=(elapsed+Math.min(performance.now()-t0,durs[i]||0))/total;bar.style.width=(p*100)+'%'}requestAnimationFrame(tick)}
+document.getElementById('rs').onclick=()=>{clearTimeout(timer);i=-1;elapsed=0;paused=false;stage.classList.remove('paused');document.getElementById('pp').textContent='Pausa';next()};
+let left=0;document.getElementById('pp').onclick=e=>{paused=!paused;e.target.textContent=paused?'Reproducir':'Pausa';
+  document.querySelectorAll('#stage *').forEach(el=>el.style.animationPlayState=paused?'paused':'running');
+  if(paused){clearTimeout(timer);left=durs[i]-(performance.now()-t0)}else{t0=performance.now()-(durs[i]-left);timer=setTimeout(()=>{elapsed+=durs[i];next()},left)}};
+// Frame-by-frame rendering (used to export the MP4): window.__render(ms) shows the exact frame at that time
+window.__total=total;
+window.__render=ms=>{let s=0,n=0;while(n<scenes.length-1&&ms>=s+durs[n]){s+=durs[n];n++}
+  const local=ms-s;scenes.forEach((sc,k)=>{sc.classList.toggle('on',k===n);sc.style.transition='none';sc.style.opacity=k===n?Math.min(1,local/500):0});
+  document.getAnimations().forEach(a=>{a.pause();const el=a.effect&&a.effect.target;a.currentTime=el&&el.closest&&el.closest('.scene')?local:ms});
+  bar.style.width=(ms/total*100)+'%'};
+if(!window.__noAutoplay){next();tick();}
+</script>
+</body>
+</html>

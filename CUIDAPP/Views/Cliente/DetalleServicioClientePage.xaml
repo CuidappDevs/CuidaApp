@@ -175,6 +175,18 @@
                                     <Label Grid.Column="1" Text="{loc:T pago_total}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
                                     <Label x:Name="LblPago" Grid.Column="2" Text="" FontSize="22" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" VerticalOptions="Center"/>
                                 </Grid>
+<Border x:Name="ChipMetodoPago" Margin="0,-6,0,0" IsVisible="False" Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 12" Padding="10,5" HorizontalOptions="End">
+                                    <HorizontalStackLayout Spacing="6">
+                                        <Path x:Name="IconoMetodoPago" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="14" HeightRequest="14" VerticalOptions="Center"/>
+                                        <Label x:Name="LblMetodoPago" Text="" FontSize="12" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" VerticalOptions="Center"/>
+                                    </HorizontalStackLayout>
+                                </Border>
+                                <Border x:Name="CajaInstruccionesPago" IsVisible="False" Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 14" Padding="14,10" Margin="56,0,0,0">
+                                    <VerticalStackLayout Spacing="4">
+                                        <Label Text="{loc:T como_pagar_transferencia}" FontSize="12" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}"/>
+                                        <Label x:Name="LblInstruccionesPago" Text="" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextStrong}"/>
+                                    </VerticalStackLayout>
+                                </Border>
                             </VerticalStackLayout>
                         </Border>
 

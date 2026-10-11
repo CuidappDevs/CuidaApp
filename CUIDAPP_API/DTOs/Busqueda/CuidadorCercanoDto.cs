@@ -11,5 +11,7 @@ namespace CUIDAPP_API.DTOs.Busqueda
         public decimal Latitud { get; set; }
         public decimal Longitud { get; set; }
         public double DistanciaKm { get; set; }
+        /// <summary>False si su deuda de comisiones en efectivo llegó al tope: por ahora solo transferencia.</summary>
+        public bool PuedeAceptarEfectivo { get; set; } = true;
     }
 }

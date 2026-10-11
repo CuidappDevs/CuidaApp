@@ -21,6 +21,8 @@ namespace CUIDAPP.Views.Chat
         private int miUsuarioId;
         private int conversacionId;
         private bool grabando;
+        private bool enviarPinAlAbrir;
+        private bool enviando;
         private readonly HashSet<long> idsRenderizados = new();
 
         // Reproductores retenidos aquí a propósito: si no se guarda una referencia,
@@ -33,6 +35,8 @@ namespace CUIDAPP.Views.Chat
         {
             if (query.TryGetValue("TrabajoId", out var t) && t is int id)
                 trabajoId = id;
+
+            enviarPinAlAbrir = query.TryGetValue("EnviarPin", out var ep) && ep is true;
 
             if (query.TryGetValue("OtroNombre", out var nombre) && nombre is string n)
                 LblOtroNombre.Text = n;
@@ -74,6 +78,101 @@ namespace CUIDAPP.Views.Chat
                 AgregarMensajeSiNuevo(mensaje);
 
             await _apiService.MarcarMensajesLeidosAsync(conversacionId, miUsuarioId);
+
+            await PrepararMensajesRapidosAsync();
+        }
+
+        // ================= Mensajes rápidos y PIN automático =================
+
+        private string? pinInicio;
+
+        private async Task PrepararMensajesRapidosAsync()
+        {
+            var esCuidador = Preferences.Default.Get("RolId", 0) == 3;
+            var rapidos = new List<string>();
+            try
+            {
+                if (esCuidador)
+                {
+                    rapidos.Add(Localizador.T("rapido_cuidador_llegue"));
+                    rapidos.Add(Localizador.T("rapido_cuidador_en_camino"));
+                    rapidos.Add(Localizador.T("rapido_cuidador_pide_pin"));
+                    rapidos.Add(Localizador.T("rapido_cuidador_termine"));
+                    rapidos.Add(Localizador.T("rapido_llamame"));
+                }
+                else
+                {
+                    var t = await _apiService.ObtenerTrabajoClientePorIdAsync(trabajoId);
+                    if (t != null && t.Estado == 2 && !string.IsNullOrWhiteSpace(t.PinInicio))
+                    {
+                        pinInicio = t.PinInicio.Trim();
+                        rapidos.Add(Localizador.F("rapido_cliente_pin", pinInicio));
+                    }
+                    rapidos.Add(Localizador.T("rapido_cliente_abro"));
+                    rapidos.Add(Localizador.T("rapido_cliente_cuanto_falta"));
+                    rapidos.Add(Localizador.T("rapido_cliente_gracias"));
+                    rapidos.Add(Localizador.T("rapido_llamame"));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Chat] No se pudieron preparar los mensajes rápidos: {ex.Message}");
+            }
+
+            ListaRapidos.Clear();
+            foreach (var texto in rapidos)
+                ListaRapidos.Add(CrearChipRapido(texto));
+            ScrollRapidos.IsVisible = rapidos.Count > 0;
+
+            // Vino del aviso de llegada: le envía el PIN al cuidador una sola vez por servicio.
+            if (enviarPinAlAbrir && !esCuidador && pinInicio != null)
+            {
+                enviarPinAlAbrir = false;
+                var clave = $"pin_enviado_{trabajoId}";
+                if (!Preferences.Default.Get(clave, false))
+                {
+                    Preferences.Default.Set(clave, true);
+                    await EnviarTextoAsync(Localizador.F("rapido_cliente_pin", pinInicio));
+                }
+            }
+        }
+
+        private View CrearChipRapido(string texto)
+        {
+            var chip = new Border
+            {
+                Stroke = (Color)Application.Current!.Resources["ColorBorder"],
+                StrokeThickness = 1,
+                BackgroundColor = Tema.C("ColorBackground"),
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 },
+                Padding = new Thickness(12, 7),
+                Content = new Label { Text = texto, FontSize = 13, FontFamily = "OpenSansSemibold", TextColor = (Color)Application.Current!.Resources["ColorTextStrong"], MaxLines = 1 }
+            };
+            var toque = new TapGestureRecognizer();
+            toque.Tapped += async (_, _) =>
+            {
+                _ = chip.ScaleTo(0.94, 70, Easing.CubicOut).ContinueWith(_ => MainThread.BeginInvokeOnMainThread(() => chip.ScaleTo(1, 140, Easing.CubicOut)));
+                await EnviarTextoAsync(texto);
+            };
+            chip.GestureRecognizers.Add(toque);
+            return chip;
+        }
+
+        private async Task EnviarTextoAsync(string texto)
+        {
+            if (string.IsNullOrWhiteSpace(texto) || conversacionId == 0 || enviando)
+                return;
+            enviando = true;
+            try
+            {
+                var mensaje = await _apiService.EnviarMensajeAsync(conversacionId, miUsuarioId, texto);
+                if (mensaje != null)
+                    AgregarMensajeSiNuevo(mensaje);
+            }
+            finally
+            {
+                enviando = false;
+            }
         }
 
         protected override void OnDisappearing()
@@ -365,16 +464,19 @@ namespace CUIDAPP.Views.Chat
         {
             _ = BtnEnviarCirculo.ScaleTo(0.88, 80, Easing.CubicOut).ContinueWith(_ =>
                 MainThread.BeginInvokeOnMainThread(() => BtnEnviarCirculo.ScaleTo(1, 160, Easing.CubicOut)));
+            if (grabando)
+            {
+                await DetenerYEnviarAudioAsync();
+                return;
+            }
+
             var texto = EntryMensaje.Text?.Trim();
             if (string.IsNullOrWhiteSpace(texto) || conversacionId == 0)
                 return;
 
             EntryMensaje.Text = "";
             DejarDeAvisarEscribiendo();
-
-            var mensaje = await _apiService.EnviarMensajeAsync(conversacionId, miUsuarioId, texto);
-            if (mensaje != null)
-                AgregarMensajeSiNuevo(mensaje);
+            await EnviarTextoAsync(texto);
         }
 
         private async void OnAdjuntarImagenTapped(object sender, EventArgs e)
@@ -384,7 +486,28 @@ namespace CUIDAPP.Views.Chat
 
             try
             {
-                var foto = await MediaPicker.Default.PickPhotoAsync();
+                var tomar = Localizador.T("tomar_foto");
+                var galeria = Localizador.T("elegir_de_galeria");
+                var opcion = await DisplayActionSheet(Localizador.T("enviar_foto"), Localizador.T("cancelar"), null, tomar, galeria);
+                FileResult? foto = null;
+                if (opcion == tomar)
+                {
+                    if (!MediaPicker.Default.IsCaptureSupported)
+                    {
+                        await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("camara_no_disponible"), Localizador.T("ok"));
+                        return;
+                    }
+                    if (await Permissions.RequestAsync<Permissions.Camera>() != PermissionStatus.Granted)
+                    {
+                        await Alerta.MostrarAsync(Localizador.T("permiso_necesario"), Localizador.T("necesitamos_la_camara"), Localizador.T("ok"));
+                        return;
+                    }
+                    foto = await MediaPicker.Default.CapturePhotoAsync();
+                }
+                else if (opcion == galeria)
+                {
+                    foto = await MediaPicker.Default.PickPhotoAsync();
+                }
                 if (foto == null)
                     return;
 
@@ -407,65 +530,89 @@ namespace CUIDAPP.Views.Chat
 
         private async void OnMicrofonoTapped(object sender, EventArgs e)
         {
-            if (conversacionId == 0)
+            if (conversacionId == 0 || grabando)
                 return;
 
+            var permiso = await Permissions.RequestAsync<Permissions.Microphone>();
+            if (permiso != PermissionStatus.Granted)
+            {
+                await Alerta.MostrarAsync(Localizador.T("permiso_necesario"), Localizador.T("necesitamos_acceso_al_microfono_para"), Localizador.T("ok"));
+                return;
+            }
+
+            _grabador = _audioManager.CreateRecorder();
+            _rutaGrabacionActual = Path.Combine(FileSystem.CacheDirectory, $"nota_{Guid.NewGuid():N}.wav");
+            await _grabador.StartAsync(_rutaGrabacionActual);
+            _cronometroGrabacion = System.Diagnostics.Stopwatch.StartNew();
+
+            grabando = true;
+            ContenedorEntry.IsVisible = false;
+            LblGrabando.IsVisible = true;
+            ActualizarTiempoGrabacion();
+            new Animation(t => PuntoGrabando.Opacity = 0.3 + 0.7 * Math.Abs(Math.Cos(t * Math.PI)), 0, 1)
+                .Commit(this, "PuntoGrabando", length: 1000, easing: Easing.Linear, repeat: () => LblGrabando.IsVisible);
+            // Cronómetro visible mientras graba.
+            Dispatcher.StartTimer(TimeSpan.FromSeconds(1), () =>
+            {
+                if (!grabando) return false;
+                ActualizarTiempoGrabacion();
+                return true;
+            });
+        }
+
+        private void ActualizarTiempoGrabacion()
+        {
+            var t = _cronometroGrabacion?.Elapsed ?? TimeSpan.Zero;
+            LblGrabando.Text = Localizador.F("grabando_toca_enviar", $"{(int)t.TotalMinutes}:{t.Seconds:00}");
+        }
+
+        private void RestaurarBarraEscritura()
+        {
+            grabando = false;
+            ContenedorEntry.IsVisible = true;
+            LblGrabando.IsVisible = false;
+            this.AbortAnimation("PuntoGrabando");
+        }
+
+        private async void OnCancelarGrabacionTapped(object sender, EventArgs e)
+        {
             if (!grabando)
+                return;
+            RestaurarBarraEscritura();
+            try { if (_grabador != null) await _grabador.StopAsync(); } catch { }
+            try { if (_rutaGrabacionActual != null && File.Exists(_rutaGrabacionActual)) File.Delete(_rutaGrabacionActual); } catch { }
+            _cronometroGrabacion = null;
+        }
+
+        private async Task DetenerYEnviarAudioAsync()
+        {
+            RestaurarBarraEscritura();
+            if (_grabador == null || _rutaGrabacionActual == null)
+                return;
+
+            await _grabador.StopAsync();
+
+            var duracionSegundos = _cronometroGrabacion != null
+                ? Math.Max(1, (int)Math.Ceiling(_cronometroGrabacion.Elapsed.TotalSeconds))
+                : (int?)null;
+            _cronometroGrabacion = null;
+
+            if (duracionSegundos < 1)
             {
-                var permiso = await Permissions.RequestAsync<Permissions.Microphone>();
-                if (permiso != PermissionStatus.Granted)
-                {
-                    await Alerta.MostrarAsync(Localizador.T("permiso_necesario"), Localizador.T("necesitamos_acceso_al_microfono_para"), Localizador.T("ok"));
-                    return;
-                }
-
-                _grabador = _audioManager.CreateRecorder();
-                _rutaGrabacionActual = Path.Combine(FileSystem.CacheDirectory, $"nota_{Guid.NewGuid():N}.wav");
-                await _grabador.StartAsync(_rutaGrabacionActual);
-                _cronometroGrabacion = System.Diagnostics.Stopwatch.StartNew();
-
-                grabando = true;
-                ContenedorEntry.IsVisible = false;
-                LblGrabando.IsVisible = true;
-                new Animation(t => PuntoGrabando.Opacity = 0.3 + 0.7 * Math.Abs(Math.Cos(t * Math.PI)), 0, 1)
-                    .Commit(this, "PuntoGrabando", length: 1000, easing: Easing.Linear, repeat: () => LblGrabando.IsVisible);
-                IconoMicrofono.Fill = (Color)Application.Current!.Resources["ColorDanger"];
+                await Alerta.MostrarAsync(Localizador.T("nota_muy_corta"), Localizador.T("manten_presionado_un_poco_mas"), Localizador.T("ok"));
+                return;
             }
-            else
+
+            var (url, error) = await _apiService.UploadFileConDiagnosticoAsync(_rutaGrabacionActual, $"chat/{miUsuarioId}");
+            if (url == null)
             {
-                grabando = false;
-                ContenedorEntry.IsVisible = true;
-                LblGrabando.IsVisible = false;
-                this.AbortAnimation("PuntoGrabando");
-                IconoMicrofono.Fill = (Color)Application.Current!.Resources["ColorPrimary"];
-
-                if (_grabador == null || _rutaGrabacionActual == null)
-                    return;
-
-                await _grabador.StopAsync();
-
-                var duracionSegundos = _cronometroGrabacion != null
-                    ? Math.Max(1, (int)Math.Ceiling(_cronometroGrabacion.Elapsed.TotalSeconds))
-                    : (int?)null;
-                _cronometroGrabacion = null;
-
-                if (duracionSegundos < 1)
-                {
-                    await Alerta.MostrarAsync(Localizador.T("nota_muy_corta"), Localizador.T("manten_presionado_un_poco_mas"), Localizador.T("ok"));
-                    return;
-                }
-
-                var (url, error) = await _apiService.UploadFileConDiagnosticoAsync(_rutaGrabacionActual, $"chat/{miUsuarioId}");
-                if (url == null)
-                {
-                    await Alerta.MostrarAsync(Localizador.T("no_se_pudo_subir_la_2"), error ?? Localizador.T("error_desconocido"), Localizador.T("ok"));
-                    return;
-                }
-
-                var mensaje = await _apiService.EnviarMensajeAsync(conversacionId, miUsuarioId, "🎤 Nota de voz", "audio", url, duracionSegundos);
-                if (mensaje != null)
-                    AgregarMensajeSiNuevo(mensaje);
+                await Alerta.MostrarAsync(Localizador.T("no_se_pudo_subir_la_2"), error ?? Localizador.T("error_desconocido"), Localizador.T("ok"));
+                return;
             }
+
+            var mensaje = await _apiService.EnviarMensajeAsync(conversacionId, miUsuarioId, "🎤 Nota de voz", "audio", url, duracionSegundos);
+            if (mensaje != null)
+                AgregarMensajeSiNuevo(mensaje);
         }
 
         private void OnMensajeFocused(object? sender, FocusEventArgs e)

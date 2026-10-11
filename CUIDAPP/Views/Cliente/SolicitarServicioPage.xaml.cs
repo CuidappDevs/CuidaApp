@@ -12,6 +12,8 @@ namespace CUIDAPP.Views.Cliente
         private CuidadorCercano? cuidador;
         private UbicacionCliente? ubicacionElegida;
         private readonly List<string> tareas = new();
+        private string metodoPago = "efectivo";
+        private string instruccionesTransferencia = "";
         private const int MaxTareas = 20;
 
         private void OnAgregarTareaClicked(object sender, EventArgs e)
@@ -197,6 +199,86 @@ namespace CUIDAPP.Views.Cliente
                 ImgFoto.Source = $"{ApiService.ServerOrigin}{c.FotoUrl}";
 
             ActualizarTotal();
+
+            // Si por ahora no puede tomar efectivo, se propone transferencia de entrada.
+            if (!c.PuedeAceptarEfectivo)
+                metodoPago = "transferencia";
+            ConstruirOpcionesPago();
+            _ = CargarInstruccionesAsync();
+        }
+
+        private async Task CargarInstruccionesAsync()
+        {
+            instruccionesTransferencia = await _apiService.ObtenerInstruccionesTransferenciaAsync();
+            ConstruirOpcionesPago();
+        }
+
+        private void ConstruirOpcionesPago()
+        {
+            if (cuidador == null)
+                return;
+
+            OpcionesPago.Clear();
+            OpcionesPago.Add(CrearOpcionPago("efectivo", "M2 6H22V18H2V6ZM12 9A3 3 0 1 0 12 15A3 3 0 0 0 12 9ZM5 8V10A2 2 0 0 0 7 8H5ZM17 16A2 2 0 0 0 19 14V16H17ZM19 8H17A2 2 0 0 0 19 10V8ZM5 14V16H7A2 2 0 0 0 5 14Z",
+                Localizador.T("pago_efectivo"), habilitado: cuidador.PuedeAceptarEfectivo), 0, 0);
+            OpcionesPago.Add(CrearOpcionPago("transferencia", "M4 10V17H7V10H4ZM10.5 10V17H13.5V10H10.5ZM2 22H22V19H2V22ZM17 10V17H20V10H17ZM12 1L2 6V8H22V6L12 1Z",
+                Localizador.T("pago_transferencia"), habilitado: true), 1, 0);
+
+            LblNotaPago.Text = metodoPago == "efectivo"
+                ? Localizador.F("pago_efectivo_nota", cuidador.NombreCompleto)
+                : Localizador.T("pago_transferencia_nota");
+            CajaInstrucciones.IsVisible = metodoPago == "transferencia" && !string.IsNullOrWhiteSpace(instruccionesTransferencia);
+            LblInstrucciones.Text = instruccionesTransferencia;
+        }
+
+        // Tarjeta de método: seleccionada = azul lleno; deshabilitada (efectivo sin cupo) se ve apagada y explica por qué.
+        private View CrearOpcionPago(string metodo, string icono, string texto, bool habilitado)
+        {
+            var seleccionado = metodoPago == metodo;
+            var colorTexto = seleccionado ? Colors.White : (Color)Application.Current!.Resources["ColorTextStrong"];
+            var tarjeta = new Border
+            {
+                Stroke = seleccionado ? Colors.Transparent : (Color)Application.Current!.Resources["ColorBorder"],
+                StrokeThickness = 1.5,
+                BackgroundColor = seleccionado ? Tema.C("ColorPrimary") : Tema.C("ColorSurface"),
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 16 },
+                Padding = new Thickness(12, 14),
+                Opacity = habilitado ? 1 : 0.45,
+                Content = new VerticalStackLayout
+                {
+                    Spacing = 6,
+                    HorizontalOptions = LayoutOptions.Center,
+                    Children =
+                    {
+                        new Microsoft.Maui.Controls.Shapes.Path { Data = Geo(icono), Fill = seleccionado ? Colors.White : Tema.C("ColorPrimary"), Aspect = Stretch.Uniform, WidthRequest = 22, HeightRequest = 22, HorizontalOptions = LayoutOptions.Center },
+                        new Label { Text = texto, FontSize = 14, FontFamily = "OpenSansSemibold", TextColor = colorTexto, HorizontalOptions = LayoutOptions.Center }
+                    }
+                }
+            };
+            var toque = new TapGestureRecognizer();
+            toque.Tapped += async (_, _) =>
+            {
+                if (!habilitado)
+                {
+                    var transferir = await Alerta.MostrarAsync(Localizador.T("efectivo_no_disponible_titulo"),
+                        Localizador.F("efectivo_no_disponible_texto", cuidador!.NombreCompleto),
+                        Localizador.T("pagar_por_transferencia"), Localizador.T("elegir_otro_cuidador"), TipoAlerta.Info);
+                    if (transferir)
+                    {
+                        metodoPago = "transferencia";
+                        ConstruirOpcionesPago();
+                    }
+                    else
+                    {
+                        await Shell.Current.GoToAsync("..");
+                    }
+                    return;
+                }
+                metodoPago = metodo;
+                ConstruirOpcionesPago();
+            };
+            tarjeta.GestureRecognizers.Add(toque);
+            return tarjeta;
         }
 
         private void ActualizarTotal()
@@ -298,7 +380,8 @@ namespace CUIDAPP.Views.Cliente
                     Tarifa = tarifaTotal,
                     Latitud = ubicacionElegida.Latitud,
                     Longitud = ubicacionElegida.Longitud,
-                    Tareas = tareas.Count > 0 ? tareas.ToList() : null
+                    Tareas = tareas.Count > 0 ? tareas.ToList() : null,
+                    MetodoPago = metodoPago
                 };
 
                 var (success, error) = await _apiService.CrearTrabajoAsync(request);

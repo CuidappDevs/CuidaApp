@@ -186,9 +186,38 @@ namespace CUIDAPP_API.Services.Cuidador
             var success = Convert.ToInt32(filasAfectadas) > 0;
 
             if (success)
+            {
                 await _notifier.NotificarGlobalAsync("UbicacionCuidadorCambio", new { dto.CuidadorId, dto.Latitud, dto.Longitud, dto.Bateria });
+                await AvisarLlegadaAsync(connection, dto);
+            }
 
             return success;
+        }
+
+        // Si llegó al lugar de un servicio aceptado, avisa al cliente una sola vez (con el PIN para empezar).
+        private async Task AvisarLlegadaAsync(SqlConnection connection, ActualizarUbicacionDto dto)
+        {
+            try
+            {
+                using var command = new SqlCommand("sp_DetectarLlegadaCuidador", connection) { CommandType = CommandType.StoredProcedure };
+                command.Parameters.AddWithValue("@CuidadorId", dto.CuidadorId);
+                command.Parameters.AddWithValue("@Latitud", (double)dto.Latitud);
+                command.Parameters.AddWithValue("@Longitud", (double)dto.Longitud);
+                command.Parameters.AddWithValue("@Fecha", HoraLocalRD.Ahora);
+                using var reader = await command.ExecuteReaderAsync();
+                if (!await reader.ReadAsync())
+                    return;
+
+                var trabajoId = reader.GetInt32(reader.GetOrdinal("TrabajoId"));
+                var clienteId = reader.GetInt32(reader.GetOrdinal("ClienteId"));
+                var pin = reader["PinInicio"] as string;
+                var nombre = reader["CuidadorNombre"] as string ?? "";
+                await _notifier.NotificarAsync(clienteId, "CuidadorLlego", new { TrabajoId = trabajoId, Nombre = nombre, Pin = pin });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Llegada] No se pudo revisar la llegada del cuidador {dto.CuidadorId}: {ex.Message}");
+            }
         }
 
         public async Task<GananciasDto> ObtenerGananciasAsync(int cuidadorId)
@@ -271,7 +300,11 @@ namespace CUIDAPP_API.Services.Cuidador
                     Propina = Convert.ToDecimal(reader["Propina"]),
                     Estado = Convert.ToInt32(reader["Estado"]),
                     FechaPago = reader["FechaPago"] == DBNull.Value ? null : Convert.ToDateTime(reader["FechaPago"]),
-                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"])
+                    FechaCreacion = Convert.ToDateTime(reader["FechaCreacion"]),
+                    Comision = Convert.ToDecimal(reader["Comision"]),
+                    DescuentoSaldo = Convert.ToDecimal(reader["DescuentoSaldo"]),
+                    MetodoPago = reader["MetodoPago"] as string,
+                    Neto = Convert.ToDecimal(reader["Neto"])
                 });
             }
 

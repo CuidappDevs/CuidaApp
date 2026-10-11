@@ -1,6 +1,8 @@
 @page "/auditoria"
 @layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
 @inject PanelApiService Api
+@inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
 
 <PageTitle>Auditoría · Cuidapp Admin</PageTitle>
 
@@ -11,6 +13,20 @@
     }
     else
     {
+        <div class="adm-card adm-card-pad d-flex align-items-center" style="gap:14px; flex-wrap:wrap;">
+            <div class="d-flex align-items-center" style="gap:10px; flex:1; min-width:240px;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round"><rect x="9" y="2" width="6" height="12" rx="3"></rect><path d="M5 10a7 7 0 0 0 14 0M12 17v4"></path></svg>
+                <div class="d-flex flex-column" style="gap:2px;">
+                    <span class="adm-card-title">Caja negra: grabación de audio de los servicios</span>
+                    <span class="pn-muted" style="line-height:1.5;">Si la enciendes, cada servicio graba audio mientras dura, con aviso visible en el teléfono del Care Partner y consentimiento de ambas partes. Solo el Superadmin puede escucharla, cada acceso queda aquí en la auditoría y el audio se borra a los 30 días si no hubo disputa ni SOS. Asegúrate de que tus términos lo contemplen.</span>
+                </div>
+            </div>
+            <label class="pn-switch" style="font-weight:600;">
+                <input type="checkbox" checked="@_grabacion" @onchange="CambiarGrabacion" disabled="@_cambiandoGrab" />
+                @(_grabacion ? "Encendida" : "Apagada")
+            </label>
+        </div>
+
         <div class="pn-toolbar">
             <div class="pn-search pn-grow" style="max-width:420px;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
@@ -66,7 +82,30 @@
     protected override async Task OnInitializedAsync()
     {
         if (AuthStateTask != null) _permitido = SesionAdmin.EsSuperadmin((await AuthStateTask).User);
-        if (_permitido) await Cargar();
+        if (_permitido)
+        {
+            _grabacion = await Api.GrabacionSeguridadAsync();
+            await Cargar();
+        }
+    }
+
+    private bool _grabacion;
+    private bool _cambiandoGrab;
+
+    private async Task CambiarGrabacion(ChangeEventArgs e)
+    {
+        var activar = e.Value is true;
+        var ok = activar
+            ? await Confirmacion.PreguntarAsync("¿Encender la grabación de seguridad?",
+                "A partir de ahora, cada servicio que inicie grabará audio (con aviso visible y consentimiento). Confirma que tus términos y la ley lo permiten.", "Encender")
+            : await Confirmacion.PreguntarAsync("¿Apagar la grabación?",
+                "Los servicios que empiecen desde ahora ya no grabarán. Las grabaciones existentes se conservan.", "Apagar", peligro: true);
+        if (!ok) return;
+        _cambiandoGrab = true;
+        var r = await Api.GuardarGrabacionSeguridadAsync(activar);
+        _cambiandoGrab = false;
+        Toasts.Mostrar(r);
+        if (r.Ok) { _grabacion = activar; await Cargar(); }
     }
 
     private async Task Cargar()

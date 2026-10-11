@@ -19,5 +19,6 @@ namespace CUIDAPP.Models.Trabajo
         public decimal? Longitud { get; set; }
         public bool RechazadoPorCliente { get; set; }
         public bool PagoDisputado { get; set; }
+        public string? MetodoPago { get; set; }
     }
 }

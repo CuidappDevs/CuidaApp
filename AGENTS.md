@@ -33,11 +33,12 @@ Each domain has its own folder in Controllers/, Interfaces/, Services/, DTOs/:
 - `Busqueda/` — nearby search (GPS-based)
 - `Calificacion/` — ratings (1-5 stars)
 - `UbicacionCliente/` — client saved locations
-- `Admin/` — admin operations (approve/suspend caregivers, manage clients, sanctions) + `AdminOperacionesController` (dashboard, services, verification, map, ratings, finance, catalogs, audit log, mass notices) using the generic `IAdminOperacionesService` (SP → rows)
+- `Admin/` — admin operations (approve/suspend caregivers, manage clients, sanctions) + `AdminGestionController` (quality score, document expiry, commission, payment method, disputes; `VencimientoDocumentosService` checks expiries hourly) + `AdminOperacionesController` (dashboard, services, verification, map, ratings, finance, catalogs, audit log, mass notices) using the generic `IAdminOperacionesService` (SP → rows)
 - `Chat/` — real-time chat (text, image, audio messages)
 - `Email/` — MailKit email service (SMTP via `EmailCredentials` config)
 - `Ticket/` — support tickets (create, message, status)
-- `PagoAdmin/` — payment authorization/approval
+- `PagoAdmin/` — payment authorization/approval. Payment states: 1 pending, 3 authorized, 2 paid, 4 paid in cash (client paid the caregiver directly; the commission goes to the caregiver's balance `MovimientosSaldoCuidador` and is deducted when authorizing their next transfer payment; with the balance at the cap `TopeDeudaEfectivo` they cannot accept cash services). The client picks the payment method when requesting (`Trabajos.MetodoPago`)
+- `Grabacion/` — black-box security audio (transparent, consented): on/off flag, mark service, register uploaded segments; `GrabacionRetencionService` deletes clips older than 30 days (kept if the service has an open dispute or an SOS)
 - `Sistema/` — server time sync
 - `Upload/` — file upload (max 10MB: jpg, png, pdf, m4a, mp3, wav, aac)
 
@@ -90,9 +91,10 @@ La app está en **español (base), inglés y creol haitiano (`ht`)**. Reglas:
 
 - Cookie-based authentication (8h, no sliding). The API JWT travels inside the cookie (claim `api_token`, plus `nivel_admin`) and every API service attaches it with `SesionAdmin.Adjuntar` (`Services/SesionAdmin.cs`); the layout logs out when the token expires
 - Menu sections are filtered by admin level (Superadmin / Operaciones / Finanzas); pages check `SesionAdmin.PuedeOperar/PuedeFinanzas/EsSuperadmin`
-- Pages: Dashboard (real data), SOS (persistent: loads pending from the API, history), Servicios + detalle (timeline, tasks, payment, read-only chat, cancel/complete), Mapa en vivo (Leaflet + OSM, `wwwroot/js/panel.js`), Verificación, Care Partners, Clientes, Calificaciones, Soporte, Avisos masivos, Pagos, Finanzas (CSV export), Catálogos, Auditoría, Administradores (levels), Buscar
+- Pages: Dashboard (real data), SOS (persistent: loads pending from the API, history), Servicios + detalle (timeline, tasks, payment with commission, client payment method, read-only chat, cancel/complete, open dispute), Disputas + detalle (evidence and resolution: full / partial / no payment), Calidad (0–100 score and traffic light per Care Partner), Documentos (expiry dates, renewals to review), Mapa en vivo (Leaflet + OSM, `wwwroot/js/panel.js`), Verificación, Care Partners, Clientes, Calificaciones, Soporte, Avisos masivos, Pagos, Finanzas (CSV export, platform commission settings, payment-method breakdown), Catálogos, Auditoría, Administradores (levels), Buscar
 - `PanelApiService` for the new endpoints; models in `Models/Panel/PanelModels.cs`
 - `/mapa` is the command center ("Ojo de Dios"): layer chips, click a marker → side card with actions (direct notification, "¿Estás bien?" check-in, follow, call/WhatsApp, today's route replay, hide), draw an area to notify caregivers inside, heat map, alerts tab with sound. Map logic lives in `wwwroot/js/panel.js` (`cuidPanel.*`, calls back into the page via `DotNetObjectReference`)
+- Client and Care Partner profiles (`ClienteDetail`, `CarePartnerDetail`): header with stats, tabs (summary, services, documents, edit) and the shared `GestionCuenta` component (temporary suspension with duration presets / indefinite ban, reason category, optional notification to the user, history)
 - Shared components in `Components/Shared/`: `DialogoConfirmacion` (+ `ConfirmacionService`, toasts via `AvisoToastService`), `Paginador`, `GraficoBarras`, `Avatar`, `Estrellas`, `Esqueleto`, `EstadoVacio`. Every destructive action must go through `ConfirmacionService`
 - CSS: `wwwroot/css/admin.css` (base) + `wwwroot/css/panel.css` (`pn-*` components; ease-out motion under 250 ms, hover only with a mouse, `prefers-reduced-motion`)
 - Local preview against a local API: `.claude/launch.json` → `cuidapp-administrativo-local`

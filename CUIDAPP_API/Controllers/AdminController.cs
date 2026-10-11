@@ -14,11 +14,15 @@ namespace CUIDAPP_API.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IAdminService _adminService;
+        private readonly IAdminOperacionesService _db;
+        private readonly CUIDAPP_API.Services.Realtime.ITrabajoNotifier _notifier;
         private readonly ILogger<AdminController> _logger;
 
-        public AdminController(IAdminService adminService, ILogger<AdminController> logger)
+        public AdminController(IAdminService adminService, IAdminOperacionesService db, CUIDAPP_API.Services.Realtime.ITrabajoNotifier notifier, ILogger<AdminController> logger)
         {
             _adminService = adminService;
+            _db = db;
+            _notifier = notifier;
             _logger = logger;
         }
 
@@ -137,11 +141,28 @@ namespace CUIDAPP_API.Controllers
             try
             {
                 var resultado = await _adminService.SuspenderUsuarioAsync(usuarioId, dto);
+                if (resultado.Code == "APPLIED")
+                    await OcultarSuspendidoAsync(usuarioId);
                 return TraducirResultado(resultado);
             }
             catch (Exception ex)
             {
                 return ErrorInterno(ex, "SuspenderUsuario", usuarioId, dto.AdminId);
+            }
+        }
+
+        // Un Care Partner suspendido deja de aparecer en el mapa de los clientes en ese momento.
+        private async Task OcultarSuspendidoAsync(int usuarioId)
+        {
+            try
+            {
+                var fila = await _db.EjecutarAsync("sp_OcultarUsuarioSuspendido", ("@UsuarioId", usuarioId));
+                if (Convert.ToInt32(fila?["Filas"] ?? 0) > 0)
+                    await _notifier.NotificarGlobalAsync("DisponibilidadCambio", new { CuidadorId = usuarioId, Disponible = false, PorHorario = false });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "No se pudo ocultar al usuario suspendido {UsuarioId}", usuarioId);
             }
         }
 

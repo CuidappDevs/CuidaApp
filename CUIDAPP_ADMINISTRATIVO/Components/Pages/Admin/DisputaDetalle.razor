@@ -1,0 +1,202 @@
+@page "/disputas/{Id:int}"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@inject PanelApiService Api
+@inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
+
+<PageTitle>Disputa #@Id · Cuidapp Admin</PageTitle>
+
+<div class="pn-page">
+    <a class="adm-back" href="disputas">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"></path></svg>
+        Volver a disputas
+    </a>
+
+    @if (_cargando)
+    {
+        <div class="adm-card"><Esqueleto Filas="6" /></div>
+    }
+    else if (_d == null)
+    {
+        <div class="adm-card"><EstadoVacio Titulo="Disputa no encontrada" /></div>
+    }
+    else
+    {
+        <div class="adm-card adm-card-pad d-flex flex-wrap align-items-center" style="gap:16px 24px;">
+            <div class="d-flex flex-column" style="gap:6px; flex:1; min-width:260px;">
+                <div class="d-flex flex-wrap align-items-center" style="gap:10px;">
+                    <span style="font-size:20px; font-weight:600;">Disputa #@_d.Id</span>
+                    @if (_d.Abierta) { <span class="pn-pill tone-warn">Abierta · @(_d.DiasAbierta == 0 ? "hoy" : $"{_d.DiasAbierta} día(s)")</span> }
+                    else { <span class="pn-pill tone-ok">@_d.ResolucionTexto</span> }
+                </div>
+                <span class="pn-muted" style="font-size:13.5px;">@_d.OrigenTexto · abierta el @_d.FechaApertura.ToString("dd MMM yyyy, h:mm tt", Es)@(_d.AbiertaPorNombre != null ? $" por {_d.AbiertaPorNombre}" : "")</span>
+            </div>
+            <a class="pn-btn pn-btn-quiet" href="servicios/@_d.TrabajoId">Ver servicio completo (chat, bitácora)</a>
+        </div>
+
+        <div class="pn-grid pn-grid-2">
+            <div class="d-flex flex-column" style="gap:16px; min-width:0;">
+                <div class="pn-grid pn-grid-2-eq">
+                    @Persona("Cliente", _d.ClienteNombre, _d.ClienteFoto, _d.ClienteTelefono, $"clientes/{_d.ClienteId}")
+                    @Persona("Care Partner", _d.CuidadorNombre, _d.CuidadorFoto, _d.CuidadorTelefono, $"care-partners/{_d.CuidadorId}")
+                </div>
+
+                <div class="adm-card adm-card-pad d-flex flex-column" style="gap:12px;">
+                    <span class="adm-card-title">Evidencia</span>
+                    <div class="pn-stats">
+                        <div class="pn-stat"><span class="pn-stat-k">Horario pedido</span><span class="pn-stat-v">@_d.Fecha.ToString("dd MMM") · @_d.HoraInicio–@_d.HoraFin</span></div>
+                        <div class="pn-stat"><span class="pn-stat-k">Inicio con PIN</span><span class="pn-stat-v">@(_d.FechaInicioReal?.ToString("h:mm tt") ?? "No inició")</span></div>
+                        <div class="pn-stat"><span class="pn-stat-k">Final marcado</span><span class="pn-stat-v">@(_d.FechaFin?.ToString("dd MMM, h:mm tt") ?? "—")</span></div>
+                        <div class="pn-stat"><span class="pn-stat-k">Duración real</span><span class="pn-stat-v">@Duracion()</span></div>
+                        <div class="pn-stat"><span class="pn-stat-k">Tareas</span><span class="pn-stat-v">@_d.TareasHechas de @_d.Tareas</span></div>
+                        <div class="pn-stat"><span class="pn-stat-k">Puntos GPS</span><span class="pn-stat-v">@_d.PuntosGps</span></div>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(_d.Motivo))
+                    {
+                        <div class="pn-callout tone-warn"><span><b>Motivo:</b> @_d.Motivo</span></div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(_d.JustificacionFinalizacion))
+                    {
+                        <div class="pn-callout tone-muted"><span><b>Lo que escribió el Care Partner al cerrar:</b> @_d.JustificacionFinalizacion</span></div>
+                    }
+                    @if (_servicio?.Mensajes.Count > 0)
+                    {
+                        <span class="pn-section-title">Últimos mensajes del chat</span>
+                        @foreach (var m in _servicio.Mensajes.TakeLast(6))
+                        {
+                            <div class="pn-aviso-fila">
+                                <span class="d-flex flex-column" style="flex:1; min-width:0; gap:1px;">
+                                    <span style="font-weight:600; color:var(--adm-ink-2);">@m.RemitenteNombre</span>
+                                    <span style="font-size:13px;">@(m.Eliminado ? "(mensaje eliminado)" : m.Tipo == "texto" || string.IsNullOrEmpty(m.UrlArchivo) ? m.Contenido : $"[{m.Tipo}]")</span>
+                                </span>
+                                <span class="pn-muted" style="font-size:11.5px;">@m.FechaEnvio.ToString("dd MMM, h:mm tt")</span>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="d-flex flex-column" style="gap:16px; min-width:0;">
+                <div class="adm-card adm-card-pad d-flex flex-column" style="gap:10px;">
+                    <span class="adm-card-title">Dinero</span>
+                    <dl class="pn-kv" style="margin:0; grid-template-columns:150px 1fr;">
+                        <dt>Tarifa del servicio</dt><dd class="pn-strong">RD$ @_d.Tarifa.ToString("N2")</dd>
+                        <dt>Método de pago</dt><dd>@MetodosPago.Texto(_d.MetodoPago)</dd>
+                        <dt>Pago al Care Partner</dt>
+                        <dd>@(_d.PagoMonto is decimal pm ? $"RD$ {pm:N2} · {(_d.PagoEstado switch { 2 => "pagado", 3 => "autorizado", _ => "pendiente" })}" : "Aún no hay pago")</dd>
+                        @if (!_d.Abierta)
+                        {
+                            <dt>Monto decidido</dt><dd class="pn-strong">RD$ @((_d.MontoFinal ?? 0).ToString("N2"))</dd>
+                        }
+                    </dl>
+                </div>
+
+                @if (_d.Abierta)
+                {
+                    <div class="adm-card adm-card-pad d-flex flex-column" style="gap:12px;">
+                        <span class="adm-card-title">Resolver</span>
+                        <div class="d-flex flex-column" style="gap:8px;" role="radiogroup" aria-label="Resolución">
+                            @foreach (var (id, titulo, texto) in Opciones)
+                            {
+                                <label class="pn-opcion @(_resolucion == id ? "on" : "")">
+                                    <input type="radio" name="res" checked="@(_resolucion == id)" @onchange="() => _resolucion = id" />
+                                    <span class="d-flex flex-column" style="gap:2px;">
+                                        <span class="pn-strong">@titulo</span>
+                                        <span class="pn-muted">@texto</span>
+                                    </span>
+                                </label>
+                            }
+                        </div>
+                        @if (_resolucion == "parcial")
+                        {
+                            <div>
+                                <label class="pn-label" for="dp-m">Monto para el Care Partner (RD$)</label>
+                                <input id="dp-m" class="pn-input" type="number" min="1" max="@_d.Tarifa" step="50" inputmode="decimal" @bind="_monto" style="width:180px;" />
+                                <span class="pn-hint">Entre 1 y @_d.Tarifa.ToString("N0"). La comisión se descuenta igual que en un pago normal.</span>
+                            </div>
+                        }
+                        <div>
+                            <label class="pn-label" for="dp-n">Nota para el cliente y el Care Partner</label>
+                            <textarea id="dp-n" class="adm-textarea" rows="3" maxlength="600" @bind="_nota" @bind:event="oninput" placeholder="Ej.: Revisamos el GPS y la bitácora; el servicio se hizo completo."></textarea>
+                            <span class="pn-hint">Les llega como notificación a ambos y queda en la auditoría.</span>
+                        </div>
+                        <button type="button" class="pn-btn pn-btn-primary" disabled="@(!PuedeResolver)" @onclick="Resolver">Resolver disputa</button>
+                    </div>
+                }
+                else
+                {
+                    <div class="adm-card adm-card-pad d-flex flex-column" style="gap:6px;">
+                        <span class="adm-card-title">Resolución</span>
+                        <span class="pn-muted">@_d.FechaResolucion?.ToString("dd MMM yyyy, h:mm tt", Es)@(_d.ResueltaPorNombre != null ? $" · {_d.ResueltaPorNombre}" : "")</span>
+                        @if (!string.IsNullOrWhiteSpace(_d.Nota)) { <span style="font-size:14px;">“@_d.Nota”</span> }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private static readonly System.Globalization.CultureInfo Es = new("es-DO");
+    private static readonly (string Id, string Titulo, string Texto)[] Opciones =
+    {
+        ("completo", "Pagar completo", "El servicio se hizo bien: el Care Partner cobra la tarifa entera."),
+        ("parcial", "Pago parcial", "Se hizo una parte: indicas cuánto cobra el Care Partner."),
+        ("sin_pago", "Sin pago", "No se prestó el servicio: se quita el pago pendiente."),
+    };
+
+    private DisputaFila? _d;
+    private DetalleServicio? _servicio;
+    private bool _cargando = true, _procesando;
+    private string _resolucion = "completo";
+    private decimal? _monto;
+    private string _nota = "";
+
+    private bool PuedeResolver => !_procesando && _nota.Trim().Length >= 3
+        && (_resolucion != "parcial" || (_monto > 0 && _monto < _d!.Tarifa));
+
+    protected override async Task OnParametersSetAsync() => await Cargar();
+
+    private async Task Cargar()
+    {
+        _cargando = true;
+        _d = await Api.DisputaAsync(Id);
+        if (_d != null) _servicio = await Api.ServicioAsync(_d.TrabajoId);
+        _cargando = false;
+    }
+
+    private string Duracion()
+    {
+        if (_d?.FechaInicioReal is not { } ini || _d.FechaFin is not { } fin) return "—";
+        var t = fin - ini;
+        return t.TotalHours >= 1 ? $"{(int)t.TotalHours} h {t.Minutes} min" : $"{t.Minutes} min";
+    }
+
+    private RenderFragment Persona(string rol, string nombre, string? foto, string? tel, string enlace) => __builder =>
+    {
+        <a class="adm-card adm-card-pad d-flex align-items-center" href="@enlace" style="gap:12px; text-decoration:none; color:inherit;">
+            <Avatar Url="@Api.Archivo(foto)" Nombre="@nombre" Tam="42" />
+            <div class="pn-who-text" style="flex:1;">
+                <span class="pn-muted" style="font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em;">@rol</span>
+                <span style="font-size:15px;">@nombre</span>
+                <span class="pn-muted">@(tel ?? "Sin teléfono")</span>
+            </div>
+        </a>
+    };
+
+    private async Task Resolver()
+    {
+        var monto = _resolucion switch { "completo" => _d!.Tarifa, "parcial" => _monto ?? 0, _ => 0 };
+        if (!await Confirmacion.PreguntarAsync("¿Resolver la disputa?",
+                $"El servicio queda completado y el Care Partner cobra RD$ {monto:N2} (antes de comisión). Se avisará a ambos. No se puede deshacer.",
+                "Resolver", peligro: _resolucion == "sin_pago"))
+            return;
+        _procesando = true;
+        var r = await Api.ResolverDisputaAsync(Id, _resolucion, _resolucion == "parcial" ? _monto : null, _nota.Trim());
+        _procesando = false;
+        Toasts.Mostrar(r);
+        if (r.Ok) await Cargar();
+    }
+}

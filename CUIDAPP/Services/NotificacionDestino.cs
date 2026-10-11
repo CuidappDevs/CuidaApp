@@ -13,6 +13,8 @@ namespace CUIDAPP.Services
 
         public static string Trabajo(int trabajoId) => $"trabajo:{trabajoId}";
         public static string Chat(int trabajoId) => $"chat:{trabajoId}";
+        /// <summary>Abre el chat y le envía al cuidador el PIN de inicio (aviso de llegada).</summary>
+        public static string ChatPin(int trabajoId) => $"chatpin:{trabajoId}";
         public static string Calificar(int trabajoId) => $"calificar:{trabajoId}";
         public static string Ticket(int ticketId) => $"ticket:{ticketId}";
         public const string Verificacion = "verificacion";
@@ -73,6 +75,15 @@ namespace CUIDAPP.Services
                             await Shell.Current.GoToAsync("ChatPage", new Dictionary<string, object>
                             {
                                 { "TrabajoId", id }, { "OtroNombre", conCliente.ClienteNombre }, { "OtroFotoUrl", conCliente.ClienteFotoUrl ?? "" }
+                            });
+                        break;
+
+                    case "chatpin" when !esCuidador:
+                        var conPin = await api.ObtenerTrabajoClientePorIdAsync(id);
+                        if (conPin != null)
+                            await Shell.Current.GoToAsync("ChatPage", new Dictionary<string, object>
+                            {
+                                { "TrabajoId", id }, { "OtroNombre", conPin.CuidadorNombre }, { "OtroFotoUrl", conPin.CuidadorFotoUrl ?? "" }, { "EnviarPin", true }
                             });
                         break;
 

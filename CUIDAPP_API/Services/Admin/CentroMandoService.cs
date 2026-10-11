@@ -26,7 +26,7 @@ namespace CUIDAPP_API.Services.Admin
         }
 
         /// <summary>Guarda el aviso y lo manda al teléfono de la persona (evento "AvisoDirecto" a su grupo).</summary>
-        public async Task<int> EnviarAsync(int adminId, int usuarioId, string tipo, string titulo, string mensaje, int? minutosRespuesta = null)
+        public async Task<int> EnviarAsync(int? adminId, int usuarioId, string tipo, string titulo, string mensaje, int? minutosRespuesta = null)
         {
             var ahora = HoraLocalRD.Ahora;
             DateTime? vence = minutosRespuesta.HasValue ? ahora.AddMinutes(minutosRespuesta.Value) : null;

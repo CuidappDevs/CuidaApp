@@ -1,3 +1,4 @@
+using CUIDAPP.Helpers;
 using CUIDAPP.Localization;
 using CUIDAPP.Models.Chat;
 using CUIDAPP.Views.Chat;
@@ -43,6 +44,35 @@ namespace CUIDAPP.Services
 
         private static string Cuando(DateTime fecha, TimeSpan hora)
             => Localizador.F("fecha_y_hora", Localizador.DiaMes(fecha), DateTime.Today.Add(hora).ToString("h:mm tt", Localizador.Cultura));
+
+        // ---------- Llegó el cuidador (cliente): dale el PIN; tocar abre el chat con él
+        public static void CuidadorLlego(int trabajoId, string nombre, string? pin)
+        {
+            if (EsCuidador || UsuarioId == 0)
+                return;
+
+            var titulo = Localizador.F("notif_en_lugar_titulo", nombre);
+            var texto = string.IsNullOrWhiteSpace(pin)
+                ? Localizador.F("notif_en_lugar_texto_sin_pin", nombre)
+                : Localizador.F("notif_en_lugar_texto", nombre, pin);
+            NotificacionHistorial.Agregar(titulo, texto, "trabajo", trabajoId);
+
+            // Con PIN: tocar el aviso abre el chat y le envía el PIN al cuidador automáticamente.
+            var destino = string.IsNullOrWhiteSpace(pin) ? NotificacionDestino.Chat(trabajoId) : NotificacionDestino.ChatPin(trabajoId);
+            if (!App.EstaEnPrimerPlano)
+            {
+                NativeNotifier.Mostrar(titulo, texto, destino);
+                return;
+            }
+
+            MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                SonidoAviso.Reproducir(TipoSonido.Aviso);
+                var boton = string.IsNullOrWhiteSpace(pin) ? Localizador.T("abrir_chat") : Localizador.T("enviar_pin_chat");
+                if (await Alerta.MostrarAsync(titulo, texto, boton, Localizador.T("cerrar"), TipoAlerta.Info))
+                    NotificacionDestino.Recibir(destino, true);
+            });
+        }
 
         // ---------- 1. Nueva solicitud (cuidador)
         public static async Task NuevaSolicitudAsync(int trabajoId)

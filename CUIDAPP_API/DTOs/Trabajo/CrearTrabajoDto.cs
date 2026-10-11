@@ -13,5 +13,7 @@ namespace CUIDAPP_API.DTOs.Trabajo
         public decimal? Latitud { get; set; }
         public decimal? Longitud { get; set; }
         public List<string>? Tareas { get; set; }
+        /// <summary>Cómo pagará el cliente: "efectivo" o "transferencia" (se elige al pedir).</summary>
+        public string? MetodoPago { get; set; }
     }
 }

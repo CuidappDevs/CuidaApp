@@ -11,5 +11,7 @@ namespace CUIDAPP.Models.Busqueda
         public decimal Latitud { get; set; }
         public decimal Longitud { get; set; }
         public double DistanciaKm { get; set; }
+        /// <summary>False si por ahora no puede tomar servicios en efectivo (deuda de comisiones en el tope).</summary>
+        public bool PuedeAceptarEfectivo { get; set; } = true;
     }
 }

@@ -19,6 +19,7 @@ namespace CUIDAPP.Services
         public static event Action<int, int, string>? TareaCompletada; // TrabajoId, TareaId, Descripcion
         public static event Action<Mensaje>? MensajeNuevo;
         public static event Action<int, double>? AlertaGeocerca; // TrabajoId, DistanciaMetros
+        public static event Action<int, string, string?>? CuidadorLlego; // TrabajoId, Nombre del cuidador, PIN de inicio
         public static event Action<int, int, bool>? UsuarioEscribiendo; // ConversacionId, UsuarioId, Escribiendo
         public static event Action<int>? CuentaActualizada; // Estado (2=Aprobado, 3=Rechazado)
         public static event Action<int, decimal>? PagoAprobado; // TrabajoId, Monto
@@ -59,6 +60,14 @@ namespace CUIDAPP.Services
                 MainThread.BeginInvokeOnMainThread(() => MensajeNuevo?.Invoke(mensaje));
             });
             _connection.On<object>("AlertaGeocerca", payload => DispatchAlertaGeocerca(payload));
+            _connection.On<object>("CuidadorLlego", payload =>
+            {
+                var json = (System.Text.Json.JsonElement)payload;
+                var trabajoId = json.GetProperty("trabajoId").GetInt32();
+                var nombre = json.TryGetProperty("nombre", out var n) ? n.GetString() ?? "" : "";
+                var pin = json.TryGetProperty("pin", out var p) && p.ValueKind == System.Text.Json.JsonValueKind.String ? p.GetString() : null;
+                MainThread.BeginInvokeOnMainThread(() => CuidadorLlego?.Invoke(trabajoId, nombre, pin));
+            });
             _connection.On<object>("UsuarioEscribiendo", payload => DispatchUsuarioEscribiendo(payload));
             _connection.On<object>("CuentaActualizada", payload =>
             {

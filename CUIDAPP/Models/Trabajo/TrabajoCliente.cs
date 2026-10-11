@@ -21,5 +21,6 @@ namespace CUIDAPP.Models.Trabajo
         public DateTime? FechaInicioReal { get; set; }
         public string? JustificacionFinalizacion { get; set; }
         public bool RechazadoPorCliente { get; set; }
+        public string? MetodoPago { get; set; }
     }
 }

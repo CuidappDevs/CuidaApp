@@ -1,3 +1,4 @@
+@inject IConfiguration Config
 <!DOCTYPE html>
 <html lang="es">
 
@@ -33,6 +34,8 @@
     <script src="@Assets["_framework/blazor.web.js"]"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js" crossorigin=""></script>
+    @* Mismo token público de Mapbox que usa la app (los mapas del panel lo leen de aquí). *@
+    <script>window.cuidMapa = { token: "@(Config["MapboxToken"] ?? "")" };</script>
     <script src="@Assets["js/panel.js"]"></script>
     <script>
         window.addEventListener('load', function () {
