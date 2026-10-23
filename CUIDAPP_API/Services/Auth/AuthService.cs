@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using CUIDAPP_API.DTOs.Auth;
 using CUIDAPP_API.Interfaces.Auth;
 using CUIDAPP_API.Interfaces.Email;
+using CUIDAPP_API.Services.TestPsicologico;
 
 namespace CUIDAPP_API.Services.Auth
 {
@@ -168,6 +169,22 @@ namespace CUIDAPP_API.Services.Auth
         public async Task<int> RegisterCaregiverAsync(RegisterCaregiverDto registerDto)
         {
             using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            // Si el tipo de trabajo tiene test psicológico activo, debe venir un intento aprobado de la misma persona.
+            var documento = TestPsicologicoService.NormalizarDocumento(registerDto.DocumentoIdentidad);
+            var telefono = TestPsicologicoService.NormalizarTelefono(registerDto.Telefono);
+            using (var validar = new SqlCommand("sp_TestValidarRegistro", connection))
+            {
+                validar.CommandType = CommandType.StoredProcedure;
+                validar.Parameters.AddWithValue("@Especialidad", registerDto.Especialidad);
+                validar.Parameters.AddWithValue("@Token", (object?)registerDto.TestToken ?? DBNull.Value);
+                validar.Parameters.AddWithValue("@Documento", (object?)documento ?? DBNull.Value);
+                validar.Parameters.AddWithValue("@Telefono", (object?)telefono ?? DBNull.Value);
+                if ((await validar.ExecuteScalarAsync())?.ToString() != "OK")
+                    throw new TestRequeridoException();
+            }
+
             using var command = new SqlCommand("sp_CrearUsuarioCuidador", connection);
             command.CommandType = CommandType.StoredProcedure;
             
@@ -192,9 +209,18 @@ namespace CUIDAPP_API.Services.Auth
                 ? System.Text.Json.JsonSerializer.Serialize(documentosExtra)
                 : DBNull.Value);
 
-            await connection.OpenAsync();
             var result = await command.ExecuteScalarAsync();
             var nuevoId = Convert.ToInt32(result);
+
+            if (nuevoId > 0 && registerDto.TestToken is Guid token)
+            {
+                using var vincular = new SqlCommand("sp_TestVincularIntento", connection);
+                vincular.CommandType = CommandType.StoredProcedure;
+                vincular.Parameters.AddWithValue("@Token", token);
+                vincular.Parameters.AddWithValue("@UsuarioId", nuevoId);
+                await vincular.ExecuteNonQueryAsync();
+            }
+
             // Correo de bienvenida en segundo plano (no demora ni afecta el registro).
             if (nuevoId > 0)
                 _ = Task.Run(() => new BienvenidaService(_config).EnviarCuidadorAsync(registerDto.Email, registerDto.NombreCompleto));

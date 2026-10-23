@@ -18,6 +18,10 @@ namespace CUIDAPP.Views.Registro
         // y se envía tal cual como texto al registrar (PerfilCuidador.Especialidad).
         private string? especialidadSeleccionada;
         private List<Models.Cuidador.TipoTrabajo> tiposTrabajo = new();
+        // Test psicológico aprobado para el tipo de trabajo elegido (se envía al registrar).
+        private Guid? testToken;
+        private int? testTipoTrabajoId;
+        private bool verificandoTest;
         private int selectedPay = 2; // Default Billetera
         private readonly ApiService _apiService = new ApiService();
         private List<Nacionalidad> nacionalidades = new();
@@ -216,7 +220,10 @@ namespace CUIDAPP.Views.Registro
 
         private async void OnNextTapped(object sender, EventArgs e)
         {
-            if (!await ValidateCurrentStep())
+            if (verificandoTest || !await ValidateCurrentStep())
+                return;
+
+            if (currentFlow[currentStepIndex] == PasoTrabajo && !await PasarTestPsicologicoAsync())
                 return;
 
             if (currentStepIndex < currentFlow.Count - 1)
@@ -332,6 +339,79 @@ namespace CUIDAPP.Views.Registro
             return true;
         }
 
+        // Si el tipo de trabajo elegido tiene test psicológico, se hace aquí (antes de los documentos).
+        // Devuelve true si el registro puede seguir.
+        private async Task<bool> PasarTestPsicologicoAsync()
+        {
+            var tipo = tiposTrabajo.FirstOrDefault(t => t.Nombre == especialidadSeleccionada);
+            if (tipo == null || tipo.Id <= 0)
+                return true; // lista de respaldo (sin conexión al cargar): el servidor decide al registrar
+            if (testToken != null && testTipoTrabajoId == tipo.Id)
+                return true;
+
+            testToken = null;
+            testTipoTrabajoId = null;
+            var documento = NacionalidadSeleccionadaId() is null ? null : DocumentoLimpio();
+
+            verificandoTest = true;
+            EstadoTest? estado;
+            try { estado = await _apiService.ObtenerEstadoTestAsync(tipo.Id, documento, EntryTelefono.Text); }
+            finally { verificandoTest = false; }
+
+            switch (estado?.Estado)
+            {
+                case null:
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("test_error_conexion"), Localizador.T("ok"), TipoAlerta.Error);
+                    return false;
+                case "SIN_TEST":
+                    return true;
+                case "APROBADO":
+                    testToken = estado.Token;
+                    testTipoTrabajoId = tipo.Id;
+                    return true;
+                case "BLOQUEADO":
+                    await Alerta.MostrarAsync(Localizador.T("test_no_continua_titulo"), estado.BloqueadoHasta is DateTime hasta
+                        ? Localizador.F("test_bloqueado_texto", Localizador.FechaLarga(hasta)) : Localizador.T("test_descartado_texto"),
+                        Localizador.T("entendido"), TipoAlerta.Advertencia);
+                    return false;
+                case "DESCARTADO":
+                    await Alerta.MostrarAsync(Localizador.T("test_no_continua_titulo"), Localizador.T("test_descartado_texto"), Localizador.T("entendido"), TipoAlerta.Advertencia);
+                    return false;
+            }
+
+            // LIBRE: aviso antes de empezar.
+            var empezar = await Alerta.MostrarAsync(Localizador.T("test_aviso_titulo"),
+                Localizador.F("test_aviso_texto", estado.TotalPreguntas ?? 0, estado.MinutosLimite ?? 0),
+                Localizador.T("test_empezar"), Localizador.T("test_ahora_no"), TipoAlerta.Info);
+            if (!empezar)
+                return false;
+
+            var pagina = new TestPsicologicoPage(new IniciarTestRequest
+            {
+                TipoTrabajoId = tipo.Id,
+                Nombre = EntryNombre.Text?.Trim(),
+                Email = EntryEmail.Text?.Trim(),
+                Documento = documento,
+                Telefono = EntryTelefono.Text?.Trim()
+            });
+            await Navigation.PushModalAsync(pagina, true);
+            var (resultado, token) = await pagina.Terminado;
+            BarraEstado.Blanca();
+
+            if (resultado == null)
+                return false; // salió sin terminar o no hubo conexión: puede volver a intentarlo
+            if (resultado.PuedeSeguir)
+            {
+                testToken = token;
+                testTipoTrabajoId = tipo.Id;
+                return true;
+            }
+
+            // Bloqueada o descartada: el registro termina aquí.
+            await Shell.Current.GoToAsync("..");
+            return false;
+        }
+
         private async Task FinishRegistration()
         {
             bool esCuidador = selectedRole == "Cuidador";
@@ -442,9 +522,24 @@ namespace CUIDAPP.Views.Registro
                     FotoUrl = fotoUrl,
                     CedulaUrl = cedulaUrl,
                     CartaAntecedentesUrl = antecedentesUrl,
-                    DocumentosExtra = documentosExtraSubidos
+                    DocumentosExtra = documentosExtraSubidos,
+                    TestToken = testToken
                 };
-                success = await _apiService.RegisterCuidadorAsync(request);
+                string? codigoError;
+                (success, codigoError) = await _apiService.RegisterCuidadorAsync(request);
+
+                // El test no coincide (p. ej. cambió el documento después de hacerlo): vuelve al paso del trabajo.
+                if (!success && codigoError == "TEST_REQUERIDO")
+                {
+                    testToken = null;
+                    testTipoTrabajoId = null;
+                    await OverlayExito.FadeTo(0, 200);
+                    OverlayExito.IsVisible = false;
+                    await Alerta.MostrarAsync(Localizador.T("test_aviso_titulo"), Localizador.T("test_requerido_registro"), Localizador.T("ok"), TipoAlerta.Advertencia);
+                    currentStepIndex = currentFlow.IndexOf(PasoTrabajo);
+                    await UpdateStepUI(true);
+                    return;
+                }
             }
 
             if (success)

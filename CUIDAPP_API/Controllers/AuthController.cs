@@ -77,6 +77,10 @@ namespace CUIDAPP_API.Controllers
                 var newUserId = await _authService.RegisterCaregiverAsync(registerDto);
                 return Ok(new { Message = "Cuidador registrado con éxito", UserId = newUserId });
             }
+            catch (TestRequeridoException ex)
+            {
+                return Conflict(new ApiErrorDto("TEST_REQUERIDO", ex.Message));
+            }
             catch (Exception ex)
             {
                 return ErrorInterno(ex, "Registro");

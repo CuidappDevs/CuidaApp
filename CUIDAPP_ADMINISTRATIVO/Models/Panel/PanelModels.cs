@@ -772,4 +772,138 @@ namespace CUIDAPP_ADMINISTRATIVO.Models.Panel
         public decimal TopeDeudaEfectivo { get; set; }
         public string? InstruccionesTransferencia { get; set; }
     }
+
+    // ---------- Test psicológico del registro
+
+    /// <summary>Resultado de un intento (TestIntentos.Resultado) con su texto y color de pastilla.</summary>
+    public static class ResultadoTest
+    {
+        public const int Aprobado = 1, Revision = 2, Bloqueado = 3, Descartado = 4;
+
+        public static string Texto(int r) => r switch
+        {
+            Aprobado => "Aprobado", Revision => "Revisión manual", Bloqueado => "Bloqueado", Descartado => "Descartado", _ => "—"
+        };
+
+        public static string Tono(int r) => r switch
+        {
+            Aprobado => "tone-ok", Revision => "tone-warn", Bloqueado or Descartado => "tone-danger", _ => "tone-muted"
+        };
+    }
+
+    public class TestsPanel
+    {
+        public List<TestFila> Tests { get; set; } = new();
+        public List<TestTipoVinculo> Tipos { get; set; } = new();
+    }
+
+    public class TestFila
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = "";
+        public string? Descripcion { get; set; }
+        public int MinutosLimite { get; set; }
+        public decimal PorcentajeAprobacion { get; set; }
+        public decimal PorcentajeRevision { get; set; }
+        public int DiasBloqueo { get; set; }
+        public bool Activo { get; set; }
+        public int Preguntas { get; set; }
+        public int Criticas { get; set; }
+        public int Intentos { get; set; }
+    }
+
+    public class TestTipoVinculo
+    {
+        public int TestId { get; set; }
+        public int TipoTrabajoId { get; set; }
+        public string Nombre { get; set; } = "";
+    }
+
+    /// <summary>Lo que se edita y se envía al guardar (POST admin/tests).</summary>
+    public class TestEdicion
+    {
+        public int? Id { get; set; }
+        public string Nombre { get; set; } = "";
+        public string? Descripcion { get; set; }
+        public int MinutosLimite { get; set; } = 12;
+        public decimal PorcentajeAprobacion { get; set; } = 83;
+        public decimal PorcentajeRevision { get; set; } = 66;
+        public int DiasBloqueo { get; set; } = 90;
+        public bool Activo { get; set; } = true;
+        public List<int> Tipos { get; set; } = new();
+        public List<PreguntaEdicion> Preguntas { get; set; } = new();
+    }
+
+    public class PreguntaEdicion
+    {
+        public string Texto { get; set; } = "";
+        public bool EsCritica { get; set; }
+        public List<OpcionEdicion> Opciones { get; set; } = new();
+    }
+
+    public class OpcionEdicion
+    {
+        public string Texto { get; set; } = "";
+        public bool EsCorrecta { get; set; }
+        public bool EsRedFlag { get; set; }
+    }
+
+    public class TestDetalleRespuesta
+    {
+        public TestEdicion Test { get; set; } = new();
+        public List<int> Tipos { get; set; } = new();
+        public List<PreguntaEdicion> Preguntas { get; set; } = new();
+    }
+
+    public class TestIntentoFila
+    {
+        public int Id { get; set; }
+        public int TestId { get; set; }
+        public string Test { get; set; } = "";
+        public string? TipoTrabajo { get; set; }
+        public int? UsuarioId { get; set; }
+        public string? Nombre { get; set; }
+        public string? Email { get; set; }
+        public string? Documento { get; set; }
+        public string? Telefono { get; set; }
+        public DateTime FechaInicio { get; set; }
+        public DateTime? FechaFin { get; set; }
+        public int? SegundosUsados { get; set; }
+        public bool TiempoAgotado { get; set; }
+        public int? TotalPreguntas { get; set; }
+        public int? Correctas { get; set; }
+        public decimal? Porcentaje { get; set; }
+        public bool FalloCritica { get; set; }
+        public bool EligioRedFlag { get; set; }
+        public int Resultado { get; set; }
+        public DateTime? BloqueadoHasta { get; set; }
+        public bool Anulado { get; set; }
+        public DateTime? FechaAnulado { get; set; }
+        public string? AnuladoPorNombre { get; set; }
+    }
+
+    public class TestRespuestaFila
+    {
+        public int Orden { get; set; }
+        public string PreguntaTexto { get; set; } = "";
+        public bool EsCritica { get; set; }
+        public string? OpcionTexto { get; set; }
+        public string? CorrectaTexto { get; set; }
+        public bool EsCorrecta { get; set; }
+        public bool EsRedFlag { get; set; }
+    }
+
+    public class TestIntentoDetalle
+    {
+        public TestIntentoFila Intento { get; set; } = new();
+        public List<TestRespuestaFila> Respuestas { get; set; } = new();
+    }
+
+    public class TestResultadoUsuario
+    {
+        public int UsuarioId { get; set; }
+        public int IntentoId { get; set; }
+        public int Resultado { get; set; }
+        public decimal? Porcentaje { get; set; }
+    }
 }

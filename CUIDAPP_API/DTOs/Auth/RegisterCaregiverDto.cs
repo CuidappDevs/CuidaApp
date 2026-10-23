@@ -17,6 +17,14 @@ namespace CUIDAPP_API.DTOs.Auth
         public string? MetodoCobro { get; set; }
         public string? CedulaUrl { get; set; }
         public string? CartaAntecedentesUrl { get; set; }
+        /// <summary>Token del test psicológico aprobado (obligatorio si el tipo de trabajo tiene test activo).</summary>
+        public Guid? TestToken { get; set; }
+    }
+
+    /// <summary>El tipo de trabajo elegido pide test psicológico y no hay un intento aprobado de esta persona.</summary>
+    public class TestRequeridoException : Exception
+    {
+        public TestRequeridoException() : base("Falta aprobar el test psicológico.") { }
     }
 
     public class DocumentoExtraDto

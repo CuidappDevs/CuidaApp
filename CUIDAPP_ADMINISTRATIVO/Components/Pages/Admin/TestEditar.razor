@@ -1,0 +1,456 @@
+@page "/tests/nuevo"
+@page "/tests/{Id:int}"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@inject PanelApiService Api
+@inject NavigationManager Nav
+@inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
+
+<PageTitle>@(Id == null ? "Nuevo test" : "Editar test") · Cuidapp Admin</PageTitle>
+
+<div class="pn-page">
+    <a class="adm-back" href="tests">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"></path></svg>
+        Volver a Test psicológico
+    </a>
+
+    @if (_test == null || _tipos == null)
+    {
+        <div class="adm-card"><Esqueleto Filas="6" ConAvatar="false" /></div>
+    }
+    else
+    {
+        <div class="pn-tp-layout">
+            <div class="pn-tp">
+            <fieldset disabled="@(!_puedeEditar)" class="pn-tp">
+
+                @* ---------- 1. Datos ---------- *@
+                <section class="adm-card pn-tp-card">
+                    <div class="pn-tp-paso">
+                        <span class="pn-tp-paso-n @(string.IsNullOrWhiteSpace(_test.Nombre) ? "" : "ok")">1</span>
+                        <div><span class="adm-card-title">Datos del test</span><span class="adm-card-sub">Lo que ve el equipo en el panel y lo que lee la candidata antes de empezar.</span></div>
+                    </div>
+                    <div>
+                        <label class="pn-label">Nombre del test</label>
+                        <input class="adm-input" maxlength="150" placeholder="Ej.: Test para niñeras" @bind="_test.Nombre" @bind:event="oninput" />
+                        <span class="pn-tp-ayuda">Solo lo ve el equipo. Usa un nombre que diga para quién es.</span>
+                    </div>
+                    <div>
+                        <label class="pn-label">Mensaje para la candidata <span class="pn-muted" style="font-weight:500;">(opcional)</span></label>
+                        <textarea class="adm-textarea" rows="2" maxlength="500" placeholder="Ej.: Lee cada situación con calma y elige lo que harías de verdad. No hay respuestas con trampa." @bind="_test.Descripcion" @bind:event="oninput"></textarea>
+                        <span class="pn-tp-ayuda">Aparece en la app justo antes de la primera pregunta. @(_test.Descripcion?.Length ?? 0)/500</span>
+                    </div>
+                    <label class="pn-switch"><input type="checkbox" @bind="_test.Activo" /> @(_test.Activo ? "Activo: la app lo pide en el registro" : "Inactivo: guardado como borrador, nadie lo ve")</label>
+                </section>
+
+                @* ---------- 2. Servicios ---------- *@
+                <section class="adm-card pn-tp-card">
+                    <div class="pn-tp-paso">
+                        <span class="pn-tp-paso-n @(_test.Tipos.Count > 0 ? "ok" : "")">2</span>
+                        <div><span class="adm-card-title">¿A quién se le pide?</span><span class="adm-card-sub">Toca los servicios que llevan este test. Quien elija uno de ellos al registrarse lo hará antes de subir sus documentos.</span></div>
+                    </div>
+                    <div class="pn-chips">
+                        @foreach (var tipo in _tipos)
+                        {
+                            var otro = _vinculos.FirstOrDefault(v => v.TipoTrabajoId == tipo.Id && v.TestId != Id);
+                            var elegido = _test.Tipos.Contains(tipo.Id ?? 0);
+                            <button type="button" class="pn-chip pn-tp-chip @(elegido ? "on" : "")" disabled="@(otro != null || !_puedeEditar)"
+                                    title="@(otro != null ? $"Ya está en «{otro.TestNombre}»" : null)" @onclick="() => AlternarTipo(tipo.Id ?? 0)">
+                                @if (elegido)
+                                {
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"></path></svg>
+                                }
+                                @tipo.Nombre
+                                @if (otro != null) { <span class="pn-muted" style="font-weight:500;">· en «@otro.TestNombre»</span> }
+                                else if (!tipo.Activo) { <span class="pn-muted" style="font-weight:500;">· oculto</span> }
+                            </button>
+                        }
+                    </div>
+                    <span class="pn-tp-ayuda">Cada servicio admite un solo test. Los que aparecen apagados ya tienen uno: quítalos de ese test primero.</span>
+                </section>
+
+                @* ---------- 3. Reglas ---------- *@
+                <section class="adm-card pn-tp-card">
+                    <div class="pn-tp-paso">
+                        <span class="pn-tp-paso-n ok">3</span>
+                        <div><span class="adm-card-title">Tiempo y calificación</span><span class="adm-card-sub">La app califica sola al terminar. Ajusta cuánto tiempo hay y qué puntaje hace falta.</span></div>
+                    </div>
+                    <div class="pn-tp-reglas">
+                        <div>
+                            <label class="pn-label">Tiempo límite</label>
+                            <span class="pn-tp-num"><input class="pn-input" type="number" min="1" max="180" @bind="_test.MinutosLimite" @bind:event="oninput" /> <span class="pn-muted">min</span></span>
+                            <span class="pn-tp-ayuda">Al acabarse, se envía lo que haya respondido.</span>
+                        </div>
+                        <div>
+                            <label class="pn-label">Aprueba con</label>
+                            <span class="pn-tp-num"><input class="pn-input" type="number" min="1" max="100" step="0.1" @bind="_test.PorcentajeAprobacion" @bind:event="oninput" /> <span class="pn-muted">% o más</span></span>
+                            <span class="pn-tp-ayuda">Sigue el registro sin más.</span>
+                        </div>
+                        <div>
+                            <label class="pn-label">Revisión manual desde</label>
+                            <span class="pn-tp-num"><input class="pn-input" type="number" min="0" max="100" step="0.1" @bind="_test.PorcentajeRevision" @bind:event="oninput" /> <span class="pn-muted">%</span></span>
+                            <span class="pn-tp-ayuda">Sigue, pero el equipo revisa sus respuestas.</span>
+                        </div>
+                        <div>
+                            <label class="pn-label">Si no pasa, bloquear</label>
+                            <span class="pn-tp-num"><input class="pn-input" type="number" min="1" max="3650" @bind="_test.DiasBloqueo" @bind:event="oninput" /> <span class="pn-muted">días</span></span>
+                            <span class="pn-tp-ayuda">No puede volver a intentarlo antes.</span>
+                        </div>
+                    </div>
+
+                    @* Franja visual del resultado según el puntaje *@
+                    <div class="pn-tp-franja" aria-hidden="true">
+                        <span class="rojo" style="width:@Pct(_test.PorcentajeRevision)%;"></span>
+                        <span class="ambar" style="width:@Pct(_test.PorcentajeAprobacion - _test.PorcentajeRevision)%;"></span>
+                        <span class="verde" style="width:@Pct(100 - _test.PorcentajeAprobacion)%;"></span>
+                    </div>
+                    <div class="pn-tp-franja-leyenda">
+                        <span><i class="rojo"></i>Bloqueada: menos de @_test.PorcentajeRevision.ToString("0.#")%@(Total > 0 ? $" (≤ {Math.Max(0, Minimo(_test.PorcentajeRevision) - 1)} correctas)" : "")</span>
+                        <span><i class="ambar"></i>Revisión: @_test.PorcentajeRevision.ToString("0.#")% a @_test.PorcentajeAprobacion.ToString("0.#")%@(Total > 0 ? $" ({Minimo(_test.PorcentajeRevision)}–{Math.Max(Minimo(_test.PorcentajeRevision), Minimo(_test.PorcentajeAprobacion) - 1)})" : "")</span>
+                        <span><i class="verde"></i>Aprobada: @_test.PorcentajeAprobacion.ToString("0.#")% o más@(Total > 0 ? $" ({Minimo(_test.PorcentajeAprobacion)}+ de {Total})" : "")</span>
+                    </div>
+                    <div class="pn-tp-orden">
+                        <b>Antes del puntaje se revisa:</b>
+                        <span><span class="pn-pill tone-danger no-dot">Red flag</span> si eligió una → descartada para siempre</span>
+                        <span><span class="pn-pill tone-warn no-dot">Importante</span> si falló una → bloqueada @_test.DiasBloqueo días</span>
+                    </div>
+                </section>
+
+            </fieldset>
+
+                @* ---------- 4. Preguntas (una por pestaña) ---------- *@
+                <section class="adm-card overflow-hidden">
+                    <div class="pn-card-head">
+                        <div class="pn-tp-paso">
+                            <span class="pn-tp-paso-n @(Total > 0 && Incompletas == 0 ? "ok" : "")">4</span>
+                            <div>
+                                <span class="adm-card-title">Preguntas</span>
+                                <span class="adm-card-sub">Escribe una situación real, sus opciones y marca cuál es la correcta. En la app salen en orden aleatorio.</span>
+                            </div>
+                        </div>
+                        <span class="pn-muted" style="white-space:nowrap;">@Total en total</span>
+                    </div>
+
+                    @if (Total == 0)
+                    {
+                        <div class="pn-tp-vacio">
+                            <span>Todavía no hay preguntas.</span>
+                            @if (_puedeEditar) { <button type="button" class="pn-btn pn-btn-primary" @onclick="AgregarPregunta">Agregar la primera pregunta</button> }
+                        </div>
+                    }
+
+                    @if (Total > 0)
+                    {
+                        <div class="pn-tp-tabs" role="tablist" aria-label="Preguntas">
+                            @for (int i = 0; i < _test.Preguntas.Count; i++)
+                            {
+                                var k = i;
+                                var p = _test.Preguntas[k];
+                                var lista = Faltante(p) == null;
+                                <button type="button" role="tab" aria-selected="@(k == _actual)"
+                                        class="pn-tp-tab @(k == _actual ? "on" : "") @(lista ? "ok" : "falta") @(p.EsCritica ? "critica" : "")"
+                                        title="@TituloPestana(k)" @onclick="() => _actual = k">@(k + 1)</button>
+                            }
+                            @if (_puedeEditar)
+                            {
+                                <button type="button" class="pn-tp-tab nuevo" title="Agregar pregunta" aria-label="Agregar pregunta" @onclick="AgregarPregunta">+</button>
+                            }
+                        </div>
+                        <div class="pn-tp-tabs-leyenda">
+                            <span><i class="ok"></i>Lista</span>
+                            <span><i class="falta"></i>Le falta algo</span>
+                            <span><i class="critica"></i>Importante</span>
+                        </div>
+
+                        var n = Math.Clamp(_actual, 0, Total - 1);
+                        var pregunta = _test.Preguntas[n];
+                        var falta = Faltante(pregunta);
+                        <fieldset disabled="@(!_puedeEditar)" class="pn-tp-fs">
+                        <div class="pn-tp-pregunta @(pregunta.EsCritica ? "critica" : "")" @key="pregunta">
+                            <div class="pn-tp-pregunta-top">
+                                <span class="pn-tp-n">@(n + 1)</span>
+                                <span class="pn-strong">Pregunta @(n + 1)</span>
+                                @if (falta == null) { <span class="pn-pill tone-ok no-dot">Lista</span> }
+                                else { <span class="pn-pill tone-muted no-dot">Falta: @falta</span> }
+                                <span class="pn-grow"></span>
+                                <button type="button" class="pn-tp-importante @(pregunta.EsCritica ? "on" : "")" @onclick="() => pregunta.EsCritica = !pregunta.EsCritica"
+                                        title="Si la falla, queda bloqueada aunque tenga buen puntaje">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"></path></svg>
+                                    @(pregunta.EsCritica ? "Importante" : "Marcar como importante")
+                                </button>
+                                <div class="pn-tp-mover">
+                                    <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" title="Subir" aria-label="Subir" disabled="@(n == 0)" @onclick="() => Mover(n, -1)">↑</button>
+                                    <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" title="Bajar" aria-label="Bajar" disabled="@(n == _test.Preguntas.Count - 1)" @onclick="() => Mover(n, 1)">↓</button>
+                                    <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" title="Duplicar" aria-label="Duplicar" @onclick="() => Duplicar(n)">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg>
+                                    </button>
+                                    <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" title="Eliminar" aria-label="Eliminar pregunta" @onclick="() => QuitarPregunta(n)">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <textarea class="adm-textarea" rows="2" maxlength="1000" placeholder="Describe la situación y la pregunta. Ej.: Durante la limpieza se rompe un adorno de porcelana y los dueños no están. ¿Cómo procede?" @bind="pregunta.Texto" @bind:event="oninput"></textarea>
+
+                            <div class="pn-tp-opciones">
+                                <div class="pn-tp-opciones-head">
+                                    <span>Opciones</span>
+                                    <span>¿Correcta?</span>
+                                    <span>¿Red flag?</span>
+                                    <span></span>
+                                </div>
+                                @for (int j = 0; j < pregunta.Opciones.Count; j++)
+                                {
+                                    var opcion = pregunta.Opciones[j];
+                                    var m = j;
+                                    <div class="pn-tp-opcion @(opcion.EsCorrecta ? "correcta" : opcion.EsRedFlag ? "redflag" : "")">
+                                        <span class="pn-tp-letra">@((char)('A' + m))</span>
+                                        <input class="pn-input" maxlength="500" placeholder="@EjemploOpcion(m)" @bind="opcion.Texto" @bind:event="oninput" />
+                                        <label class="pn-tp-marca" title="Es la respuesta correcta">
+                                            <input type="radio" name="correcta-@n" checked="@opcion.EsCorrecta" @onchange="() => MarcarCorrecta(pregunta, opcion)" />
+                                            <span>Correcta</span>
+                                        </label>
+                                        <label class="pn-tp-marca rojo" title="@(opcion.EsCorrecta ? "La correcta no puede ser red flag" : "Si la elige, queda descartada para siempre")">
+                                            <input type="checkbox" checked="@opcion.EsRedFlag" disabled="@opcion.EsCorrecta" @onchange="e => opcion.EsRedFlag = (bool)(e.Value ?? false)" />
+                                            <span>Red flag</span>
+                                        </label>
+                                        <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" title="Quitar opción" aria-label="Quitar opción" disabled="@(pregunta.Opciones.Count <= 2)" @onclick="() => pregunta.Opciones.RemoveAt(m)">×</button>
+                                    </div>
+                                }
+                                @if (pregunta.Opciones.Count < 6)
+                                {
+                                    <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" style="align-self:flex-start;" @onclick="() => pregunta.Opciones.Add(new OpcionEdicion())">+ Agregar opción</button>
+                                }
+                            </div>
+                        </div>
+                        </fieldset>
+
+                        <div class="pn-tp-agregar">
+                            <button type="button" class="pn-btn pn-btn-quiet" disabled="@(n == 0)" @onclick="() => _actual = n - 1">← Anterior</button>
+                            <span class="pn-muted">Pregunta @(n + 1) de @Total · recomendado: 12 preguntas en 12 minutos</span>
+                            <span class="pn-grow"></span>
+                            @if (n < Total - 1)
+                            {
+                                <button type="button" class="pn-btn pn-btn-primary" @onclick="() => _actual = n + 1">Siguiente →</button>
+                            }
+                            else if (_puedeEditar)
+                            {
+                                <button type="button" class="pn-btn pn-btn-primary" @onclick="AgregarPregunta">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+                                    Agregar pregunta
+                                </button>
+                            }
+                        </div>
+                    }
+                </section>
+            </div>
+
+            @* ---------- Guía lateral ---------- *@
+            <aside class="pn-tp-guia">
+                <section class="adm-card pn-tp-card">
+                    <span class="adm-card-title">Resumen</span>
+                    <div class="pn-tp-resumen">
+                        <div><b>@Total</b><span>preguntas</span></div>
+                        <div><b>@_test.Preguntas.Count(p => p.EsCritica)</b><span>importantes</span></div>
+                        <div><b>@_test.Preguntas.Sum(p => p.Opciones.Count(o => o.EsRedFlag && !string.IsNullOrWhiteSpace(o.Texto)))</b><span>red flags</span></div>
+                        <div><b>@_test.MinutosLimite</b><span>minutos</span></div>
+                    </div>
+                    <ul class="pn-tp-check">
+                        <li class="@(string.IsNullOrWhiteSpace(_test.Nombre) ? "" : "ok")">Tiene nombre</li>
+                        <li class="@(_test.Tipos.Count > 0 ? "ok" : "")">Vinculado a @(_test.Tipos.Count == 1 ? "1 servicio" : $"{_test.Tipos.Count} servicios")</li>
+                        <li class="@(Total > 0 && Incompletas == 0 ? "ok" : "")">@(Incompletas == 0 ? "Todas las preguntas listas" : $"{Incompletas} pregunta(s) sin terminar")</li>
+                        <li class="@(_test.Activo ? "ok" : "")">@(_test.Activo ? "Activo en la app" : "Inactivo (borrador)")</li>
+                    </ul>
+                    @if (_puedeEditar)
+                    {
+                        @if (_error != null) { <span class="pn-tp-error">@_error</span> }
+                        <button type="button" class="pn-btn pn-btn-primary" style="width:100%; justify-content:center;" disabled="@_guardando" @onclick="Guardar">@(_guardando ? "Guardando…" : "Guardar test")</button>
+                        <a class="pn-btn pn-btn-quiet" style="width:100%; justify-content:center;" href="tests">Cancelar</a>
+                    }
+                </section>
+
+                <section class="adm-card pn-tp-card">
+                    <span class="adm-card-title">Cómo se lee cada marca</span>
+                    <div class="pn-tp-leyenda">
+                        <div><span class="pn-tp-muestra correcta">Correcta</span><span>La respuesta esperada. Hay una sola por pregunta y suma al puntaje.</span></div>
+                        <div><span class="pn-tp-muestra redflag">Red flag</span><span>Conducta inaceptable (robo, maltrato, encubrir un accidente). Si la elige, queda <b>descartada para siempre</b>.</span></div>
+                        <div><span class="pn-tp-muestra importante">Importante</span><span>Dilema crítico. Si la falla, queda <b>bloqueada</b> aunque su puntaje sea alto.</span></div>
+                    </div>
+                </section>
+
+                <section class="adm-card pn-tp-card">
+                    <span class="adm-card-title">Consejos para buenas preguntas</span>
+                    <ul class="pn-tp-tips">
+                        <li>Plantea una situación concreta del trabajo: qué pasa, dónde y con quién.</li>
+                        <li>Usa 3 o 4 opciones creíbles; evita que la correcta sea la más larga.</li>
+                        <li>Marca como red flag solo lo grave de verdad, no un simple error.</li>
+                        <li>Reserva "importante" para emergencias y seguridad (niños, salud, intrusos).</li>
+                        <li>Editar el test no cambia los resultados que ya existen.</li>
+                    </ul>
+                </section>
+            </aside>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private record Vinculo(int TestId, int TipoTrabajoId, string TestNombre);
+
+    private TestEdicion? _test;
+    private List<TipoServicioCat>? _tipos;
+    private List<Vinculo> _vinculos = new();
+    private bool _puedeEditar, _guardando;
+    private string? _error;
+    private int _actual; // pregunta abierta en las pestañas
+
+    private int Total => _test?.Preguntas.Count ?? 0;
+    private int Incompletas => _test?.Preguntas.Count(p => Faltante(p) != null) ?? 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthStateTask != null) _puedeEditar = SesionAdmin.PuedeOperar((await AuthStateTask).User);
+
+        var tipos = Api.TiposServicioAsync();
+        var tests = Api.TestsAsync();
+        _tipos = await tipos ?? new();
+        var panel = await tests ?? new();
+        _vinculos = panel.Tipos.Select(v => new Vinculo(v.TestId, v.TipoTrabajoId, panel.Tests.FirstOrDefault(t => t.Id == v.TestId)?.Nombre ?? "otro test")).ToList();
+
+        if (Id is int id)
+        {
+            var detalle = await Api.TestDetalleAsync(id);
+            if (detalle == null)
+            {
+                Toasts.Mostrar(new ResultadoAccion(false, "No se encontró el test."));
+                Nav.NavigateTo("tests");
+                return;
+            }
+            detalle.Test.Tipos = detalle.Tipos;
+            detalle.Test.Preguntas = detalle.Preguntas;
+            _test = detalle.Test;
+        }
+        else
+        {
+            _test = new TestEdicion();
+            AgregarPregunta();
+        }
+    }
+
+    // Cuántas correctas hacen falta para llegar a un porcentaje.
+    private int Minimo(decimal porcentaje) => (int)Math.Ceiling(Total * porcentaje / 100m);
+
+    // Ancho de un tramo de la franja (0..100, con punto decimal para CSS).
+    private static string Pct(decimal valor) => Math.Clamp(valor, 0, 100).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+
+    private static string EjemploOpcion(int i) => i switch
+    {
+        0 => "Ej.: Toma fotos, limpia con cuidado y avisa de inmediato al cliente y a Cuidapp",
+        1 => "Ej.: Esconde los pedazos en la basura y no dice nada",
+        _ => $"Opción {(char)('A' + i)}"
+    };
+
+    // Qué le falta a la pregunta para estar lista (null = lista).
+    private static string? Faltante(PreguntaEdicion p)
+    {
+        if (string.IsNullOrWhiteSpace(p.Texto)) return "texto";
+        var conTexto = p.Opciones.Where(o => !string.IsNullOrWhiteSpace(o.Texto)).ToList();
+        if (conTexto.Count < 2) return "2 opciones";
+        if (conTexto.Count(o => o.EsCorrecta) != 1) return "marcar la correcta";
+        return null;
+    }
+
+    private void AlternarTipo(int tipoId)
+    {
+        if (!_test!.Tipos.Remove(tipoId)) _test.Tipos.Add(tipoId);
+    }
+
+    private void AgregarPregunta()
+    {
+        _test!.Preguntas.Add(new PreguntaEdicion
+        {
+            Opciones = { new OpcionEdicion(), new OpcionEdicion(), new OpcionEdicion(), new OpcionEdicion() }
+        });
+        _actual = _test.Preguntas.Count - 1;
+    }
+
+    private string TituloPestana(int i)
+    {
+        var p = _test!.Preguntas[i];
+        var estado = Faltante(p) is string f ? $"falta {f}" : "lista";
+        return $"Pregunta {i + 1} · {estado}{(p.EsCritica ? " · importante" : "")}";
+    }
+
+    private void Duplicar(int i)
+    {
+        var p = _test!.Preguntas[i];
+        _test.Preguntas.Insert(i + 1, new PreguntaEdicion
+        {
+            Texto = p.Texto,
+            EsCritica = p.EsCritica,
+            Opciones = p.Opciones.Select(o => new OpcionEdicion { Texto = o.Texto, EsCorrecta = o.EsCorrecta, EsRedFlag = o.EsRedFlag }).ToList()
+        });
+        _actual = i + 1;
+    }
+
+    private void Mover(int i, int delta)
+    {
+        var lista = _test!.Preguntas;
+        (lista[i], lista[i + delta]) = (lista[i + delta], lista[i]);
+        _actual = i + delta; // la pestaña sigue a la pregunta
+    }
+
+    private async Task QuitarPregunta(int i)
+    {
+        var p = _test!.Preguntas[i];
+        var vacia = string.IsNullOrWhiteSpace(p.Texto) && p.Opciones.All(o => string.IsNullOrWhiteSpace(o.Texto));
+        if (!vacia && !await Confirmacion.PreguntarAsync("¿Eliminar esta pregunta?", $"Se quitará la pregunta {i + 1} con sus opciones. Los resultados ya guardados no cambian.", "Eliminar", peligro: true))
+            return;
+        _test.Preguntas.RemoveAt(i);
+        _actual = Math.Clamp(i, 0, Math.Max(0, _test.Preguntas.Count - 1));
+    }
+
+    private static void MarcarCorrecta(PreguntaEdicion p, OpcionEdicion elegida)
+    {
+        foreach (var o in p.Opciones) o.EsCorrecta = o == elegida;
+        elegida.EsRedFlag = false;
+    }
+
+    // Misma validación que la API, para avisar antes de enviar.
+    private string? Validar()
+    {
+        var t = _test!;
+        if (string.IsNullOrWhiteSpace(t.Nombre)) return "Ponle un nombre al test (paso 1).";
+        if (t.MinutosLimite is < 1 or > 180) return "El tiempo debe estar entre 1 y 180 minutos.";
+        if (t.PorcentajeAprobacion is <= 0 or > 100) return "El % de aprobación debe estar entre 1 y 100.";
+        if (t.PorcentajeRevision < 0 || t.PorcentajeRevision > t.PorcentajeAprobacion) return "El % de revisión no puede ser mayor que el de aprobación.";
+        if (t.DiasBloqueo is < 1 or > 3650) return "Los días de bloqueo deben estar entre 1 y 3650.";
+        if (t.Activo && t.Preguntas.Count == 0) return "Un test activo necesita al menos una pregunta.";
+        for (int i = 0; i < t.Preguntas.Count; i++)
+            if (Faltante(t.Preguntas[i]) is string falta)
+            {
+                _actual = i; // abre la pregunta con el problema
+                return $"A la pregunta {i + 1} le falta: {falta}.";
+            }
+        return null;
+    }
+
+    private async Task Guardar()
+    {
+        _error = Validar();
+        if (_error != null) return;
+
+        if (_test!.Activo && _test.Tipos.Count == 0 &&
+            !await Confirmacion.PreguntarAsync("¿Guardar sin servicios?", "El test está activo pero no está vinculado a ningún servicio, así que nadie lo verá todavía.", "Guardar igual"))
+            return;
+
+        _guardando = true;
+        var r = await Api.GuardarTestAsync(_test);
+        _guardando = false;
+        Toasts.Mostrar(r);
+        if (r.Ok) Nav.NavigateTo("tests");
+        else _error = r.Mensaje;
+    }
+}

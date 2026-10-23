@@ -1,0 +1,174 @@
+@page "/tests"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@inject PanelApiService Api
+@inject NavigationManager Nav
+
+<PageTitle>Test psicológico · Cuidapp Admin</PageTitle>
+
+<div class="pn-page">
+    <div class="pn-toolbar">
+        <div class="pn-seg">
+            <button type="button" class="@(_tab == 0 ? "on" : "")" @onclick="() => Tab(0)">Tests</button>
+            <button type="button" class="@(_tab == 1 ? "on" : "")" @onclick="() => Tab(1)">Resultados</button>
+        </div>
+        <span class="pn-grow"></span>
+        @if (_tab == 0 && _puedeEditar)
+        {
+            <a class="pn-btn pn-btn-primary" href="tests/nuevo">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+                Nuevo test
+            </a>
+        }
+    </div>
+
+    @if (_tab == 0)
+    {
+        <div class="pn-callout tone-info">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 16v-4m0-4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z"></path></svg>
+            <span>Cuando una Care Partner elige en el registro un servicio vinculado a un test activo, la app le pide el test antes de subir sus documentos. Cada servicio puede tener un solo test.</span>
+        </div>
+
+        <div class="adm-card overflow-hidden">
+            @if (_tests == null)
+            {
+                <Esqueleto Filas="4" ConAvatar="false" />
+            }
+            else if (_tests.Tests.Count == 0)
+            {
+                <EstadoVacio Titulo="Todavía no hay tests" Texto="Crea el primero y vincúlalo a uno o varios tipos de servicio." Icono="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4" />
+            }
+            else
+            {
+                <div class="pn-table-wrap">
+                    <table class="pn-table">
+                        <thead><tr><th>Test</th><th>Servicios</th><th class="pn-num">Preguntas</th><th>Tiempo</th><th>Aprobación</th><th class="pn-num">Intentos</th><th>Estado</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var t in _tests.Tests)
+                            {
+                                var tipos = _tests.Tipos.Where(x => x.TestId == t.Id).ToList();
+                                <tr class="pn-row-link" @onclick='() => Nav.NavigateTo($"tests/{t.Id}")'>
+                                    <td>
+                                        <div class="pn-who-text"><span class="pn-strong">@t.Nombre</span>@if (!string.IsNullOrWhiteSpace(t.Descripcion)) { <span class="pn-muted">@t.Descripcion</span> }</div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-wrap" style="gap:6px;">
+                                            @foreach (var x in tipos) { <span class="pn-tag" style="padding-right:11px;">@x.Nombre</span> }
+                                            @if (tipos.Count == 0) { <span class="pn-muted">Sin vincular</span> }
+                                        </div>
+                                    </td>
+                                    <td class="pn-num">@t.Preguntas@if (t.Criticas > 0) { <span class="pn-muted"> · @t.Criticas críticas</span> }</td>
+                                    <td style="white-space:nowrap;">@t.MinutosLimite min</td>
+                                    <td style="white-space:nowrap;">@t.PorcentajeAprobacion.ToString("0.#")% <span class="pn-muted">· revisión @t.PorcentajeRevision.ToString("0.#")%</span></td>
+                                    <td class="pn-num">@t.Intentos</td>
+                                    <td>
+                                        @if (!t.Activo) { <span class="pn-pill tone-muted">Inactivo</span> }
+                                        else if (tipos.Count == 0 || t.Preguntas == 0) { <span class="pn-pill tone-warn">Activo, sin efecto</span> }
+                                        else { <span class="pn-pill tone-ok">Activo</span> }
+                                    </td>
+                                    <td class="pn-num"><span class="pn-link">@(_puedeEditar ? "Editar" : "Ver") →</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="pn-toolbar">
+            <div class="pn-seg">
+                <button type="button" class="@(_filtro == null ? "on" : "")" @onclick="() => Filtrar(null)">Todos</button>
+                @foreach (var r in new[] { ResultadoTest.Aprobado, ResultadoTest.Revision, ResultadoTest.Bloqueado, ResultadoTest.Descartado })
+                {
+                    <button type="button" class="@(_filtro == r ? "on" : "")" @onclick="() => Filtrar(r)">@ResultadoTest.Texto(r)</button>
+                }
+            </div>
+            <span class="pn-grow"></span>
+            <div class="pn-search" style="max-width:320px; flex:1;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+                <input class="pn-input" type="search" placeholder="Nombre, correo, documento o teléfono" @bind="_buscar" @bind:after="CargarIntentos" />
+            </div>
+        </div>
+
+        <div class="adm-card overflow-hidden">
+            @if (_intentos == null)
+            {
+                <Esqueleto Filas="6" />
+            }
+            else if (_intentos.Count == 0)
+            {
+                <EstadoVacio Titulo="Sin resultados" Texto="Aquí aparecen los tests que terminan las candidatas al registrarse." Icono="M9 12l2 2 4-4M12 3l7 3v6c0 4.5-3 7.7-7 9-4-1.3-7-4.5-7-9V6z" />
+            }
+            else
+            {
+                <div class="pn-table-wrap">
+                    <table class="pn-table">
+                        <thead><tr><th>Candidata</th><th>Test</th><th>Puntaje</th><th>Fecha</th><th>Resultado</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var i in Paginador.Cortar(_intentos, _pagina, 15))
+                            {
+                                <tr class="pn-row-link" @onclick='() => Nav.NavigateTo($"tests/intentos/{i.Id}")'>
+                                    <td>
+                                        <div class="pn-who-text">
+                                            <span>@(i.Nombre ?? "—")</span>
+                                            <span class="pn-muted">@(i.Documento ?? "sin documento")@(i.Telefono != null ? $" · {i.Telefono}" : "")</span>
+                                        </div>
+                                    </td>
+                                    <td><div class="pn-who-text"><span>@i.Test</span><span class="pn-muted">@i.TipoTrabajo</span></div></td>
+                                    <td style="white-space:nowrap;">
+                                        @(i.Porcentaje?.ToString("0.#") ?? "0")% <span class="pn-muted">(@i.Correctas/@i.TotalPreguntas)</span>
+                                        @if (i.FalloCritica) { <span class="pn-pill tone-danger no-dot" style="margin-left:6px;">Falló crítica</span> }
+                                        @if (i.EligioRedFlag) { <span class="pn-pill tone-danger no-dot" style="margin-left:6px;">Red flag</span> }
+                                    </td>
+                                    <td class="pn-muted" style="white-space:nowrap;">@i.FechaFin?.ToString("dd MMM, h:mm tt")</td>
+                                    <td>
+                                        @if (i.Anulado) { <span class="pn-pill tone-muted">Anulado</span> }
+                                        else { <span class="pn-pill @ResultadoTest.Tono(i.Resultado)">@ResultadoTest.Texto(i.Resultado)</span> }
+                                    </td>
+                                    <td class="pn-num"><span class="pn-link">Ver →</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <Paginador Pagina="_pagina" Tamano="15" Total="_intentos.Count" PaginaCambiada="p => _pagina = p" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+    [SupplyParameterFromQuery(Name = "tab")] private int? TabInicial { get; set; }
+
+    private int _tab;
+    private bool _puedeEditar;
+    private TestsPanel? _tests;
+    private List<TestIntentoFila>? _intentos;
+    private int? _filtro;
+    private string? _buscar;
+    private int _pagina = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthStateTask != null) _puedeEditar = SesionAdmin.PuedeOperar((await AuthStateTask).User);
+        await Tab(TabInicial == 1 ? 1 : 0);
+    }
+
+    private async Task Tab(int t)
+    {
+        _tab = t;
+        if (t == 0) _tests = await Api.TestsAsync() ?? new();
+        else await CargarIntentos();
+    }
+
+    private async Task Filtrar(int? r) { _filtro = r; await CargarIntentos(); }
+
+    private async Task CargarIntentos()
+    {
+        _pagina = 1;
+        _intentos = null;
+        _intentos = await Api.TestIntentosAsync(_filtro, _buscar) ?? new();
+    }
+}

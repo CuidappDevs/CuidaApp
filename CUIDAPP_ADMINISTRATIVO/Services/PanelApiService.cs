@@ -167,6 +167,20 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
         public Task<ResultadoAccion> AgregarRequisitoAsync(int estatusId, string tipo) => Enviar(HttpMethod.Post, "admin/catalogos/requisitos", new { EstatusMigratorioId = estatusId, TipoDocumento = tipo });
         public Task<ResultadoAccion> QuitarRequisitoAsync(int id) => Enviar(HttpMethod.Delete, $"admin/catalogos/requisitos/{id}");
 
+        // Test psicológico del registro
+        public Task<TestsPanel?> TestsAsync() => Get<TestsPanel>("admin/tests");
+        public Task<TestDetalleRespuesta?> TestDetalleAsync(int id) => Get<TestDetalleRespuesta>($"admin/tests/{id}");
+        public Task<ResultadoAccion> GuardarTestAsync(TestEdicion t) => Enviar(HttpMethod.Post, "admin/tests", t);
+        public Task<List<TestIntentoFila>?> TestIntentosAsync(int? resultado, string? buscar)
+            => Get<List<TestIntentoFila>>("admin/tests/intentos?" + string.Join("&", new[]
+            {
+                resultado is int r ? $"resultado={r}" : null,
+                string.IsNullOrWhiteSpace(buscar) ? null : $"buscar={Uri.EscapeDataString(buscar.Trim())}"
+            }.Where(p => p != null)));
+        public Task<TestIntentoDetalle?> TestIntentoAsync(int id) => Get<TestIntentoDetalle>($"admin/tests/intentos/{id}");
+        public Task<ResultadoAccion> AnularTestIntentoAsync(int id) => Enviar(HttpMethod.Post, $"admin/tests/intentos/{id}/anular");
+        public Task<List<TestResultadoUsuario>?> TestResultadosUsuariosAsync() => Get<List<TestResultadoUsuario>>("admin/tests/resultados-usuarios");
+
         public Task<ResultadoAccion> AtenderSosAsync(int id, string atendidoPor) => Enviar(HttpMethod.Put, $"sos/{id}/atender", new { AtendidoPor = atendidoPor });
         public Task<ResultadoAccion> DescartarSosAsync(int id) => Enviar(HttpMethod.Put, $"sos/{id}/descartar");
     }

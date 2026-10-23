@@ -17,6 +17,8 @@ namespace CUIDAPP.Models.Auth
         public string? MetodoCobro { get; set; }
         public string? CedulaUrl { get; set; }
         public string? CartaAntecedentesUrl { get; set; }
+        /// <summary>Token del test psicológico aprobado (si el tipo de trabajo lo pide).</summary>
+        public Guid? TestToken { get; set; }
     }
 
     public class DocumentoExtraDto

@@ -36,7 +36,7 @@
         {
             <div class="pn-table-wrap">
                 <table class="pn-table">
-                    <thead><tr><th>Care Partner</th><th>Documentos</th><th>Esperando</th><th>Última subida</th><th>Estado</th><th></th></tr></thead>
+                    <thead><tr><th>Care Partner</th><th>Test</th><th>Documentos</th><th>Esperando</th><th>Última subida</th><th>Estado</th><th></th></tr></thead>
                     <tbody>
                         @foreach (var v in Paginador.Cortar(Filtrados(), _pagina, 15))
                         {
@@ -46,6 +46,15 @@
                                         <Avatar Url="@Api.Archivo(v.FotoUrl)" Nombre="@v.Nombre" />
                                         <div class="pn-who-text"><span>@v.Nombre</span><span class="pn-muted">@v.Email@(v.Telefono != null ? $" · {v.Telefono}" : "")</span></div>
                                     </div>
+                                </td>
+                                <td style="white-space:nowrap;">
+                                    @if (_tests.TryGetValue(v.UsuarioId, out var t))
+                                    {
+                                        <a class="pn-pill @ResultadoTest.Tono(t.Resultado)" href="tests/intentos/@t.IntentoId" @onclick:stopPropagation="true" title="Ver respuestas">
+                                            @ResultadoTest.Texto(t.Resultado)@(t.Porcentaje is decimal pct ? $" · {pct:0.#}%" : "")
+                                        </a>
+                                    }
+                                    else { <span class="pn-muted">—</span> }
                                 </td>
                                 <td style="min-width:170px;">
                                     <div class="d-flex flex-column" style="gap:6px;">
@@ -84,7 +93,15 @@
     private int _filtro;
     private int _pagina = 1;
 
-    protected override async Task OnInitializedAsync() => _lista = await Api.VerificacionAsync() ?? new();
+    // Último resultado del test psicológico de cada Care Partner (si su servicio lo pedía).
+    private Dictionary<int, TestResultadoUsuario> _tests = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tests = Api.TestResultadosUsuariosAsync();
+        _lista = await Api.VerificacionAsync() ?? new();
+        _tests = (await tests ?? new()).ToDictionary(t => t.UsuarioId);
+    }
 
     private void Filtrar(int f) { _filtro = f; _pagina = 1; }
 

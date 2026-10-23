@@ -39,6 +39,7 @@ Each domain has its own folder in Controllers/, Interfaces/, Services/, DTOs/:
 - `Ticket/` — support tickets (create, message, status)
 - `PagoAdmin/` — payment authorization/approval. Payment states: 1 pending, 3 authorized, 2 paid, 4 paid in cash (client paid the caregiver directly; the commission goes to the caregiver's balance `MovimientosSaldoCuidador` and is deducted when authorizing their next transfer payment; with the balance at the cap `TopeDeudaEfectivo` they cannot accept cash services). The client picks the payment method when requesting (`Trabajos.MetodoPago`)
 - `Grabacion/` — black-box security audio (transparent, consented): on/off flag, mark service, register uploaded segments; `GrabacionRetencionService` deletes clips older than 30 days (kept if the service has an open dispute or an SOS)
+- `TestPsicologico/` — psychological test at caregiver sign-up (`docs/sql/test-psicologico.sql`). The panel creates tests (questions, critical questions, red-flag options, time limit, approval/review %, block days) and links each to `TiposTrabajos` (one test per type) via `AdminTestsController`. The app asks for it after the "¿Qué trabajo haces?" step; the server grades it (red flag → discarded forever, failed critical → blocked, else by %), blocks by document/phone, and `register/cuidador` requires the passing `TestToken` (409 `TEST_REQUERIDO`)
 - `Sistema/` — server time sync
 - `Upload/` — file upload (max 10MB: jpg, png, pdf, m4a, mp3, wav, aac)
 

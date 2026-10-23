@@ -1,4 +1,6 @@
-// Set up event handlers
+// Reconexión del panel con el servidor (Blazor Server).
+// Al volver a la pestaña después de una pausa se reintenta enseguida; si la sesión ya no existe,
+// se recarga la página sola para que nunca quede "congelada".
 const reconnectModal = document.getElementById("components-reconnect-modal");
 reconnectModal.addEventListener("components-reconnect-state-changed", handleReconnectStateChanged);
 
@@ -8,40 +10,57 @@ retryButton.addEventListener("click", retry);
 const resumeButton = document.getElementById("components-resume-button");
 resumeButton.addEventListener("click", resume);
 
+let desconectado = false;
+let reintentando = false;
+
+// Siempre escuchando: al volver a la pestaña, si se perdió la conexión, se reintenta ya.
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && desconectado) {
+        retry();
+    }
+});
+
 function handleReconnectStateChanged(event) {
-    if (event.detail.state === "show") {
+    const estado = event.detail.state;
+    if (estado === "show") {
+        desconectado = true;
         reconnectModal.showModal();
-    } else if (event.detail.state === "hide") {
+    } else if (estado === "hide") {
+        desconectado = false;
         reconnectModal.close();
-    } else if (event.detail.state === "failed") {
-        document.addEventListener("visibilitychange", retryWhenDocumentBecomesVisible);
-    } else if (event.detail.state === "rejected") {
+    } else if (estado === "failed") {
+        desconectado = true;
+        // Si el usuario está mirando, reintenta sin esperar a que pulse el botón.
+        if (document.visibilityState === "visible") {
+            setTimeout(retry, 2000);
+        }
+    } else if (estado === "rejected") {
         location.reload();
     }
 }
 
 async function retry() {
-    document.removeEventListener("visibilitychange", retryWhenDocumentBecomesVisible);
-
+    if (reintentando) return;
+    reintentando = true;
     try {
-        // Reconnect will asynchronously return:
-        // - true to mean success
-        // - false to mean we reached the server, but it rejected the connection (e.g., unknown circuit ID)
-        // - exception to mean we didn't reach the server (this can be sync or async)
+        // true = reconectó · false = el servidor respondió pero la sesión ya no existe · excepción = servidor no disponible
         const successful = await Blazor.reconnect();
-        if (!successful) {
-            // We have been able to reach the server, but the circuit is no longer available.
-            // We'll reload the page so the user can continue using the app as quickly as possible.
-            const resumeSuccessful = await Blazor.resumeCircuit();
-            if (!resumeSuccessful) {
-                location.reload();
-            } else {
-                reconnectModal.close();
-            }
+        if (successful) {
+            desconectado = false;
+            reconnectModal.close();
+            return;
         }
-    } catch (err) {
-        // We got an exception, server is currently unavailable
-        document.addEventListener("visibilitychange", retryWhenDocumentBecomesVisible);
+        const resumeSuccessful = await Blazor.resumeCircuit();
+        if (resumeSuccessful) {
+            desconectado = false;
+            reconnectModal.close();
+        } else {
+            location.reload();
+        }
+    } catch {
+        // Servidor no disponible por ahora: se reintenta al volver a la pestaña o con el botón.
+    } finally {
+        reintentando = false;
     }
 }
 
@@ -53,11 +72,5 @@ async function resume() {
         }
     } catch {
         reconnectModal.classList.replace("components-reconnect-paused", "components-reconnect-resume-failed");
-    }
-}
-
-async function retryWhenDocumentBecomesVisible() {
-    if (document.visibilityState === "visible") {
-        await retry();
     }
 }

@@ -6,8 +6,21 @@ using CUIDAPP_ADMINISTRATIVO.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
+// La sesión del panel (circuito) aguanta pausas largas: con la pestaña en segundo plano el navegador
+// frena los "pings" (Chrome manda ~1 por minuto) y con los valores por defecto (30 s de espera y 3 min
+// guardando la sesión) el panel quedaba congelado al volver de una llamada o una pausa.
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+    .AddInteractiveServerComponents(o =>
+    {
+        o.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(60);
+        o.DisconnectedCircuitMaxRetained = 200;
+    })
+    .AddHubOptions(o =>
+    {
+        o.ClientTimeoutInterval = TimeSpan.FromMinutes(3);
+        o.KeepAliveInterval = TimeSpan.FromSeconds(15);
+        o.HandshakeTimeout = TimeSpan.FromSeconds(30);
+    });
 
 builder.Services.AddHttpClient<AdminAuthService>(client =>
 {

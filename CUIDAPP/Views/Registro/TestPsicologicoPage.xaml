@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:loc="clr-namespace:CUIDAPP.Localization"
+             x:Class="CUIDAPP.Views.Registro.TestPsicologicoPage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource ColorBackground}"
+             SafeAreaEdges="None">
+
+    <Grid SafeAreaEdges="None">
+        <ScrollView x:Name="Scroll" SafeAreaEdges="None">
+            <VerticalStackLayout Spacing="0">
+
+                <!-- ENCABEZADO (borde a borde): título, tiempo restante y avance -->
+                <Grid Padding="0,0,0,26">
+                    <Grid.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#2A63B8" Offset="0.0" />
+                            <GradientStop Color="{StaticResource ColorPrimary}" Offset="0.6" />
+                            <GradientStop Color="{StaticResource ColorPrimaryDark}" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </Grid.Background>
+                    <Ellipse Fill="#14FFFFFF" WidthRequest="220" HeightRequest="220" HorizontalOptions="End" VerticalOptions="Start" Margin="0,-90,-80,0"/>
+
+                    <VerticalStackLayout x:Name="ContenidoEncabezado" Spacing="14">
+                        <Grid ColumnDefinitions="44,*,Auto" Padding="12,10,16,0" ColumnSpacing="10">
+                            <Border x:Name="BtnCerrar" Stroke="Transparent" BackgroundColor="#26FFFFFF" WidthRequest="44" HeightRequest="44">
+                                <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnCerrarTapped" />
+                                </Border.GestureRecognizers>
+                                <Path Data="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" Fill="White" Aspect="Uniform" WidthRequest="16" HeightRequest="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                            </Border>
+                            <Label Grid.Column="1" x:Name="LblTitulo" Text="{loc:T test_titulo}" FontSize="17" FontFamily="OpenSansSemibold" TextColor="White" VerticalOptions="Center" LineBreakMode="TailTruncation"/>
+                            <Border Grid.Column="2" x:Name="CajaTiempo" IsVisible="False" Stroke="Transparent" BackgroundColor="#26FFFFFF" StrokeShape="RoundRectangle 14" Padding="12,6" VerticalOptions="Center">
+                                <HorizontalStackLayout Spacing="6">
+                                    <Path Data="M12 2C6.5 2 2 6.5 2 12S6.5 22 12 22 22 17.5 22 12 17.5 2 12 2ZM12 20C7.59 20 4 16.41 4 12S7.59 4 12 4 20 7.59 20 12 16.41 20 12 20ZM12.5 7H11V13L16.2 16.2L17 14.9L12.5 12.2V7Z" Fill="White" Aspect="Uniform" WidthRequest="15" HeightRequest="15" VerticalOptions="Center"/>
+                                    <Label x:Name="LblTiempo" FontSize="15" FontFamily="OpenSansSemibold" TextColor="White" VerticalOptions="Center"/>
+                                </HorizontalStackLayout>
+                            </Border>
+                        </Grid>
+
+                        <VerticalStackLayout x:Name="BloqueAvance" Spacing="8" Padding="20,0" IsVisible="False">
+                            <Label x:Name="LblAvance" FontSize="13" FontFamily="OpenSansSemibold" TextColor="#E6FFFFFF"/>
+                            <Grid x:Name="PistaAvance" HeightRequest="6">
+                                <Border Stroke="Transparent" BackgroundColor="#33FFFFFF" StrokeShape="RoundRectangle 3"/>
+                                <Border x:Name="BarraAvance" Stroke="Transparent" BackgroundColor="White" StrokeShape="RoundRectangle 3" HorizontalOptions="Start" WidthRequest="0"/>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Grid>
+
+                <VerticalStackLayout Padding="20,20,20,0" Spacing="16">
+
+                    <!-- Cargando el test -->
+                    <VerticalStackLayout x:Name="PanelCargando" Spacing="12" Padding="0,60,0,0">
+                        <ActivityIndicator IsRunning="True" Color="{StaticResource ColorPrimary}" HorizontalOptions="Center"/>
+                        <Label Text="{loc:T test_preparando}" FontSize="14" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+
+                    <!-- Pregunta actual -->
+                    <VerticalStackLayout x:Name="PanelPregunta" Spacing="14" IsVisible="False">
+                        <Border Stroke="{StaticResource ColorBorder}" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="18">
+                            <Label x:Name="LblPregunta" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" LineHeight="1.25"/>
+                        </Border>
+                        <Label Text="{loc:T test_elige_una}" FontSize="13" TextColor="{StaticResource ColorTextMuted}"/>
+                        <VerticalStackLayout x:Name="ListaOpciones" Spacing="10"/>
+
+                        <Border x:Name="BtnSiguiente" Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimary}" StrokeShape="RoundRectangle 18" HeightRequest="56" Margin="0,8,0,0" Opacity="0.5">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnSiguienteTapped" />
+                            </Border.GestureRecognizers>
+                            <Label x:Name="LblSiguiente" Text="{loc:T siguiente}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
+                        <Label x:Name="BtnAnterior" Text="{loc:T test_anterior}" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" Padding="12,6">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnAnteriorTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </VerticalStackLayout>
+
+                    <!-- Enviando -->
+                    <VerticalStackLayout x:Name="PanelEnviando" Spacing="12" Padding="0,60,0,0" IsVisible="False">
+                        <ActivityIndicator IsRunning="True" Color="{StaticResource ColorPrimary}" HorizontalOptions="Center"/>
+                        <Label Text="{loc:T test_enviando}" FontSize="14" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+
+                    <!-- Resultado -->
+                    <VerticalStackLayout x:Name="PanelResultado" Spacing="16" Padding="0,30,0,0" IsVisible="False">
+                        <Border x:Name="CirculoResultado" Stroke="Transparent" WidthRequest="96" HeightRequest="96" HorizontalOptions="Center">
+                            <Border.StrokeShape><Ellipse/></Border.StrokeShape>
+                            <Path x:Name="IconoResultado" Aspect="Uniform" WidthRequest="44" HeightRequest="44" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
+                        <Label x:Name="LblResultadoTitulo" FontSize="22" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" HorizontalTextAlignment="Center"/>
+                        <Label x:Name="LblResultadoTexto" FontSize="15" TextColor="{StaticResource ColorTextMuted}" HorizontalTextAlignment="Center" LineHeight="1.25"/>
+                        <Border x:Name="BtnResultado" Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimary}" StrokeShape="RoundRectangle 18" HeightRequest="56" Margin="0,10,0,0">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnResultadoTapped" />
+                            </Border.GestureRecognizers>
+                            <Label x:Name="LblBtnResultado" FontSize="16" FontFamily="OpenSansSemibold" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <ContentView x:Name="EspacioInferior"/>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>

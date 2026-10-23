@@ -1,0 +1,116 @@
+@page "/tests/intentos/{Id:int}"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@inject PanelApiService Api
+@inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
+
+<PageTitle>Resultado del test · Cuidapp Admin</PageTitle>
+
+<div class="pn-page" style="max-width:960px;">
+    <a class="adm-back" href="tests?tab=1">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"></path></svg>
+        Volver a Resultados
+    </a>
+
+    @if (_d == null)
+    {
+        <div class="adm-card"><Esqueleto Filas="6" ConAvatar="false" /></div>
+    }
+    else
+    {
+        var i = _d.Intento;
+        <section class="adm-card pn-tp-card">
+            <div class="d-flex align-items-center flex-wrap" style="gap:10px;">
+                <span class="adm-card-title" style="font-size:17px;">@(i.Nombre ?? "Candidata sin nombre")</span>
+                @if (i.Anulado) { <span class="pn-pill tone-muted">Anulado</span> }
+                else { <span class="pn-pill @ResultadoTest.Tono(i.Resultado)">@ResultadoTest.Texto(i.Resultado)</span> }
+                <span class="pn-grow"></span>
+                @if (i.UsuarioId is int uid) { <a class="pn-link" href="care-partners/@uid">Ver ficha de Care Partner →</a> }
+            </div>
+            <div class="pn-stats">
+                <div class="pn-stat"><span class="pn-stat-v">@(i.Porcentaje?.ToString("0.#") ?? "0")%</span><span class="pn-stat-k">@i.Correctas de @i.TotalPreguntas correctas</span></div>
+                <div class="pn-stat"><span class="pn-stat-v">@Duracion(i.SegundosUsados)</span><span class="pn-stat-k">@(i.TiempoAgotado ? "Se agotó el tiempo" : "Tiempo usado")</span></div>
+                <div class="pn-stat"><span class="pn-stat-v">@i.Test</span><span class="pn-stat-k">@i.TipoTrabajo</span></div>
+            </div>
+            <div class="pn-kv" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px;">
+                <div><span class="pn-label">Correo</span><div>@(i.Email ?? "—")</div></div>
+                <div><span class="pn-label">Documento</span><div>@(i.Documento ?? "—")</div></div>
+                <div><span class="pn-label">Teléfono</span><div>@(i.Telefono ?? "—")</div></div>
+                <div><span class="pn-label">Terminado</span><div>@i.FechaFin?.ToString("dd MMM yyyy, h:mm tt")</div></div>
+            </div>
+
+            @if (i.EligioRedFlag)
+            {
+                <div class="pn-callout tone-danger"><span>Eligió al menos una opción <b>red flag</b>: queda descartada y no puede volver a registrarse con este documento ni este teléfono.</span></div>
+            }
+            else if (i.Resultado == ResultadoTest.Bloqueado)
+            {
+                <div class="pn-callout tone-warn"><span>@(i.FalloCritica ? "Falló una pregunta importante." : "No llegó al porcentaje de revisión.") Bloqueada hasta el <b>@i.BloqueadoHasta?.ToString("dd MMM yyyy")</b>.</span></div>
+            }
+            else if (i.Resultado == ResultadoTest.Revision)
+            {
+                <div class="pn-callout tone-info"><span>Pasó al porcentaje de revisión manual: puede terminar su registro, pero conviene revisar sus respuestas antes de aprobar su cuenta en Verificación.</span></div>
+            }
+
+            @if (i.Anulado)
+            {
+                <span class="pn-hint">Anulado@(i.AnuladoPorNombre != null ? $" por {i.AnuladoPorNombre}" : "") el @i.FechaAnulado?.ToString("dd MMM yyyy"). Ya no cuenta para bloqueos.</span>
+            }
+            else if (_puedeEditar && i.Resultado is ResultadoTest.Bloqueado or ResultadoTest.Descartado)
+            {
+                <div><button type="button" class="pn-btn pn-btn-quiet" disabled="@_anulando" @onclick="Anular">Anular intento y quitar el bloqueo</button></div>
+            }
+        </section>
+
+        <section class="adm-card overflow-hidden">
+            <div class="pn-card-head"><span class="adm-card-title">Respuestas</span></div>
+            @foreach (var r in _d.Respuestas)
+            {
+                <div class="pn-tp-resp">
+                    <div class="d-flex align-items-start" style="gap:12px;">
+                        <span class="pn-tp-n" style="margin-top:0;">@r.Orden</span>
+                        <span style="flex:1; font-weight:600;">@r.PreguntaTexto</span>
+                        @if (r.EsCritica) { <span class="pn-pill tone-warn no-dot">Importante</span> }
+                    </div>
+                    <div class="pn-tp-resp-op">
+                        <span class="pn-pill @(r.EsCorrecta ? "tone-ok" : "tone-danger") no-dot" style="flex:none;">@(r.EsCorrecta ? "Correcta" : r.OpcionTexto == null ? "Sin responder" : "Incorrecta")</span>
+                        <span>@(r.OpcionTexto ?? "—")</span>
+                        @if (r.EsRedFlag) { <span class="pn-pill tone-danger no-dot" style="flex:none;">Red flag</span> }
+                    </div>
+                    @if (!r.EsCorrecta && r.CorrectaTexto != null)
+                    {
+                        <div class="pn-tp-resp-op pn-muted"><span style="flex:none;">Correcta:</span><span>@r.CorrectaTexto</span></div>
+                    }
+                </div>
+            }
+        </section>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private TestIntentoDetalle? _d;
+    private bool _puedeEditar, _anulando;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthStateTask != null) _puedeEditar = SesionAdmin.PuedeOperar((await AuthStateTask).User);
+        _d = await Api.TestIntentoAsync(Id) ?? new();
+    }
+
+    private static string Duracion(int? s) => s is int x ? $"{x / 60}:{x % 60:00} min" : "—";
+
+    private async Task Anular()
+    {
+        if (!await Confirmacion.PreguntarAsync("¿Anular este intento?",
+                "La persona podrá volver a hacer el test y registrarse. El intento queda en el historial como anulado.", "Anular", peligro: true))
+            return;
+        _anulando = true;
+        var r = await Api.AnularTestIntentoAsync(Id);
+        _anulando = false;
+        Toasts.Mostrar(r);
+        if (r.Ok) _d = await Api.TestIntentoAsync(Id) ?? _d;
+    }
+}

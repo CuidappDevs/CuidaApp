@@ -683,3 +683,12 @@
     .adm-header-sub { display: none; }
     .adm-search { display: none; }
 }
+
+/* Aviso de error de Blazor: oculto; Blazor lo muestra solo cuando hay un error real. */
+#blazor-error-ui {
+    display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 2000;
+    padding: 12px 48px 12px 20px; background: #FEF2F2; color: #991B1B; border-top: 1px solid #FECACA;
+    font-size: 14px; box-shadow: 0 -4px 16px rgba(0,0,0,.08);
+}
+#blazor-error-ui .reload { color: #991B1B; font-weight: 700; margin-left: 8px; }
+#blazor-error-ui .dismiss { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); cursor: pointer; }

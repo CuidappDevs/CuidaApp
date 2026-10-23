@@ -241,17 +241,88 @@ namespace CUIDAPP.Services
             }
         }
 
-        public async Task<bool> RegisterCuidadorAsync(RegisterCaregiverRequest request)
+        /// <summary>Codigo = "TEST_REQUERIDO" si el servidor no encontró el test aprobado de esta persona.</summary>
+        public async Task<(bool Ok, string? Codigo)> RegisterCuidadorAsync(RegisterCaregiverRequest request)
         {
             try
             {
                 var response = await _httpClient.PostAsJsonAsync("auth/register/cuidador", request);
-                return response.IsSuccessStatusCode;
+                if (response.IsSuccessStatusCode)
+                    return (true, null);
+                return (false, await LeerCodigoErrorAsync(response));
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error registrando cuidador: {ex.Message}");
-                return false;
+                return (false, null);
+            }
+        }
+
+        private static async Task<string?> LeerCodigoErrorAsync(HttpResponseMessage response)
+        {
+            try
+            {
+                var json = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+                return json.ValueKind == System.Text.Json.JsonValueKind.Object && json.TryGetProperty("code", out var c) ? c.GetString() : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        // ---------- Test psicológico del registro
+
+        /// <summary>Null si no hubo conexión.</summary>
+        public async Task<EstadoTest?> ObtenerEstadoTestAsync(int tipoTrabajoId, string? documento, string? telefono)
+        {
+            try
+            {
+                var url = $"testpsicologico/estado?tipoTrabajoId={tipoTrabajoId}&documento={Uri.EscapeDataString(documento ?? "")}&telefono={Uri.EscapeDataString(telefono ?? "")}";
+                var response = await _httpClient.GetAsync(url);
+                if (!response.IsSuccessStatusCode)
+                    return null;
+                return await response.Content.ReadFromJsonAsync<EstadoTest>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error consultando el test: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>Test listo para responder, o el estado que impide hacerlo (bloqueado, descartado…). Ambos null si no hubo conexión.</summary>
+        public async Task<(TestParaResolver? Test, EstadoTest? Estado)> IniciarTestAsync(IniciarTestRequest request)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("testpsicologico/iniciar", request);
+                if (response.IsSuccessStatusCode)
+                    return (await response.Content.ReadFromJsonAsync<TestParaResolver>(), null);
+                if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                    return (null, await response.Content.ReadFromJsonAsync<EstadoTest>());
+                return (null, null);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error iniciando el test: {ex.Message}");
+                return (null, null);
+            }
+        }
+
+        public async Task<ResultadoTest?> FinalizarTestAsync(FinalizarTestRequest request)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("testpsicologico/finalizar", request);
+                if (!response.IsSuccessStatusCode)
+                    return null;
+                return await response.Content.ReadFromJsonAsync<ResultadoTest>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error enviando el test: {ex.Message}");
+                return null;
             }
         }
 
