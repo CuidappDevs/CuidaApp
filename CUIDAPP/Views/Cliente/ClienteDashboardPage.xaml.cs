@@ -21,7 +21,8 @@ namespace CUIDAPP.Views.Cliente
         private bool mapaHtmlCargado = false;
         private List<CuidadorMapa> cuidadoresEnMapa = new();
         private bool estaVisible;
-        private bool pollingIniciado;
+        private int generacionPolling;
+        private DateTime ultimaRecargaPorUbicacion = DateTime.MinValue;
         private const string MapboxAccessToken = "pk.eyJ1IjoiZm9yemU5ZGFyayIsImEiOiJjbXNtbmtvb2oxcHV6Mnpwd2s5bTc1YXViIn0.Zm3kXe_m7Ic04GFCjA40DA";
 
         public ClienteDashboardPage()
@@ -165,6 +166,12 @@ namespace CUIDAPP.Views.Cliente
                 punto.Longitud = (decimal)lng;
                 ActualizarCuidadoresEnMapa();
             }
+            else if ((DateTime.UtcNow - ultimaRecargaPorUbicacion).TotalSeconds >= 5)
+            {
+                // Care Partner que acaba de entrar y aún no está en la lista: se trae sin esperar al refresco periódico.
+                ultimaRecargaPorUbicacion = DateTime.UtcNow;
+                _ = CargarCuidadoresEnMapa();
+            }
         }
 
         private async void OnTrabajoActualizadoTiempoReal(int trabajoId, int estado)
@@ -174,16 +181,15 @@ namespace CUIDAPP.Views.Cliente
 
         private void IniciarPollingSiHaceFalta()
         {
-            if (pollingIniciado)
-                return;
-            pollingIniciado = true;
+            // Cada visita arranca su propio refresco; el de la visita anterior se apaga solo.
+            var generacion = ++generacionPolling;
 
             // Mientras el cliente esté viendo el dashboard, refrescamos periódicamente los
             // servicios y cuidadores cercanos, para reflejar en "tiempo real" cuando un
             // cuidador se conecta/desconecta (sin esperar a que el cliente navegue y vuelva).
             Dispatcher.StartTimer(TimeSpan.FromSeconds(8), () =>
             {
-                if (!estaVisible)
+                if (!estaVisible || generacion != generacionPolling)
                     return false;
 
                 if (!hayServicioActivo)

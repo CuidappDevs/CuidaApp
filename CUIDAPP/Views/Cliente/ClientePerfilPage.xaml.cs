@@ -137,6 +137,11 @@ namespace CUIDAPP.Views.Cliente
             await Shell.Current.GoToAsync("MisUbicacionesPage");
         }
 
+        private async void OnContratosTapped(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync("MisContratosPage");
+        }
+
         private async void OnMisCalificacionesTapped(object sender, EventArgs e)
         {
             await Shell.Current.GoToAsync("MisCalificacionesPage");

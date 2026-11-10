@@ -287,6 +287,30 @@ namespace CUIDAPP.Services
             Avisar(string.IsNullOrWhiteSpace(titulo) ? Localizador.T("notif_aviso_equipo") : titulo, mensaje, "aviso", null, null);
         }
 
+        // ---------- 7. Contrato fijo: la otra parte hizo algo (permiso/domicilio los avisa el panel con AvisoDirecto)
+        public static void ContratoActualizado(int contratoId, string? estado)
+        {
+            if (contratoId <= 0 || UsuarioId == 0 || estado is null or "permiso" or "domicilio")
+                return;
+            // No avisar mientras la persona ya está mirando ese contrato.
+            if (Shell.Current?.CurrentPage is Views.Contratos.ContratoDetallePage)
+                return;
+            var clave = estado switch
+            {
+                "1" or "2" => "notif_contrato_propuesta",
+                "3" => "notif_contrato_por_firmar",
+                "4" => "notif_contrato_activo",
+                "5" => "notif_contrato_pausa",
+                "6" => "notif_contrato_terminado",
+                "7" => "notif_contrato_rechazado",
+                "9" => "notif_contrato_retirado",
+                "ausencia" => "notif_contrato_ausencia",
+                _ => null
+            };
+            if (clave == null) return;
+            Avisar(Localizador.T(clave + "_titulo"), Localizador.F(clave + "_texto", contratoId.ToString("D5")), "contrato", null, NotificacionDestino.Contrato(contratoId));
+        }
+
         // ---------- 6. Soporte respondió / cambió el estado del reporte
         public static void TicketActualizado(int ticketId, bool respuesta, int? estado, string? asunto)
         {

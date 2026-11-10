@@ -72,6 +72,9 @@ builder.Services.AddHostedService<CUIDAPP_API.Services.Cuidador.VencimientoDocum
 builder.Services.AddHostedService<CUIDAPP_API.Services.Admin.GrabacionRetencionService>();
 builder.Services.AddScoped<CUIDAPP_API.Interfaces.Admin.IAdminOperacionesService, CUIDAPP_API.Services.Admin.AdminOperacionesService>();
 builder.Services.AddScoped<CUIDAPP_API.Services.Admin.CentroMandoService>();
+// Contratos fijos: firma, PDF privado y generación horaria de las jornadas.
+builder.Services.AddScoped<CUIDAPP_API.Services.Contrato.ContratoService>();
+builder.Services.AddHostedService<CUIDAPP_API.Services.Contrato.ContratosTrabajosService>();
 
 var app = builder.Build();
 

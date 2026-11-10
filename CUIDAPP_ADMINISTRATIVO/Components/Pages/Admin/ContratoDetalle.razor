@@ -1,0 +1,200 @@
+@page "/contratos/{Id:int}"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@inject PanelApiService Api
+@inject AvisoToastService Toasts
+
+<PageTitle>Contrato CF-@Id.ToString("D5") · Cuidapp Admin</PageTitle>
+
+<div class="pn-page">
+    <a class="adm-back" href="contratos">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"></path></svg>
+        Volver a contratos fijos
+    </a>
+
+    @if (_cargando)
+    {
+        <div class="adm-card"><Esqueleto Filas="6" /></div>
+    }
+    else if (_d?.Contrato is not { } c)
+    {
+        <div class="adm-card"><EstadoVacio Titulo="Contrato no encontrado" /></div>
+    }
+    else
+    {
+        <div class="adm-card adm-card-pad d-flex flex-wrap align-items-center" style="gap:16px 24px;">
+            <div class="d-flex flex-column" style="gap:6px; flex:1; min-width:260px;">
+                <div class="d-flex flex-wrap align-items-center" style="gap:10px;">
+                    <span style="font-size:20px; font-weight:600;">Contrato CF-@c.Id.ToString("D5")</span>
+                    <span class="pn-pill @EstadoContrato.Tono(c.Estado)">@EstadoContrato.Texto(c.Estado)</span>
+                </div>
+                <span class="pn-muted" style="font-size:13.5px;">@c.TipoServicio · propuesto el @c.FechaCreacion.ToString("dd MMM yyyy", Es)@(c.FechaActivacion is DateTime fa ? $" · activo desde {fa:dd MMM yyyy}" : "")</span>
+            </div>
+            @if (_d.Documentos.FirstOrDefault() is { } ultimo)
+            {
+                <a class="pn-btn pn-btn-primary" href="contratos/pdf/@ultimo.Id" target="_blank" rel="noopener">Ver PDF firmado</a>
+            }
+        </div>
+
+        <div class="pn-grid pn-grid-2">
+            <div class="d-flex flex-column" style="gap:16px; min-width:0;">
+                <div class="pn-grid pn-grid-2-eq">
+                    @Persona("Cliente", c.ClienteNombre, c.ClienteFoto, c.ClienteTelefono, c.ClienteDocumento, $"clientes/{c.ClienteId}")
+                    @Persona("Care Partner", c.CuidadorNombre, c.CuidadorFoto, c.CuidadorTelefono, c.CuidadorDocumento, $"care-partners/{c.CuidadorId}")
+                </div>
+
+                <div class="adm-card adm-card-pad d-flex flex-column" style="gap:12px;">
+                    <span class="adm-card-title">Condiciones</span>
+                    <dl class="pn-kv" style="margin:0; grid-template-columns:150px 1fr;">
+                        <dt>Domicilio</dt><dd>@c.DomicilioNombre · @c.Direccion</dd>
+                        <dt>Persona a cuidar</dt><dd>@(c.QuienVive ?? "—")</dd>
+                        <dt>Horario</dt><dd>@string.Join(" · ", _d.Horario.Select(EstadoContrato.Franja))</dd>
+                        <dt>Tarifa</dt><dd class="pn-strong">RD$ @c.TarifaHora.ToString("N2") por hora · ≈ RD$ @((c.TarifaHora * (decimal)HorasSemana()).ToString("N0")) por semana</dd>
+                        <dt>Método de pago</dt><dd>@MetodosPago.Texto(c.MetodoPago)</dd>
+                        <dt>Vigencia</dt><dd>Desde @c.FechaInicio.ToString("dd MMM yyyy", Es)@(c.FechaFin is DateTime ff ? $" hasta {ff:dd MMM yyyy}" : " · indefinido") · preaviso @c.DiasPreaviso días</dd>
+                        @if (!string.IsNullOrWhiteSpace(c.Nota)) { <dt>Nota</dt><dd>@c.Nota</dd> }
+                        @if (c.FechaTerminacion is DateTime ft)
+                        {
+                            <dt>Terminación</dt>
+                            <dd>@ft.ToString("dd MMM yyyy", Es) por @(c.TerminadoPor == c.ClienteId ? c.ClienteNombre : c.TerminadoPor == c.CuidadorId ? c.CuidadorNombre : "el sistema")@(string.IsNullOrWhiteSpace(c.MotivoTerminacion) ? "" : $": “{c.MotivoTerminacion}”")</dd>
+                        }
+                    </dl>
+                </div>
+
+                <div class="adm-card adm-card-pad d-flex flex-column" style="gap:10px;">
+                    <span class="adm-card-title">Jornadas</span>
+                    @if (_d.Trabajos.Count == 0) { <span class="pn-muted">Aún no se generan jornadas (se crean 7 días antes, cuando el contrato está activo).</span> }
+                    else
+                    {
+                        <div class="pn-table-wrap">
+                            <table class="pn-table">
+                                <thead><tr><th>Fecha</th><th>Horario</th><th>Monto</th><th>Estado</th></tr></thead>
+                                <tbody>
+                                    @foreach (var t in _d.Trabajos)
+                                    {
+                                        <tr>
+                                            <td><a href="servicios/@t.Id">@t.Fecha.ToString("ddd dd MMM", Es)</a></td>
+                                            <td>@t.HoraInicio–@t.HoraFin</td>
+                                            <td class="pn-num">RD$ @t.Tarifa.ToString("N0")</td>
+                                            <td><span class="pn-pill @EstadoServicio.Tono(t.Estado)">@EstadoServicio.Texto(t.Estado)</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="d-flex flex-column" style="gap:16px; min-width:0;">
+                <div class="adm-card adm-card-pad d-flex flex-column" style="gap:10px;">
+                    <span class="adm-card-title">Documentos</span>
+                    @if (_d.Documentos.Count == 0) { <span class="pn-muted">El PDF se genera cuando firman las dos partes.</span> }
+                    @foreach (var doc in _d.Documentos)
+                    {
+                        <div class="d-flex flex-column" style="gap:6px; padding:8px 0; border-top:1px solid var(--adm-line-soft);">
+                            <div class="d-flex align-items-center" style="gap:8px;">
+                                <span class="pn-strong" style="flex:1;">v@(doc.Version) · @doc.Tipo</span>
+                                <a class="pn-btn pn-btn-quiet pn-btn-sm" href="contratos/pdf/@doc.Id" target="_blank" rel="noopener">Ver</a>
+                                <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" disabled="@_verificando" @onclick="() => Verificar(doc)">Verificar</button>
+                            </div>
+                            <span class="pn-muted">@doc.Fecha.ToString("dd MMM yyyy, h:mm tt", Es)</span>
+                            <code style="font-size:11px; word-break:break-all; color:var(--adm-muted);">SHA-256 @doc.Hash</code>
+                            @if (_verificacion.TryGetValue(doc.Id, out var v))
+                            {
+                                <span class="pn-pill @(v ? "tone-ok" : "tone-danger")" style="align-self:flex-start;">@(v ? "Íntegro: el archivo coincide con su hash" : "¡No coincide o falta el archivo!")</span>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="adm-card adm-card-pad d-flex flex-column" style="gap:10px;">
+                    <span class="adm-card-title">Firmas</span>
+                    @if (_d.Firmas.Count == 0) { <span class="pn-muted">@(c.Estado == 3 ? "Esperando las firmas." : "Sin firmas.")</span> }
+                    @foreach (var f in _d.Firmas)
+                    {
+                        <div class="d-flex flex-column" style="gap:4px; padding:8px 0; border-top:1px solid var(--adm-line-soft);">
+                            <div style="height:64px; background:#fff; border:1px solid var(--adm-line); border-radius:10px; padding:6px; display:flex; justify-content:center;" class="cf-firma">@((MarkupString)f.FirmaSvg)</div>
+                            <span class="pn-strong">@f.NombreCompleto</span>
+                            <span class="pn-muted">@f.Fecha.ToString("dd MMM yyyy, h:mm:ss tt", Es) · código en @f.Correo</span>
+                            <span class="pn-muted">IP @(f.Ip ?? "—")@(f.Latitud is decimal la ? $" · GPS {la.ToString(System.Globalization.CultureInfo.InvariantCulture)}, {f.Longitud?.ToString(System.Globalization.CultureInfo.InvariantCulture)}" : "")</span>
+                        </div>
+                    }
+                </div>
+
+                <div class="adm-card adm-card-pad d-flex flex-column" style="gap:6px;">
+                    <span class="adm-card-title">Negociación</span>
+                    @foreach (var p in _d.Propuestas)
+                    {
+                        <div class="pn-aviso-fila" style="align-items:flex-start;">
+                            <span class="d-flex flex-column" style="flex:1; gap:2px;">
+                                <span class="pn-strong">v@(p.Version) · @p.PropuestoPorNombre</span>
+                                <span>RD$ @p.TarifaHora.ToString("N0")/h · desde @p.FechaInicio.ToString("dd MMM", Es)</span>
+                                <span class="pn-muted">@EstadoContrato.Horario(p.Horario)</span>
+                                @if (!string.IsNullOrWhiteSpace(p.Nota)) { <span class="pn-muted">“@p.Nota”</span> }
+                            </span>
+                            <span class="pn-muted" style="font-size:11.5px; white-space:nowrap;">@p.Fecha.ToString("dd MMM, h:mm tt", Es)</span>
+                        </div>
+                    }
+                </div>
+
+                @if (_d.Ausencias.Count > 0)
+                {
+                    <div class="adm-card adm-card-pad d-flex flex-column" style="gap:6px;">
+                        <span class="adm-card-title">Ausencias</span>
+                        @foreach (var a in _d.Ausencias)
+                        {
+                            <div class="pn-aviso-fila">
+                                <span style="flex:1;"><b>@a.Fecha.ToString("ddd dd MMM", Es)</b> · @a.MarcadoPorNombre@(string.IsNullOrWhiteSpace(a.Motivo) ? "" : $" · {a.Motivo}")</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .cf-firma svg { height: 100%; width: auto; max-width: 100%; }
+</style>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private static readonly System.Globalization.CultureInfo Es = new("es-DO");
+    private DetalleContrato? _d;
+    private bool _cargando = true, _verificando;
+    private readonly Dictionary<int, bool> _verificacion = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _cargando = true;
+        _d = await Api.ContratoAsync(Id);
+        _cargando = false;
+    }
+
+    private double HorasSemana() => _d?.Horario.Sum(h =>
+        TimeSpan.TryParse(h.HoraFin, out var f) && TimeSpan.TryParse(h.HoraInicio, out var i) ? (f - i).TotalHours : 0) ?? 0;
+
+    private async Task Verificar(DocumentoContrato doc)
+    {
+        _verificando = true;
+        var v = await Api.VerificarDocumentoContratoAsync(doc.Id);
+        _verificando = false;
+        if (v == null) { Toasts.Mostrar("No se pudo verificar el documento.", false); return; }
+        _verificacion[doc.Id] = v.Existe && v.Integro;
+        Toasts.Mostrar(v.Existe && v.Integro ? "El PDF está íntegro." : "El PDF no coincide con el hash guardado.", v.Existe && v.Integro);
+    }
+
+    private RenderFragment Persona(string rol, string nombre, string? foto, string? tel, string? doc, string enlace) => __builder =>
+    {
+        <a class="adm-card adm-card-pad d-flex align-items-center" href="@enlace" style="gap:12px; text-decoration:none; color:inherit;">
+            <Avatar Url="@Api.Archivo(foto)" Nombre="@nombre" Tam="42" />
+            <div class="pn-who-text" style="flex:1;">
+                <span class="pn-muted" style="font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em;">@rol</span>
+                <span style="font-size:15px;">@nombre</span>
+                <span class="pn-muted">@(tel ?? "Sin teléfono") · Doc. @(doc ?? "—")</span>
+            </div>
+        </a>
+    };
+}

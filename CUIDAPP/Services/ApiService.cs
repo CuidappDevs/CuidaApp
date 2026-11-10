@@ -12,7 +12,7 @@ using CUIDAPP.Models.Upload;
 
 namespace CUIDAPP.Services
 {
-    public class ApiService
+    public partial class ApiService
     {
         private readonly HttpClient _httpClient;
 

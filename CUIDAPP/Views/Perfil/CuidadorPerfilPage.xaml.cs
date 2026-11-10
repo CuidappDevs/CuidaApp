@@ -292,5 +292,10 @@ namespace CUIDAPP.Views.Perfil
         {
             await Shell.Current.GoToAsync("MisReportesPage");
         }
+
+        private async void OnContratosTapped(object sender, EventArgs e)
+        {
+            await Shell.Current.GoToAsync("MisContratosPage");
+        }
     }
 }

@@ -153,6 +153,7 @@
         new("tests", "Test psicológico", "tests", "M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4"),
         new("partners", "Care Partners", "care-partners", "M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M18 8l2 2 3-3"),
         new("clients", "Clientes", "clientes", "M3 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M9 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M17 20v-2a4 4 0 0 0-2-3.4M16 3.5a3.5 3.5 0 0 1 0 7"),
+        new("contratos", "Contratos fijos", "contratos", "M14 3v4a1 1 0 0 0 1 1h4M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2ZM9 17c1-1.5 2-2 3-1s2 .5 3-1", Permiso.Operar),
         new("calidad", "Calidad", "calidad", "M12 20V10M18 20V4M6 20v-4"),
         new("vencimientos", "Documentos", "vencimientos", "M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.6a1 1 0 0 1 .7.3l5.4 5.4a1 1 0 0 1 .3.7V19a2 2 0 0 1-2 2Z"),
         new("calificaciones", "Calificaciones", "calificaciones", "M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"),
@@ -285,6 +286,7 @@
         if (seg.StartsWith("buscar")) return "buscar";
         if (seg.StartsWith("care-partners")) return "partners";
         if (seg.StartsWith("clientes")) return "clients";
+        if (seg.StartsWith("contratos")) return "contratos";
         if (seg.StartsWith("pagos")) return "pagos";
         if (seg.StartsWith("soporte")) return "soporte";
         if (seg.StartsWith("administradores")) return "admins";
@@ -317,6 +319,8 @@
             _ when seg.StartsWith("care-partners/") => ("Ficha de Care Partner", "Revisión de documentos"),
             "clientes" => ("Clientes registrados", "Gestiona cuentas e información de contacto"),
             _ when seg.StartsWith("clientes/") => ("Ficha de cliente", "Cuenta y servicios contratados"),
+            "contratos" => ("Contratos fijos", "Permisos para contratar, domicilios y contratos firmados"),
+            _ when seg.StartsWith("contratos/") => ("Contrato fijo", "Condiciones, negociación, firmas, PDF y jornadas"),
             "pagos" => ("Pagos", "Autoriza y confirma los pagos a Care Partners"),
             "soporte" => ("Soporte", "Reportes de clientes y Care Partners"),
             _ when seg.StartsWith("soporte/") => ("Reporte", "Detalle y seguimiento"),

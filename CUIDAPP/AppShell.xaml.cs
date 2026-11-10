@@ -35,13 +35,20 @@ namespace CUIDAPP
             Routing.RegisterRoute("AyudaPage", typeof(Views.Soporte.AyudaPage));
             Routing.RegisterRoute("NuevoReportePage", typeof(Views.Soporte.NuevoReportePage));
             Routing.RegisterRoute("DetalleReportePage", typeof(Views.Soporte.DetalleReportePage));
+            Routing.RegisterRoute("MisContratosPage", typeof(Views.Contratos.MisContratosPage));
+            Routing.RegisterRoute("PermisoContratarPage", typeof(Views.Contratos.PermisoContratarPage));
+            Routing.RegisterRoute("ProponerContratoPage", typeof(Views.Contratos.ProponerContratoPage));
+            Routing.RegisterRoute("ContratoDetallePage", typeof(Views.Contratos.ContratoDetallePage));
+            Routing.RegisterRoute("FirmarContratoPage", typeof(Views.Contratos.FirmarContratoPage));
         }
     
         // La barra de estado acompaña al encabezado azul del login y recuperar contraseña; en el resto, blanca.
         protected override void OnNavigated(ShellNavigatedEventArgs args)
         {
             base.OnNavigated(args);
-            if (CurrentPage is MainPage or Views.Auth.ForgotPasswordPage or Views.Cliente.ClientePerfilPage or Views.Cliente.CuidadoresPorServicioPage or Views.Cliente.CuidadorDetallePage or Views.Calificacion.MisCalificacionesPage or Views.Soporte.MisReportesPage or Views.Cliente.SolicitarServicioPage or Views.Cliente.MiServicioPage or Views.Cliente.DetalleServicioClientePage or Views.Cliente.MisUbicacionesPage or Views.Calificacion.CalificarPage or Views.Soporte.NuevoReportePage or Views.Perfil.MiHorarioPage or Views.Soporte.AyudaPage) Helpers.BarraEstado.Azul();
+            if (CurrentPage is MainPage or Views.Auth.ForgotPasswordPage or Views.Cliente.ClientePerfilPage or Views.Cliente.CuidadoresPorServicioPage or Views.Cliente.CuidadorDetallePage or Views.Calificacion.MisCalificacionesPage or Views.Soporte.MisReportesPage or Views.Cliente.SolicitarServicioPage or Views.Cliente.MiServicioPage or Views.Cliente.DetalleServicioClientePage or Views.Cliente.MisUbicacionesPage or Views.Calificacion.CalificarPage or Views.Soporte.NuevoReportePage or Views.Perfil.MiHorarioPage or Views.Soporte.AyudaPage
+                or Views.Contratos.MisContratosPage or Views.Contratos.PermisoContratarPage or Views.Contratos.ProponerContratoPage
+                or Views.Contratos.ContratoDetallePage or Views.Contratos.FirmarContratoPage) Helpers.BarraEstado.Azul();
             else Helpers.BarraEstado.Blanca();
         }
     }

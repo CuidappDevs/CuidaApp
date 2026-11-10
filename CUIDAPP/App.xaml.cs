@@ -49,6 +49,7 @@ namespace CUIDAPP
             RealtimeService.PagoAprobado += (trabajoId, monto) => AvisosApp.PagoAprobado(trabajoId, monto);
             RealtimeService.TicketActualizado += (ticketId, respuesta, estado, asunto) => AvisosApp.TicketActualizado(ticketId, respuesta, estado, asunto);
             RealtimeService.AvisoGeneral += AvisosApp.AvisoGeneral;
+            RealtimeService.ContratoActualizado += AvisosApp.ContratoActualizado;
             RealtimeService.AvisoDirecto += (id, tipo, titulo, mensaje, minutos) =>
             {
                 if (tipo == "checkin")

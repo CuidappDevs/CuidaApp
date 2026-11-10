@@ -16,6 +16,7 @@ namespace CUIDAPP.Views.Cliente
                 cuidador = c;
                 Renderizar(c);
                 _ = CargarRatingAsync(c.Id);
+                _ = MostrarContratoFijoAsync(c.Id);
             }
         }
 
@@ -106,6 +107,20 @@ namespace CUIDAPP.Views.Cliente
         private async void OnBackTapped(object sender, EventArgs e)
         {
             await Shell.Current.GoToAsync("..");
+        }
+
+        /// <summary>El botón de contrato fijo solo aparece si el Care Partner acepta contratos fijos.</summary>
+        private async Task MostrarContratoFijoAsync(int cuidadorId)
+        {
+            var info = await _apiService.PuedeProponerContratoAsync(Preferences.Default.Get("UserId", 0), cuidadorId);
+            BtnContratoFijo.IsVisible = info?.Estado?.AceptaContratos == true;
+        }
+
+        private async void OnContratoFijoTapped(object sender, EventArgs e)
+        {
+            if (cuidador == null)
+                return;
+            await Shell.Current.GoToAsync("ProponerContratoPage", new Dictionary<string, object> { { "Cuidador", cuidador } });
         }
 
         private async void OnSolicitarTapped(object sender, EventArgs e)

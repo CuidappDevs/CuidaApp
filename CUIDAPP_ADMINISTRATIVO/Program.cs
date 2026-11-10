@@ -145,6 +145,25 @@ app.MapGet("/archivo/uploads/{**ruta}", async (string ruta, HttpContext http, IH
     return Results.Stream(await respuesta.Content.ReadAsStreamAsync(http.RequestAborted), tipo, enableRangeProcessing: true);
 }).RequireAuthorization();
 
+// PDF firmado de un contrato fijo: la API lo entrega solo con el JWT del administrador (y queda en la
+// auditoría), así que el panel lo pide con el token de la cookie y lo muestra en el navegador.
+app.MapGet("/contratos/pdf/{documentoId:int}", async (int documentoId, HttpContext http, IHttpClientFactory fabrica, IConfiguration config) =>
+{
+    var token = http.User.FindFirstValue(SesionAdmin.ClaimToken);
+    if (string.IsNullOrEmpty(token))
+        return Results.Unauthorized();
+    var cliente = fabrica.CreateClient("archivos");
+    using var req = new HttpRequestMessage(HttpMethod.Post, new Uri(new Uri(config["ApiBaseUrl"]!), $"admin/contratos/documentos/{documentoId}/descargar"));
+    req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+    var respuesta = await cliente.SendAsync(req, http.RequestAborted);
+    if (!respuesta.IsSuccessStatusCode)
+        return Results.StatusCode((int)respuesta.StatusCode);
+    var nombre = respuesta.Content.Headers.ContentDisposition?.FileNameStar ?? $"Contrato-{documentoId}.pdf";
+    http.Response.Headers.CacheControl = "no-store";
+    http.Response.Headers.ContentDisposition = $"inline; filename=\"{nombre}\"";
+    return Results.Bytes(await respuesta.Content.ReadAsByteArrayAsync(http.RequestAborted), "application/pdf");
+}).RequireAuthorization();
+
 app.MapGet("/account/logout", async (HttpContext http) =>
 {
     await http.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

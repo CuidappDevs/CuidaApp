@@ -60,6 +60,10 @@ namespace CUIDAPP_API.Seguridad
             ["ResolverDisputa"] = "Resolvió una disputa",
             ["RegistrarAbono"] = "Registró un abono de deuda de efectivo",
             ["GuardarConfigPagos"] = "Cambió el tope de deuda o las instrucciones de transferencia",
+            ["RevisarPermisoContratacion"] = "Revisó un permiso para contratar fijo",
+            ["RevisarDomicilioContratacion"] = "Revisó un domicilio para contratos fijos",
+            ["DescargarDocumentoContrato"] = "Descargó el PDF de un contrato",
+            ["VerificarDocumentoContrato"] = "Verificó la integridad del PDF de un contrato",
         };
 
         private static readonly string[] ClavesId = { "id", "usuarioId", "pagoId", "trabajoId", "ticketId", "cuidadorId" };

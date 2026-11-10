@@ -98,6 +98,15 @@
                             </Grid>
                             <BoxView HeightRequest="1" Color="{StaticResource ColorBorder}" Margin="64,0,10,0"/>
                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12">
+                                <Grid.GestureRecognizers><TapGestureRecognizer Tapped="OnContratosTapped"/></Grid.GestureRecognizers>
+                                <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40">
+                                    <Path Data="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM16 18H8V16H16V18ZM16 14H8V12H16V14ZM13 9V3.5L18.5 9H13Z" Fill="{StaticResource ColorPrimary}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </Border>
+                                <Label Grid.Column="1" Text="{loc:T contratos_titulo}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
+                                <Path Grid.Column="2" Data="M10 6L8.59 7.41L13.17 12L8.59 16.59L10 18L16 12L10 6Z" Fill="{StaticResource ColorChevron}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{StaticResource ColorBorder}" Margin="64,0,10,0"/>
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="10,12">
                                 <Grid.GestureRecognizers><TapGestureRecognizer Tapped="OnMisCalificacionesTapped"/></Grid.GestureRecognizers>
                                 <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorWarningSoft}" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40">
                                     <Path Data="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z" Fill="#E09A1A" Aspect="Uniform" WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center"/>

@@ -78,6 +78,25 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
             }
         }
 
+        // ---------- Contratos fijos
+        public Task<List<SolicitudContrato>?> SolicitudesContratoAsync() => Get<List<SolicitudContrato>>("admin/contratos/solicitudes");
+        public Task<List<DomicilioContrato>?> DomiciliosContratoAsync() => Get<List<DomicilioContrato>>("admin/contratos/domicilios");
+        public Task<List<ContratoFila>?> ContratosAsync() => Get<List<ContratoFila>>("admin/contratos");
+        public Task<DetalleContrato?> ContratoAsync(int id) => Get<DetalleContrato>($"admin/contratos/{id}");
+        public Task<ResultadoAccion> RevisarPermisoContratoAsync(int clienteId, string accion, string? comentario)
+            => Enviar(HttpMethod.Post, $"admin/contratos/solicitudes/{clienteId}/revisar", new { Accion = accion, Comentario = comentario });
+        public Task<ResultadoAccion> RevisarDomicilioContratoAsync(int id, string accion, string? comentario)
+            => Enviar(HttpMethod.Post, $"admin/contratos/domicilios/{id}/revisar", new { Accion = accion, Comentario = comentario });
+        public async Task<VerificacionDocumento?> VerificarDocumentoContratoAsync(int documentoId)
+        {
+            try
+            {
+                var r = await _http.PostAsync($"admin/contratos/documentos/{documentoId}/verificar", null);
+                return r.IsSuccessStatusCode ? await r.Content.ReadFromJsonAsync<VerificacionDocumento>(Json) : null;
+            }
+            catch (Exception ex) { Console.WriteLine($"[Panel] verificar documento: {ex.Message}"); return null; }
+        }
+
         // ---------- Lecturas
         public Task<DashboardPanel?> DashboardAsync() => Get<DashboardPanel>("admin/dashboard");
 

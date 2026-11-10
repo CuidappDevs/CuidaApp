@@ -16,7 +16,13 @@ namespace CUIDAPP_API.Services.Email
                 ?? throw new InvalidOperationException("Falta la sección 'EmailCredentials' en la configuración.");
         }
 
-        public async Task EnviarAsync(string destinatario, string asunto, string cuerpoHtml)
+        public Task EnviarAsync(string destinatario, string asunto, string cuerpoHtml)
+            => EnviarInternoAsync(destinatario, asunto, cuerpoHtml, null);
+
+        public Task EnviarConAdjuntoAsync(string destinatario, string asunto, string cuerpoHtml, string nombreArchivo, byte[] contenido, string tipoMime)
+            => EnviarInternoAsync(destinatario, asunto, cuerpoHtml, (nombreArchivo, contenido, tipoMime));
+
+        private async Task EnviarInternoAsync(string destinatario, string asunto, string cuerpoHtml, (string Nombre, byte[] Contenido, string Tipo)? adjunto)
         {
             var mensaje = new MimeMessage();
             mensaje.From.Add(MailboxAddress.Parse(_credenciales.SmtpUser));
@@ -26,7 +32,10 @@ namespace CUIDAPP_API.Services.Email
                 mensaje.To.Add(MailboxAddress.Parse(d));
 
             mensaje.Subject = asunto;
-            mensaje.Body = new BodyBuilder { HtmlBody = cuerpoHtml }.ToMessageBody();
+            var cuerpo = new BodyBuilder { HtmlBody = cuerpoHtml };
+            if (adjunto is { } a)
+                cuerpo.Attachments.Add(a.Nombre, a.Contenido, ContentType.Parse(a.Tipo));
+            mensaje.Body = cuerpo.ToMessageBody();
 
             using var cliente = new SmtpClient();
             await cliente.ConnectAsync(_credenciales.SmtpHost, _credenciales.SmtpPort, SecureSocketOptions.StartTls);

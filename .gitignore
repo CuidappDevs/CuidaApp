@@ -366,3 +366,5 @@ graphify-out
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# PDF firmados de contratos fijos (carpeta privada de la API, nunca al repositorio)
+CUIDAPP_API/privado/

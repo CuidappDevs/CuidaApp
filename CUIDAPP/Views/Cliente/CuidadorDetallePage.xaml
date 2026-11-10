@@ -121,8 +121,13 @@
 
                         <!-- Acción principal (dentro del contenido: nada queda anclado al borde inferior) -->
                         <Border x:Name="PieAccion" Stroke="Transparent" BackgroundColor="Transparent" Padding="0,8,0,0">
-                            <Button x:Name="BtnSolicitar" Text="{loc:T solicitar_servicio}" Clicked="OnSolicitarTapped" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="16" HeightRequest="56"
-                                    Pressed="OnBotonPresionado" Released="OnBotonSoltado"/>
+                            <VerticalStackLayout Spacing="10">
+                                <Button x:Name="BtnSolicitar" Text="{loc:T solicitar_servicio}" Clicked="OnSolicitarTapped" BackgroundColor="{StaticResource ColorPrimary}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="16" CornerRadius="16" HeightRequest="56"
+                                        Pressed="OnBotonPresionado" Released="OnBotonSoltado"/>
+                                <!-- Solo si el Care Partner acepta contratos fijos -->
+                                <Button x:Name="BtnContratoFijo" Text="{loc:T contratar_fijo}" Clicked="OnContratoFijoTapped" IsVisible="False" BackgroundColor="{StaticResource ColorSurface}" TextColor="{StaticResource ColorPrimary}"
+                                        BorderColor="{StaticResource ColorPrimary}" BorderWidth="1.5" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="16" HeightRequest="52"/>
+                            </VerticalStackLayout>
                         </Border>
 
                         <!-- Espacio final: deja libre la barra de gestos -->

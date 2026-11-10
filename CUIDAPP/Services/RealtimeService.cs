@@ -26,6 +26,7 @@ namespace CUIDAPP.Services
         public static event Action<int, bool, int?, string?>? TicketActualizado; // TicketId, Respuesta, Estado, Asunto
         public static event Action<int, string, string, string, int>? AvisoDirecto; // Id, Tipo ("mensaje"/"checkin"), Título, Mensaje, Minutos
         public static event Action<int, string?, string, string>? AvisoGeneral; // Destino (0 todos, 2 clientes, 3 cuidadores), Idioma (null todos), Título, Mensaje
+        public static event Action<int, string?>? ContratoActualizado; // ContratoId (0 = permiso/domicilio), Estado ("1".."9", "ausencia", "permiso", "domicilio")
 
         public static bool EstaConectado => _connection?.State == HubConnectionState.Connected;
 
@@ -102,6 +103,20 @@ namespace CUIDAPP.Services
                 var mensaje = json.TryGetProperty("mensaje", out var m) ? m.GetString() ?? "" : "";
                 var minutos = json.TryGetProperty("minutos", out var mi) && mi.ValueKind == System.Text.Json.JsonValueKind.Number ? mi.GetInt32() : 0;
                 MainThread.BeginInvokeOnMainThread(() => AvisoDirecto?.Invoke(id, tipo, titulo, mensaje, minutos));
+            });
+
+            // Contrato fijo: propuesta, respuesta, firma, ausencia, pausa… (o permiso/domicilio revisado: ContratoId 0).
+            _connection.On<object>("ContratoActualizado", payload =>
+            {
+                var json = (System.Text.Json.JsonElement)payload;
+                var id = json.TryGetProperty("contratoId", out var c) && c.ValueKind == System.Text.Json.JsonValueKind.Number ? c.GetInt32() : 0;
+                string? estado = json.TryGetProperty("estado", out var e) ? e.ValueKind switch
+                {
+                    System.Text.Json.JsonValueKind.Number => e.GetInt32().ToString(),
+                    System.Text.Json.JsonValueKind.String => e.GetString(),
+                    _ => null
+                } : null;
+                MainThread.BeginInvokeOnMainThread(() => ContratoActualizado?.Invoke(id, estado));
             });
 
             // Aviso masivo enviado desde el panel administrativo.

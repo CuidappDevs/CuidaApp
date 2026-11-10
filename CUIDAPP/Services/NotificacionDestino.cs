@@ -17,6 +17,7 @@ namespace CUIDAPP.Services
         public static string ChatPin(int trabajoId) => $"chatpin:{trabajoId}";
         public static string Calificar(int trabajoId) => $"calificar:{trabajoId}";
         public static string Ticket(int ticketId) => $"ticket:{ticketId}";
+        public static string Contrato(int contratoId) => $"contrato:{contratoId}";
         public const string Verificacion = "verificacion";
         public const string Dinero = "dinero";
 
@@ -108,6 +109,10 @@ namespace CUIDAPP.Services
 
                     case "ticket":
                         await Shell.Current.GoToAsync("DetalleReportePage", new Dictionary<string, object> { { "TicketId", id } });
+                        break;
+
+                    case "contrato":
+                        await Shell.Current.GoToAsync("ContratoDetallePage", new Dictionary<string, object> { { "ContratoId", id } });
                         break;
 
                     case Verificacion:

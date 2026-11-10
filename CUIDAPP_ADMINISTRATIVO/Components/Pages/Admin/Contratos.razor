@@ -1,0 +1,224 @@
+@page "/contratos"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@inject PanelApiService Api
+@inject NavigationManager Nav
+@inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
+
+<PageTitle>Contratos fijos · Cuidapp Admin</PageTitle>
+
+<div class="pn-page">
+    <div class="pn-toolbar">
+        <div class="pn-seg">
+            <button type="button" class="@(_tab == 0 ? "on" : "")" @onclick="() => Tab(0)">Permisos para contratar <span class="pn-seg-n">@(_solicitudes?.Count(s => s.Estado == 1) ?? 0)</span></button>
+            <button type="button" class="@(_tab == 1 ? "on" : "")" @onclick="() => Tab(1)">Domicilios <span class="pn-seg-n">@(_domicilios?.Count(d => d.Estado == 1) ?? 0)</span></button>
+            <button type="button" class="@(_tab == 2 ? "on" : "")" @onclick="() => Tab(2)">Contratos <span class="pn-seg-n">@(_contratos?.Count(c => c.Estado is 4 or 5) ?? 0)</span></button>
+        </div>
+        <label class="d-flex align-items-center" style="gap:8px; font-size:13px;">
+            <input type="checkbox" @bind="_soloPendientes" @bind:after="() => _pagina = 1" />
+            @(_tab == 2 ? "Solo vivos (negociando, activos o en pausa)" : "Solo pendientes de revisar")
+        </label>
+    </div>
+
+    @if (_tab == 0)
+    {
+        <div class="pn-callout tone-info">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 16v-4m0-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path></svg>
+            <span>Un cliente necesita este permiso <b>y</b> al menos un domicilio validado para proponer contratos fijos. Revocar un permiso pone en pausa sus contratos activos y retira las propuestas en curso.</span>
+        </div>
+        <div class="adm-card overflow-hidden">
+            @if (_solicitudes == null) { <Esqueleto Filas="5" /> }
+            else if (!Solicitudes().Any()) { <EstadoVacio Titulo="Sin solicitudes" Texto="Cuando un cliente pida permiso para contratar fijo desde la app, aparecerá aquí." /> }
+            else
+            {
+                @foreach (var s in Paginador.Cortar(Solicitudes(), _pagina, 10))
+                {
+                    <div class="adm-card-pad d-flex flex-wrap" style="gap:16px 24px; border-top:1px solid var(--adm-line-soft);">
+                        <div class="d-flex flex-column" style="gap:10px; flex:1; min-width:280px;">
+                            <a class="pn-who" href="clientes/@s.ClienteId" style="text-decoration:none; color:inherit;">
+                                <Avatar Url="@Api.Archivo(s.FotoUrl)" Nombre="@s.NombreCompleto" Tam="40" />
+                                <div class="pn-who-text"><span>@s.NombreCompleto</span><span class="pn-muted">@s.Email · @(s.Telefono ?? "sin teléfono") · Doc. @(s.DocumentoIdentidad ?? "—")</span></div>
+                            </a>
+                            <div style="font-size:14px;">“@s.Motivo”</div>
+                            @if (!string.IsNullOrWhiteSpace(s.Referencia)) { <span class="pn-muted"><b>Referencia:</b> @s.Referencia</span> }
+                            <div class="d-flex flex-wrap" style="gap:6px;">
+                                <span class="pn-pill no-dot tone-muted">Cliente desde @(s.ClienteDesde?.ToString("MMM yyyy", Es) ?? "—")</span>
+                                <span class="pn-pill no-dot @(s.ServiciosCompletados >= 3 ? "tone-ok" : "tone-warn")">@s.ServiciosCompletados servicios completados</span>
+                                <span class="pn-pill no-dot @(s.ServiciosCancelados > 2 ? "tone-danger" : "tone-muted")">@s.ServiciosCancelados cancelados</span>
+                                <span class="pn-pill no-dot tone-muted">@(s.CalificacionPromedio is decimal c ? $"★ {c:0.0} como cliente" : "Sin calificaciones")</span>
+                                @if (s.Sanciones > 0) { <span class="pn-pill no-dot tone-danger">@s.Sanciones sanción(es)</span> }
+                                <span class="pn-pill no-dot tone-muted">@s.DomiciliosAprobados domicilio(s) validado(s)</span>
+                            </div>
+                            @if (Api.Archivo(s.CedulaUrl) is string ced) { <a class="pn-link" href="@ced" target="_blank" rel="noopener">Ver cédula adjunta →</a> }
+                        </div>
+                        <div class="d-flex flex-column" style="gap:8px; min-width:220px;">
+                            <span class="pn-pill @EstadoContrato.TonoRevision(s.Estado)" style="align-self:flex-start;">@EstadoContrato.TextoRevision(s.Estado)</span>
+                            <span class="pn-muted">Solicitado @s.FechaSolicitud.ToString("dd MMM yyyy, h:mm tt", Es)</span>
+                            @if (s.FechaRevision is DateTime fr) { <span class="pn-muted">Revisado @fr.ToString("dd MMM yyyy", Es)@(s.RevisadoPor != null ? $" · {s.RevisadoPor}" : "")</span> }
+                            @if (!string.IsNullOrWhiteSpace(s.ComentarioAdmin)) { <span class="pn-muted">“@s.ComentarioAdmin”</span> }
+                            @if (s.Estado == 1)
+                            {
+                                <div class="d-flex" style="gap:8px;">
+                                    <button type="button" class="pn-btn pn-btn-ok pn-btn-sm" disabled="@_procesando" @onclick='() => RevisarPermiso(s, "aprobar")'>Aprobar</button>
+                                    <button type="button" class="pn-btn pn-btn-danger-soft pn-btn-sm" disabled="@_procesando" @onclick='() => RevisarPermiso(s, "rechazar")'>Rechazar</button>
+                                </div>
+                            }
+                            else if (s.Estado == 2)
+                            {
+                                <button type="button" class="pn-btn pn-btn-danger-soft pn-btn-sm" style="align-self:flex-start;" disabled="@_procesando" @onclick='() => RevisarPermiso(s, "revocar")'>Revocar permiso</button>
+                            }
+                        </div>
+                    </div>
+                }
+                <Paginador Pagina="_pagina" Tamano="10" Total="Solicitudes().Count()" PaginaCambiada="p => _pagina = p" />
+            }
+        </div>
+    }
+    else if (_tab == 1)
+    {
+        <div class="adm-card overflow-hidden">
+            @if (_domicilios == null) { <Esqueleto Filas="5" /> }
+            else if (!Domicilios().Any()) { <EstadoVacio Titulo="Sin domicilios" Texto="Cuando un cliente pida validar un domicilio, aparecerá aquí con su comprobante." /> }
+            else
+            {
+                <div class="pn-table-wrap">
+                    <table class="pn-table">
+                        <thead><tr><th>Cliente</th><th>Domicilio</th><th>Quién vive ahí</th><th>Comprobante</th><th>Estado</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var d in Paginador.Cortar(Domicilios(), _pagina, 15))
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="pn-who-text"><a href="clientes/@d.ClienteId" class="pn-strong" style="text-decoration:none;">@d.ClienteNombre</a>
+                                            <span class="pn-muted">Permiso: @EstadoContrato.TextoRevision(d.PermisoEstado).ToLower()</span></div>
+                                    </td>
+                                    <td style="min-width:200px;">
+                                        <div class="pn-who-text"><span>@d.DomicilioNombre</span>
+                                            <a class="pn-muted" href="https://www.openstreetmap.org/?mlat=@d.Latitud.ToString(System.Globalization.CultureInfo.InvariantCulture)&mlon=@d.Longitud.ToString(System.Globalization.CultureInfo.InvariantCulture)#map=17/@d.Latitud.ToString(System.Globalization.CultureInfo.InvariantCulture)/@d.Longitud.ToString(System.Globalization.CultureInfo.InvariantCulture)" target="_blank" rel="noopener">@d.Direccion ↗</a></div>
+                                    </td>
+                                    <td>@d.QuienVive</td>
+                                    <td>@if (Api.Archivo(d.ComprobanteUrl) is string url) { <a class="pn-link" href="@url" target="_blank" rel="noopener">Ver →</a> }</td>
+                                    <td>
+                                        <span class="pn-pill @EstadoContrato.TonoRevision(d.Estado)">@EstadoContrato.TextoRevision(d.Estado)</span>
+                                        @if (!string.IsNullOrWhiteSpace(d.ComentarioAdmin)) { <div class="pn-muted" style="margin-top:4px;">“@d.ComentarioAdmin”</div> }
+                                    </td>
+                                    <td class="pn-num">
+                                        @if (d.Estado == 1)
+                                        {
+                                            <div class="d-flex" style="gap:6px; justify-content:flex-end;">
+                                                <button type="button" class="pn-btn pn-btn-ok pn-btn-sm" disabled="@_procesando" @onclick='() => RevisarDomicilio(d, "aprobar")'>Validar</button>
+                                                <button type="button" class="pn-btn pn-btn-danger-soft pn-btn-sm" disabled="@_procesando" @onclick='() => RevisarDomicilio(d, "rechazar")'>Rechazar</button>
+                                            </div>
+                                        }
+                                        else { <span class="pn-muted">@(d.FechaRevision?.ToString("dd MMM yyyy", Es))</span> }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <Paginador Pagina="_pagina" Tamano="15" Total="Domicilios().Count()" PaginaCambiada="p => _pagina = p" />
+            }
+        </div>
+    }
+    else
+    {
+        <div class="adm-card overflow-hidden">
+            @if (_contratos == null) { <Esqueleto Filas="6" /> }
+            else if (!ContratosFiltrados().Any()) { <EstadoVacio Titulo="Sin contratos" Texto="Los contratos que propongan los clientes aparecerán aquí desde la propuesta hasta la firma." /> }
+            else
+            {
+                <div class="pn-table-wrap">
+                    <table class="pn-table">
+                        <thead><tr><th>Contrato</th><th>Cliente → Care Partner</th><th>Horario</th><th>Tarifa</th><th>Jornadas</th><th>Estado</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var c in Paginador.Cortar(ContratosFiltrados(), _pagina, 15))
+                            {
+                                <tr class="pn-row-link" @onclick='() => Nav.NavigateTo($"contratos/{c.Id}")'>
+                                    <td><div class="pn-who-text"><span>CF-@c.Id.ToString("D5")</span><span class="pn-muted">@c.TipoServicio</span></div></td>
+                                    <td><div class="pn-who-text"><span>@c.ClienteNombre → @c.CuidadorNombre</span><span class="pn-muted">@c.DomicilioNombre · @c.Direccion</span></div></td>
+                                    <td class="pn-muted" style="min-width:180px;">@EstadoContrato.Horario(c.Horario)</td>
+                                    <td class="pn-num">RD$ @c.TarifaHora.ToString("N0")/h</td>
+                                    <td class="pn-num">@c.JornadasCompletadas</td>
+                                    <td><span class="pn-pill @EstadoContrato.Tono(c.Estado)">@EstadoContrato.Texto(c.Estado)</span></td>
+                                    <td class="pn-num"><span class="pn-link">Ver →</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <Paginador Pagina="_pagina" Tamano="15" Total="ContratosFiltrados().Count()" PaginaCambiada="p => _pagina = p" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private static readonly System.Globalization.CultureInfo Es = new("es-DO");
+    private List<SolicitudContrato>? _solicitudes;
+    private List<DomicilioContrato>? _domicilios;
+    private List<ContratoFila>? _contratos;
+    private int _tab, _pagina = 1;
+    private bool _soloPendientes = true, _procesando;
+
+    protected override async Task OnInitializedAsync() => await Cargar();
+
+    private async Task Cargar()
+    {
+        var s = Api.SolicitudesContratoAsync();
+        var d = Api.DomiciliosContratoAsync();
+        var c = Api.ContratosAsync();
+        _solicitudes = await s ?? new();
+        _domicilios = await d ?? new();
+        _contratos = await c ?? new();
+    }
+
+    private void Tab(int t) { _tab = t; _pagina = 1; }
+
+    private IEnumerable<SolicitudContrato> Solicitudes() => (_solicitudes ?? new()).Where(s => !_soloPendientes || s.Estado == 1);
+    private IEnumerable<DomicilioContrato> Domicilios() => (_domicilios ?? new()).Where(d => !_soloPendientes || d.Estado == 1);
+    private IEnumerable<ContratoFila> ContratosFiltrados() => (_contratos ?? new()).Where(c => !_soloPendientes || c.Estado is >= 1 and <= 5);
+
+    private async Task RevisarPermiso(SolicitudContrato s, string accion)
+    {
+        string? comentario = null;
+        if (accion == "aprobar")
+        {
+            if (!await Confirmacion.PreguntarAsync("¿Aprobar el permiso?", $"{s.NombreCompleto} podrá proponer contratos fijos en sus domicilios validados. Se le avisará en la app.", "Aprobar"))
+                return;
+        }
+        else
+        {
+            comentario = await Confirmacion.PedirMotivoAsync(accion == "rechazar" ? "¿Rechazar la solicitud?" : "¿Revocar el permiso?",
+                accion == "rechazar" ? $"{s.NombreCompleto} recibirá el motivo y podrá volver a pedirlo en 30 días."
+                                     : $"Los contratos activos de {s.NombreCompleto} quedan en pausa (se cancelan sus próximas jornadas) y se retiran las propuestas en curso. Se avisará al cliente y a sus Care Partners.",
+                accion == "rechazar" ? "Rechazar" : "Revocar", "Motivo (lo verá el cliente)");
+            if (comentario == null) return;
+        }
+        _procesando = true;
+        var r = await Api.RevisarPermisoContratoAsync(s.ClienteId, accion, comentario);
+        _procesando = false;
+        Toasts.Mostrar(r);
+        if (r.Ok) await Cargar();
+    }
+
+    private async Task RevisarDomicilio(DomicilioContrato d, string accion)
+    {
+        string? comentario = null;
+        if (accion == "aprobar")
+        {
+            if (!await Confirmacion.PreguntarAsync("¿Validar el domicilio?", $"{d.ClienteNombre} podrá contratar Care Partners fijos en «{d.DomicilioNombre}».", "Validar"))
+                return;
+        }
+        else
+        {
+            comentario = await Confirmacion.PedirMotivoAsync("¿Rechazar el domicilio?", "El cliente verá el motivo y podrá enviar otro comprobante.", "Rechazar", "Motivo (lo verá el cliente)");
+            if (comentario == null) return;
+        }
+        _procesando = true;
+        var r = await Api.RevisarDomicilioContratoAsync(d.Id, accion, comentario);
+        _procesando = false;
+        Toasts.Mostrar(r);
+        if (r.Ok) await Cargar();
+    }
+}
