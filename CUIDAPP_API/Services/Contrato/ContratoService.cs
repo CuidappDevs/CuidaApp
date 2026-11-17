@@ -69,6 +69,9 @@ namespace CUIDAPP_API.Services.Contrato
         public Task NotificarAsync(int usuarioId, int contratoId, object? estado)
             => _notifier.NotificarAsync(usuarioId, Evento, new { ContratoId = contratoId, Estado = estado });
 
+        public Task NotificarAsync(int usuarioId, int contratoId, string tipo, int trabajoId, int? sugeridoId, string? sugeridoNombre)
+            => _notifier.NotificarAsync(usuarioId, Evento, new { ContratoId = contratoId, Estado = tipo, Tipo = tipo, trabajoId, sugeridoId, sugeridoNombre });
+
         private static string HashCodigo(int contratoId, int usuarioId, string codigo)
             => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{contratoId}:{usuarioId}:{codigo.Trim()}")));
 
@@ -80,7 +83,7 @@ namespace CUIDAPP_API.Services.Contrato
             var codigo = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
             var fila = await _db.EjecutarAsync("sp_ContratoCodigoGenerar",
                 ("@ContratoId", contratoId), ("@UsuarioId", usuarioId),
-                ("@CodigoHash", HashCodigo(contratoId, usuarioId, codigo)), ("@Expira", HoraLocalRD.Ahora.AddMinutes(10)));
+                ("@CodigoHash", HashCodigo(contratoId, usuarioId, codigo)), ("@Expira", HoraLocalRD.Ahora.AddMinutes(10)), ("@Ahora", HoraLocalRD.Ahora));
             var resultado = fila?["Resultado"]?.ToString() ?? "ERROR";
             if (resultado != "OK")
                 return (resultado, null);
@@ -114,8 +117,17 @@ namespace CUIDAPP_API.Services.Contrato
 
             if (fila!["FirmasCompletas"] is true)
             {
-                await ActivarAsync(contratoId);
-                return ("OK", true);
+                // La firma ya quedó guardada: si el PDF o la activación fallan, no se le devuelve error a
+                // quien firmó; ActivarPendientesAsync lo reintenta.
+                try
+                {
+                    return ("OK", await ActivarAsync(contratoId));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Las dos partes firmaron el contrato {Id} pero no se pudo activar", contratoId);
+                    return ("OK", false);
+                }
             }
 
             if (fila["NotificarA"] is int otro)
@@ -140,16 +152,32 @@ namespace CUIDAPP_API.Services.Contrato
 
         // ------------------------------------------------------------------ activación + PDF
 
-        private async Task ActivarAsync(int contratoId)
+        /// <summary>Activa los contratos con las dos firmas que quedaron sin activar. Devuelve cuántos activó.</summary>
+        public async Task<int> ActivarPendientesAsync()
         {
+            var activados = 0;
+            foreach (var fila in (await _db.ConsultarAsync("sp_ContratosPendientesActivar"))[0])
+            {
+                var id = Convert.ToInt32(fila["Id"]);
+                try { if (await ActivarAsync(id)) activados++; }
+                catch (Exception ex) { _logger.LogError(ex, "No se pudo activar el contrato {Id}", id); }
+            }
+            return activados;
+        }
+
+        private async Task<bool> ActivarAsync(int contratoId)
+        {
+            var ahora = HoraLocalRD.Ahora;
+            await _db.EjecutarAsync("sp_ContratoPrepararActivacion", ("@ContratoId", contratoId), ("@Ahora", ahora));
             var detalle = await _db.ConsultarAsync("sp_ContratoDetalle", ("@ContratoId", contratoId), ("@UsuarioId", null));
             var c = detalle[0].FirstOrDefault();
-            if (c == null) return;
+            if (c == null) return false;
 
+            // El PDF y la activacion usan la misma fecha RD.
+            if (Convert.ToDateTime(c["FechaInicio"]).Date < ahora.Date) c["FechaInicio"] = ahora.Date;
             var pdf = GenerarPdf(c, detalle[1], detalle[4]);
             var hash = Convert.ToHexString(SHA256.HashData(pdf));
-            var ahora = HoraLocalRD.Ahora;
-            var relativa = Path.Combine("contratos", ahora.Year.ToString(), contratoId.ToString(), $"CF-{contratoId:D5}-v1-{ahora:yyyyMMddHHmmss}.pdf");
+            var relativa = Path.Combine("contratos", ahora.Year.ToString(), contratoId.ToString(), $"CF-{contratoId:D5}-v1-{ahora:yyyyMMddHHmmss}-{Guid.NewGuid():N}.pdf");
             var completa = Path.Combine(_raiz, relativa);
             Directory.CreateDirectory(Path.GetDirectoryName(completa)!);
             await File.WriteAllBytesAsync(completa, pdf);
@@ -158,7 +186,8 @@ namespace CUIDAPP_API.Services.Contrato
             if (fila?["Resultado"]?.ToString() != "OK")
             {
                 _logger.LogWarning("No se pudo activar el contrato {Id}: {R}", contratoId, fila?["Resultado"]);
-                return;
+                File.Delete(completa);
+                return false;
             }
 
             // Primeros servicios de la semana, sin esperar a la pasada horaria.
@@ -183,6 +212,7 @@ namespace CUIDAPP_API.Services.Contrato
                 }
                 catch (Exception ex) { _logger.LogWarning(ex, "No se pudo enviar el PDF del contrato {Id} a {Correo}", contratoId, correo); }
             }
+            return true;
         }
 
         /// <summary>Genera los trabajos (de un contrato o de todos) y avisa a las dos partes.</summary>
@@ -235,10 +265,10 @@ namespace CUIDAPP_API.Services.Contrato
                 page.Content().Column(col =>
                 {
                     col.Spacing(12);
-                    col.Item().Text("Acuerdo de servicio recurrente de cuidado").FontSize(16).Bold();
+                    col.Item().Text(c.ContainsKey("AnexoId") ? $"Anexo {c["AnexoId"]} al contrato CF-{id:D5}" : "Acuerdo de servicio recurrente de cuidado").FontSize(16).Bold();
                     col.Item().Text(t =>
                     {
-                        t.Span("Este acuerdo se celebra a través de la plataforma CuidApp entre las partes indicadas abajo, que aceptan las condiciones de este documento y lo firman electrónicamente desde la aplicación.").FontColor(suave);
+                        t.Span(c.ContainsKey("AnexoId") ? "Este anexo modifica ?nicamente la tarifa y el horario indicados desde la fecha de vigencia. Las dem?s condiciones del contrato original permanecen vigentes. Ambas partes aceptan y firman electr?nicamente estos cambios." : "Este acuerdo se celebra a través de la plataforma CuidApp entre las partes indicadas abajo, que aceptan las condiciones de este documento y lo firman electrónicamente desde la aplicación.").FontColor(suave);
                     });
 
                     void Seccion(string titulo, Action<ColumnDescriptor> contenido) => col.Item().Column(s =>
@@ -278,10 +308,14 @@ namespace CUIDAPP_API.Services.Contrato
                         Dato(s, "Persona a cuidar", Txt(c["QuienVive"]));
                     });
 
+                    if (c.TryGetValue("Dormida", out var dormida) && Convert.ToBoolean(dormida))
+                        col.Item().Text("Modalidad: con pernocta (la Care Partner duerme en la residencia). Se pagan solo las horas del horario pactado.");
                     Seccion("3. Servicio y horario", s =>
                     {
                         Dato(s, "Tipo de servicio", Txt(c["TipoServicio"]));
                         Dato(s, "Fecha de inicio", Fecha(c["FechaInicio"]));
+                        if (c.TryGetValue("TrabajaDesde", out var antig) && antig is DateTime)
+                            Dato(s, "Trabaja con la familia desde", Fecha(antig));
                         Dato(s, "Fecha de fin", c["FechaFin"] is DateTime ? Fecha(c["FechaFin"]) : "Indefinida, hasta que una de las partes lo termine");
                         s.Item().PaddingTop(4).Table(t =>
                         {
@@ -322,8 +356,18 @@ namespace CUIDAPP_API.Services.Contrato
                             "Cambios. Cualquier cambio de tarifa u horario debe acordarse por las dos partes dentro de CuidApp.",
                             "Confidencialidad. El Care Partner mantendrá en reserva la información personal y de salud de la persona cuidada y del hogar.",
                             "Conflictos. Cualquier reclamo se gestionará primero por el soporte de CuidApp, que podrá revisar la información registrada en la plataforma.",
-                        };
-                        for (var i = 0; i < clausulas.Length; i++)
+                        }.ToList();
+                        // Antigüedad previa (cuidadora invitada por la familia): se deja por escrito.
+                        if (c.TryGetValue("TrabajaDesde", out var desde) && desde is DateTime)
+                        {
+                            // Relación previa con la familia: no se niega el vínculo laboral; CuidApp queda solo como herramienta.
+                            clausulas[0] = "Naturaleza del acuerdo. Este acuerdo formaliza por escrito la relación de trabajo que ya existe entre el Cliente y el Care Partner. " +
+                                "El Cliente es quien contrata y recibe el servicio; CuidApp no es parte de esa relación ni empleador del Care Partner, y solo ofrece la plataforma " +
+                                "para organizar las jornadas, los pagos y los registros. Los derechos que la ley reconozca al Care Partner por su tiempo de trabajo con la familia se mantienen.";
+                            clausulas.Insert(1, "Antigüedad previa. Las partes reconocen que el Care Partner presta servicios de cuidado a esta familia desde el " + Fecha(desde) +
+                                ", antes de registrarse en CuidApp. Esa fecha queda registrada en este acuerdo y la firma no la reemplaza ni la reinicia.");
+                        }
+                        for (var i = 0; i < clausulas.Count; i++)
                         {
                             var n = i + 1;
                             s.Item().Row(r => { r.ConstantItem(18).Text($"{n}.").FontColor(suave); r.RelativeItem().Text(clausulas[n - 1]).FontSize(9.5f); });
@@ -379,6 +423,7 @@ namespace CUIDAPP_API.Services.Contrato
         {
             var doc = (await _db.ConsultarAsync("sp_ContratoDocumento", ("@DocumentoId", documentoId)))[0].FirstOrDefault();
             if (doc == null) return (null, null, false);
+            if (Convert.ToBoolean(doc.GetValueOrDefault("EnBoveda") ?? false)) return (doc, null, false);
             var ruta = Path.GetFullPath(Path.Combine(_raiz, Txt(doc["Ruta"])));
             if (!ruta.StartsWith(Path.GetFullPath(_raiz), StringComparison.OrdinalIgnoreCase) || !File.Exists(ruta))
                 return (doc, null, false);

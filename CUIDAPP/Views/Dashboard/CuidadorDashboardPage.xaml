@@ -130,6 +130,9 @@
                     </Grid>
                 </Border>
 
+                <!-- CONTRATOS FIJOS (solo si tiene) -->
+                <VerticalStackLayout x:Name="ResumenContratos" Spacing="12" />
+
                 <!-- PRÓXIMO TRABAJO -->
                 <VerticalStackLayout x:Name="BloqueProximo" Spacing="12">
                     <Label Text="{loc:T proximo_trabajo}" FontSize="17" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>

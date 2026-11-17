@@ -39,7 +39,15 @@ namespace CUIDAPP
             Routing.RegisterRoute("PermisoContratarPage", typeof(Views.Contratos.PermisoContratarPage));
             Routing.RegisterRoute("ProponerContratoPage", typeof(Views.Contratos.ProponerContratoPage));
             Routing.RegisterRoute("ContratoDetallePage", typeof(Views.Contratos.ContratoDetallePage));
+            Routing.RegisterRoute("ContratoAsistenciaPage", typeof(Views.Contratos.ContratoAsistenciaPage));
+            Routing.RegisterRoute("ContratoAnexosPage", typeof(Views.Contratos.ContratoAnexosPage));
+            Routing.RegisterRoute("ContratoJornadasPage", typeof(Views.Contratos.ContratoJornadasPage));
+            Routing.RegisterRoute("ContratoDocumentosPage", typeof(Views.Contratos.ContratoDocumentosPage));
             Routing.RegisterRoute("FirmarContratoPage", typeof(Views.Contratos.FirmarContratoPage));
+            Routing.RegisterRoute("InvitarCuidadoraPage", typeof(Views.Contratos.InvitarCuidadoraPage));
+            Routing.RegisterRoute("DeudasClientePage", typeof(Views.Cuenta.DeudasClientePage));
+            Routing.RegisterRoute("EliminarCuentaPage", typeof(Views.Cuenta.EliminarCuentaPage));
+            Routing.RegisterRoute("TerminosPage", typeof(Views.Cuenta.TerminosPage));
         }
     
         // La barra de estado acompaña al encabezado azul del login y recuperar contraseña; en el resto, blanca.

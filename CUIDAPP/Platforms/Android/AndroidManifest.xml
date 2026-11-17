@@ -23,5 +23,9 @@
 		<intent>
 			<action android:name="android.media.action.IMAGE_CAPTURE" />
 		</intent>
+		<!-- Voz del teléfono para leer los Términos y Condiciones (Android 11+ exige declararlo) -->
+		<intent>
+			<action android:name="android.intent.action.TTS_SERVICE" />
+		</intent>
 	</queries>
 </manifest>

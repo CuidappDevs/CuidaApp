@@ -114,8 +114,10 @@ namespace CUIDAPP.Views.Cliente
                         HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center
                     } : null
                 };
-                var fila = new Grid { ColumnSpacing = 12, ColumnDefinitions = { new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star) } };
+                var fila = new Grid { ColumnSpacing = 12, ColumnDefinitions = { new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) } };
                 fila.Add(check, 0);
+                if (!string.IsNullOrWhiteSpace(tarea.FotoUrl))
+                    fila.Add(MiniaturaEvidencia(tarea.FotoUrl!), 2);
                 fila.Add(new Label
                 {
                     Text = tarea.Descripcion,
@@ -134,6 +136,24 @@ namespace CUIDAPP.Views.Cliente
                     Content = fila
                 });
             }
+        }
+
+        // Foto que la Care Partner tomó al marcar la tarea: miniatura; al tocarla se abre en grande.
+        private View MiniaturaEvidencia(string fotoUrl)
+        {
+            var url = fotoUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? fotoUrl : $"{ApiService.ServerOrigin}{fotoUrl}";
+            var marco = new Border
+            {
+                WidthRequest = 44, HeightRequest = 44, StrokeThickness = 0, BackgroundColor = Tema.C("ColorSubtle"),
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 }, VerticalOptions = LayoutOptions.Center,
+                Content = new Image { Source = url, Aspect = Aspect.AspectFill }
+            };
+            SemanticProperties.SetDescription(marco, Localizador.T("checklist_ver_foto"));
+            marco.GestureRecognizers.Add(new TapGestureRecognizer
+            {
+                Command = new Command(async () => await Launcher.Default.OpenAsync(new Uri(url)))
+            });
+            return marco;
         }
 
         private void IniciarRelojSiHaceFalta()
@@ -169,6 +189,7 @@ namespace CUIDAPP.Views.Cliente
             ContenedorInfo.IsVisible = false;
 
             trabajo = await _apiService.ObtenerTrabajoClientePorIdAsync(trabajoId);
+            await CargarSeguimientosAsync();
 
             LoadingIndicator.IsRunning = false;
 

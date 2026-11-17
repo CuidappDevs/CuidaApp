@@ -23,6 +23,7 @@ namespace CUIDAPP_API.Controllers
                 var trabajoId = await _trabajoService.CrearTrabajoAsync(dto);
                 return Ok(new { Message = "Trabajo creado con éxito", TrabajoId = trabajoId });
             }
+            catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number is 51061 or 51062) { throw; }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Error interno: {ex.Message}");
@@ -112,6 +113,7 @@ namespace CUIDAPP_API.Controllers
 
                 var mensaje = motivo switch
                 {
+                    "MONTO_RECIBIDO_INVALIDO" => "El monto recibido debe estar entre cero y el total del servicio y tener hasta dos decimales.",
                     "TRABAJO_NO_ENCONTRADO" => "El trabajo no existe.",
                     "ESTADO_INVALIDO" => "Este trabajo ya no está en estado Aceptado.",
                     "FECHA_FUTURA" => "Aún no es la fecha programada para este trabajo.",
@@ -217,14 +219,18 @@ namespace CUIDAPP_API.Controllers
         }
 
         [HttpPost("tareas/{tareaId}/completar")]
-        public async Task<IActionResult> CompletarTarea(int tareaId)
+        public async Task<IActionResult> CompletarTarea(int tareaId, [FromBody(EmptyBodyBehavior = Microsoft.AspNetCore.Mvc.ModelBinding.EmptyBodyBehavior.Allow)] CompletarTareaFotoDto? dto = null)
         {
             try
             {
-                var tarea = await _trabajoService.CompletarTareaAsync(tareaId);
+                var tarea = await _trabajoService.CompletarTareaAsync(tareaId, dto?.FotoUrl);
                 if (tarea == null)
                     return BadRequest("La tarea no existe, ya estaba completada o el servicio no está en progreso.");
                 return Ok(tarea);
+            }
+            catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 50002)
+            {
+                return BadRequest(new { code = "FOTO_REQUERIDA" });
             }
             catch (Exception ex)
             {

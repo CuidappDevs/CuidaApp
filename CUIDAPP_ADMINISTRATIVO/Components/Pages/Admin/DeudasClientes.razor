@@ -1,0 +1,242 @@
+@page "/saldos-clientes"
+@layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
+@inject PanelApiService Api
+@inject ConfirmacionService Confirmacion
+@inject AvisoToastService Toasts
+
+<PageTitle>Saldos de clientes · Cuidapp Admin</PageTitle>
+
+<div class="pn-page">
+    <div class="pn-toolbar">
+        <div class="pn-seg">
+            @foreach (var (id, texto) in Grupos)
+            {
+                <button type="button" class="@(_grupo == id ? "on" : "")" @onclick="() => { _grupo = id; _pagina = 1; }">@texto <span class="pn-seg-n">@Cuenta(id)</span></button>
+            }
+        </div>
+        <span class="pn-grow"></span>
+        <input class="pn-input" placeholder="Buscar cliente o Care Partner…" @bind="_buscar" @bind:event="oninput" style="width:240px;" />
+    </div>
+
+    <div class="pn-callout tone-info">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 16v-4m0-4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z"></path></svg>
+        <span>Cuando un servicio en efectivo no se paga completo, la Care Partner indica cuánto recibió y la diferencia queda como <b>saldo del cliente</b>. Mientras esté pendiente o en revisión, el cliente <b>no puede pedir servicios ni contratos</b>. Tiene <b>24 horas</b> para pagarlo por CuidaApp (la app le recuerda 2 horas antes y le avisa al vencer); el saldo <b>nunca se paga en efectivo a la Care Partner</b>. Al confirmar el pago, el monto se acredita a la Care Partner en su saldo.</span>
+    </div>
+
+    @if (_deudas != null)
+    {
+        <div class="pn-stats" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:16px;">
+            <div class="adm-card" style="padding:14px 16px;">
+                <div class="pn-muted" style="font-size:12px;">Pendiente de cobro</div>
+                <div class="pn-strong" style="font-size:22px; color:var(--danger);">@Monto(_deudas.Where(d => d.Estado is 1 or 3).Sum(d => d.Monto))</div>
+            </div>
+            <div class="adm-card" style="padding:14px 16px;">
+                <div class="pn-muted" style="font-size:12px;">Clientes bloqueados</div>
+                <div class="pn-strong" style="font-size:22px;">@_deudas.Where(d => d.Estado is 1 or 3).Select(d => d.ClienteId).Distinct().Count()</div>
+            </div>
+            <div class="adm-card" style="padding:14px 16px;">
+                <div class="pn-muted" style="font-size:12px;">Comprobantes por revisar</div>
+                <div class="pn-strong" style="font-size:22px; color:var(--primary);">@Cuenta("comprobante")</div>
+            </div>
+        </div>
+    }
+
+    <div class="adm-card overflow-hidden">
+        @if (_deudas == null)
+        {
+            <Esqueleto Filas="6" />
+        }
+        else if (!Visibles().Any())
+        {
+            <EstadoVacio Titulo="@(_grupo == "cerradas" ? "Sin historial todavía" : "Nada en esta vista")" Texto="@(_grupo == "comprobante" ? "No hay comprobantes esperando revisión. 👌" : null)" Icono="M2 7h20M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2M2 7v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7M6 15h4" />
+        }
+        else
+        {
+            <div class="pn-table-wrap">
+                <table class="pn-table">
+                    <thead><tr><th>Cliente</th><th>Servicio</th><th class="pn-num">Total</th><th class="pn-num">Recibido</th><th class="pn-num">Pendiente</th><th>Estado</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var d in Paginador.Cortar(Visibles().ToList(), _pagina, 20))
+                        {
+                            <tr>
+                                <td>
+                                    <a class="pn-who" href="clientes/@d.ClienteId" style="text-decoration:none; color:inherit;">
+                                        <Avatar Nombre="@(d.NombreCliente ?? "Cliente")" Tam="30" />
+                                        <span class="pn-who-text"><span>@(d.NombreCliente ?? $"Cliente #{d.ClienteId}")</span><span class="pn-muted">@d.CorreoCliente</span></span>
+                                    </a>
+                                </td>
+                                <td>
+                                    <a class="pn-link" href="servicios/@d.TrabajoId">#@d.TrabajoId</a>
+                                    <div class="pn-muted" style="font-size:11.5px;">@((d.FechaServicio ?? d.FechaCreacion).ToString("dd MMM yyyy")) · <a class="pn-link" href="care-partners/@d.CuidadorId">@d.NombreCuidador</a></div>
+                                </td>
+                                <td class="pn-num">@Monto(d.MontoTotal)</td>
+                                <td class="pn-num">@Monto(d.MontoRecibido)</td>
+                                <td class="pn-num"><span class="pn-strong" style="@(d.Estado is 1 or 3 ? "color:var(--danger);" : "")">@Monto(d.Monto)</span></td>
+                                <td>
+                                    @switch (d.Estado)
+                                    {
+                                        case 1 when !string.IsNullOrWhiteSpace(d.ComprobanteUrl):
+                                            <a class="pn-pill tone-violet" href="@Api.Archivo(d.ComprobanteUrl)" target="_blank" rel="noopener" style="text-decoration:none;">Comprobante ↗</a>
+                                            break;
+                                        case 1: <span class="pn-pill tone-danger">Pendiente</span> break;
+                                        case 3: <span class="pn-pill tone-warn" title="@d.NotaCliente">Objetada</span> break;
+                                        case 2: <span class="pn-pill tone-ok">Pagada</span> break;
+                                        default: <span class="pn-pill">Condonada</span> break;
+                                    }
+                                    @if (d.Estado is 1 or 3 && d.FechaLimite is { } lim)
+                                    {
+                                        <div style="font-size:11.5px; font-weight:600; color:@(d.Vencida ? "var(--danger)" : "var(--adm-muted-2)");">@(d.Vencida ? $"Plazo vencido ({lim:dd MMM HH:mm})" : $"Paga antes de {lim:dd MMM HH:mm}")</div>
+                                    }
+                                    @if (d.Estado == 3 && !string.IsNullOrWhiteSpace(d.NotaCliente))
+                                    {
+                                        <div class="pn-muted" style="font-size:11.5px; max-width:240px;">“@d.NotaCliente”</div>
+                                    }
+                                    else if (!string.IsNullOrWhiteSpace(d.NotaAdmin) && d.Estado is 2 or 4)
+                                    {
+                                        <div class="pn-muted" style="font-size:11.5px; max-width:240px;">@d.NotaAdmin</div>
+                                    }
+                                </td>
+                                <td class="pn-num">
+                                    @if (_puedeFinanzas && d.Estado is 1 or 3)
+                                    {
+                                        <span class="d-inline-flex" style="gap:6px;">
+                                            <button type="button" class="pn-btn pn-btn-ok pn-btn-sm" disabled="@_procesando" @onclick="() => ConfirmarPago(d)">Confirmar pago</button>
+                                            @if (d.Estado == 3)
+                                            {
+                                                <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" disabled="@_procesando" @onclick="() => Reabrir(d)">Mantener</button>
+                                            }
+                                            <button type="button" class="pn-btn pn-btn-quiet pn-btn-sm" disabled="@_procesando" @onclick="() => AbrirAjuste(d)">Ajustar</button>
+                                            <button type="button" class="pn-btn pn-btn-danger-soft pn-btn-sm" disabled="@_procesando" @onclick="() => Condonar(d)">Condonar</button>
+                                        </span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <Paginador Pagina="_pagina" Tamano="20" Total="Visibles().Count()" PaginaCambiada="p => _pagina = p" />
+        }
+    </div>
+</div>
+
+@if (_ajustando != null)
+{
+    <div class="pn-overlay" @onclick="() => _ajustando = null">
+        <div class="pn-dialog" role="dialog" aria-modal="true" aria-labelledby="aj-t" @onclick:stopPropagation="true">
+            <h2 id="aj-t" class="pn-dialog-title">Ajustar saldo</h2>
+            <p class="pn-dialog-text">@(_ajustando.NombreCliente) · servicio #@_ajustando.TrabajoId. Total @Monto(_ajustando.MontoTotal), la Care Partner reportó @Monto(_ajustando.MontoRecibido). Si el nuevo saldo es 0 queda anulado.</p>
+            <label class="pn-label" for="aj-m">Nuevo saldo pendiente (RD$)</label>
+            <input id="aj-m" class="pn-input" type="number" min="0" step="0.01" max="@_ajustando.MontoTotal" @bind="_montoAjuste" />
+            <label class="pn-label" for="aj-n" style="margin-top:10px;">Motivo</label>
+            <textarea id="aj-n" class="pn-input" rows="3" @bind="_notaAjuste" @bind:event="oninput" placeholder="Ej.: la Care Partner confirmó que recibió RD$200 más"></textarea>
+            <div class="pn-dialog-actions">
+                <button type="button" class="pn-btn pn-btn-quiet" @onclick="() => _ajustando = null">Cancelar</button>
+                <button type="button" class="pn-btn pn-btn-primary" disabled="@(_procesando || _montoAjuste is null || _montoAjuste < 0 || _montoAjuste > _ajustando.MontoTotal || (_notaAjuste?.Trim().Length ?? 0) < 5)" @onclick="GuardarAjuste">Guardar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState>? AuthStateTask { get; set; }
+
+    private static readonly (string Id, string Texto)[] Grupos =
+        { ("comprobante", "Con comprobante"), ("vencidas", "Plazo vencido"), ("pendientes", "Pendientes"), ("revision", "Objetadas"), ("cerradas", "Cerradas") };
+
+    private List<DeudaClienteFila>? _deudas;
+    private string _grupo = "comprobante";
+    private string _buscar = "";
+    private int _pagina = 1;
+    private bool _procesando, _puedeFinanzas;
+    private DeudaClienteFila? _ajustando;
+    private decimal? _montoAjuste;
+    private string? _notaAjuste;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthStateTask != null) _puedeFinanzas = SesionAdmin.PuedeFinanzas((await AuthStateTask).User);
+        await Cargar();
+        _grupo = new[] { "comprobante", "vencidas", "revision", "pendientes" }.FirstOrDefault(g => Cuenta(g) > 0) ?? "cerradas";
+    }
+
+    private async Task Cargar() => _deudas = await Api.DeudasClientesAsync() ?? new();
+
+    private static string Grupo(DeudaClienteFila d) => d.Estado switch
+    {
+        1 when !string.IsNullOrWhiteSpace(d.ComprobanteUrl) => "comprobante",
+        1 when d.Vencida => "vencidas",
+        1 => "pendientes",
+        3 => "revision",
+        _ => "cerradas"
+    };
+
+    private int Cuenta(string grupo) => _deudas?.Count(d => Grupo(d) == grupo) ?? 0;
+
+    private IEnumerable<DeudaClienteFila> Visibles()
+    {
+        var b = _buscar.Trim();
+        return (_deudas ?? new())
+            .Where(d => Grupo(d) == _grupo)
+            .Where(d => b.Length == 0 || (d.NombreCliente ?? "").Contains(b, StringComparison.OrdinalIgnoreCase)
+                        || (d.NombreCuidador ?? "").Contains(b, StringComparison.OrdinalIgnoreCase)
+                        || (d.CorreoCliente ?? "").Contains(b, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(d => d.FechaCreacion);
+    }
+
+    private static string Monto(decimal m) => $"RD${m:N2}";
+
+    private async Task Ejecutar(Func<Task<ResultadoAccion>> accion)
+    {
+        _procesando = true;
+        var r = await accion();
+        _procesando = false;
+        Toasts.Mostrar(r);
+        if (r.Ok) await Cargar();
+    }
+
+    private async Task ConfirmarPago(DeudaClienteFila d)
+    {
+        var texto = string.IsNullOrWhiteSpace(d.ComprobanteUrl)
+            ? $"No hay comprobante en la app. Confirma solo si verificaste que {d.NombreCliente} pagó {Monto(d.Monto)}."
+            : $"Verifica en el banco la transferencia de {Monto(d.Monto)}. Se acreditará a {d.NombreCuidador} y el cliente podrá volver a pedir servicios.";
+        if (!await Confirmacion.PreguntarAsync("¿Confirmar el pago?", texto, "Confirmar pago"))
+            return;
+        await Ejecutar(() => Api.ConfirmarPagoDeudaAsync(d.Id, null));
+    }
+
+    private async Task Condonar(DeudaClienteFila d)
+    {
+        var nota = await Confirmacion.PedirMotivoAsync("¿Condonar el saldo?",
+            $"El saldo de {Monto(d.Monto)} se anula y {d.NombreCliente} queda desbloqueado. A {d.NombreCuidador} no se le acredita nada.", "Condonar");
+        if (nota == null) return;
+        await Ejecutar(() => Api.CondonarDeudaAsync(d.Id, nota));
+    }
+
+    private async Task Reabrir(DeudaClienteFila d)
+    {
+        var nota = await Confirmacion.PedirMotivoAsync("¿Mantener el saldo?",
+            "La objeción se rechaza y el saldo vuelve a pendiente. Explícale al cliente por qué (lo verá en la app).", "Mantener", peligro: false);
+        if (nota == null) return;
+        await Ejecutar(() => Api.ReabrirDeudaAsync(d.Id, nota));
+    }
+
+    private void AbrirAjuste(DeudaClienteFila d)
+    {
+        _ajustando = d;
+        _montoAjuste = d.Monto;
+        _notaAjuste = "";
+    }
+
+    private async Task GuardarAjuste()
+    {
+        if (_ajustando == null || _montoAjuste is not { } monto) return;
+        var id = _ajustando.Id;
+        var nota = _notaAjuste!.Trim();
+        _procesando = true;
+        var r = await Api.AjustarDeudaAsync(id, Math.Round(monto, 2), nota);
+        _procesando = false;
+        Toasts.Mostrar(r);
+        if (r.Ok) { _ajustando = null; await Cargar(); }
+    }
+}

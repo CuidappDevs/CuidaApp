@@ -18,8 +18,11 @@ namespace CUIDAPP.Services
         public static string Calificar(int trabajoId) => $"calificar:{trabajoId}";
         public static string Ticket(int ticketId) => $"ticket:{ticketId}";
         public static string Contrato(int contratoId) => $"contrato:{contratoId}";
+        /// <summary>Jornadas del contrato (ausencia de la titular: elegir un relevo).</summary>
+        public static string Jornadas(int contratoId) => $"jornadas:{contratoId}";
         public const string Verificacion = "verificacion";
         public const string Dinero = "dinero";
+        public const string Deudas = "deudas";
 
         /// <summary>Llega desde Android al tocar una notificación.</summary>
         public static void Recibir(string? destino, bool appYaAbierta)
@@ -41,6 +44,9 @@ namespace CUIDAPP.Services
             if (destino != null)
                 await IrAsync(destino);
         }
+
+        /// <summary>Abre el destino desde la lista de notificaciones de la app.</summary>
+        public static Task AbrirAsync(string destino) => IrAsync(destino);
 
         private static async Task IrAsync(string destino)
         {
@@ -115,6 +121,10 @@ namespace CUIDAPP.Services
                         await Shell.Current.GoToAsync("ContratoDetallePage", new Dictionary<string, object> { { "ContratoId", id } });
                         break;
 
+                    case "jornadas":
+                        await Shell.Current.GoToAsync("ContratoJornadasPage", new Dictionary<string, object> { { "ContratoId", id }, { "AbrirRelevo", true } });
+                        break;
+
                     case Verificacion:
                         if (Preferences.Default.Get("EstadoAprobacion", 0) != 2 && Shell.Current.CurrentPage is not Views.Verificacion.VerificacionPendientePage)
                             await Shell.Current.GoToAsync("VerificacionPendientePage");
@@ -122,6 +132,10 @@ namespace CUIDAPP.Services
 
                     case "checkin":
                         await CheckinApp.MostrarPendienteAsync();
+                        break;
+
+                    case Deudas when !esCuidador:
+                        await Shell.Current.GoToAsync("DeudasClientePage");
                         break;
 
                     case Dinero when esCuidador:

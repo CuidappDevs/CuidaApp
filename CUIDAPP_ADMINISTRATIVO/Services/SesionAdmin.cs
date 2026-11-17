@@ -10,21 +10,38 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
     /// Sesión del administrador dentro del panel. El JWT que devuelve la API al iniciar sesión se
     /// guarda como claim en la cookie y se adjunta a cada llamada a la API (que ahora lo exige en
     /// los endpoints de administración). También expone el nivel de permisos.
-    /// Niveles: 1 Superadmin, 2 Operaciones/soporte, 3 Finanzas.
+    /// Niveles: 1 Superadmin, 2 Operaciones, 3 Finanzas, 4 Verificación (KYC), 5 Soporte, 6 Legal.
     /// </summary>
     public static class SesionAdmin
     {
         public const string ClaimToken = "api_token";
         public const string ClaimNivel = "nivel_admin";
 
-        public const int Superadmin = 1, Operaciones = 2, Finanzas = 3;
+        public const int Superadmin = 1, Operaciones = 2, Finanzas = 3, Verificacion = 4, Soporte = 5, Legal = 6;
+
+        /// <summary>Niveles en el orden en que se ofrecen al crear o cambiar un administrador.</summary>
+        public static readonly int[] Niveles = { Superadmin, Operaciones, Verificacion, Soporte, Legal, Finanzas };
 
         public static string NombreNivel(int nivel) => nivel switch
         {
             Superadmin => "Superadmin",
             Operaciones => "Operaciones",
             Finanzas => "Finanzas",
+            Verificacion => "Verificación (KYC)",
+            Soporte => "Soporte",
+            Legal => "Legal y Dirección",
             _ => "Administrador"
+        };
+
+        public static string DescripcionNivel(int nivel) => nivel switch
+        {
+            Superadmin => "Acceso total: configuración, administradores, auditoría y grabaciones.",
+            Operaciones => "Todo lo operativo: verificación, servicios, soporte, contratos y avisos.",
+            Finanzas => "Pagos, comisiones, saldos y reportes. No cambia la configuración del sistema.",
+            Verificacion => "Revisa cédulas, pasaportes, antecedentes, permisos migratorios y tests.",
+            Soporte => "Tickets, SOS, disputas y seguimiento de servicios.",
+            Legal => "Auditoría, SOS, grabaciones en disputa, documentos, permisos migratorios y la bóveda de contratos.",
+            _ => ""
         };
 
         public static int Nivel(ClaimsPrincipal user) => int.TryParse(user.FindFirst(ClaimNivel)?.Value, out var n) ? n : Operaciones;
@@ -33,6 +50,12 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
         public static bool PuedeOperar(ClaimsPrincipal user) => Nivel(user) is Superadmin or Operaciones;
         public static bool PuedeFinanzas(ClaimsPrincipal user) => Nivel(user) is Superadmin or Finanzas;
         public static bool EsSuperadmin(ClaimsPrincipal user) => Nivel(user) == Superadmin;
+        /// <summary>Aprobar / rechazar Care Partners, documentos, vencimientos y tests (equipo KYC).</summary>
+        public static bool PuedeVerificar(ClaimsPrincipal user) => Nivel(user) is Superadmin or Operaciones or Verificacion;
+        /// <summary>Atender tickets, SOS y disputas.</summary>
+        public static bool PuedeSoporte(ClaimsPrincipal user) => Nivel(user) is Superadmin or Operaciones or Soporte;
+        /// <summary>Auditoría, historial SOS y grabaciones de la caja negra (Legal y Dirección).</summary>
+        public static bool PuedeAuditar(ClaimsPrincipal user) => Nivel(user) is Superadmin or Legal;
 
         /// <summary>Lee el nivel y el vencimiento que vienen dentro del JWT (sin validarlo: eso lo hace la API).</summary>
         public static (int Nivel, DateTimeOffset? Vence) LeerToken(string token)

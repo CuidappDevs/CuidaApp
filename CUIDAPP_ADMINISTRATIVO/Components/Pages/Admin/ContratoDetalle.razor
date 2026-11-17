@@ -21,13 +21,21 @@
     }
     else
     {
+        @* Encabezado: número, estado, fechas, contratos relacionados y PDF *@
         <div class="adm-card adm-card-pad d-flex flex-wrap align-items-center" style="gap:16px 24px;">
             <div class="d-flex flex-column" style="gap:6px; flex:1; min-width:260px;">
                 <div class="d-flex flex-wrap align-items-center" style="gap:10px;">
                     <span style="font-size:20px; font-weight:600;">Contrato CF-@c.Id.ToString("D5")</span>
                     <span class="pn-pill @EstadoContrato.Tono(c.Estado)">@EstadoContrato.Texto(c.Estado)</span>
                 </div>
-                <span class="pn-muted" style="font-size:13.5px;">@c.TipoServicio · propuesto el @c.FechaCreacion.ToString("dd MMM yyyy", Es)@(c.FechaActivacion is DateTime fa ? $" · activo desde {fa:dd MMM yyyy}" : "")</span>
+                <span class="pn-muted" style="font-size:13.5px;">@c.TipoServicio · propuesto el @c.FechaCreacion.ToString("dd MMM yyyy", Es)@(c.FechaActivacion is DateTime fa ? $" · activo desde {fa.ToString("dd MMM yyyy", Es)}" : "")</span>
+                @if (c.ContratoAnteriorId is int || c.ContratoRenovadoId is int)
+                {
+                    <span class="d-flex flex-wrap" style="gap:8px; margin-top:2px;">
+                        @if (c.ContratoAnteriorId is int anterior) { <a class="pn-pill no-dot" href="contratos/@anterior" style="text-decoration:none;">← Contrato anterior CF-@anterior.ToString("D5")</a> }
+                        @if (c.ContratoRenovadoId is int renovado) { <a class="pn-pill tone-ok no-dot" href="contratos/@renovado" style="text-decoration:none;">Renovación CF-@renovado.ToString("D5") →</a> }
+                    </span>
+                }
             </div>
             @if (_d.Documentos.FirstOrDefault() is { } ultimo)
             {
@@ -35,6 +43,87 @@
             }
         </div>
 
+        @* Asistencia del mes: selector de mes + indicadores *@
+        <div class="adm-card adm-card-pad d-flex flex-column" style="gap:14px;">
+            <div class="d-flex flex-wrap align-items-center justify-content-between" style="gap:10px;">
+                <div class="d-flex flex-column" style="gap:2px;">
+                    <span class="adm-card-title">Asistencia del mes</span>
+                    <span class="adm-card-sub">Jornadas de @_mes.ToString("MMMM yyyy", Es) según lo programado en el contrato.</span>
+                </div>
+                <label class="d-inline-flex align-items-center" style="gap:8px; margin:0;">
+                    <span class="pn-muted" style="font-size:13px;">Mes</span>
+                    <input class="pn-input" type="month" value="@_mes.ToString("yyyy-MM")" @onchange="CambiarMes" style="width:170px;" />
+                </label>
+            </div>
+            @if (_resumen is { } r)
+            {
+                <div class="pn-grid pn-grid-kpi">
+                    <div class="pn-kpi">
+                        <div class="pn-kpi-top"><span class="pn-kpi-label">Completadas</span><span class="pn-kpi-icon tone-ok"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17 19 7"></path></svg></span></div>
+                        <span class="pn-kpi-value">@r.Completadas</span>
+                        <span class="pn-kpi-sub">jornadas terminadas</span>
+                    </div>
+                    <div class="pn-kpi">
+                        <div class="pn-kpi-top"><span class="pn-kpi-label">Sin iniciar</span><span class="pn-kpi-icon tone-warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v4l2.5 2.5"></path></svg></span></div>
+                        <span class="pn-kpi-value">@r.NoIniciadas</span>
+                        <span class="pn-kpi-sub">programadas que no empezaron</span>
+                    </div>
+                    <div class="pn-kpi">
+                        <div class="pn-kpi-top"><span class="pn-kpi-label">Ausencias</span><span class="pn-kpi-icon tone-violet"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M4 10h16M9 14l6 4m0-4-6 4"></path></svg></span></div>
+                        <span class="pn-kpi-value">@r.Ausencias</span>
+                        <span class="pn-kpi-sub">registradas con aviso</span>
+                    </div>
+                    <div class="pn-kpi @(r.Canceladas > 0 ? "is-alert" : "")">
+                        <div class="pn-kpi-top"><span class="pn-kpi-label">Canceladas</span><span class="pn-kpi-icon tone-danger"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></span></div>
+                        <span class="pn-kpi-value">@r.Canceladas</span>
+                        <span class="pn-kpi-sub" title="Quién canceló">Cliente @r.CanceladasCliente · Care Partner @r.CanceladasCuidador@(r.CanceladasSinAtribuir > 0 ? $" · sin atribuir {r.CanceladasSinAtribuir}" : "")</span>
+                    </div>
+                    <div class="pn-kpi">
+                        <div class="pn-kpi-top"><span class="pn-kpi-label">Horas trabajadas</span><span class="pn-kpi-icon tone-info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 7v5l3 2"></path><circle cx="12" cy="12" r="9"></circle></svg></span></div>
+                        <span class="pn-kpi-value">@r.HorasTrabajadas.ToString("0.#", Es) <span style="font-size:15px; font-weight:500;" class="pn-muted">h</span></span>
+                        <span class="pn-kpi-sub">en jornadas completadas</span>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="pn-callout tone-danger"><span>No se pudo cargar la asistencia de este mes.</span></div>
+            }
+        </div>
+
+        @* Anexos: cambios de horario o tarifa firmados después del contrato *@
+        <section class="adm-card adm-card-pad d-flex flex-column" style="gap:12px;">
+            <div class="d-flex flex-column" style="gap:2px;">
+                <span class="adm-card-title">Anexos</span>
+                <span class="adm-card-sub">Cambios de horario o tarifa firmados después del contrato.</span>
+            </div>
+            @if (_d.Anexos.Count == 0)
+            {
+                <span class="pn-muted" style="font-size:13px;">Este contrato no tiene anexos.</span>
+            }
+            else
+            {
+                <div class="d-flex flex-column" style="gap:8px;">
+                    @foreach (var a in _d.Anexos)
+                    {
+                        <div class="pn-anexo">
+                            <div class="d-flex flex-column" style="gap:4px; flex:1; min-width:0;">
+                                <span class="d-flex flex-wrap align-items-center" style="gap:8px;">
+                                    <span class="pn-strong">Anexo #@a.Id</span>
+                                    <span class="pn-pill @EstadoContrato.Tono(a.Estado)">@EstadoContrato.Texto(a.Estado)</span>
+                                </span>
+                                <span class="pn-muted" style="font-size:12.5px;">Desde el @a.FechaInicio.ToString("dd MMM yyyy", Es) · RD$ @a.TarifaHora.ToString("N2", Es) por hora</span>
+                                <span style="font-size:13px;">@EstadoContrato.Horario(a.Horario)</span>
+                            </div>
+                            @if (a.DocumentoId is int documento)
+                            {
+                                <a class="pn-btn pn-btn-quiet pn-btn-sm" href="contratos/pdf/@documento" target="_blank" rel="noopener">Ver anexo firmado</a>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </section>
         <div class="pn-grid pn-grid-2">
             <div class="d-flex flex-column" style="gap:16px; min-width:0;">
                 <div class="pn-grid pn-grid-2-eq">
@@ -48,6 +137,7 @@
                         <dt>Domicilio</dt><dd>@c.DomicilioNombre · @c.Direccion</dd>
                         <dt>Persona a cuidar</dt><dd>@(c.QuienVive ?? "—")</dd>
                         <dt>Horario</dt><dd>@string.Join(" · ", _d.Horario.Select(EstadoContrato.Franja))</dd>
+                        <dt>Modalidad</dt><dd>@(c.Dormida ? "Con pernocta: duerme en la residencia (se pagan solo las horas del horario)" : "Por jornada (no duerme en la residencia)")</dd>
                         <dt>Tarifa</dt><dd class="pn-strong">RD$ @c.TarifaHora.ToString("N2") por hora · ≈ RD$ @((c.TarifaHora * (decimal)HorasSemana()).ToString("N0")) por semana</dd>
                         <dt>Método de pago</dt><dd>@MetodosPago.Texto(c.MetodoPago)</dd>
                         <dt>Vigencia</dt><dd>Desde @c.FechaInicio.ToString("dd MMM yyyy", Es)@(c.FechaFin is DateTime ff ? $" hasta {ff:dd MMM yyyy}" : " · indefinido") · preaviso @c.DiasPreaviso días</dd>
@@ -59,6 +149,25 @@
                         }
                     </dl>
                 </div>
+
+                @if (_d.Tareas.Count > 0)
+                {
+                    <div class="adm-card adm-card-pad d-flex flex-column" style="gap:10px;">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span class="adm-card-title">Tareas diarias</span>
+                            <span class="adm-card-sub">@_d.Tareas.Count tarea(s) · @_d.Tareas.Count(t => t.RequiereFoto) con foto</span>
+                        </div>
+                        <ol style="margin:0; padding-left:20px; display:flex; flex-direction:column; gap:6px; font-size:13.5px;">
+                            @foreach (var t in _d.Tareas.OrderBy(t => t.Orden))
+                            {
+                                <li>
+                                    @t.Descripcion
+                                    @if (t.RequiereFoto) { <span class="pn-pill tone-info no-dot" style="margin-left:6px;">Foto</span> }
+                                </li>
+                            }
+                        </ol>
+                    </div>
+                }
 
                 <div class="adm-card adm-card-pad d-flex flex-column" style="gap:10px;">
                     <span class="adm-card-title">Jornadas</span>
@@ -162,6 +271,12 @@
     [Parameter] public int Id { get; set; }
 
     private static readonly System.Globalization.CultureInfo Es = new("es-DO");
+    private DateTime _mes = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+    private ResumenMensualContrato? _resumen;
+    private async Task CambiarMes(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value + "-01", out var mes)) { _mes = mes; _resumen = await Api.ResumenMensualContratoAsync(Id, mes); }
+    }
     private DetalleContrato? _d;
     private bool _cargando = true, _verificando;
     private readonly Dictionary<int, bool> _verificacion = new();
@@ -170,6 +285,7 @@
     {
         _cargando = true;
         _d = await Api.ContratoAsync(Id);
+        _resumen = await Api.ResumenMensualContratoAsync(Id, _mes);
         _cargando = false;
     }
 

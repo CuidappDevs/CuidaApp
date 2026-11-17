@@ -20,7 +20,7 @@ namespace CUIDAPP_API.Interfaces.Trabajo
         Task<IEnumerable<ActividadTrabajoDto>> ObtenerActividadesAsync(int trabajoId);
         Task<ActividadTrabajoDto> AgregarActividadAsync(AgregarActividadTrabajoDto dto);
         Task<IEnumerable<TareaTrabajoDto>> ObtenerTareasAsync(int trabajoId);
-        Task<TareaTrabajoDto?> CompletarTareaAsync(int tareaId);
+        Task<TareaTrabajoDto?> CompletarTareaAsync(int tareaId, string? fotoUrl = null);
         Task AlertarGeocercaAsync(int trabajoId, double distanciaMetros);
     }
 }

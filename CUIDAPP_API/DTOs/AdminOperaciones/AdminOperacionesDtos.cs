@@ -30,7 +30,7 @@ namespace CUIDAPP_API.DTOs.AdminOperaciones
 
     public class NivelAdminDto
     {
-        [Range(1, 3)]
+        [Range(1, 6)]
         public int Nivel { get; set; }
     }
 

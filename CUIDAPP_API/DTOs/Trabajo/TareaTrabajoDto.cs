@@ -6,6 +6,8 @@ namespace CUIDAPP_API.DTOs.Trabajo
         public int TrabajoId { get; set; }
         public required string Descripcion { get; set; }
         public int Orden { get; set; }
+        public bool RequiereFoto { get; set; }
+        public string? FotoUrl { get; set; }
         public bool Completada { get; set; }
         public DateTime? FechaCompletada { get; set; }
     }

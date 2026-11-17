@@ -174,6 +174,7 @@ namespace CUIDAPP_API.Services.Trabajo
                 FechaInicioReal = reader["FechaInicioReal"] as DateTime?,
                 JustificacionFinalizacion = reader["JustificacionFinalizacion"] as string,
                 RechazadoPorCliente = Convert.ToBoolean(reader["RechazadoPorCliente"]),
+                ContratoId = int.TryParse(LeerTexto(reader, "ContratoId"), out var contratoId) ? contratoId : null,
                 MetodoPago = LeerTexto(reader, "MetodoPago")
             };
         }
@@ -256,14 +257,21 @@ namespace CUIDAPP_API.Services.Trabajo
             return (false, "ERROR_DESCONOCIDO");
         }
 
+        public static bool MontoRecibidoValido(decimal? monto) => !monto.HasValue ||
+            monto.Value >= 0 && monto.Value <= 99999999.99m && monto.Value == decimal.Round(monto.Value, 2);
+
         public async Task<(bool Success, string Motivo)> FinalizarTrabajoAsync(FinalizarTrabajoDto dto)
         {
+            // El límite contra el total real se valida bajo bloqueo dentro del SP.
+            if (!MontoRecibidoValido(dto.MontoRecibido)) return (false, "MONTO_RECIBIDO_INVALIDO");
             using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand("sp_FinalizarTrabajo", connection);
+            using var command = new SqlCommand("sp_FinalizarTrabajoConDeuda", connection);
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.AddWithValue("@TrabajoId", dto.TrabajoId);
             command.Parameters.AddWithValue("@Pin", dto.Pin);
             command.Parameters.AddWithValue("@Justificacion", (object?)dto.Justificacion ?? DBNull.Value);
+            command.Parameters.AddWithValue("@MontoRecibido", (object?)dto.MontoRecibido ?? DBNull.Value);
+            command.Parameters.AddWithValue("@Ahora", HoraLocalRD.Ahora);
 
             await connection.OpenAsync();
             using var reader = await command.ExecuteReaderAsync();
@@ -277,12 +285,15 @@ namespace CUIDAPP_API.Services.Trabajo
                 {
                     // Pasa a Estado 7 (esperando confirmación del cliente): el pago y el
                     // Estado 4 (Completado) solo se generan cuando el cliente confirma.
+                    var deudaCreada = Convert.ToBoolean(reader["DeudaCreada"]);
                     reader.Close();
                     var participantes = await ObtenerParticipantesAsync(dto.TrabajoId);
                     if (participantes.HasValue)
                     {
                         await _notifier.NotificarAsync(participantes.Value.ClienteId, "TrabajoActualizado", new { dto.TrabajoId, Estado = 7 });
                         await _notifier.NotificarAsync(participantes.Value.CuidadorId, "TrabajoActualizado", new { dto.TrabajoId, Estado = 7 });
+                        if (deudaCreada)
+                            await _notifier.NotificarAsync(participantes.Value.ClienteId, "CuentaActualizada", new { tipo = "deuda_cliente", trabajoId = dto.TrabajoId });
                     }
                 }
 
@@ -435,7 +446,7 @@ namespace CUIDAPP_API.Services.Trabajo
             return tareas;
         }
 
-        public async Task<TareaTrabajoDto?> CompletarTareaAsync(int tareaId)
+        public async Task<TareaTrabajoDto?> CompletarTareaAsync(int tareaId, string? fotoUrl = null)
         {
             TareaTrabajoDto? tarea = null;
             using (var connection = new SqlConnection(_connectionString))
@@ -443,6 +454,7 @@ namespace CUIDAPP_API.Services.Trabajo
             {
                 command.CommandType = CommandType.StoredProcedure;
                 command.Parameters.AddWithValue("@TareaId", tareaId);
+                command.Parameters.AddWithValue("@FotoUrl", (object?)fotoUrl ?? DBNull.Value);
                 command.Parameters.AddWithValue("@FechaCompletada", HoraLocalRD.Ahora);
 
                 await connection.OpenAsync();
@@ -467,6 +479,8 @@ namespace CUIDAPP_API.Services.Trabajo
             TrabajoId = Convert.ToInt32(reader["TrabajoId"]),
             Descripcion = reader["Descripcion"].ToString() ?? "",
             Orden = Convert.ToInt32(reader["Orden"]),
+            RequiereFoto = Convert.ToBoolean(reader["RequiereFoto"]),
+            FotoUrl = reader["FotoUrl"] as string,
             Completada = Convert.ToBoolean(reader["Completada"]),
             FechaCompletada = reader["FechaCompletada"] == DBNull.Value ? null : Convert.ToDateTime(reader["FechaCompletada"])
         };
@@ -544,6 +558,7 @@ namespace CUIDAPP_API.Services.Trabajo
                 Longitud = reader["Longitud"] as decimal?,
                 RechazadoPorCliente = Convert.ToBoolean(reader["RechazadoPorCliente"]),
                 PagoDisputado = Convert.ToBoolean(reader["PagoDisputado"]),
+                ContratoId = int.TryParse(LeerTexto(reader, "ContratoId"), out var contratoId) ? contratoId : null,
                 MetodoPago = LeerTexto(reader, "MetodoPago")
             };
         }

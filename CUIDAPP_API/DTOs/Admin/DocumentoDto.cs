@@ -7,6 +7,8 @@ namespace CUIDAPP_API.DTOs.Admin
         public required string UrlArchivo { get; set; }
         public int Estado { get; set; }
         public string? ObservacionesAdmin { get; set; }
+        public bool RequiereVencimiento { get; set; }
+        public DateOnly? FechaVencimiento { get; set; }
         public DateTime FechaSubida { get; set; }
     }
 }

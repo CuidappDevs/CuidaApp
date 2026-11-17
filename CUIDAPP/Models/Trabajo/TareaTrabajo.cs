@@ -8,5 +8,8 @@ namespace CUIDAPP.Models.Trabajo
         public int Orden { get; set; }
         public bool Completada { get; set; }
         public DateTime? FechaCompletada { get; set; }
+        /// <summary>Tarea del checklist de un contrato que pide foto como evidencia al marcarla.</summary>
+        public bool RequiereFoto { get; set; }
+        public string? FotoUrl { get; set; }
     }
 }

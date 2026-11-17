@@ -297,5 +297,11 @@ namespace CUIDAPP.Views.Perfil
         {
             await Shell.Current.GoToAsync("MisContratosPage");
         }
+    
+        private async void OnTerminosTapped(object? sender, TappedEventArgs e)
+            => await Shell.Current.GoToAsync("TerminosPage");
+
+        private async void OnEliminarCuentaTapped(object? sender, TappedEventArgs e)
+            => await Shell.Current.GoToAsync("EliminarCuentaPage");
     }
 }

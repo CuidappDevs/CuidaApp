@@ -40,9 +40,11 @@ namespace CUIDAPP.Views.Registro
             SetupFlows();
             _ = CargarTiposTrabajoAsync();
             _ = CargarNacionalidadesAsync();
+            _ = CargarEstatusMigratorioAsync();
             RenderizarDocumentosExtra();
             UpdatePayOptionsUI();
             UpdateRoleOptionsUI();
+            ConstruirTerminos();
         }
 
         private void SetupFlows()
@@ -74,6 +76,59 @@ namespace CUIDAPP.Views.Registro
 
         // ---- Términos y Condiciones (antes del paso 1) ----
         private bool terminosLeidos;
+        /// <summary>Versión de los términos que aceptó (viaja al servidor en el registro).</summary>
+        private string? terminosVersionAceptada;
+
+        private List<Border> partesTerminos = new();
+        private bool lectorConectado;
+
+        private void ConstruirTerminos()
+        {
+            partesTerminos = Localization.Terminos.Construir(ContenidoTyc);
+            LblCasillaTyc.Text = Localization.Terminos.Actual.Casilla;
+            ConectarLector();
+            _ = LectorTerminos.PrepararAsync(Localization.Terminos.Segmentos());
+        }
+
+        // Lector de voz: resalta la sección que lee, la sigue con el scroll y, si se escucha completo, cuenta como leído.
+        private void ConectarLector()
+        {
+            if (lectorConectado) return;
+            lectorConectado = true;
+            LectorTerminos.ParteCambiada += i => MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                if (i < 0 || i >= partesTerminos.Count) return;
+                Localization.Terminos.Resaltar(partesTerminos, i);
+                await ScrollTerminos.ScrollToAsync(partesTerminos[i], ScrollToPosition.Start, true);
+            });
+            LectorTerminos.Detenido += () => MainThread.BeginInvokeOnMainThread(() => Localization.Terminos.Resaltar(partesTerminos, -1));
+            LectorTerminos.Completado += () => MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                MarcarTerminosLeidos();
+                await ScrollTerminos.ScrollToAsync(CajaCasillaTyc, ScrollToPosition.End, true);
+            });
+        }
+
+        // El texto cambia con el idioma mientras la persona lee.
+        private void OnIdiomaCambiadoTerminos() => MainThread.BeginInvokeOnMainThread(ConstruirTerminos);
+
+        private void OnCasillaTycTapped(object? sender, TappedEventArgs e) => ChkTerminos.IsChecked = !ChkTerminos.IsChecked;
+
+        private void OnCasillaTycCambiada(object? sender, CheckedChangedEventArgs e)
+        {
+            CajaCasillaTyc.Stroke = e.Value ? Tema.C("ColorPrimary") : Tema.C("ColorBorder");
+            CajaCasillaTyc.BackgroundColor = e.Value ? Tema.C("ColorPrimarySoft") : Tema.C("ColorSurface");
+            ActualizarBotonAceptar();
+        }
+
+        // Aceptar: leyó hasta el final y marcó la casilla. Rechazar: basta con haber leído.
+        private void ActualizarBotonAceptar()
+        {
+            var puede = terminosLeidos && ChkTerminos.IsChecked;
+            if (BtnAceptarTerminos.IsEnabled == puede) return;
+            BtnAceptarTerminos.IsEnabled = puede;
+            _ = BtnAceptarTerminos.FadeTo(puede ? 1 : 0.5, 200, Easing.CubicOut);
+        }
 
         private void OnTerminosScrolled(object? sender, ScrolledEventArgs e)
         {
@@ -109,13 +164,19 @@ namespace CUIDAPP.Views.Registro
             if (ScrollTerminos.ScrollY + visible < contenido - 24)
                 return;
 
+            MarcarTerminosLeidos();
+        }
+
+        // Llegó al final leyendo o escuchó el audio completo: se habilita Rechazar (y Aceptar con la casilla).
+        private void MarcarTerminosLeidos()
+        {
+            if (terminosLeidos) return;
             terminosLeidos = true;
-            BtnAceptarTerminos.IsEnabled = true;
             BtnRechazarTerminos.IsEnabled = true;
             ActualizarBarraLectura();
+            ActualizarBotonAceptar();
 
-            // Los botones se "encienden" y la pista se desvanece.
-            _ = BtnAceptarTerminos.FadeTo(1, 220, Easing.CubicOut);
+            // Rechazar se "enciende" y la pista se desvanece (Aceptar espera la casilla).
             _ = BtnRechazarTerminos.FadeTo(1, 220, Easing.CubicOut);
             _ = LblHintTerminos.FadeTo(0, 160, Easing.CubicOut).ContinueWith(_ =>
                 MainThread.BeginInvokeOnMainThread(() => LblHintTerminos.IsVisible = false));
@@ -123,15 +184,18 @@ namespace CUIDAPP.Views.Registro
 
         private void OnAceptarTerminosTapped(object sender, EventArgs e)
         {
-            if (!terminosLeidos)
+            if (!terminosLeidos || !ChkTerminos.IsChecked)
                 return;
 
+            LectorTerminos.Detener();
+            terminosVersionAceptada = Localization.Terminos.Version;
             PanelTerminos.IsVisible = false; // se muestra el paso 1 (Hello!)
         }
 
         // Rechazar (o la flecha atrás de esta pantalla) devuelve al login.
         private async void OnRechazarTerminosTapped(object sender, EventArgs e)
         {
+            LectorTerminos.Detener();
             await Shell.Current.GoToAsync("..");
         }
 
@@ -151,11 +215,15 @@ namespace CUIDAPP.Views.Registro
         {
             base.OnAppearing();
             IniciarAnimacionBienvenida();
+            Localization.Localizador.Instancia.IdiomaCambiado -= OnIdiomaCambiadoTerminos;
+            Localization.Localizador.Instancia.IdiomaCambiado += OnIdiomaCambiadoTerminos;
         }
 
         protected override void OnDisappearing()
         {
             base.OnDisappearing();
+            Localization.Localizador.Instancia.IdiomaCambiado -= OnIdiomaCambiadoTerminos;
+            LectorTerminos.Detener();
             foreach (var n in new[] { "HolaSaludo", "HolaFlotar", "HolaParpadeo" })
                 this.AbortAnimation(n);
         }
@@ -238,9 +306,46 @@ namespace CUIDAPP.Views.Registro
             }
         }
 
+        // ---------- Código de invitación ("Invitar a mi cuidadora")
+
+        private string? codigoInvitacion;
+
+        private void OnCodigoInvitacionCambiado(object? sender, TextChangedEventArgs e)
+        {
+            var limpio = (e.NewTextValue ?? "").Trim().ToUpperInvariant();
+            if (EntryCodigoInvitacion.Text != limpio) { EntryCodigoInvitacion.Text = limpio; return; }
+            codigoInvitacion = null;
+            LblInvitacion.IsVisible = false;
+        }
+
+        /// <summary>Valida el código (si lo escribió) y rellena nombre, teléfono y correo vacíos con los de la invitación.</summary>
+        private async Task<bool> ValidarInvitacionAsync()
+        {
+            var codigo = (EntryCodigoInvitacion.Text ?? "").Trim().ToUpperInvariant();
+            if (codigo.Length == 0) { codigoInvitacion = null; return true; }
+            if (codigo == codigoInvitacion) return true;
+
+            var (info, error) = await _apiService.ObtenerInvitacionPorCodigoAsync(codigo);
+            if (info == null)
+            {
+                await Alerta.MostrarAsync(Localizador.T("error"), error ?? "", Localizador.T("ok"));
+                return false;
+            }
+            codigoInvitacion = codigo;
+            LblInvitacion.Text = Localizador.F("registro_invitacion_ok", info.ClienteNombre ?? "");
+            LblInvitacion.IsVisible = true;
+            if (string.IsNullOrWhiteSpace(EntryNombre.Text)) EntryNombre.Text = info.Nombre;
+            if (string.IsNullOrWhiteSpace(EntryTelefono.Text)) EntryTelefono.Text = info.Telefono;
+            if (string.IsNullOrWhiteSpace(EntryEmail.Text)) EntryEmail.Text = info.Email;
+            return true;
+        }
+
         private async Task<bool> ValidateCurrentStep()
         {
             var currentView = currentFlow[currentStepIndex];
+
+            if (currentView == PasoRol && selectedRole == "Cuidador" && !await ValidarInvitacionAsync())
+                return false;
 
             if (currentView == PasoCredenciales)
             {
@@ -249,12 +354,12 @@ namespace CUIDAPP.Views.Registro
                     await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("por_favor_ingresa_un_correo"), Localizador.T("ok"));
                     return false;
                 }
-                if (!ClaveEsSegura(EntryPassword.Text))
+                if (googleIdToken == null && !ClaveEsSegura(EntryPassword.Text))
                 {
                     await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("clave_no_cumple"), Localizador.T("ok"));
                     return false;
                 }
-                if (EntryPassword.Text != EntryPasswordConfirmar.Text)
+                if (googleIdToken == null && EntryPassword.Text != EntryPasswordConfirmar.Text)
                 {
                     await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("las_claves_no_coinciden"), Localizador.T("ok"));
                     return false;
@@ -333,6 +438,20 @@ namespace CUIDAPP.Views.Registro
                 {
                     await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("selecciona_ambos_documentos"), Localizador.T("ok"));
                     return false;
+                }
+                if (PideEstatusMigratorio())
+                {
+                    if (EstatusSeleccionado() is null)
+                    {
+                        await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("falta_estatus_migratorio"), Localizador.T("ok"));
+                        return false;
+                    }
+                    var faltan = documentosMigratorios.Where(d => d.Archivo == null).Select(d => d.Titulo).ToList();
+                    if (faltan.Count > 0)
+                    {
+                        await Alerta.MostrarAsync(Localizador.T("error"), Localizador.F("faltan_documentos_migratorios", string.Join(", ", faltan)), Localizador.T("ok"));
+                        return false;
+                    }
                 }
             }
 
@@ -423,6 +542,9 @@ namespace CUIDAPP.Views.Registro
             {
                 if (cedulaFile != null) subidas.Add((cedulaFile, EsExtranjero() ? "progreso_pasaporte" : "progreso_cedula", "err_subir_cedula", true, null));
                 if (antecedentesFile != null) subidas.Add((antecedentesFile, "progreso_antecedentes", "err_subir_carta", true, null));
+                if (PideEstatusMigratorio())
+                    foreach (var doc in documentosMigratorios.Where(d => d.Archivo != null))
+                        subidas.Add((doc.Archivo!, "progreso_migratorio", "err_subir_migratorio", true, doc));
                 foreach (var doc in documentosExtra.Where(d => d.Archivo != null && DocumentoExtraVisible(d)))
                     subidas.Add((doc.Archivo!, "progreso_opcional", "", false, doc));
             }
@@ -456,12 +578,16 @@ namespace CUIDAPP.Views.Registro
                 PintarProgreso(baseHechos / total, texto);
 
                 var progreso = new Progress<double>(f => PintarProgreso((baseHechos + f * tamano) / total, texto));
-                var url = await _apiService.UploadFileAsync(archivo.FullPath, carpetaUsuario, esCuidador ? progreso : null) ?? "";
+                var (urlSubida, errorSubida) = await _apiService.UploadFileConDiagnosticoAsync(archivo.FullPath, carpetaUsuario, esCuidador ? progreso : null);
+                var url = urlSubida ?? "";
                 hechos += tamano;
 
                 if (url == "" && obligatorio)
                 {
-                    await MostrarErrorSubida(Localizador.T(errorClave));
+                    // Se muestra también el motivo real (tamaño, tipo de archivo, conexión) para poder corregirlo.
+                    var mensaje = Localizador.T(errorClave);
+                    if (!string.IsNullOrWhiteSpace(errorSubida)) mensaje += "\n\n" + errorSubida;
+                    await MostrarErrorSubida(mensaje);
                     return;
                 }
 
@@ -481,7 +607,9 @@ namespace CUIDAPP.Views.Registro
                 var request = new RegisterClientRequest
                 {
                     Email = EntryEmail.Text ?? "",
-                    Password = EntryPassword.Text ?? "",
+                    Password = googleIdToken == null ? EntryPassword.Text ?? "" : "",
+                    GoogleIdToken = googleIdToken,
+                    TerminosVersion = terminosVersionAceptada,
                     NombreCompleto = EntryNombre.Text ?? "",
                     NacionalidadId = NacionalidadSeleccionadaId(),
                     DocumentoIdentidad = NacionalidadSeleccionadaId() is null ? null : EntryDocumento.Text?.Trim(),
@@ -510,7 +638,9 @@ namespace CUIDAPP.Views.Registro
                 var request = new RegisterCaregiverRequest
                 {
                     Email = EntryEmail.Text ?? "",
-                    Password = EntryPassword.Text ?? "",
+                    Password = googleIdToken == null ? EntryPassword.Text ?? "" : "",
+                    GoogleIdToken = googleIdToken,
+                    TerminosVersion = terminosVersionAceptada,
                     NombreCompleto = EntryNombre.Text ?? "",
                     NacionalidadId = NacionalidadSeleccionadaId(),
                     DocumentoIdentidad = NacionalidadSeleccionadaId() is null ? null : EntryDocumento.Text?.Trim(),
@@ -523,7 +653,9 @@ namespace CUIDAPP.Views.Registro
                     CedulaUrl = cedulaUrl,
                     CartaAntecedentesUrl = antecedentesUrl,
                     DocumentosExtra = documentosExtraSubidos,
-                    TestToken = testToken
+                    EstatusMigratorioId = PideEstatusMigratorio() ? EstatusSeleccionado()?.Id : null,
+                    TestToken = testToken,
+                    CodigoInvitacion = codigoInvitacion
                 };
                 string? codigoError;
                 (success, codigoError) = await _apiService.RegisterCuidadorAsync(request);
@@ -537,6 +669,31 @@ namespace CUIDAPP.Views.Registro
                     OverlayExito.IsVisible = false;
                     await Alerta.MostrarAsync(Localizador.T("test_aviso_titulo"), Localizador.T("test_requerido_registro"), Localizador.T("ok"), TipoAlerta.Advertencia);
                     currentStepIndex = currentFlow.IndexOf(PasoTrabajo);
+                    await UpdateStepUI(true);
+                    return;
+                }
+
+                // El servidor no encontró el estatus migratorio o alguno de sus documentos: vuelve a los documentos.
+                if (!success && codigoError is "ESTATUS_MIGRATORIO_REQUERIDO" or "DOCUMENTOS_MIGRATORIOS_FALTANTES")
+                {
+                    await OverlayExito.FadeTo(0, 200);
+                    OverlayExito.IsVisible = false;
+                    await Alerta.MostrarAsync(Localizador.T("estatus_migratorio"), Localizador.T("migratorio_rechazado_servidor"), Localizador.T("ok"), TipoAlerta.Advertencia);
+                    _ = CargarEstatusMigratorioAsync();
+                    currentStepIndex = currentFlow.IndexOf(PasoDocumentos);
+                    await UpdateStepUI(true);
+                    return;
+                }
+
+                // El código venció o se usó mientras llenaba el registro: vuelve al paso del rol.
+                if (!success && codigoError == "INVITACION_INVALIDA")
+                {
+                    codigoInvitacion = null;
+                    LblInvitacion.IsVisible = false;
+                    await OverlayExito.FadeTo(0, 200);
+                    OverlayExito.IsVisible = false;
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("contrato_err_invitacion_invalida"), Localizador.T("ok"));
+                    currentStepIndex = currentFlow.IndexOf(PasoRol);
                     await UpdateStepUI(true);
                     return;
                 }
@@ -704,6 +861,7 @@ namespace CUIDAPP.Views.Registro
         {
             PintarOpcionRol(RoleOptionCliente, RoleIconBoxCliente, RoleIconCliente, RoleTextCliente, RoleCheckCliente, RoleCheckMarkCliente, selectedRole == "Cliente");
             PintarOpcionRol(RoleOptionCuidador, RoleIconBoxCuidador, RoleIconCuidador, RoleTextCuidador, RoleCheckCuidador, RoleCheckMarkCuidador, selectedRole == "Cuidador");
+            BloqueInvitacion.IsVisible = selectedRole == "Cuidador";
         }
 
         private static void PintarOpcionRol(Border tarjeta, Border cajaIcono, Microsoft.Maui.Controls.Shapes.Path icono, Label titulo,
@@ -1058,10 +1216,14 @@ namespace CUIDAPP.Views.Registro
         private sealed class DocumentoExtra
         {
             public required string Tipo { get; init; }
-            public required string ClaveTitulo { get; init; }
-            public required string ClaveDesc { get; init; }
+            public string ClaveTitulo { get; init; } = "";
+            public string ClaveDesc { get; init; } = "";
             public required string Icono { get; init; }
             public bool SoloExtranjero { get; init; }
+            /// <summary>Documento del estatus migratorio: viene del catálogo (sin clave propia) y es obligatorio.</summary>
+            public bool Obligatorio { get; init; }
+            public string Titulo => ClaveTitulo == "" ? Localizador.D(Tipo) : Localizador.T(ClaveTitulo);
+            public string Descripcion => ClaveDesc == "" ? Localizador.T("doc_migratorio_desc") : Localizador.T(ClaveDesc);
             public FileResult? Archivo { get; set; }
         }
 
@@ -1084,12 +1246,63 @@ namespace CUIDAPP.Views.Registro
 
         private bool EsExtranjero() => NacionalidadSeleccionadaId() is not null && !EsDominicana();
 
-        private bool DocumentoExtraVisible(DocumentoExtra d) => !d.SoloExtranjero || EsExtranjero();
+        // Si el estatus migratorio exige ese mismo documento, solo se muestra la tarjeta obligatoria.
+        private bool DocumentoExtraVisible(DocumentoExtra d) => (!d.SoloExtranjero || EsExtranjero())
+            && !(PideEstatusMigratorio() && documentosMigratorios.Any(m => string.Equals(m.Tipo, d.Tipo, StringComparison.OrdinalIgnoreCase)));
 
         // El documento de identidad obligatorio es el pasaporte si es extranjero; los opcionales de extranjeros aparecen o se quitan.
         private void ActualizarDocumentosSegunNacionalidad()
         {
             LblCedulaTitulo.Text = Localizador.T(EsExtranjero() ? "pasaporte_pagina_datos" : "cedula_de_identidad_ambos_lados");
+            RenderizarDocumentosExtra();
+            BloqueMigratorio.IsVisible = PideEstatusMigratorio();
+        }
+
+        // ---------- Estatus migratorio (catálogo EstatusMigratorio + RequisitosDocumentoPorEstatus del panel).
+        // Si el catálogo no carga, el bloque no aparece y el servidor decide al registrar.
+        private List<EstatusMigratorio> estatusMigratorios = new();
+        private readonly List<DocumentoExtra> documentosMigratorios = new();
+
+        private bool PideEstatusMigratorio() => EsExtranjero() && estatusMigratorios.Count > 0;
+
+        private EstatusMigratorio? EstatusSeleccionado()
+        {
+            var i = PickerEstatusMigratorio.SelectedIndex;
+            return i >= 0 && i < estatusMigratorios.Count ? estatusMigratorios[i] : null;
+        }
+
+        private async Task CargarEstatusMigratorioAsync()
+        {
+            CargandoEstatus.IsVisible = CargandoEstatus.IsRunning = true;
+            FlechaEstatus.IsVisible = false;
+            var previo = EstatusSeleccionado()?.Id;
+            estatusMigratorios = await _apiService.ObtenerEstatusMigratorioAsync();
+            CargandoEstatus.IsVisible = CargandoEstatus.IsRunning = false;
+            FlechaEstatus.IsVisible = true;
+
+            PickerEstatusMigratorio.ItemsSource = estatusMigratorios.Select(x => Localizador.D(x.Nombre)).ToList();
+            PickerEstatusMigratorio.SelectedIndex = estatusMigratorios.FindIndex(x => x.Id == previo);
+            BloqueMigratorio.IsVisible = PideEstatusMigratorio();
+            RenderizarDocumentosMigratorios();
+        }
+
+        private void OnEstatusMigratorioCambiado(object? sender, EventArgs e) => RenderizarDocumentosMigratorios();
+
+        // Una tarjeta obligatoria por documento del estatus elegido. Un archivo ya elegido para un
+        // documento con el mismo nombre se conserva al cambiar de estatus.
+        private void RenderizarDocumentosMigratorios()
+        {
+            // Archivos ya elegidos (aquí o en la tarjeta opcional del mismo documento) se conservan.
+            var anteriores = documentosMigratorios.Concat(documentosExtra).Where(d => d.Archivo != null)
+                .GroupBy(d => d.Tipo, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First().Archivo, StringComparer.OrdinalIgnoreCase);
+            documentosMigratorios.Clear();
+            ListaDocumentosMigratorios.Clear();
+            foreach (var tipo in EstatusSeleccionado()?.Requisitos ?? new List<string>())
+            {
+                var doc = new DocumentoExtra { Tipo = tipo, Icono = IconoDocumento, Obligatorio = true, Archivo = anteriores.GetValueOrDefault(tipo) };
+                documentosMigratorios.Add(doc);
+                ListaDocumentosMigratorios.Add(CrearTarjetaDocumentoExtra(doc));
+            }
             RenderizarDocumentosExtra();
         }
 
@@ -1127,19 +1340,19 @@ namespace CUIDAPP.Views.Registro
 
             var archivo = new Label
             {
-                Text = doc.Archivo?.FileName ?? Localizador.T(doc.ClaveDesc),
+                Text = doc.Archivo?.FileName ?? doc.Descripcion,
                 FontFamily = "OpenSansRegular", FontSize = 12, LineBreakMode = LineBreakMode.MiddleTruncation,
                 TextColor = doc.Archivo != null ? Tema.C("ColorSuccess") : (Color)Application.Current!.Resources["ColorTextMuted"]
             };
 
             var chip = new Border
             {
-                StrokeThickness = 0, BackgroundColor = Tema.C("ColorSubtle"), Padding = new Thickness(8, 2),
+                StrokeThickness = 0, BackgroundColor = Tema.C(doc.Obligatorio ? "ColorWarningSoft" : "ColorSubtle"), Padding = new Thickness(8, 2),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 8 }, VerticalOptions = LayoutOptions.Center,
-                Content = new Label { Text = Localizador.T("opcional"), FontFamily = "OpenSansSemibold", FontSize = 10, TextColor = (Color)Application.Current!.Resources["ColorTextMuted"] }
+                Content = new Label { Text = Localizador.T(doc.Obligatorio ? "obligatorio" : "opcional"), FontFamily = "OpenSansSemibold", FontSize = 10, TextColor = Tema.C(doc.Obligatorio ? "ColorWarning" : "ColorTextMuted") }
             };
             var tituloFila = new HorizontalStackLayout { Spacing = 8 };
-            tituloFila.Add(new Label { Text = Localizador.T(doc.ClaveTitulo), FontFamily = "OpenSansSemibold", FontSize = 14, TextColor = (Color)Application.Current!.Resources["ColorTextStrong"], VerticalOptions = LayoutOptions.Center });
+            tituloFila.Add(new Label { Text = doc.Titulo, FontFamily = "OpenSansSemibold", FontSize = 14, TextColor = (Color)Application.Current!.Resources["ColorTextStrong"], VerticalOptions = LayoutOptions.Center, LineBreakMode = LineBreakMode.TailTruncation, MaximumWidthRequest = 190 });
             tituloFila.Add(chip);
 
             var textos = new VerticalStackLayout { Spacing = 3, VerticalOptions = LayoutOptions.Center };
@@ -1177,7 +1390,7 @@ namespace CUIDAPP.Views.Registro
             {
                 try
                 {
-                    var result = await FilePicker.Default.PickAsync(new PickOptions { PickerTitle = Localizador.T(doc.ClaveTitulo) });
+                    var result = await FilePicker.Default.PickAsync(new PickOptions { PickerTitle = doc.Titulo });
                     if (result == null) return;
                     doc.Archivo = result;
                     archivo.Text = result.FileName;

@@ -156,23 +156,14 @@
                                     </Border>
                                 </Grid>
                             </Border>
-                            <!-- Recurrente (RolId 4): contratación formal tipo empleado. Desactivada hasta que exista su flujo. -->
-                            <Border x:Name="RoleOptionRecurrente" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 20" Padding="16" BackgroundColor="{StaticResource ColorSurface}" Opacity="0.6" IsEnabled="False">
-                                <Grid ColumnDefinitions="Auto, *" ColumnSpacing="14">
-                                    <Border WidthRequest="52" HeightRequest="52" StrokeThickness="0" StrokeShape="RoundRectangle 16" BackgroundColor="{StaticResource ColorBackground}" VerticalOptions="Center">
-                                        <!-- Calendario con repetición -->
-                                        <Path Data="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3 4.9 3 6V20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V10H19V20ZM12 11.5V13.25L14.5 11L12 8.75V10.5C9.79 10.5 8 12.29 8 14.5C8 15.29 8.23 16.02 8.62 16.64L9.71 15.55C9.57 15.22 9.5 14.87 9.5 14.5C9.5 13.12 10.62 12 12 12V11.5ZM15.38 12.36L14.29 13.45C14.43 13.78 14.5 14.13 14.5 14.5C14.5 15.88 13.38 17 12 17V15.25L9.5 17.5L12 19.75V18C14.21 18 16 16.21 16 14.5C16 13.71 15.77 12.98 15.38 12.36Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="26" HeightRequest="26" HorizontalOptions="Center" VerticalOptions="Center"/>
-                                    </Border>
-                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="4">
-                                        <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
-                                            <Label Text="{loc:T rol_recurrente}" FontFamily="OpenSansSemibold" FontSize="16" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
-                                            <Border Grid.Column="1" Stroke="Transparent" BackgroundColor="{StaticResource ColorWarningSoft}" StrokeShape="RoundRectangle 10" Padding="8,3" VerticalOptions="Center">
-                                                <Label Text="{loc:T en_desarrollo}" FontSize="10" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorWarning}"/>
-                                            </Border>
-                                        </Grid>
-                                        <Label Text="{loc:T rol_recurrente_desc}" FontFamily="OpenSansRegular" FontSize="13" TextColor="{StaticResource ColorTextMuted}"/>
-                                    </VerticalStackLayout>
-                                </Grid>
+                            <!-- Invitada por una familia ("Invitar a mi cuidadora"): código opcional, solo para Care Partner -->
+                            <Border x:Name="BloqueInvitacion" Stroke="{StaticResource ColorBorder}" StrokeThickness="1" StrokeShape="RoundRectangle 16" Padding="14,12" BackgroundColor="{StaticResource ColorSurface}">
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="{loc:T registro_invitacion_titulo}" FontFamily="OpenSansSemibold" FontSize="14" TextColor="{StaticResource ColorTextStrong}"/>
+                                    <Label Text="{loc:T registro_invitacion_texto}" FontFamily="OpenSansRegular" FontSize="12.5" TextColor="{StaticResource ColorTextMuted}"/>
+                                    <Entry x:Name="EntryCodigoInvitacion" Placeholder="{loc:T registro_invitacion_placeholder}" MaxLength="8" Keyboard="Text" CharacterSpacing="3" FontFamily="OpenSansSemibold" FontSize="16" PlaceholderColor="{StaticResource ColorPlaceholder}" TextColor="{StaticResource ColorTextStrong}" BackgroundColor="Transparent" HeightRequest="48" TextChanged="OnCodigoInvitacionCambiado"/>
+                                    <Label x:Name="LblInvitacion" IsVisible="False" FontFamily="OpenSansSemibold" FontSize="12.5" TextColor="{StaticResource ColorSuccess}"/>
+                                </VerticalStackLayout>
                             </Border>
                         </VerticalStackLayout>
 
@@ -201,7 +192,19 @@
                                 </Grid>
                             </Border>
                             </VerticalStackLayout>
-                            <VerticalStackLayout Spacing="8">
+                            <!-- Registro con Google: no se pide contraseña -->
+                            <Border x:Name="AvisoGoogle" IsVisible="False" Stroke="Transparent" BackgroundColor="{StaticResource ColorPrimarySoft}" StrokeShape="RoundRectangle 14" Padding="14,12">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                    <Grid WidthRequest="48" HeightRequest="48" Scale="0.42" Margin="-14" VerticalOptions="Center">
+                                        <Path Aspect="None" Fill="#EA4335" Data="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.980 6.190C12.43 13.72 17.74 9.5 24 9.5z"/>
+                                        <Path Aspect="None" Fill="#4285F4" Data="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                                        <Path Aspect="None" Fill="#FBBC05" Data="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                                        <Path Aspect="None" Fill="#34A853" Data="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.450-4.92 2.300-8.16 2.300-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                                    </Grid>
+                                    <Label Grid.Column="1" Text="{loc:T registro_google_aviso}" FontFamily="OpenSansRegular" FontSize="13" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
+                                </Grid>
+                            </Border>
+                            <VerticalStackLayout x:Name="BloqueClave" Spacing="8">
                                 <Label Text="{loc:T contrasena}" FontFamily="OpenSansSemibold" FontSize="13" TextColor="{StaticResource ColorTextStrong}"/>
                                 <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorBackground}" Padding="14,0">
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
@@ -215,7 +218,7 @@
                             </Border>
                             </VerticalStackLayout>
                             <!-- Requisitos de la contraseña: se marcan en verde al cumplirse -->
-                            <VerticalStackLayout Spacing="6" Margin="2,-6,0,0">
+                            <VerticalStackLayout x:Name="BloqueReglasClave" Spacing="6" Margin="2,-6,0,0">
                                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                                     <Border x:Name="ReglaLargoCaja" WidthRequest="18" HeightRequest="18" StrokeThickness="0" BackgroundColor="{StaticResource ColorBorder}" VerticalOptions="Center">
                                         <Border.StrokeShape><Ellipse/></Border.StrokeShape>
@@ -238,7 +241,7 @@
                                     <Label x:Name="ReglaEspecialTexto" Grid.Column="1" Text="{loc:T regla_clave_especial}" FontFamily="OpenSansRegular" FontSize="13" TextColor="{StaticResource ColorTextMuted}" VerticalOptions="Center"/>
                                 </Grid>
                             </VerticalStackLayout>
-                            <VerticalStackLayout Spacing="8">
+                            <VerticalStackLayout x:Name="BloqueConfirmarClave" Spacing="8">
                                 <Label Text="{loc:T confirmar_contrasena}" FontFamily="OpenSansSemibold" FontSize="13" TextColor="{StaticResource ColorTextStrong}"/>
                                 <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorBackground}" Padding="14,0">
                                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
@@ -505,6 +508,23 @@
                                 
                             </Border>
 
+                            <!-- Estatus migratorio: solo extranjeras. Al elegirlo aparecen sus documentos obligatorios (catálogo del panel) -->
+                            <VerticalStackLayout x:Name="BloqueMigratorio" Spacing="10" Margin="0,18,0,0" IsVisible="False">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{loc:T estatus_migratorio}" FontFamily="OpenSansSemibold" FontSize="17" TextColor="{StaticResource ColorTextStrong}"/>
+                                    <Label Text="{loc:T estatus_migratorio_desc}" FontFamily="OpenSansRegular" FontSize="13" TextColor="{StaticResource ColorTextMuted}"/>
+                                </VerticalStackLayout>
+                                <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorBackground}" Padding="14,0">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                        <Path Data="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM10 17L6 13L7.41 11.59L10 14.17L16.59 7.58L18 9L10 17Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="18" HeightRequest="18" VerticalOptions="Center"/>
+                                        <Picker x:Name="PickerEstatusMigratorio" SelectedIndexChanged="OnEstatusMigratorioCambiado" Grid.Column="1" Title="{loc:T selecciona_estatus_migratorio}" TitleColor="{StaticResource ColorPlaceholder}" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextStrong}" FontSize="15" BackgroundColor="Transparent" HeightRequest="52"/>
+                                        <ActivityIndicator x:Name="CargandoEstatus" Grid.Column="2" Color="{StaticResource ColorPrimary}" WidthRequest="18" HeightRequest="18" IsVisible="False" VerticalOptions="Center"/>
+                                        <Path x:Name="FlechaEstatus" Grid.Column="2" Data="M7 10L12 15L17 10H7Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="12" HeightRequest="12" VerticalOptions="Center" InputTransparent="True"/>
+                                    </Grid>
+                                </Border>
+                                <VerticalStackLayout x:Name="ListaDocumentosMigratorios" Spacing="10"/>
+                            </VerticalStackLayout>
+
                             <!-- Documentos opcionales: van a DocumentosCuidador. Se arman en código (cambian si es extranjero) -->
                             <VerticalStackLayout Spacing="4" Margin="0,18,0,2">
                                 <Label Text="{loc:T documentos_opcionales}" FontFamily="OpenSansSemibold" FontSize="17" TextColor="{StaticResource ColorTextStrong}"/>
@@ -702,96 +722,17 @@
                         </Grid>
                     </Border>
 
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
-                            <Label Text="1" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
-                        </Border>
-                        <VerticalStackLayout Grid.Column="1" Spacing="6">
-                            <Label Text="{loc:T tyc_1_t}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
-                            <Label Text="{loc:T tyc_1_b}" FontSize="14" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" LineHeight="1.45"/>
-                        </VerticalStackLayout>
-                    </Grid>
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
-                            <Label Text="2" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
-                        </Border>
-                        <VerticalStackLayout Grid.Column="1" Spacing="6">
-                            <Label Text="{loc:T tyc_2_t}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
-                            <Label Text="{loc:T tyc_2_b}" FontSize="14" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" LineHeight="1.45"/>
-                        </VerticalStackLayout>
-                    </Grid>
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
-                            <Label Text="3" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
-                        </Border>
-                        <VerticalStackLayout Grid.Column="1" Spacing="6">
-                            <Label Text="{loc:T tyc_3_t}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
-                            <Label Text="{loc:T tyc_3_b}" FontSize="14" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" LineHeight="1.45"/>
-                        </VerticalStackLayout>
-                    </Grid>
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
-                            <Label Text="4" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
-                        </Border>
-                        <VerticalStackLayout Grid.Column="1" Spacing="6">
-                            <Label Text="{loc:T tyc_4_t}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
-                            <Label Text="{loc:T tyc_4_b}" FontSize="14" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" LineHeight="1.45"/>
-                        </VerticalStackLayout>
-                    </Grid>
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
-                            <Label Text="5" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
-                        </Border>
-                        <VerticalStackLayout Grid.Column="1" Spacing="6">
-                            <Label Text="{loc:T tyc_5_t}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
-                            <Label Text="{loc:T tyc_5_b}" FontSize="14" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" LineHeight="1.45"/>
-                        </VerticalStackLayout>
-                    </Grid>
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
-                            <Label Text="6" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
-                        </Border>
-                        <VerticalStackLayout Grid.Column="1" Spacing="6">
-                            <Label Text="{loc:T tyc_6_t}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
-                            <Label Text="{loc:T tyc_6_b}" FontSize="14" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" LineHeight="1.45"/>
-                        </VerticalStackLayout>
-                    </Grid>
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
-                            <Label Text="7" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
-                        </Border>
-                        <VerticalStackLayout Grid.Column="1" Spacing="6">
-                            <Label Text="{loc:T tyc_7_t}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
-                            <Label Text="{loc:T tyc_7_b}" FontSize="14" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" LineHeight="1.45"/>
-                        </VerticalStackLayout>
-                    </Grid>
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
-                            <Label Text="8" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
-                        </Border>
-                        <VerticalStackLayout Grid.Column="1" Spacing="6">
-                            <Label Text="{loc:T tyc_8_t}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
-                            <Label Text="{loc:T tyc_8_b}" FontSize="14" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" LineHeight="1.45"/>
-                        </VerticalStackLayout>
-                    </Grid>
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
-                            <Label Text="9" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
-                        </Border>
-                        <VerticalStackLayout Grid.Column="1" Spacing="6">
-                            <Label Text="{loc:T tyc_9_t}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
-                            <Label Text="{loc:T tyc_9_b}" FontSize="14" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" LineHeight="1.45"/>
-                        </VerticalStackLayout>
-                    </Grid>
-                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
-                        <Border WidthRequest="28" HeightRequest="28" StrokeThickness="0" StrokeShape="RoundRectangle 14" BackgroundColor="{StaticResource ColorPrimarySoft}" VerticalOptions="Start" Margin="0,1,0,0">
-                            <Label Text="10" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" VerticalOptions="Center"/>
-                        </Border>
-                        <VerticalStackLayout Grid.Column="1" Spacing="6">
-                            <Label Text="{loc:T tyc_10_t}" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
-                            <Label Text="{loc:T tyc_10_b}" FontSize="14" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}" LineHeight="1.45"/>
-                        </VerticalStackLayout>
-                    </Grid>
+                    <!-- Texto oficial (Resources/Terminos/terminos.{idioma}.json), lo arma Terminos.Construir -->
+                    <VerticalStackLayout x:Name="ContenidoTyc" Spacing="26"/>
+
+                    <!-- Casilla obligatoria: con la lectura completa habilita "Aceptar" -->
+                    <Border x:Name="CajaCasillaTyc" Stroke="{StaticResource ColorBorder}" StrokeThickness="1.5" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 16" Padding="12,10">
+                        <Border.GestureRecognizers><TapGestureRecognizer Tapped="OnCasillaTycTapped"/></Border.GestureRecognizers>
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                            <CheckBox x:Name="ChkTerminos" Color="{StaticResource ColorPrimary}" VerticalOptions="Center" CheckedChanged="OnCasillaTycCambiada"/>
+                            <Label x:Name="LblCasillaTyc" Grid.Column="1" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" VerticalOptions="Center"/>
+                        </Grid>
+                    </Border>
                 </VerticalStackLayout>
             </ScrollView>
 
@@ -801,6 +742,8 @@
                     <Shadow Brush="{StaticResource ColorShadow}" Offset="0,-6" Radius="18" Opacity="0.08" />
                 </Border.Shadow>
                 <VerticalStackLayout Spacing="12">
+                    <!-- Escuchar los términos con la voz del teléfono (en creol: aviso de no disponible) -->
+                    <loc:ReproductorTerminos x:Name="LectorTerminos"/>
                     <HorizontalStackLayout x:Name="LblHintTerminos" HorizontalOptions="Center" Spacing="6">
                         <Path Data="M20 12L18.59 10.59L13 16.17V4H11V16.17L5.42 10.58L4 12L12 20L20 12Z" Fill="{StaticResource ColorTextMuted}" Aspect="Uniform" WidthRequest="13" HeightRequest="13" VerticalOptions="Center"/>
                         <Label Text="{loc:T tyc_hint}" FontSize="12" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextMuted}" VerticalOptions="Center"/>

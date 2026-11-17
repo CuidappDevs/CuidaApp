@@ -57,12 +57,12 @@ namespace CUIDAPP.Views.Contratos
 
             if (vivos.Count > 0)
             {
-                Contenido.Add(Texto(Localizador.T("contratos_en_curso"), true, 13).ConMargen(4, 4));
+                Contenido.Add(Titulo(Localizador.T("contratos_en_curso"), 16).ConMargen(4, 4));
                 foreach (var c in vivos) Contenido.Add(TarjetaContrato(c));
             }
             if (cerrados.Count > 0)
             {
-                Contenido.Add(Texto(Localizador.T("contratos_anteriores"), true, 13).ConMargen(4, 4));
+                Contenido.Add(Titulo(Localizador.T("contratos_anteriores"), 16).ConMargen(4, 4));
                 foreach (var c in cerrados) Contenido.Add(TarjetaContrato(c));
             }
             Contenido.Add(new ContentView { HeightRequest = 24 + BarraEstado.AltoInferior() });
@@ -84,11 +84,76 @@ namespace CUIDAPP.Views.Contratos
                 3 or 4 => string.IsNullOrWhiteSpace(datos?.Permiso?.ComentarioAdmin) ? Localizador.T("permiso_rechazado_texto") : datos!.Permiso!.ComentarioAdmin!,
                 _ => Localizador.T("permiso_sin_solicitar_texto")
             };
-            return Tarjeta(
+            var permiso = Tarjeta(
                 new HorizontalStackLayout { Spacing = 10, Children = { Titulo(Localizador.T("permiso_para_contratar")), Pastilla(Revision(estado), ColoresRevision(estado)) } },
                 Texto(texto, true),
                 Boton(Localizador.T(estado == 0 ? "permiso_solicitar" : "permiso_gestionar"), estado == 0 ? TipoBoton.Principal : TipoBoton.Secundario,
                     () => Shell.Current.GoToAsync("PermisoContratarPage")));
+            if (estado != 2) return permiso;
+
+            return new VerticalStackLayout { Spacing = 16, Children = { permiso, await TarjetaInvitacionesAsync() } };
+        }
+
+        /// <summary>"Mi cuidadora de confianza": invitar a quien ya trabaja con la familia y seguir sus invitaciones.</summary>
+        private async Task<View> TarjetaInvitacionesAsync()
+        {
+            var invitaciones = await _api.ObtenerInvitacionesAsync(usuarioId);
+            var vistas = new List<View>
+            {
+                Titulo(Localizador.T("invitar_tarjeta_titulo")),
+                Texto(Localizador.T("invitar_tarjeta_texto"), true)
+            };
+
+            foreach (var inv in invitaciones)
+            {
+                vistas.Add(Separador());
+                var (clave, colores) = inv.Estado switch
+                {
+                    2 when inv.CuidadorAprobacion == 2 => ("invitacion_estado_lista", ("ColorSuccessSoft", "ColorSuccess")),
+                    2 => ("invitacion_estado_verificando", ("ColorWarningSoft", "ColorWarning")),
+                    4 => ("invitacion_estado_vencida", ("ColorSubtle", "ColorTextMuted")),
+                    _ => ("invitacion_estado_pendiente", ("ColorPrimarySoft", "ColorPrimary"))
+                };
+                var fila = new Grid { ColumnDefinitions = { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) }, ColumnSpacing = 10 };
+                fila.Add(Titulo(inv.CuidadorNombre ?? inv.Nombre, 15).Centrado(), 0);
+                fila.Add(Pastilla(Localizador.T(clave), colores).Centrado(), 1);
+                vistas.Add(fila);
+                if (inv.TrabajaDesde is DateTime desde)
+                    vistas.Add(Texto(Localizador.F("invitacion_desde", Localizador.FechaLarga(desde)), true, 12.5));
+
+                var i = inv;
+                switch (inv.Estado)
+                {
+                    case 1:
+                        vistas.Add(Texto(Localizador.F("invitacion_codigo", inv.Codigo, Localizador.FechaLarga(inv.Expira)), false, 13));
+                        vistas.Add(Boton(Localizador.T("invitacion_compartir"), TipoBoton.Secundario, () => InvitarCuidadoraPage.CompartirAsync(i.Nombre, i.Codigo)));
+                        vistas.Add(Boton(Localizador.T("invitacion_cancelar"), TipoBoton.Peligro, () => CancelarInvitacionAsync(i)));
+                        break;
+                    case 2 when inv.CuidadorAprobacion == 2 && inv.CuidadorId is int cuidadorId:
+                        vistas.Add(Boton(Localizador.T("invitacion_proponer"), TipoBoton.Principal, () => Shell.Current.GoToAsync("ProponerContratoPage", new Dictionary<string, object>
+                        {
+                            { "Cuidador", new Models.Busqueda.CuidadorCercano { Id = cuidadorId, NombreCompleto = i.CuidadorNombre ?? i.Nombre, FotoUrl = i.CuidadorFoto } },
+                            { "TrabajaDesde", (object?)i.TrabajaDesde ?? DateTime.MinValue }
+                        })));
+                        break;
+                    case 2:
+                        vistas.Add(Texto(Localizador.T("invitacion_verificando_texto"), true, 12.5));
+                        break;
+                }
+            }
+
+            vistas.Add(Boton(Localizador.T("invitar_boton"), invitaciones.Count == 0 ? TipoBoton.Principal : TipoBoton.Secundario,
+                () => Shell.Current.GoToAsync("InvitarCuidadoraPage")));
+            return Tarjeta(vistas.ToArray());
+        }
+
+        private async Task CancelarInvitacionAsync(Models.Contrato.InvitacionCuidador inv)
+        {
+            if (!await Alerta.MostrarAsync(Localizador.T("invitacion_cancelar"), Localizador.F("invitacion_cancelar_confirmar", inv.Nombre), Localizador.T("si"), Localizador.T("no")))
+                return;
+            var (ok, error) = await _api.CancelarInvitacionAsync(inv.Id, usuarioId);
+            if (!ok) await Alerta.MostrarAsync(Localizador.T("error"), error ?? "", Localizador.T("ok"));
+            await CargarAsync();
         }
 
         private async Task<View> TarjetaCuidadorAsync()

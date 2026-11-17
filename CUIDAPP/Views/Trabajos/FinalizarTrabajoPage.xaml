@@ -63,6 +63,44 @@
                     </Border>
                 </VerticalStackLayout>
 
+                <!-- Solo en servicios en efectivo: ¿cobró completo? Si no, la diferencia queda como deuda del cliente -->
+                <Border x:Name="CardEfectivo" IsVisible="False" Stroke="{StaticResource ColorBorder}" StrokeThickness="1" BackgroundColor="{StaticResource ColorSurface}" StrokeShape="RoundRectangle 20" Padding="18">
+                    <VerticalStackLayout Spacing="14">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                            <Border Stroke="Transparent" BackgroundColor="{StaticResource ColorSuccessSoft}" StrokeShape="RoundRectangle 12" WidthRequest="40" HeightRequest="40" VerticalOptions="Start">
+                                <Path Data="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"
+                                      Fill="{StaticResource ColorSuccess}" Aspect="Uniform" WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                <Label Text="{loc:T efectivo_cobro_titulo}" FontSize="15" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                                <Label x:Name="LblEfectivoTotal" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextMuted}"/>
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <!-- Dos opciones tipo segmento -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Border x:Name="OpcionCompleto" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" HeightRequest="48">
+                                <Border.GestureRecognizers><TapGestureRecognizer Tapped="OnCobroCompleto"/></Border.GestureRecognizers>
+                                <Label x:Name="LblOpcionCompleto" Text="{loc:T efectivo_cobro_completo}" FontSize="14" FontFamily="OpenSansSemibold" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+                            <Border x:Name="OpcionParcial" Grid.Column="1" StrokeThickness="1.5" StrokeShape="RoundRectangle 14" HeightRequest="48">
+                                <Border.GestureRecognizers><TapGestureRecognizer Tapped="OnCobroParcial"/></Border.GestureRecognizers>
+                                <Label x:Name="LblOpcionParcial" Text="{loc:T efectivo_cobro_parcial}" FontSize="14" FontFamily="OpenSansSemibold" HorizontalOptions="Center" VerticalOptions="Center"/>
+                            </Border>
+                        </Grid>
+
+                        <VerticalStackLayout x:Name="BloqueMontoRecibido" Spacing="8" IsVisible="False">
+                            <Label Text="{loc:T efectivo_cobro_monto}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}"/>
+                            <Border Stroke="{StaticResource ColorBorder}" StrokeThickness="1.2" BackgroundColor="{StaticResource ColorBackground}" StrokeShape="RoundRectangle 14" Padding="12,2" HeightRequest="50">
+                                <Entry x:Name="EntryMontoRecibido" Keyboard="Numeric" FontSize="16" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextStrong}" PlaceholderColor="{StaticResource ColorPlaceholder}" Placeholder="0" BackgroundColor="Transparent" TextChanged="OnMontoRecibidoChanged"/>
+                            </Border>
+                            <Border x:Name="AvisoDiferencia" IsVisible="False" Stroke="Transparent" BackgroundColor="{StaticResource ColorWarningSoft}" StrokeShape="RoundRectangle 12" Padding="12,10">
+                                <Label x:Name="LblDiferencia" FontSize="13" FontFamily="OpenSansRegular" TextColor="{StaticResource ColorTextStrong}"/>
+                            </Border>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+
             </VerticalStackLayout>
         </ScrollView>
 

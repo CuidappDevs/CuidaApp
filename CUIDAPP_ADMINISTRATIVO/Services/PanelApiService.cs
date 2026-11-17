@@ -78,10 +78,35 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
             }
         }
 
+        // ---------- Saldos pendientes de clientes (efectivo incompleto)
+        public Task<List<DeudaClienteFila>?> DeudasClientesAsync(int? estado = null, int? clienteId = null)
+        {
+            var filtros = new List<string>();
+            if (estado.HasValue) filtros.Add($"estado={estado}");
+            if (clienteId.HasValue) filtros.Add($"clienteId={clienteId}");
+            return Get<List<DeudaClienteFila>>("admindeudas" + (filtros.Count > 0 ? "?" + string.Join("&", filtros) : ""));
+        }
+        public Task<ResultadoAccion> ConfirmarPagoDeudaAsync(int id, string? nota) => Enviar(HttpMethod.Post, $"admindeudas/{id}/confirmar-pago", new { Nota = nota });
+        public Task<ResultadoAccion> CondonarDeudaAsync(int id, string nota) => Enviar(HttpMethod.Post, $"admindeudas/{id}/condonar", new { Nota = nota });
+        public Task<ResultadoAccion> AjustarDeudaAsync(int id, decimal monto, string nota) => Enviar(HttpMethod.Post, $"admindeudas/{id}/ajustar", new { Monto = monto, Nota = nota });
+        public Task<ResultadoAccion> ReabrirDeudaAsync(int id, string nota) => Enviar(HttpMethod.Post, $"admindeudas/{id}/reabrir", new { Nota = nota });
+
+        // ---------- Eliminación de cuentas
+        public Task<List<EliminacionCuentaFila>?> EliminacionesAsync(int? estado = null)
+            => Get<List<EliminacionCuentaFila>>(estado.HasValue ? $"admineliminaciones?estado={estado}" : "admineliminaciones");
+        public Task<List<EliminacionCuentaFila>?> EliminacionesUsuarioAsync(int usuarioId) => Get<List<EliminacionCuentaFila>>($"admineliminaciones/usuario/{usuarioId}");
+        public Task<ResultadoAccion> CancelarEliminacionAsync(int id, string nota) => Enviar(HttpMethod.Post, $"admineliminaciones/{id}/cancelar", new { Nota = nota });
+
+        // ---------- Bóveda de cumplimiento (contratos firmados de cuentas eliminadas)
+        public Task<List<DocumentoBoveda>?> BovedaAsync() => Get<List<DocumentoBoveda>>("admin/boveda");
+
         // ---------- Contratos fijos
         public Task<List<SolicitudContrato>?> SolicitudesContratoAsync() => Get<List<SolicitudContrato>>("admin/contratos/solicitudes");
         public Task<List<DomicilioContrato>?> DomiciliosContratoAsync() => Get<List<DomicilioContrato>>("admin/contratos/domicilios");
         public Task<List<ContratoFila>?> ContratosAsync() => Get<List<ContratoFila>>("admin/contratos");
+        public Task<ResumenMensualContrato?> ResumenMensualContratoAsync(int id, DateTime mes)
+            => Get<ResumenMensualContrato>($"admin/contratos/{id}/resumen-mensual?mes={mes:yyyy-MM-dd}");
+        public Task<List<AlertaContrato>?> AlertasContratosAsync() => Get<List<AlertaContrato>>("admin/contratos/alertas");
         public Task<DetalleContrato?> ContratoAsync(int id) => Get<DetalleContrato>($"admin/contratos/{id}");
         public Task<ResultadoAccion> RevisarPermisoContratoAsync(int clienteId, string accion, string? comentario)
             => Enviar(HttpMethod.Post, $"admin/contratos/solicitudes/{clienteId}/revisar", new { Accion = accion, Comentario = comentario });

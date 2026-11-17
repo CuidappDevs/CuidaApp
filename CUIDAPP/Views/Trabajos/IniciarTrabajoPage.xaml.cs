@@ -145,7 +145,9 @@ namespace CUIDAPP.Views.Trabajos
         {
             try
             {
-                if (trabajo == null || !await GrabacionSeguridad.EncendidaEnServidorAsync())
+                if (trabajo == null || trabajo.ContratoId != null) return;
+                var detalle = await _apiService.ObtenerTrabajoClientePorIdAsync(trabajo.Id);
+                if (detalle == null || detalle.ContratoId != null || !await GrabacionSeguridad.EncendidaEnServidorAsync())
                     return;
 
                 await Alerta.MostrarAsync(Localizador.T("grabacion_aviso_titulo"), Localizador.T("grabacion_aviso_texto"), Localizador.T("entendido"), TipoAlerta.Info);

@@ -138,6 +138,15 @@
                         </HorizontalStackLayout>
                     </Border>
 
+                    <!-- Términos y Condiciones (lectura) -->
+                    <Label Text="{loc:T tyc_titulo}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorPrimary}" HorizontalOptions="Center" Padding="16,10" Margin="0,4,0,-8" SemanticProperties.Description="{loc:T tyc_titulo}">
+                        <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnTerminosTapped"/></Label.GestureRecognizers>
+                    </Label>
+                    <!-- Eliminar cuenta: enlace discreto al final -->
+                    <Label Text="{loc:T eliminar_mi_cuenta}" FontSize="13" FontFamily="OpenSansSemibold" TextColor="{StaticResource ColorTextMuted}" HorizontalOptions="Center" Padding="16,10" Margin="0,4,0,0" SemanticProperties.Description="{loc:T eliminar_mi_cuenta}">
+                        <Label.GestureRecognizers><TapGestureRecognizer Tapped="OnEliminarCuentaTapped"/></Label.GestureRecognizers>
+                    </Label>
+
                 </VerticalStackLayout>
             </Grid>
 

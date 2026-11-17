@@ -72,16 +72,64 @@ namespace CUIDAPP_ADMINISTRATIVO.Services
             }
         }
 
-        public async Task<bool> ActualizarEstadoAsync(int cuidadorId, int nuevoEstado, string? observaciones)
+        public async Task<ResultadoEstadoCuidador> ActualizarEstadoAsync(int cuidadorId, int nuevoEstado, string? observaciones)
         {
             try
             {
                 var response = await _httpClient.PutAsJsonAsync("admin/aprobar-cuidador", new { CuidadorId = cuidadorId, NuevoEstado = nuevoEstado, Observaciones = observaciones });
-                return response.IsSuccessStatusCode;
+                if (response.IsSuccessStatusCode)
+                    return new ResultadoEstadoCuidador(true, null, new());
+
+                // 409: extranjera sin pasaporte / permiso migratorio vigente.
+                string? codigo = null;
+                var faltantes = new List<string>();
+                try
+                {
+                    var json = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+                    if (json.ValueKind == System.Text.Json.JsonValueKind.Object)
+                    {
+                        if (json.TryGetProperty("code", out var c)) codigo = c.GetString();
+                        else if (json.TryGetProperty("motivo", out var m)) codigo = m.GetString();
+                        if (json.TryGetProperty("faltantes", out var f) && f.ValueKind == System.Text.Json.JsonValueKind.Array)
+                            faltantes = f.EnumerateArray().Select(x => x.GetString() ?? "").Where(x => x != "").ToList();
+                    }
+                }
+                catch { /* cuerpo vacío o no JSON */ }
+                return new ResultadoEstadoCuidador(false, codigo, faltantes);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error actualizando estado del cuidador: {ex.Message}");
+                return new ResultadoEstadoCuidador(false, null, new());
+            }
+        }
+
+        /// <summary>Estatus migratorio y documentos de una Care Partner. Null si no se pudo leer.</summary>
+        public async Task<MigratorioCuidador?> ObtenerMigratorioAsync(int cuidadorId)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"admin/cuidadores/{cuidadorId}/migratorio");
+                return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<MigratorioCuidador>() : null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo estatus migratorio: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>Deja la cuenta pendiente y le pide a la Care Partner (notificación + correo) que suba su comprobante migratorio.</summary>
+        public async Task<bool> PedirMigratorioAsync(int cuidadorId, string? mensaje)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"admin/cuidadores/{cuidadorId}/pedir-migratorio", new { Mensaje = mensaje });
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error pidiendo comprobante migratorio: {ex.Message}");
                 return false;
             }
         }

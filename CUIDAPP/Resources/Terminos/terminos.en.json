@@ -1,0 +1,266 @@
+{
+  "version": "2026-11-16",
+  "titulo": "Cuidapp Terms, General Conditions of Use and Regulatory Compliance Program (Criminal Compliance)",
+  "intro": "This document constitutes a binding adhesion contract between the User and the Cuidapp platform. It expressly incorporates the provisions of the New Criminal Code of the Dominican Republic (Law No. 74-25), establishing a framework of prevention, corporate shielding and regulatory compliance (Criminal Compliance) in accordance with the criminal liability of legal entities (Arts. 8 to 11).",
+  "aviso_traduccion": "This is a courtesy translation. In case of any difference, the Spanish version prevails.",
+  "secciones": [
+    {
+      "numero": "I",
+      "titulo": "Applicable regulatory framework and legal nature",
+      "bloques": [
+        {
+          "subtitulo": "1.1. Substantive legal regime",
+          "texto": "This agreement is formally governed by the laws of the Dominican Republic, including, but not limited to:",
+          "puntos": [
+            "Law No. 74-25: New Criminal Code of the Dominican Republic (corporate criminal liability regime, aggravated protection of vulnerable persons and cybercrimes).",
+            "Civil Code of the Dominican Republic: Article 1779 and related provisions on the lease of work and services.",
+            "Law No. 285-04: General Migration Law of the Dominican Republic (strict regulation of migratory status and prohibition of irregular labor intermediation of foreigners without valid permits).",
+            "Law No. 172-13: on the Comprehensive Protection of Personal Data.",
+            "Law No. 136-03: Code for the System of Protection and Fundamental Rights of Children and Adolescents.",
+            "Law No. 5-13: on Disability in the Dominican Republic.",
+            "Regulations of the National Council for the Elderly (CONAPE): comprehensive protection of older adults."
+          ]
+        },
+        {
+          "subtitulo": "1.2. Exclusive technological intermediation",
+          "texto": "Cuidapp operates strictly as a digital intermediation technology platform that connects users requesting care services (\"Clients\") with duly registered independent service providers (\"Associates\" or \"Care Partners\"). Cuidapp does not provide care, nursing, medical or direct assistance services, and does not exercise any power of direction, command, labor oversight or discipline over the providers."
+        },
+        {
+          "subtitulo": "1.3. Civil nature of the relationship (lease of services)",
+          "texto": "In accordance with Article 1779 of the Civil Code, the legal relationship between the Client and the Associate or Care Partner is formalized as a lease of services (an independent bilateral civil contract). The parties acknowledge and accept that there is no labor subordination, joint liability or employer-employee relationship with Cuidapp, and the company is fully released from labor benefits, notice periods, severance pay or indemnities."
+        },
+        {
+          "subtitulo": "1.4. Absence of a principal-agent relationship and civil and criminal exoneration",
+          "texto": "Cuidapp is not a principal, employer or guarantor of the independent providers. Care Partners or Associates act under their own technical autonomy and at their own risk. Cuidapp is exonerated from all civil, tortious or quasi-tortious liability for damages, losses or breaches occurring during the provision of the individual service."
+        }
+      ]
+    },
+    {
+      "numero": "II",
+      "titulo": "Corporate criminal shielding and compliance system (Law No. 74-25)",
+      "bloques": [
+        {
+          "subtitulo": "2.1. Exemption from criminal liability of the legal entity (Arts. 8-11)",
+          "texto": "In strict compliance with Article 8 of the Criminal Code (Law No. 74-25), Cuidapp has effectively adopted and implemented a Regulatory Compliance and Crime Prevention Program (Criminal Compliance) with surveillance, control and technological audit measures suitable for preventing offenses. Any punishable conduct committed by a user, Care Partner or Associate shall constitute an individual act that fraudulently circumvents the platform's controls, formally exempting Cuidapp from corporate criminal liability."
+        },
+        {
+          "subtitulo": "2.2. Crime prevention in the digital environment",
+          "texto": "The use of the platform to commit the crimes of cyberbullying, identity theft, unauthorized access to computer systems, digital fraud or forgery of public or private documents is strictly prohibited. Cuidapp will actively cooperate with the Public Prosecutor's Office and the National Police by providing the corresponding digital evidence."
+        }
+      ]
+    },
+    {
+      "numero": "III",
+      "titulo": "Special aggravated protection of vulnerable groups",
+      "bloques": [
+        {
+          "texto": "In accordance with the aggravated offenses of the New Criminal Code and special laws, Cuidapp applies a zero-tolerance policy toward any violation against vulnerable persons:",
+          "tarjetas": [
+            {
+              "titulo": "Minors",
+              "base": "Law No. 136-03 / Law No. 74-25",
+              "texto": "Hiring exclusively by parents or legal guardians. Direct hiring by minors is prohibited. The platform does not assume legal guardianship or custody."
+            },
+            {
+              "titulo": "Persons with disabilities",
+              "base": "Law No. 5-13 / Law No. 74-25",
+              "texto": "Guarantee of autonomy, accessibility, respect for dignity and non-discrimination. Special criminal classification for acts of abandonment or degrading treatment."
+            },
+            {
+              "titulo": "Older adults",
+              "base": "CONAPE regulations / Law No. 74-25",
+              "texto": "Physical, emotional and financial protection. Severe penalization of financial abuse, gross negligence or psychological abuse."
+            },
+            {
+              "titulo": "Terminally or chronically ill patients",
+              "base": "Public Health guidelines",
+              "texto": "Cuidapp is not a clinical center. The client must verify that the Care Partner or Associate has the required technical competence and medical supervision."
+            }
+          ]
+        },
+        {
+          "subtitulo": "3.1. Zero tolerance and mandatory criminal complaint",
+          "texto": "Upon any indication, report or suspicion of mistreatment, abuse, gross negligence, degrading treatment or theft of property, Cuidapp will proceed with the immediate and permanent suspension of the account and will file the corresponding complaint with the Public Prosecutor's Office, CONANI, CONAPE or CONADIS."
+        }
+      ]
+    },
+    {
+      "numero": "IV",
+      "titulo": "Registration, biometrics and digital due diligence",
+      "bloques": [
+        {
+          "subtitulo": "4.1. Identity verification by OCR and liveness check",
+          "texto": "Cuidapp implements Optical Character Recognition (OCR) tools and facial biometric validation (liveness check) to verify the identity of Users and of Care Partners or Associates at the time of registration."
+        },
+        {
+          "subtitulo": "4.2. Scope of technological due diligence (disclaimer)",
+          "texto": "Biometric verifications and criminal background checks are risk mitigation measures based on public records available at the date of the query. They do not represent an infallible guarantee of future conduct. Identity theft or document forgery by a user constitutes an individual criminal offense of material or intellectual forgery (Law No. 74-25)."
+        }
+      ]
+    },
+    {
+      "numero": "V",
+      "titulo": "Operation of the emergency button (SOS) and audio capture",
+      "bloques": [
+        {
+          "subtitulo": "5.1. Express consent for the capture of digital evidence",
+          "texto": "By voluntarily activating the \"Emergency Button (SOS)\" function, the User grants free, prior, express and informed consent for Cuidapp to carry out the following protocols:",
+          "puntos": [
+            "Background activation of the mobile device's microphone.",
+            "Capture and encryption of ambient audio fragments (for example, 10-second bursts).",
+            "Secure and unalterable transmission of the audio and the real-time GPS location to cloud servers.",
+            "Immediate sharing of the alert and coordinates with the National Emergency and Security Response System 9-1-1 and the emergency authorities."
+          ]
+        },
+        {
+          "texto": "Duress PIN and preventive inertial sensors (Dead-Man's Switch): it is legally protected that, if a female user enters a false PIN under duress or if the phone detects anomalous inactivity or a fall followed by a countdown, the application silently transmits the geolocation and audio to the authorities or to Cuidapp's central team, under the principle of state of necessity and legitimate assistance."
+        },
+        {
+          "subtitulo": "5.2. Exclusion of criminal unlawfulness (privacy versus state of necessity)",
+          "texto": "Audio capture activated through the SOS button is based on the justification of state of necessity and legitimate assistance in emergencies (Arts. 8 and related provisions of the Criminal Code), ruling out any unlawful act relating to the expectation of privacy or the illegal interception of communications."
+        }
+      ]
+    },
+    {
+      "numero": "VI",
+      "titulo": "Financial conditions, payments and rules of conduct",
+      "bloques": [
+        {
+          "subtitulo": "6.1. Payment processing and delegated agent",
+          "texto": "Payments are made through the means enabled by the platform (cash, bank transfer and, in the future, authorized payment gateways). Cuidapp acts solely as a delegated collection agent for the service fees and the technological intermediation commission."
+        },
+        {
+          "subtitulo": "6.2. Absolute prohibition of disintermediation",
+          "texto": "It is strictly prohibited to arrange services, direct contacts or payments outside the application in order to evade intermediation commissions. Breach will result in the permanent blocking of the account and legal action for damages and breach of contract.",
+          "puntos": [
+            "Technology usage commission (10%): Cuidapp applies a service fee equivalent to 10% of the total value of the contracted service, which is charged exclusively to the user (family) for the use, maintenance and support of the digital platform.",
+            "Protection of the Associate's payment: it is expressly established that the 10% commission charged to the user does not affect, reduce or in any way interfere with the full payment agreed and intended for the independent caregiver or associate.",
+            "Transaction transparency: all charges transparently reflect the breakdown of the service amount for the associate and the technological intermediation fee for the user."
+          ]
+        },
+        {
+          "subtitulo": "6.3. Exclusivity clause and disengagement fee",
+          "texto": "If the Client directly hires, or formalizes a permanent employment relationship outside the platform with, a Care Partner or Associate discovered through Cuidapp before the terms of the established plans have elapsed, the Client expressly authorizes Cuidapp to charge to their registered payment method a Disintermediation and Connection Licensing Fee equivalent to the value of three (3) months of the subscription of the contracted plan, without prejudice to the definitive cancellation and disabling of their account.",
+          "nota": "If a Care Partner works outside the platform, charging in cash and without registration, she cuts herself off from the benefits of the Cuidapp ecosystem: outside the application she is on her own in the face of any non-payment or abuse; inside the application, the system backs every hour worked."
+        },
+        {
+          "subtitulo": "6.4. Safeguarding of property on the premises",
+          "texto": "It is the client's sole responsibility to keep cash, jewelry, cards and valuables locked away within the premises. Cuidapp assumes no responsibility for losses or misplacement within private property."
+        },
+        {
+          "subtitulo": "6.5. Cancellations, no-shows and overtime",
+          "puntos": [
+            "Late cancellation: if the user cancels the service request with less notice than the limit stipulated in the application, a late cancellation charge may be applied to compensate for the time allocated by the Care Partner.",
+            "Care Partner no-show: if the Care Partner fails to show up, the user will receive a full refund of the amount charged or the equivalent credit on the platform.",
+            "Overtime: any extension of the originally contracted time must be recorded through the application so that the corresponding rate is adjusted transparently."
+          ]
+        },
+        {
+          "subtitulo": "6.6. Office, official identification and induction unit",
+          "puntos": [
+            "Opening of an office and issuance of official identification (QR code): Cuidapp will soon open a physical office intended for logistical management, the delivery of authorized official apparel and identification credentials with a QR code for Care Partners or Associates.",
+            "Mitigation of traditional uniforms: the main purpose of this measure is to mitigate the use of traditional uniforms associated with informality or stigmatization of the sector, promoting a modern, professional and standardized image that reinforces the dignity and corporate respect of the work.",
+            "Induction and follow-up unit: this physical space will operate simultaneously as an induction and continuous follow-up unit, responsible for offering technical training, updates to safety protocols, in-person support and performance supervision of Care Partners or Associates, ensuring excellence, continuous improvement and the operational shielding of the Cuidapp community."
+          ]
+        },
+        {
+          "subtitulo": "6.7. Verification for foreign providers (migratory KYC)",
+          "texto": "Users who operate as Care Partners or Associates of foreign nationality are required to submit and digitally validate with Cuidapp an official identity document valid in the territory of the Dominican Republic, such as a valid passport, residence card or work permit issued by the General Directorate of Migration (DGM), together with the corresponding criminal record certificate (locally approved by the PGR or duly apostilled from their country of origin). Cuidapp reserves the right to suspend or permanently deny the activation of any profile whose documents show inconsistencies or alterations or lack legal validity before the Dominican authorities."
+        }
+      ]
+    },
+    {
+      "numero": "VII",
+      "titulo": "Processing of personal data and evidentiary chain of custody",
+      "bloques": [
+        {
+          "subtitulo": "7.1. Compliance with Law No. 172-13",
+          "texto": "The User authorizes the processing of their personal, biometric and health data strictly necessary for the performance of the service. The user may exercise their rights of access, rectification, cancellation or opposition (habeas data) through the support channels.",
+          "nota": "The identity validation of Care Partners (both national and foreign via DGM) is carried out while preserving privacy through Zero-Knowledge Proofs (ZKP) or cryptographic hashes, minimizing the physical retention of sensitive documents on central servers in order to meet the highest privacy standard worldwide."
+        },
+        {
+          "subtitulo": "7.2. Preservation of records and digital chain of custody",
+          "texto": "Cuidapp keeps audit records (logs, OCR verifications, GPS coordinates and emergency audio) under encryption standards and digital chain of custody, and is empowered to reliably provide them to the Public Prosecutor's Office or the competent courts in the context of criminal or procedural investigations."
+        }
+      ]
+    },
+    {
+      "numero": "VIII",
+      "titulo": "Collection policies, outstanding balances and operational protection",
+      "bloques": [
+        {
+          "subtitulo": "A. Responsibility for full payment",
+          "puntos": [
+            "Upon completion of any service, the contracting user is obliged to deliver the exact payment agreed in the request.",
+            "If the user does not have the exact cash amount at the time the service is closed, the Care Partner will record in the application the actual amount received.",
+            "The remaining difference will be immediately recorded in the system as an outstanding balance (account debt) owed by the user."
+          ]
+        },
+        {
+          "subtitulo": "B. Automatic blocking for debt",
+          "puntos": [
+            "Suspension of services: any user with an outstanding balance will be automatically disabled from making new service requests (whether occasional or recurring) until the debt is paid in full through the enabled digital payment channels (card, transfer or deposit).",
+            "Active recurring services: if the user has an active subscription or recurring schedule, it will be paused until the outstanding balance is settled."
+          ]
+        },
+        {
+          "subtitulo": "C. Legal and technical restriction on account deletion",
+          "puntos": [
+            "Impediment to cancellation: no user may request or carry out the deletion or deactivation of their account if there are pending financial obligations, open disputes or recorded negative balances.",
+            "Recidivism control: Cuidapp retains the identification data (identity document number and telephone number) to prevent the creation of duplicate or fraudulent profiles intended to evade prior financial obligations."
+          ]
+        }
+      ]
+    },
+    {
+      "numero": "IX",
+      "titulo": "Code of ethics and compliance",
+      "bloques": [
+        {
+          "puntos": [
+            "Rooted empathy: unconditional respect for the dignity, physical integrity and autonomy of the person being cared for.",
+            "Transparency and trust: absolute honesty in profiles, credentials, schedules and communications.",
+            "Ethics and reporting channel: provision of a protected internal channel for reporting ethical violations or illegal conduct within the platform."
+          ]
+        }
+      ]
+    },
+    {
+      "numero": "X",
+      "titulo": "Active geolocation and community routes (Safety Radar)",
+      "aviso": "This function will be available in an upcoming update of the application.",
+      "bloques": [
+        {
+          "puntos": [
+            "Nature of the Community Radar service: the \"Community Safety Radar\" is an optional technological tool for visibility of walking routes (such as school commutes or walks with older adults) designed to increase psychological and active safety during urban travel. Its activation is entirely optional (opt-in) through the application's controls.",
+            "Cross visibility and trust filters: by activating the \"Community Route\" mode, the User (Client or Care Partner) freely and knowingly accepts that their general position and verified role status be passively displayed (through nodes or avatars) within a configurable proximity radius (for example, 200 m to 500 m) solely to other active users who have previously passed the rigorous identity, biometrics and background validation process (KYC) on the platform. Any display to external unverified profiles is strictly prohibited and blocked.",
+            "Ghost mode: the user has a quick invisibility switch within the radar interface to hide their position immediately at any time during the route if they require absolute privacy.",
+            "Automatic shutdown: the system automatically deactivates the radar and en-route geolocation upon the formal end of the registered shift or upon crossing the arrival perimeter of the destination address.",
+            "Proper use of the neighborhood reporting channel: the radar includes an alert or urban incident report button to warn of physical obstacles or risk zones on public roads. Malicious use, the submission of false reports or the deliberate alteration of proximity data shall constitute a direct violation of the rules of coexistence, resulting in the immediate and permanent disabling of the account on the platform."
+          ]
+        }
+      ]
+    },
+    {
+      "numero": "XI",
+      "titulo": "Intellectual property and copyright",
+      "bloques": [
+        {
+          "texto": "All intellectual property rights, trademarks, logos, visual interfaces, software code, operational workflows and contents of Cuidapp are the exclusive property of the company. Their reproduction, modification, distribution or reverse engineering without prior written authorization is prohibited."
+        }
+      ]
+    },
+    {
+      "numero": "XII",
+      "titulo": "Jurisdiction and governing law",
+      "bloques": [
+        {
+          "texto": "These Terms and Conditions are governed by and construed in accordance with the laws of the Dominican Republic, in particular Law No. 74-25 (Criminal Code), Law No. 172-13 and the Civil Code. Any dispute, controversy or claim shall be submitted to the exclusive jurisdiction of the courts of the National District, Dominican Republic."
+        }
+      ]
+    }
+  ],
+  "declaracion_titulo": "Declaration of acceptance",
+  "declaracion": "By registering and using Cuidapp (including its geolocation functions and, when available, the Community Safety Radar), you confirm that you have read, understood and expressly accept these Terms and Conditions and the privacy policies, the use of community routes under strict identity filters, the prohibition on posting on social media content about the services and the persons cared for, and you acknowledge that the platform acts exclusively as a technological intermediary of trust and security.",
+  "casilla": "I have read and accept the Terms and Conditions"
+}

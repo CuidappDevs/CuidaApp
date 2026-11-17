@@ -22,6 +22,7 @@ namespace CUIDAPP.Services
         public static event Action<int, string, string?>? CuidadorLlego; // TrabajoId, Nombre del cuidador, PIN de inicio
         public static event Action<int, int, bool>? UsuarioEscribiendo; // ConversacionId, UsuarioId, Escribiendo
         public static event Action<int>? CuentaActualizada; // Estado (2=Aprobado, 3=Rechazado)
+        public static event Action<string>? AvisoCuenta; // "deuda_cliente", "cuenta_en_eliminacion", "eliminacion_cancelada"
         public static event Action<int, decimal>? PagoAprobado; // TrabajoId, Monto
         public static event Action<int, bool, int?, string?>? TicketActualizado; // TicketId, Respuesta, Estado, Asunto
         public static event Action<int, string, string, string, int>? AvisoDirecto; // Id, Tipo ("mensaje"/"checkin"), Título, Mensaje, Minutos
@@ -73,7 +74,13 @@ namespace CUIDAPP.Services
             _connection.On<object>("CuentaActualizada", payload =>
             {
                 var json = (System.Text.Json.JsonElement)payload;
-                var estado = json.GetProperty("estado").GetInt32();
+                // Avisos de cuenta con "tipo" (deuda del cliente, eliminación); los de aprobación traen "estado".
+                if (json.TryGetProperty("tipo", out var tipo) && tipo.GetString() is { Length: > 0 } t)
+                {
+                    MainThread.BeginInvokeOnMainThread(() => AvisoCuenta?.Invoke(t));
+                    return;
+                }
+                if (!json.TryGetProperty("estado", out var e) || !e.TryGetInt32(out var estado)) return;
                 MainThread.BeginInvokeOnMainThread(() => CuentaActualizada?.Invoke(estado));
             });
             _connection.On<object>("PagoAprobado", payload =>

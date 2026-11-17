@@ -122,7 +122,9 @@
                 </Border>
 
                 <!-- Contenido colapsable -->
-                <VerticalStackLayout x:Name="ContenidoExpandible">
+                <VerticalStackLayout x:Name="AvisoDeuda" Margin="0,0,0,14" IsVisible="False" />
+                <VerticalStackLayout x:Name="ResumenContratos" Spacing="12" Margin="0,0,0,14" />
+<VerticalStackLayout x:Name="ContenidoExpandible">
 
                     <!-- Buscador -->
                     <Border x:Name="BordeBuscar" Stroke="Transparent" StrokeThickness="1.5" StrokeShape="RoundRectangle 26" BackgroundColor="{StaticResource ColorSubtle}" Padding="18,2" Margin="0,0,0,14">

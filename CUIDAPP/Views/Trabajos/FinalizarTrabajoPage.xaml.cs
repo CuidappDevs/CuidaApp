@@ -16,7 +16,54 @@ namespace CUIDAPP.Views.Trabajos
                 trabajo = t;
                 LblCliente.Text = Localizador.F("servicio_para", t.ClienteNombre);
                 CardJustificacion.IsVisible = ServerClock.Now.TimeOfDay < t.HoraFin;
+                CardEfectivo.IsVisible = t.MetodoPago == "efectivo" && t.Tarifa > 0;
+                LblEfectivoTotal.Text = Localizador.F("efectivo_cobro_sub", Localizador.F("rd_monto", t.Tarifa));
+                PintarOpcionesCobro();
             }
+        }
+
+        // ---------- Cobro en efectivo: null = sin elegir, true = completo, false = recibió menos
+        private bool? cobroCompleto;
+
+        private void OnCobroCompleto(object? sender, TappedEventArgs e) => ElegirCobro(true);
+        private void OnCobroParcial(object? sender, TappedEventArgs e) => ElegirCobro(false);
+
+        private void ElegirCobro(bool completo)
+        {
+            cobroCompleto = completo;
+            PintarOpcionesCobro();
+            BloqueMontoRecibido.IsVisible = !completo;
+            if (!completo) EntryMontoRecibido.Focus();
+            ActualizarDiferencia();
+        }
+
+        private void PintarOpcionesCobro()
+        {
+            void Pintar(Border opcion, Label texto, bool activa)
+            {
+                opcion.Stroke = activa ? Tema.C("ColorPrimary") : Tema.C("ColorBorder");
+                opcion.BackgroundColor = activa ? Tema.C("ColorPrimarySoft") : Tema.C("ColorSurface");
+                texto.TextColor = activa ? Tema.C("ColorPrimary") : Tema.C("ColorTextStrong");
+            }
+            Pintar(OpcionCompleto, LblOpcionCompleto, cobroCompleto == true);
+            Pintar(OpcionParcial, LblOpcionParcial, cobroCompleto == false);
+        }
+
+        private void OnMontoRecibidoChanged(object? sender, TextChangedEventArgs e) => ActualizarDiferencia();
+
+        private decimal? MontoRecibido()
+            => decimal.TryParse((EntryMontoRecibido.Text ?? "").Replace(",", "."), System.Globalization.NumberStyles.Number,
+                System.Globalization.CultureInfo.InvariantCulture, out var m) ? Math.Round(m, 2) : null;
+
+        private void ActualizarDiferencia()
+        {
+            if (trabajo == null || cobroCompleto != false || MontoRecibido() is not { } recibido || recibido < 0 || recibido >= trabajo.Tarifa)
+            {
+                AvisoDiferencia.IsVisible = false;
+                return;
+            }
+            LblDiferencia.Text = Localizador.F("efectivo_cobro_aviso", Localizador.F("rd_monto", trabajo.Tarifa - recibido));
+            AvisoDiferencia.IsVisible = true;
         }
 
         public FinalizarTrabajoPage()
@@ -104,6 +151,25 @@ namespace CUIDAPP.Views.Trabajos
                 return;
             }
 
+            decimal? montoRecibido = null;
+            if (CardEfectivo.IsVisible)
+            {
+                if (cobroCompleto == null)
+                {
+                    await Alerta.MostrarAsync(Localizador.T("efectivo_cobro_titulo"), Localizador.T("efectivo_cobro_elige"), Localizador.T("ok"));
+                    return;
+                }
+                if (cobroCompleto == false)
+                {
+                    montoRecibido = MontoRecibido();
+                    if (montoRecibido is not { } m || m < 0 || m >= trabajo.Tarifa)
+                    {
+                        await Alerta.MostrarAsync(Localizador.T("efectivo_cobro_titulo"), Localizador.F("efectivo_cobro_invalido", Localizador.F("rd_monto", trabajo.Tarifa)), Localizador.T("ok"));
+                        return;
+                    }
+                }
+            }
+
             BtnConfirmar.IsEnabled = false;
             BtnConfirmar.Text = Localizador.T("verificando");
             LblError.IsVisible = false;
@@ -111,7 +177,7 @@ namespace CUIDAPP.Views.Trabajos
             try
             {
                 var justificacion = CardJustificacion.IsVisible ? EditorJustificacion.Text?.Trim() : null;
-                var (success, error) = await _apiService.FinalizarTrabajoAsync(trabajo.Id, pin, justificacion);
+                var (success, error) = await _apiService.FinalizarTrabajoAsync(trabajo.Id, pin, justificacion, montoRecibido);
 
                 if (success)
                 {

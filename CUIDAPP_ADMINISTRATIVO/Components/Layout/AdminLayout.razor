@@ -1,4 +1,4 @@
-@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
 @implements IDisposable
 @inject NavigationManager Nav
 @inject SosNotificationService SosService
@@ -20,30 +20,37 @@
                 }
             </div>
 
-            <nav class="adm-nav">
-                @foreach (var item in NavVisible())
+            <nav class="adm-nav" aria-label="Menú principal">
+                @* Accesos de todos los días, siempre a la vista *@
+                @foreach (var item in Visibles(null))
                 {
-                    @if (item.Grupo != null && !_collapsed)
+                    @Enlace(item, false)
+                }
+
+                @* Secciones desplegables *@
+                @foreach (var g in _grupos)
+                {
+                    var items = Visibles(g.Id).ToList();
+                    if (items.Count == 0) continue;
+                    var abierto = true;
+                    var tieneActivo = items.Any(EsActivo);
+                    @if (_collapsed)
                     {
-                        <span class="adm-nav-group">@item.Grupo</span>
+                        <span class="adm-nav-sep" aria-hidden="true"></span>
                     }
-                    <a class="adm-nav-item @(IsActive(item.Section) ? "active" : "")"
-                       href="@item.Href" title="@item.Label">
-                        <span class="adm-nav-icon">
-                            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="@item.IconPath"></path>
-                            </svg>
-                        </span>
-                        @if (!_collapsed)
-                        {
-                            <span class="adm-nav-label">@item.Label</span>
-                            @if (item.Section == "sos" && SosService.AlertasPendientes.Count > 0)
+                    else
+                    {
+                        <span class="adm-nav-group">@g.Label</span>
+                    }
+                    @if (abierto)
+                    {
+                        <div class="adm-nav-sub @(_collapsed ? "is-flat" : "")">
+                            @foreach (var item in items)
                             {
-                                <span class="adm-nav-count is-alert">@SosService.AlertasPendientes.Count</span>
+                                @Enlace(item, !_collapsed)
                             }
-                        }
-                    </a>
+                        </div>
+                    }
                 }
             </nav>
         </div>
@@ -137,63 +144,125 @@
     private string? _busqueda;
     private int _nivel = SesionAdmin.Operaciones;
 
-    // Nivel mínimo para ver cada sección del menú.
-    private enum Permiso { Todos, Operar, Finanzas, Super }
+    // Niveles que ven cada sección del menú (null = todos). 1 Superadmin, 2 Operaciones, 3 Finanzas,
+    // 4 Verificación (KYC), 5 Soporte, 6 Legal. Las acciones de cada página las vuelve a validar la API.
+    private static class N
+    {
+        public static readonly int[] Sop = { 1, 2, 5, 6 };          // SOS y calificaciones (Legal audita)
+        public static readonly int[] SopSolo = { 1, 2, 5 };         // tickets y avisos
+        public static readonly int[] NoKyc = { 1, 2, 3, 5, 6 };     // servicios y disputas
+        public static readonly int[] Mapa = { 1, 2, 5 };
+        public static readonly int[] Kyc = { 1, 2, 4, 6 };          // verificación y documentos (Legal: permisos migratorios)
+        public static readonly int[] KycSolo = { 1, 2, 4 };         // tests
+        public static readonly int[] Contratos = { 1, 2, 6 };
+        public static readonly int[] Calidad = { 1, 2, 4, 5 };
+        public static readonly int[] Fin = { 1, 3 };
+        public static readonly int[] Oper = { 1, 2 };
+        public static readonly int[] Audit = { 1, 6 };
+        public static readonly int[] Super = { 1 };
+    }
 
-    private record NavItem(string Section, string Label, string Href, string IconPath, Permiso Permiso = Permiso.Todos, string? Grupo = null);
+    private record NavItem(string Section, string Label, string Href, string IconPath, int[]? Niveles = null, string? Grupo = null);
+    private record NavGrupo(string Id, string Label, string IconPath);
+
+    // Secciones desplegables del menú (en este orden). Los ítems sin grupo van arriba, siempre visibles.
+    private readonly NavGrupo[] _grupos =
+    {
+        new("servicios", "Servicios", "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"),
+        new("partners", "Care Partners", "M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M18 8l2 2 3-3"),
+        new("clientes", "Clientes", "M3 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M9 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M17 20v-2a4 4 0 0 0-2-3.4M16 3.5a3.5 3.5 0 0 1 0 7"),
+        new("comunicacion", "Comunicación", "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"),
+        new("dinero", "Dinero", "M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"),
+        new("sistema", "Sistema", "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19.4 15l1.6 1.2-2 3.4-1.9-.7a7 7 0 0 1-1.7 1L15 22h-4l-.4-2.1a7 7 0 0 1-1.7-1l-1.9.7-2-3.4L6.6 15a7 7 0 0 1 0-2L5 11.8l2-3.4 1.9.7a7 7 0 0 1 1.7-1L11 6h4l.4 2.1a7 7 0 0 1 1.7 1l1.9-.7 2 3.4-1.6 1.2a7 7 0 0 1 0 2Z"),
+    };
 
     private readonly NavItem[] _navItems =
     {
-        new("dash", "Dashboard", "dashboard", "M4 13h6V4H4zM14 20h6v-9h-6zM4 20h6v-4H4zM14 8h6V4h-6z", Grupo: "Operación"),
-        new("sos", "Emergencias SOS", "sos-alertas", "M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"),
-        new("servicios", "Servicios", "servicios", "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2ZM9 16l2 2 4-4"),
-        new("disputas", "Disputas", "disputas", "M12 3v18M5 7h14M5 7l-3 7a4 4 0 0 0 6 0L5 7Zm14 0-3 7a4 4 0 0 0 6 0l-3-7ZM8 21h8"),
-        new("mapa", "Mapa en vivo", "mapa", "M9 20l-5.4-2.7A1 1 0 0 1 3 16.4V4.6a1 1 0 0 1 1.4-.9L9 6m0 14 6-3m-6 3V6m6 11 4.6 2.3a1 1 0 0 0 1.4-.9V7.6a1 1 0 0 0-.6-.9L15 4m0 13V4m0 0L9 6"),
-        new("verificacion", "Verificación", "verificacion", "M9 12l2 2 4-4M12 3l7 3v6c0 4.5-3 7.7-7 9-4-1.3-7-4.5-7-9V6z", Grupo: "Personas"),
-        new("tests", "Test psicológico", "tests", "M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4"),
-        new("partners", "Care Partners", "care-partners", "M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M18 8l2 2 3-3"),
-        new("clients", "Clientes", "clientes", "M3 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M9 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M17 20v-2a4 4 0 0 0-2-3.4M16 3.5a3.5 3.5 0 0 1 0 7"),
-        new("contratos", "Contratos fijos", "contratos", "M14 3v4a1 1 0 0 0 1 1h4M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2ZM9 17c1-1.5 2-2 3-1s2 .5 3-1", Permiso.Operar),
-        new("calidad", "Calidad", "calidad", "M12 20V10M18 20V4M6 20v-4"),
-        new("vencimientos", "Documentos", "vencimientos", "M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.6a1 1 0 0 1 .7.3l5.4 5.4a1 1 0 0 1 .3.7V19a2 2 0 0 1-2 2Z"),
-        new("calificaciones", "Calificaciones", "calificaciones", "M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"),
-        new("soporte", "Soporte", "soporte", "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"),
-        new("avisos", "Avisos masivos", "avisos", "M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1ZM16 8.5a5 5 0 0 1 0 7M19 5.5a9 9 0 0 1 0 13"),
-        new("pagos", "Pagos", "pagos", "M2 7h20M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2M2 7v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7M6 15h4", Permiso.Finanzas, "Dinero"),
-        new("finanzas", "Finanzas", "finanzas", "M3 3v18h18M7 15l4-4 3 3 5-6", Permiso.Finanzas),
-        new("configpagos", "Config. de pagos", "configuracion-pagos", "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM19.4 15l1.6 1.2-2 3.4-1.9-.7a7 7 0 0 1-1.7 1L15 22h-4l-.4-2.1a7 7 0 0 1-1.7-1l-1.9.7-2-3.4L6.6 15a7 7 0 0 1 0-2L5 11.8l2-3.4 1.9.7a7 7 0 0 1 1.7-1L11 6h4l.4 2.1a7 7 0 0 1 1.7 1l1.9-.7 2 3.4-1.6 1.2a7 7 0 0 1 0 2Z", Permiso.Finanzas),
-        new("catalogos", "Catálogos", "catalogos", "M4 6h16M4 12h16M4 18h10", Permiso.Todos, "Sistema"),
-        new("auditoria", "Auditoría", "auditoria", "M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4", Permiso.Super),
-        new("admins", "Administradores", "administradores", "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z", Permiso.Super),
+        // Siempre a la vista
+        new("dash", "Dashboard", "dashboard", "M4 13h6V4H4zM14 20h6v-9h-6zM4 20h6v-4H4zM14 8h6V4h-6z"),
+        new("sos", "Emergencias SOS", "sos-alertas", "M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z", Niveles: N.Sop),
+        new("mapa", "Mapa en vivo", "mapa", "M9 20l-5.4-2.7A1 1 0 0 1 3 16.4V4.6a1 1 0 0 1 1.4-.9L9 6m0 14 6-3m-6 3V6m6 11 4.6 2.3a1 1 0 0 0 1.4-.9V7.6a1 1 0 0 0-.6-.9L15 4m0 13V4m0 0L9 6", Niveles: N.Mapa),
+
+        // Servicios
+        new("servicios", "Servicios", "servicios", "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2ZM9 16l2 2 4-4", Niveles: N.NoKyc, Grupo: "servicios"),
+        new("contratos", "Contratos fijos", "contratos", "M14 3v4a1 1 0 0 0 1 1h4M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2ZM9 17c1-1.5 2-2 3-1s2 .5 3-1", Niveles: N.Contratos, Grupo: "servicios"),
+        new("disputas", "Disputas", "disputas", "M12 3v18M5 7h14M5 7l-3 7a4 4 0 0 0 6 0L5 7Zm14 0-3 7a4 4 0 0 0 6 0l-3-7ZM8 21h8", Niveles: N.NoKyc, Grupo: "servicios"),
+        new("calificaciones", "Calificaciones", "calificaciones", "M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z", Niveles: N.Sop, Grupo: "servicios"),
+
+        // Care Partners
+        new("partners", "Care Partners", "care-partners", "M16 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M18 8l2 2 3-3", Grupo: "partners"),
+        new("verificacion", "Verificación", "verificacion", "M9 12l2 2 4-4M12 3l7 3v6c0 4.5-3 7.7-7 9-4-1.3-7-4.5-7-9V6z", Niveles: N.Kyc, Grupo: "partners"),
+        new("vencimientos", "Documentos", "vencimientos", "M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.6a1 1 0 0 1 .7.3l5.4 5.4a1 1 0 0 1 .3.7V19a2 2 0 0 1-2 2Z", Niveles: N.Kyc, Grupo: "partners"),
+        new("tests", "Test psicológico", "tests", "M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4", Niveles: N.KycSolo, Grupo: "partners"),
+        new("calidad", "Calidad", "calidad", "M12 20V10M18 20V4M6 20v-4", Niveles: N.Calidad, Grupo: "partners"),
+
+        // Clientes
+        new("clients", "Clientes", "clientes", "M3 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M9 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M17 20v-2a4 4 0 0 0-2-3.4M16 3.5a3.5 3.5 0 0 1 0 7", Grupo: "clientes"),
+        new("saldosclientes", "Saldos de clientes", "saldos-clientes", "M12 8v4l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z", Niveles: N.Fin, Grupo: "clientes"),
+        new("eliminaciones", "Cuentas eliminadas", "eliminaciones", "M3 6h18M8 6V4h8v2M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14M10 11v6M14 11v6", Niveles: N.SopSolo, Grupo: "clientes"),
+
+        // Comunicación
+        new("soporte", "Soporte", "soporte", "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z", Niveles: N.SopSolo, Grupo: "comunicacion"),
+        new("avisos", "Avisos masivos", "avisos", "M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1ZM16 8.5a5 5 0 0 1 0 7M19 5.5a9 9 0 0 1 0 13", Niveles: N.SopSolo, Grupo: "comunicacion"),
+
+        // Dinero
+        new("pagos", "Pagos", "pagos", "M2 7h20M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2M2 7v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7M6 15h4", Niveles: N.Fin, Grupo: "dinero"),
+        new("finanzas", "Finanzas", "finanzas", "M3 3v18h18M7 15l4-4 3 3 5-6", Niveles: N.Fin, Grupo: "dinero"),
+        new("configpagos", "Config. de pagos", "configuracion-pagos", "M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0M16 4v4M10 10v4M18 16v4", Niveles: N.Fin, Grupo: "dinero"),
+
+        // Sistema
+        new("catalogos", "Catálogos", "catalogos", "M4 6h16M4 12h16M4 18h10", Niveles: N.Oper, Grupo: "sistema"),
+        new("admins", "Administradores", "administradores", "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z", Niveles: N.Super, Grupo: "sistema"),
+        new("auditoria", "Auditoría", "auditoria", "M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4", Niveles: N.Audit, Grupo: "sistema"),
+        new("boveda", "Bóveda de contratos", "boveda", "M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2Zm10-10V7a4 4 0 0 0-8 0v4h8Z", Niveles: N.Audit, Grupo: "sistema"),
     };
 
-    private bool Permitido(Permiso p) => p switch
-    {
-        Permiso.Operar => _nivel is SesionAdmin.Superadmin or SesionAdmin.Operaciones,
-        Permiso.Finanzas => _nivel is SesionAdmin.Superadmin or SesionAdmin.Finanzas,
-        Permiso.Super => _nivel == SesionAdmin.Superadmin,
-        _ => true
-    };
+    private bool Permitido(int[]? niveles) => niveles == null || niveles.Contains(_nivel);
 
-    // Al ocultar ítems por permisos, el título del grupo pasa al primer ítem visible de ese grupo.
-    private IEnumerable<NavItem> NavVisible()
+    private IEnumerable<NavItem> Visibles(string? grupo) => _navItems.Where(i => i.Grupo == grupo && Permitido(i.Niveles));
+
+    // Activo si coincide la sección o la ruta (incluye subpáginas: "contratos/12", "tests/nuevo"…).
+    private bool EsActivo(NavItem item)
     {
-        string? grupo = null, grupoMostrado = null;
-        foreach (var item in _navItems)
-        {
-            grupo = item.Grupo ?? grupo;
-            if (!Permitido(item.Permiso)) continue;
-            if (grupo != grupoMostrado)
-            {
-                grupoMostrado = grupo;
-                yield return item with { Grupo = grupo };
-            }
-            else
-            {
-                yield return item with { Grupo = null };
-            }
-        }
+        if (IsActive(item.Section)) return true;
+        var seg = Segment();
+        return seg == item.Href || seg.StartsWith(item.Href + "/");
     }
+
+    // Secciones abiertas. Se abre sola la de la página actual; las demás las abre/cierra el usuario.
+    private readonly HashSet<string> _abiertos = new();
+
+    private void Alternar(string grupo)
+    {
+        if (!_abiertos.Remove(grupo)) _abiertos.Add(grupo);
+    }
+
+    private void AbrirGrupoActual()
+    {
+        var actual = _navItems.FirstOrDefault(i => i.Grupo != null && EsActivo(i));
+        if (actual?.Grupo != null) _abiertos.Add(actual.Grupo);
+    }
+
+    private RenderFragment Enlace(NavItem item, bool hijo) => __builder =>
+    {
+        <a class="adm-nav-item @(hijo ? "is-child" : "") @(EsActivo(item) ? "active" : "")" href="@item.Href" title="@item.Label">
+            <span class="adm-nav-icon">
+                <svg width="@(hijo ? 17 : 19)" height="@(hijo ? 17 : 19)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="@item.IconPath"></path></svg>
+            </span>
+            @if (!_collapsed)
+            {
+                <span class="adm-nav-label">@item.Label</span>
+                @if (item.Section == "sos" && SosService.AlertasPendientes.Count > 0)
+                {
+                    <span class="adm-nav-count is-alert">@SosService.AlertasPendientes.Count</span>
+                }
+            }
+            else if (item.Section == "sos" && SosService.AlertasPendientes.Count > 0)
+            {
+                <span class="adm-nav-dot" aria-label="@SosService.AlertasPendientes.Count emergencias"></span>
+            }
+        </a>
+    };
 
     private static string ResumenSos(IEnumerable<SosAlerta> alertas)
         => string.Join("  ·  ", alertas.Take(3).Select(a => $"{a.NombreUsuario} ({a.TipoUsuario}) {a.FechaCreacion:HH:mm}"));
@@ -232,6 +301,7 @@
 
         Nav.LocationChanged += OnLocationChanged;
         UpdateHeader();
+        AbrirGrupoActual();
     }
 
     private void OnSosRecibida()
@@ -259,6 +329,7 @@
     private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
         UpdateHeader();
+        AbrirGrupoActual();
         StateHasChanged();
     }
 
@@ -281,8 +352,11 @@
         if (seg.StartsWith("calificaciones")) return "calificaciones";
         if (seg.StartsWith("avisos")) return "avisos";
         if (seg.StartsWith("finanzas")) return "finanzas";
+        if (seg.StartsWith("saldos-clientes")) return "saldosclientes";
+        if (seg.StartsWith("eliminaciones")) return "eliminaciones";
         if (seg.StartsWith("catalogos")) return "catalogos";
         if (seg.StartsWith("auditoria")) return "auditoria";
+        if (seg.StartsWith("boveda")) return "boveda";
         if (seg.StartsWith("buscar")) return "buscar";
         if (seg.StartsWith("care-partners")) return "partners";
         if (seg.StartsWith("clientes")) return "clients";
@@ -311,8 +385,11 @@
             _ when seg.StartsWith("tests/") => ("Editar test", "Preguntas, tiempo y servicios vinculados"),
             "calificaciones" => ("Calificaciones", "Reseñas y Care Partners con nota baja"),
             "avisos" => ("Avisos masivos", "Mensajes a los usuarios de la app"),
+            "saldos-clientes" => ("Saldos de clientes", "Pagos en efectivo incompletos y comprobantes por revisar"),
+            "eliminaciones" => ("Cuentas eliminadas", "Solicitudes de eliminación y cuentas borradas"),
             "finanzas" => ("Finanzas", "Facturación, pagos y ganancias por Care Partner"),
             "catalogos" => ("Catálogos", "Tipos de servicio, motivos, nacionalidades y documentos"),
+            "boveda" => ("Bóveda de contratos", "Contratos firmados de cuentas eliminadas, cifrados"),
             "auditoria" => ("Auditoría", "Quién hizo qué en el panel y cuándo"),
             "buscar" => ("Búsqueda", "Personas y servicios"),
             "care-partners" => ("Care Partners registradas", "Verifica identidad y documentos"),

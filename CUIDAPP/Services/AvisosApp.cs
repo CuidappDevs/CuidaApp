@@ -35,7 +35,7 @@ namespace CUIDAPP.Services
 
         private static void Avisar(string titulo, string texto, string tipoHistorial, int? trabajoId, string? destino)
         {
-            NotificacionHistorial.Agregar(titulo, texto, tipoHistorial, trabajoId);
+            NotificacionHistorial.Agregar(titulo, texto, tipoHistorial, trabajoId, destino);
             if (App.EstaEnPrimerPlano)
                 GlobalNotifier.MostrarBanner(titulo, texto);
             else
@@ -55,7 +55,8 @@ namespace CUIDAPP.Services
             var texto = string.IsNullOrWhiteSpace(pin)
                 ? Localizador.F("notif_en_lugar_texto_sin_pin", nombre)
                 : Localizador.F("notif_en_lugar_texto", nombre, pin);
-            NotificacionHistorial.Agregar(titulo, texto, "trabajo", trabajoId);
+            // Desde el historial abre el chat (sin volver a enviar el PIN).
+            NotificacionHistorial.Agregar(titulo, texto, "trabajo", trabajoId, NotificacionDestino.Chat(trabajoId));
 
             // Con PIN: tocar el aviso abre el chat y le envía el PIN al cuidador automáticamente.
             var destino = string.IsNullOrWhiteSpace(pin) ? NotificacionDestino.Chat(trabajoId) : NotificacionDestino.ChatPin(trabajoId);
@@ -228,6 +229,21 @@ namespace CUIDAPP.Services
             return (0, "");
         }
 
+        // ---------- Avisos de cuenta: deuda del cliente por un pago en efectivo incompleto
+        public static void AvisoCuenta(string tipo)
+        {
+            if (EsCuidador) return;
+            var (titulo, texto) = tipo switch
+            {
+                "deuda_cliente" => ("notif_deuda_titulo", "notif_deuda_texto"),
+                "deuda_recordatorio" => ("notif_deuda_recordatorio_titulo", "notif_deuda_recordatorio_texto"),
+                "deuda_vencida" => ("notif_deuda_vencida_titulo", "notif_deuda_vencida_texto"),
+                _ => (null, null)
+            };
+            if (titulo != null)
+                Avisar(Localizador.T(titulo), Localizador.T(texto!), "pago", null, NotificacionDestino.Deudas);
+        }
+
         // ---------- 4. Cuenta del cuidador aprobada / rechazada
         public static void CuentaActualizada(int estado)
         {
@@ -293,8 +309,15 @@ namespace CUIDAPP.Services
             if (contratoId <= 0 || UsuarioId == 0 || estado is null or "permiso" or "domicilio")
                 return;
             // No avisar mientras la persona ya está mirando ese contrato.
-            if (Shell.Current?.CurrentPage is Views.Contratos.ContratoDetallePage)
+            if (Shell.Current?.CurrentPage is Views.Contratos.ContratoDetallePage or Views.Contratos.ContratoJornadasPage)
                 return;
+            // La titular avisó que no irá: el cliente va directo a elegir un relevo verificado.
+            if (estado == "ausencia_relevo")
+            {
+                Avisar(Localizador.T("notif_contrato_relevo_titulo"), Localizador.F("notif_contrato_relevo_texto", contratoId.ToString("D5")),
+                    "contrato", null, NotificacionDestino.Jornadas(contratoId));
+                return;
+            }
             var clave = estado switch
             {
                 "1" or "2" => "notif_contrato_propuesta",
@@ -305,6 +328,8 @@ namespace CUIDAPP.Services
                 "7" => "notif_contrato_rechazado",
                 "9" => "notif_contrato_retirado",
                 "ausencia" => "notif_contrato_ausencia",
+                "renovacion" => "notif_contrato_propuesta",
+                "renovacion_14" or "renovacion_3" => "notif_contrato_renovar",
                 _ => null
             };
             if (clave == null) return;

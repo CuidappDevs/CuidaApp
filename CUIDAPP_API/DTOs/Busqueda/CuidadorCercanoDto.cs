@@ -2,6 +2,9 @@ namespace CUIDAPP_API.DTOs.Busqueda
 {
     public class CuidadorCercanoDto
     {
+        public bool YaVino { get; set; }
+        public int VecesConCliente { get; set; }
+        public decimal? CalificacionConCliente { get; set; }
         public int Id { get; set; }
         public required string NombreCompleto { get; set; }
         public string? FotoUrl { get; set; }

@@ -164,12 +164,42 @@ app.MapGet("/contratos/pdf/{documentoId:int}", async (int documentoId, HttpConte
     return Results.Bytes(await respuesta.Content.ReadAsByteArrayAsync(http.RequestAborted), "application/pdf");
 }).RequireAuthorization();
 
+// Contrato de la bóveda de cumplimiento (cuentas eliminadas): solo Superadmin y Legal y Dirección. La API
+// exige un motivo, lo registra en BovedaAccesos y descifra el PDF; aquí solo se reenvía con el token.
+app.MapGet("/boveda/pdf/{documentoId:int}", async (int documentoId, string? motivo, HttpContext http, IHttpClientFactory fabrica, IConfiguration config) =>
+{
+    var token = http.User.FindFirstValue(SesionAdmin.ClaimToken);
+    if (string.IsNullOrEmpty(token))
+        return Results.Unauthorized();
+    if (string.IsNullOrWhiteSpace(motivo) || motivo.Trim().Length < 10)
+        return Results.BadRequest("Indica un motivo de al menos 10 caracteres.");
+    var cliente = fabrica.CreateClient("archivos");
+    using var req = new HttpRequestMessage(HttpMethod.Post, new Uri(new Uri(config["ApiBaseUrl"]!), $"admin/boveda/{documentoId}/abrir"))
+    {
+        Content = System.Net.Http.Json.JsonContent.Create(new { Motivo = motivo.Trim() })
+    };
+    req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+    var respuesta = await cliente.SendAsync(req, http.RequestAborted);
+    if (!respuesta.IsSuccessStatusCode)
+        return Results.Content(respuesta.StatusCode switch
+        {
+            System.Net.HttpStatusCode.Forbidden => "Solo Superadmin y Legal y Dirección pueden abrir la bóveda.",
+            System.Net.HttpStatusCode.Conflict => "El documento no pasó la verificación de integridad. Avisa a Superadmin.",
+            System.Net.HttpStatusCode.NotFound => "El documento no está en la bóveda.",
+            _ => "La bóveda no está disponible en este momento."
+        }, "text/plain; charset=utf-8", statusCode: (int)respuesta.StatusCode);
+    http.Response.Headers.CacheControl = "no-store";
+    http.Response.Headers.ContentDisposition = $"inline; filename=\"Contrato-boveda-{documentoId}.pdf\"";
+    return Results.Bytes(await respuesta.Content.ReadAsByteArrayAsync(http.RequestAborted), "application/pdf");
+}).RequireAuthorization();
+
 app.MapGet("/account/logout", async (HttpContext http) =>
 {
     await http.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     return Results.Redirect("/");
 });
 
+app.MapSeguimientoPublico();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

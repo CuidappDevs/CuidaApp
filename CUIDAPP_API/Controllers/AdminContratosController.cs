@@ -54,6 +54,21 @@ namespace CUIDAPP_API.Controllers
             _ => BadRequest(new ApiErrorDto(codigo, "No se pudo completar la acción."))
         };
 
+        [HttpGet("alertas")]
+        public Task<IActionResult> Alertas() => Leer("alertas contratos", async () =>
+        {
+            var r = await _db.ConsultarAsync("sp_AdminContratoAlertas", ("@Ahora", HoraLocalRD.Ahora));
+            var alertas = r[0].Select(f => new { ContratoId = Convert.ToInt32(f["ContratoId"]),
+                Tipo = f["Tipo"]?.ToString() ?? "", Cantidad = Convert.ToInt32(f["Cantidad"]) }).ToList();
+            foreach (var f in r[1])
+            {
+                var (doc, bytes, integro) = await _contratos.LeerDocumentoAsync(Convert.ToInt32(f["Id"]));
+                if (doc != null && (bytes == null || !integro))
+                    alertas.Add(new { ContratoId = Convert.ToInt32(doc["ContratoId"]), Tipo = "PDF", Cantidad = 1 });
+            }
+            return alertas;
+        });
+
         [HttpGet("solicitudes")]
         public Task<IActionResult> Solicitudes([FromQuery] int? estado) => Leer("solicitudes contrato", async () =>
             (await _db.ConsultarAsync("sp_AdminContratoSolicitudes", ("@Estado", estado)))[0]);
@@ -111,6 +126,11 @@ namespace CUIDAPP_API.Controllers
         public Task<IActionResult> Lista([FromQuery] int? estado) => Leer("contratos", async () =>
             (await _db.ConsultarAsync("sp_AdminContratos", ("@Estado", estado)))[0]);
 
+        [HttpGet("{id:int}/resumen-mensual")]
+        public Task<IActionResult> ResumenMensual(int id, [FromQuery] DateTime mes) => Leer("resumen mensual", async () =>
+            (object?)(await _db.EjecutarAsync("sp_ContratoResumenMensual", ("@ContratoId", id),
+                ("@Mes", mes.Date), ("@Ahora", HoraLocalRD.Ahora))) ?? new { });
+
         [HttpGet("{id:int}")]
         public async Task<IActionResult> Detalle(int id)
         {
@@ -118,7 +138,7 @@ namespace CUIDAPP_API.Controllers
             {
                 var r = await _db.ConsultarAsync("sp_ContratoDetalle", ("@ContratoId", id), ("@UsuarioId", null));
                 if (r[0].Count == 0) return Error("NO_ENCONTRADO");
-                return Ok(new { Contrato = r[0][0], Horario = r[1], Propuestas = r[2], Ausencias = r[3], Firmas = r[4], Documentos = r[5], Trabajos = r[6] });
+                return Ok(new { Contrato = r[0][0], Horario = r[1], Propuestas = r[2], Ausencias = r[3], Firmas = r[4], Documentos = r[5], Trabajos = r[6], Tareas = r[7], Anexos = (await _db.ConsultarAsync("sp_ContratoAnexos", ("@ContratoId", id), ("@UsuarioId", null)))[0] });
             }
             catch (Exception ex)
             {
@@ -130,8 +150,11 @@ namespace CUIDAPP_API.Controllers
         [HttpPost("documentos/{documentoId:int}/descargar")]
         public async Task<IActionResult> DescargarDocumentoContrato(int documentoId)
         {
-            var (doc, bytes, _) = await _contratos.LeerDocumentoAsync(documentoId);
+            var (doc, bytes, integro) = await _contratos.LeerDocumentoAsync(documentoId);
+            if (doc != null && Convert.ToBoolean(doc.GetValueOrDefault("EnBoveda") ?? false))
+                return StatusCode(410,new { motivo="EN_BOVEDA",message="Este contrato está en la bóveda de cumplimiento." });
             if (doc == null || bytes == null) return Error("NO_ENCONTRADO");
+            if (!integro) return Conflict(new ApiErrorDto("DOCUMENTO_ALTERADO", "DOCUMENTO_ALTERADO"));
             return File(bytes, "application/pdf", $"Contrato-CF-{Convert.ToInt32(doc["ContratoId"]):D5}-v{doc["Version"]}.pdf");
         }
 
@@ -139,6 +162,8 @@ namespace CUIDAPP_API.Controllers
         public async Task<IActionResult> VerificarDocumentoContrato(int documentoId)
         {
             var (doc, bytes, integro) = await _contratos.LeerDocumentoAsync(documentoId);
+            if (doc != null && Convert.ToBoolean(doc.GetValueOrDefault("EnBoveda") ?? false))
+                return StatusCode(410,new { motivo="EN_BOVEDA",message="Este contrato está en la bóveda de cumplimiento." });
             if (doc == null) return Error("NO_ENCONTRADO");
             return Ok(new { Existe = bytes != null, Integro = integro, Hash = doc["Hash"] });
         }

@@ -160,5 +160,11 @@ namespace CUIDAPP.Views.Cliente
             ConexionServiceManager.Detener();
             await Shell.Current.GoToAsync("//MainPage");
         }
+    
+        private async void OnTerminosTapped(object? sender, TappedEventArgs e)
+            => await Shell.Current.GoToAsync("TerminosPage");
+
+        private async void OnEliminarCuentaTapped(object? sender, TappedEventArgs e)
+            => await Shell.Current.GoToAsync("EliminarCuentaPage");
     }
 }

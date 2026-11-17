@@ -3,6 +3,7 @@ namespace CUIDAPP_API.DTOs.Trabajo
     public class TrabajoDto
     {
         public int Id { get; set; }
+        public int? ContratoId { get; set; }
         public int ClienteId { get; set; }
         public required string ClienteNombre { get; set; }
         public string? ClienteFotoUrl { get; set; }

@@ -8,4 +8,12 @@ namespace CUIDAPP.Models.Auth
         public string Pais { get; set; } = string.Empty;
         public string CodigoIso { get; set; } = string.Empty;
     }
+
+    /// <summary>Estatus migratorio del catálogo del panel, con los documentos que exige (texto en español, de la BD).</summary>
+    public class EstatusMigratorio
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public List<string> Requisitos { get; set; } = new();
+    }
 }

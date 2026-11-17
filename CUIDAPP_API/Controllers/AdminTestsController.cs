@@ -100,7 +100,7 @@ namespace CUIDAPP_API.Controllers
             return null;
         }
 
-        [Authorize(Policy = PoliticasAdmin.Operaciones)]
+        [Authorize(Policy = PoliticasAdmin.Verificacion)]
         [HttpPost]
         public async Task<IActionResult> Guardar([FromBody] TestAdminDto dto)
         {
@@ -163,7 +163,7 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
-        [Authorize(Policy = PoliticasAdmin.Operaciones)]
+        [Authorize(Policy = PoliticasAdmin.Verificacion)]
         [HttpPost("intentos/{id:int}/anular")]
         public async Task<IActionResult> Anular(int id)
         {

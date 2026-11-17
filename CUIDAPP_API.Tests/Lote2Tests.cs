@@ -50,13 +50,15 @@ public class Lote2Tests
     {
         public Func<LoginResult> Login = () => new LoginResult(LoginStatus.InvalidCredentials);
         public Task<LoginResult> LoginAsync(LoginRequestDto loginDto) => Task.FromResult(Login());
+        public Task<LoginResult> LoginGoogleAsync(string idToken) => throw new NotImplementedException();
+        public string? RenovarToken(string token) => null;
         public Task<int> RegisterClientAsync(RegisterClientDto registerDto) => throw new NotImplementedException();
         public Task<int> RegisterCaregiverAsync(RegisterCaregiverDto registerDto) => throw new NotImplementedException();
         public Task<(bool Success, Guid ResetToken, string Message)> ForgotPasswordAsync(ForgotPasswordDto dto) => throw new NotImplementedException();
         public Task<(bool Success, string Message)> ResetPasswordAsync(ResetPasswordDto dto) => throw new NotImplementedException();
     }
 
-    private static AdminController Admin(FakeAdmin fake) => new(fake, NullLogger<AdminController>.Instance);
+    private static AdminController Admin(FakeAdmin fake) => new(fake, null!, null!, NullLogger<AdminController>.Instance);
     private static AuthController Auth(FakeAuth fake) => new(fake, NullLogger<AuthController>.Instance);
 
     private static AdminActionResult Resultado(string codigo)

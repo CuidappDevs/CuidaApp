@@ -101,7 +101,7 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
-        [Authorize(Policy = PoliticasAdmin.Admin)]
+        [Authorize(Policy = PoliticasAdmin.Soporte)]
         [AuditarAdmin]
         [HttpPut("{id}/atender")]
         public async Task<IActionResult> AtenderAlerta(int id, [FromBody] AtenderSOSDto dto)
@@ -120,7 +120,7 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
-        [Authorize(Policy = PoliticasAdmin.Admin)]
+        [Authorize(Policy = PoliticasAdmin.Soporte)]
         [AuditarAdmin]
         [HttpPut("{id}/descartar")]
         public async Task<IActionResult> DescartarAlerta(int id)

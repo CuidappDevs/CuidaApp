@@ -54,6 +54,7 @@ namespace CUIDAPP_API.Controllers
             };
         }
 
+        [Authorize(Policy = PoliticasAdmin.Admin)]
         [HttpGet("cuidadores-pendientes")]
         public async Task<IActionResult> ObtenerCuidadoresPendientes()
         {
@@ -99,6 +100,7 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [Authorize(Policy = PoliticasAdmin.Admin)]
         [HttpGet("documentos/{cuidadorId}")]
         public async Task<IActionResult> ObtenerDocumentosPorCuidador(int cuidadorId)
         {
@@ -113,13 +115,21 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
-        [Authorize(Policy = PoliticasAdmin.Operaciones)]
+        [Authorize(Policy = PoliticasAdmin.Verificacion)]
         [HttpPut("aprobar-cuidador")]
         public async Task<IActionResult> ActualizarEstadoCuidador([FromBody] ActualizarEstadoCuidadorDto dto)
         {
             try
             {
-                var success = await _adminService.ActualizarEstadoCuidadorAsync(dto);
+                var r = await _db.ConsultarAsync("sp_PilotoAprobarCuidador", ("@CuidadorId", dto.CuidadorId),
+                    ("@NuevoEstado", dto.NuevoEstado), ("@Observaciones", dto.Observaciones), ("@Hoy", CUIDAPP_API.Services.HoraLocalRD.Ahora.Date));
+                if (r[0][0]["Resultado"]?.ToString() == "DOCUMENTOS_MIGRATORIOS_FALTANTES")
+                    return Conflict(new { code = "DOCUMENTOS_MIGRATORIOS_FALTANTES", faltantes = r[1].Select(d => d["TipoDocumento"]) });
+                if (r[0][0]["Resultado"]?.ToString() == "DOCUMENTOS_SIN_REVISAR")
+                    return Conflict(new { motivo = "DOCUMENTOS_SIN_REVISAR", message = "Revisa cada documento antes de aprobar la cuenta.", faltantes = r[1].Select(d => d["TipoDocumento"]) });
+                var success = r[0][0]["Resultado"]?.ToString() == "OK";
+                if (success) await HttpContext.RequestServices.GetRequiredService<CUIDAPP_API.Services.Realtime.ITrabajoNotifier>()
+                    .NotificarAsync(dto.CuidadorId, "CuentaActualizada", new { dto.CuidadorId, Estado = dto.NuevoEstado });
                 if (success)
                     return Ok(new { Message = "Estado actualizado correctamente" });
                 return BadRequest("No se pudo actualizar el estado. Verifica el ID.");

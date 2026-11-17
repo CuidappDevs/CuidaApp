@@ -2,6 +2,8 @@ namespace CUIDAPP_API.DTOs.Admin
 {
     public class ClienteAdminDto
     {
+        public string? TerminosVersion { get; set; }
+        public DateTime? TerminosAceptadosEn { get; set; }
         public int UsuarioId { get; set; }
         public string NombreCompleto { get; set; } = "";
         public string Email { get; set; } = "";

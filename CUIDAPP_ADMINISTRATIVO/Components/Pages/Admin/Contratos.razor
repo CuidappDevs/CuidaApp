@@ -1,4 +1,4 @@
-@page "/contratos"
+﻿@page "/contratos"
 @layout CUIDAPP_ADMINISTRATIVO.Components.Layout.AdminLayout
 @inject PanelApiService Api
 @inject NavigationManager Nav
@@ -8,6 +8,7 @@
 <PageTitle>Contratos fijos · Cuidapp Admin</PageTitle>
 
 <div class="pn-page">
+    <AlertasContratos />
     <div class="pn-toolbar">
         <div class="pn-seg">
             <button type="button" class="@(_tab == 0 ? "on" : "")" @onclick="() => Tab(0)">Permisos para contratar <span class="pn-seg-n">@(_solicitudes?.Count(s => s.Estado == 1) ?? 0)</span></button>
@@ -123,33 +124,59 @@
     }
     else
     {
-        <div class="adm-card overflow-hidden">
-            @if (_contratos == null) { <Esqueleto Filas="6" /> }
-            else if (!ContratosFiltrados().Any()) { <EstadoVacio Titulo="Sin contratos" Texto="Los contratos que propongan los clientes aparecerán aquí desde la propuesta hasta la firma." /> }
+        @if (_contratos == null) { <div class="adm-card overflow-hidden"><Esqueleto Filas="6" /></div> }
+        else
+        {
+            <p class="cf-resumen">
+                <span><b>@_contratos.Count(c => c.Estado == 4)</b> activos</span>
+                <span><b>@_contratos.Count(c => c.Estado is 1 or 2 or 3)</b> en negociación o firma</span>
+                <span><b>@_contratos.Count(c => c.Estado == 5)</b> en pausa</span>
+            </p>
+            @if (!ContratosFiltrados().Any()) { <div class="adm-card overflow-hidden"><EstadoVacio Titulo="Sin contratos" Texto="Los contratos que propongan los clientes aparecerán aquí desde la propuesta hasta la firma." /></div> }
             else
             {
-                <div class="pn-table-wrap">
-                    <table class="pn-table">
-                        <thead><tr><th>Contrato</th><th>Cliente → Care Partner</th><th>Horario</th><th>Tarifa</th><th>Jornadas</th><th>Estado</th><th></th></tr></thead>
-                        <tbody>
-                            @foreach (var c in Paginador.Cortar(ContratosFiltrados(), _pagina, 15))
-                            {
-                                <tr class="pn-row-link" @onclick='() => Nav.NavigateTo($"contratos/{c.Id}")'>
-                                    <td><div class="pn-who-text"><span>CF-@c.Id.ToString("D5")</span><span class="pn-muted">@c.TipoServicio</span></div></td>
-                                    <td><div class="pn-who-text"><span>@c.ClienteNombre → @c.CuidadorNombre</span><span class="pn-muted">@c.DomicilioNombre · @c.Direccion</span></div></td>
-                                    <td class="pn-muted" style="min-width:180px;">@EstadoContrato.Horario(c.Horario)</td>
-                                    <td class="pn-num">RD$ @c.TarifaHora.ToString("N0")/h</td>
-                                    <td class="pn-num">@c.JornadasCompletadas</td>
-                                    <td><span class="pn-pill @EstadoContrato.Tono(c.Estado)">@EstadoContrato.Texto(c.Estado)</span></td>
-                                    <td class="pn-num"><span class="pn-link">Ver →</span></td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                <div class="cf-lista">
+                    <div class="cf-cab" aria-hidden="true">
+                        <span>Contrato</span><span>Cliente y Care Partner</span><span>Semana</span><span class="cf-der">Tarifa</span><span></span>
+                    </div>
+                    @foreach (var c in Paginador.Cortar(ContratosFiltrados(), _pagina, 15))
+                    {
+                        var franjas = EstadoContrato.Franjas(c.Horario);
+                        <a class="cf-fila" href="contratos/@c.Id">
+                            <span class="cf-id">
+                                <span class="cf-num">CF-@c.Id.ToString("D5")</span>
+                                <span class="cf-estado @EstadoContrato.Tono(c.Estado)">@EstadoContrato.Texto(c.Estado)</span>
+                            </span>
+                            <span class="cf-partes">
+                                <span class="cf-nombres">@c.ClienteNombre <span class="cf-con">con</span> @c.CuidadorNombre</span>
+                                <span class="cf-sub">@c.TipoServicio · @c.DomicilioNombre@(c.Dormida ? " · con dormida" : "")</span>
+                            </span>
+                            <span class="cf-semana" title="@EstadoContrato.HorarioCorto(c.Horario)">
+                                <span class="cf-dias">
+                                    @foreach (var d in new[] { 1, 2, 3, 4, 5, 6, 0 })
+                                    {
+                                        var fr = franjas.Where(x => x.Dia == d).ToList();
+                                        <span class="cf-dia @(fr.Count > 0 ? "on" : "")">
+                                            <span class="cf-pista" title="De 6:00 a. m. (arriba) a 12:00 a. m. (abajo)">
+                                                @foreach (var x in fr)
+                                                {
+                                                    <span class="cf-turno" style="top:@(Pct(x.Ini))%; height:@(Pct(x.Fin) - Pct(x.Ini))%;" title="@EstadoContrato.Inicial(d)"></span>
+                                                }
+                                            </span>
+                                            <span class="cf-letra">@EstadoContrato.Inicial(d)</span>
+                                        </span>
+                                    }
+                                </span>
+                                <span class="cf-horas">@EstadoContrato.HorarioCorto(c.Horario)</span>
+                            </span>
+                            <span class="cf-tarifa cf-der"><b>RD$ @c.TarifaHora.ToString("N0")</b><span>por hora · @c.JornadasCompletadas jornadas</span></span>
+                            <svg class="cf-ir" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+                        </a>
+                    }
+                    <Paginador Pagina="_pagina" Tamano="15" Total="ContratosFiltrados().Count()" PaginaCambiada="p => _pagina = p" />
                 </div>
-                <Paginador Pagina="_pagina" Tamano="15" Total="ContratosFiltrados().Count()" PaginaCambiada="p => _pagina = p" />
             }
-        </div>
+        }
     }
 </div>
 
@@ -172,6 +199,9 @@
         _domicilios = await d ?? new();
         _contratos = await c ?? new();
     }
+
+    // Posición en la pista diaria, que va de 6:00 a. m. a medianoche.
+    private static int Pct(double fraccionDia) => (int)Math.Round(Math.Clamp((fraccionDia * 24 - 6) / 18, 0, 1) * 100);
 
     private void Tab(int t) { _tab = t; _pagina = 1; }
 

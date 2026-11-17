@@ -45,7 +45,7 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
-        [Authorize(Policy = PoliticasAdmin.Operaciones)]
+        [Authorize(Policy = PoliticasAdmin.Soporte)]
         [AuditarAdmin]
         [HttpGet]
         public async Task<IActionResult> ObtenerTodos([FromQuery] int? estado)
@@ -96,7 +96,7 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
-        [Authorize(Policy = PoliticasAdmin.Operaciones)]
+        [Authorize(Policy = PoliticasAdmin.Soporte)]
         [AuditarAdmin]
         [HttpPut("{ticketId}/estado")]
         public async Task<IActionResult> ActualizarEstado(int ticketId, [FromBody] ActualizarEstadoTicketDto dto)

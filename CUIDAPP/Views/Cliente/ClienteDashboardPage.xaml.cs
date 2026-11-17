@@ -16,7 +16,16 @@ namespace CUIDAPP.Views.Cliente
         private bool panelExpandido = true;
         private bool yaCargado = false;
         private bool hayServicioActivo = false;
-        private const double AlturaPanelExpandido = 460;
+        // 460 de base + lo que ocupen las tarjetas de contratos fijos (si hay), sin pasar del 85 % de la pantalla.
+        private double AlturaPanelExpandido
+        {
+            get
+            {
+                var extra = ResumenContratos.Children.Count > 0 && ResumenContratos.Height > 0 ? ResumenContratos.Height + 14 : 0;
+                var pantalla = DeviceDisplay.MainDisplayInfo.Height / Math.Max(DeviceDisplay.MainDisplayInfo.Density, 1);
+                return Math.Min(460 + extra, pantalla * 0.85);
+            }
+        }
         private const double AlturaPanelColapsado = 100;
         private bool mapaHtmlCargado = false;
         private List<CuidadorMapa> cuidadoresEnMapa = new();
@@ -28,6 +37,12 @@ namespace CUIDAPP.Views.Cliente
         public ClienteDashboardPage()
         {
             InitializeComponent();
+            // Cuando aparecen o cambian las tarjetas de contratos fijos, el panel crece para no cortar lo de abajo.
+            ResumenContratos.SizeChanged += (_, _) =>
+            {
+                if (panelExpandido && !this.AnimationIsRunning("AnimacionPanel"))
+                    BottomSheet.HeightRequest = AlturaPanelExpandido;
+            };
 
             // Última ubicación conocida (persistida entre sesiones): así el mapa arranca
             // en el lugar correcto de inmediato, aunque esta sea una instancia nueva de la
@@ -60,6 +75,8 @@ namespace CUIDAPP.Views.Cliente
         {
             base.OnAppearing();
             estaVisible = true;
+            _ = CUIDAPP.Helpers.ContratosDashboard.CargarAsync(ResumenContratos, false);
+            _ = CUIDAPP.Helpers.DeudaAviso.CargarBannerAsync(AvisoDeuda);
 
             var clienteIdActual = Preferences.Default.Get("UserId", 0);
             _ = RealtimeService.ConectarAsync(clienteIdActual);
@@ -176,6 +193,7 @@ namespace CUIDAPP.Views.Cliente
 
         private async void OnTrabajoActualizadoTiempoReal(int trabajoId, int estado)
         {
+            await CUIDAPP.Helpers.ContratosDashboard.CargarAsync(ResumenContratos, false);
             await VerificarServicioActivo();
         }
 
@@ -229,7 +247,7 @@ namespace CUIDAPP.Views.Cliente
             if (clienteId == 0)
                 return;
 
-            var serviciosActivos = await _apiService.ObtenerTrabajosActivosPorClienteAsync(clienteId);
+            var serviciosActivos = (await _apiService.ObtenerTrabajosActivosPorClienteAsync(clienteId)).Where(t => t.ContratoId == null).ToList();
             hayServicioActivo = serviciosActivos.Count > 0;
 
             // El cliente ahora puede tener varios servicios a la vez, así que el buscador
@@ -535,7 +553,12 @@ namespace CUIDAPP.Views.Cliente
         {
             var (icono, colorFondo, colorIcono) = ObtenerIconoServicio(servicio.Especialidad);
             var indice = ListaServicios.Count;
-            var anchoDisponible = (BottomSheet.Width > 0 ? BottomSheet.Width : Width) - 40;
+            // Al cambiar el tema la página se recrea y los servicios llegan antes de que tenga ancho
+            // (Width = -1): sin este respaldo las tarjetas salían de tamaño cero y "desaparecían".
+            var anchoPagina = BottomSheet.Width > 0 ? BottomSheet.Width
+                : Width > 0 ? Width
+                : DeviceDisplay.Current.MainDisplayInfo.Width / Math.Max(1, DeviceDisplay.Current.MainDisplayInfo.Density);
+            var anchoDisponible = anchoPagina - 40;
             var ancho = Math.Floor((anchoDisponible - EspacioServicios * (ColumnasServicios - 1)) / ColumnasServicios);
             var lado = Math.Min(ancho, 84);
 

@@ -3,6 +3,7 @@ namespace CUIDAPP.Models.Trabajo
     public class Trabajo
     {
         public int Id { get; set; }
+        public int? ContratoId { get; set; }
         public int ClienteId { get; set; }
         public string ClienteNombre { get; set; } = string.Empty;
         public string? ClienteFotoUrl { get; set; }

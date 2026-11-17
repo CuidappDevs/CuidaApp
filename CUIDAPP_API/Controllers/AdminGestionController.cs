@@ -52,6 +52,9 @@ namespace CUIDAPP_API.Controllers
             return codigo switch
             {
                 "OK" => Ok(new { Message = ok }),
+                "FECHA_VENCIMIENTO_REQUERIDA" => BadRequest(new { motivo = codigo, message = "Pon la fecha de vencimiento del documento antes de aprobarlo." }),
+                "FECHA_VENCIMIENTO_INVALIDA" => BadRequest(new { motivo = codigo, message = "La fecha de vencimiento debe ser posterior a hoy." }),
+                "MOTIVO_REQUERIDO" => BadRequest(new { motivo = codigo, message = "Indica el motivo del rechazo." }),
                 "NO_ENCONTRADO" => NotFound(new ApiErrorDto(codigo, "No se encontró el registro.")),
                 "ESTADO_INVALIDO" => Conflict(new ApiErrorDto(codigo, "El caso o el servicio ya no está en un estado que permita esta acción.")),
                 "MONTO_INVALIDO" => BadRequest(new ApiErrorDto(codigo, "El monto debe ser mayor que cero y menor que la tarifa del servicio.")),
@@ -82,25 +85,25 @@ namespace CUIDAPP_API.Controllers
         public Task<IActionResult> Vencimientos() => Leer("Vencimientos", async () =>
             (await _svc.ConsultarAsync("sp_AdminDocumentosVencimiento", ("@Hoy", Hoy)))[0]);
 
-        [Authorize(Policy = PoliticasAdmin.Operaciones)]
+        [Authorize(Policy = PoliticasAdmin.Verificacion)]
         [HttpPut("vencimientos/{id:int}")]
         public async Task<IActionResult> FijarVencimiento(int id, [FromBody] FechaVencimientoDto dto)
-            => Resultado(await _svc.EjecutarAsync("sp_AdminFijarVencimientoDocumento", ("@DocumentoId", id), ("@Fecha", dto.Fecha?.Date)), "Fecha de vencimiento guardada.");
+            => Resultado(await _svc.EjecutarAsync("sp_AdminFijarVencimientoDocumento", ("@DocumentoId", id), ("@Fecha", dto.Fecha?.Date), ("@Hoy", Hoy)), "Fecha de vencimiento guardada.");
 
-        [Authorize(Policy = PoliticasAdmin.Operaciones)]
+        [Authorize(Policy = PoliticasAdmin.Verificacion)]
         [HttpPut("vencimientos/{id:int}/revisar")]
         public async Task<IActionResult> RevisarDocumento(int id, [FromBody] RevisarDocumentoDto dto)
         {
             if (!dto.Aprobar && string.IsNullOrWhiteSpace(dto.Observaciones))
-                return BadRequest(new ApiErrorDto("OBSERVACION_REQUERIDA", "Indica por qué se rechaza el documento."));
+                return BadRequest(new { motivo = "MOTIVO_REQUERIDO", message = "Indica el motivo del rechazo." });
 
             var fila = await _svc.EjecutarAsync("sp_AdminRevisarDocumento", ("@DocumentoId", id), ("@Aprobar", dto.Aprobar),
-                ("@Fecha", dto.Fecha?.Date), ("@Observacion", dto.Observaciones?.Trim()));
+                ("@Fecha", dto.Fecha?.Date), ("@Observacion", dto.Observaciones?.Trim()), ("@Hoy", Hoy));
             if (fila?["Resultado"]?.ToString() == "OK" && fila["CuidadorId"] is int cuidadorId)
             {
                 await _avisos.EnviarAsync(AdminId, cuidadorId, "mensaje",
                     dto.Aprobar ? "Documento aprobado" : "Documento rechazado",
-                    dto.Aprobar ? "Revisamos tu documento renovado y quedó aprobado. Ya puedes ponerte visible." : $"Tu documento no fue aprobado: {dto.Observaciones!.Trim()}");
+                    dto.Aprobar ? "Revisamos tu documento y quedó aprobado." : $"Tu documento no fue aprobado: {dto.Observaciones!.Trim()}");
             }
             return Resultado(fila, dto.Aprobar ? "Documento aprobado." : "Documento rechazado.");
         }
@@ -122,7 +125,7 @@ namespace CUIDAPP_API.Controllers
                 dto.Activa ? "Grabación de seguridad encendida." : "Grabación de seguridad apagada.");
 
         // Reproducir la caja negra de un servicio: solo Superadmin, y cada acceso queda en la auditoría.
-        [Authorize(Policy = PoliticasAdmin.SuperAdmin)]
+        [Authorize(Policy = PoliticasAdmin.AuditoriaLegal)]
         [HttpGet("servicios/{id:int}/grabaciones")]
         public Task<IActionResult> GrabacionesServicio(int id) => Leer("GrabacionesServicio", async () =>
         {
@@ -210,6 +213,7 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [Authorize(Policy = PoliticasAdmin.Soporte)]
         [HttpPost("disputas")]
         public async Task<IActionResult> AbrirDisputa([FromBody] AbrirDisputaDto dto)
         {
@@ -219,6 +223,7 @@ namespace CUIDAPP_API.Controllers
             return Resultado(fila);
         }
 
+        [Authorize(Policy = PoliticasAdmin.Soporte)]
         [HttpPut("disputas/{id:int}/resolver")]
         public async Task<IActionResult> ResolverDisputa(int id, [FromBody] ResolverDisputaDto dto)
         {

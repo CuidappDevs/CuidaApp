@@ -80,6 +80,47 @@ namespace CUIDAPP.Models.Contrato
         public DateTime? FechaFin { get; set; }
         public List<FranjaContrato> Horario { get; set; } = new();
         public string? Nota { get; set; }
+        /// <summary>La Care Partner duerme en la residencia (solo se pagan las horas del horario).</summary>
+        public bool Dormida { get; set; }
+        public List<TareaContrato>? Tareas { get; set; }
+        /// <summary>Desde cuándo trabaja con la familia (antigüedad previa); sale en el PDF.</summary>
+        public DateTime? TrabajaDesde { get; set; }
+    }
+
+    // ---------- Invitar a mi cuidadora
+
+    /// <summary>Estado: 1 pendiente, 2 registrada, 4 vencida. CuidadorAprobacion: 2 = verificada.</summary>
+    public class InvitacionCuidador
+    {
+        public int Id { get; set; }
+        public string Codigo { get; set; } = "";
+        public string Nombre { get; set; } = "";
+        public string? Telefono { get; set; }
+        public string? Email { get; set; }
+        public DateTime? TrabajaDesde { get; set; }
+        public DateTime FechaCreacion { get; set; }
+        public DateTime Expira { get; set; }
+        public int Estado { get; set; }
+        public int? CuidadorId { get; set; }
+        public string? CuidadorNombre { get; set; }
+        public string? CuidadorFoto { get; set; }
+        public int? CuidadorAprobacion { get; set; }
+    }
+
+    public class InvitacionCreada
+    {
+        public int Id { get; set; }
+        public string Codigo { get; set; } = "";
+        public DateTime Expira { get; set; }
+    }
+
+    /// <summary>Lo que ve la cuidadora al escribir el código en el registro.</summary>
+    public class InvitacionInfo
+    {
+        public string? Nombre { get; set; }
+        public string? Telefono { get; set; }
+        public string? Email { get; set; }
+        public string? ClienteNombre { get; set; }
     }
 
     public class ResponderContratoRequest
@@ -90,6 +131,17 @@ namespace CUIDAPP.Models.Contrato
         public DateTime? FechaInicio { get; set; }
         public List<FranjaContrato>? Horario { get; set; }
         public string? Nota { get; set; }
+        public bool? Dormida { get; set; }
+        public List<TareaContrato>? Tareas { get; set; }
+    }
+
+    /// <summary>Tarea del checklist diario de un contrato fijo (se copia a cada jornada).</summary>
+    public class TareaContrato
+    {
+        public int Id { get; set; }
+        public string Descripcion { get; set; } = "";
+        public int Orden { get; set; }
+        public bool RequiereFoto { get; set; }
     }
 
     public class ContratoResumen
@@ -109,10 +161,14 @@ namespace CUIDAPP.Models.Contrato
         public string Direccion { get; set; } = "";
         public string? Horario { get; set; }
         public bool RequiereAccion { get; set; }
+        public bool Dormida { get; set; }
     }
 
     public class ContratoCabecera
     {
+        public int? ContratoAnteriorId { get; set; }
+        public int? ContratoRenovadoId { get; set; }
+        public DateTime? TrabajaDesde { get; set; }
         public int Id { get; set; }
         public int Estado { get; set; }
         public string TipoServicio { get; set; } = "";
@@ -136,6 +192,7 @@ namespace CUIDAPP.Models.Contrato
         public string Direccion { get; set; } = "";
         public string? QuienVive { get; set; }
         public string? MiRol { get; set; }
+        public bool Dormida { get; set; }
     }
 
     public class PropuestaContrato
@@ -191,6 +248,7 @@ namespace CUIDAPP.Models.Contrato
         public List<FirmaContrato> Firmas { get; set; } = new();
         public List<DocumentoContrato> Documentos { get; set; } = new();
         public List<JornadaContrato> Trabajos { get; set; } = new();
+        public List<TareaContrato> Tareas { get; set; } = new();
     }
 
     public class FirmarContratoRequest

@@ -44,9 +44,10 @@
                     {
                         <select class="pn-select" style="height:34px;" aria-label="Nivel de @a.NombreCompleto" value="@a.NivelAdmin"
                                 disabled="@(_procesando == a.UsuarioId)" @onchange="e => CambiarNivel(a, e.Value?.ToString())">
-                            <option value="1">Superadmin</option>
-                            <option value="2">Operaciones</option>
-                            <option value="3">Finanzas</option>
+                            @foreach (var n in SesionAdmin.Niveles)
+                            {
+                                <option value="@n">@SesionAdmin.NombreNivel(n)</option>
+                            }
                         </select>
                     }
                     <span class="pn-pill @(a.IsActive ? "tone-ok" : "tone-danger")">@a.EstadoTexto</span>
@@ -82,9 +83,10 @@
         </div>
 
         <div class="d-flex flex-column" style="gap:8px; font-size:12.5px; color:var(--adm-muted); line-height:1.5; background:var(--adm-surface); border-radius:12px; padding:12px 14px;">
-            <span><b style="color:var(--adm-ink-2);">Superadmin:</b> todo, incluidos administradores y auditoría.</span>
-            <span><b style="color:var(--adm-ink-2);">Operaciones:</b> verificación, servicios, SOS, soporte, avisos y catálogos. Sin dinero.</span>
-            <span><b style="color:var(--adm-ink-2);">Finanzas:</b> pagos y finanzas; el resto solo lectura.</span>
+            @foreach (var n in SesionAdmin.Niveles)
+            {
+                <span><b style="color:var(--adm-ink-2);">@SesionAdmin.NombreNivel(n):</b> @SesionAdmin.DescripcionNivel(n)</span>
+            }
         </div>
 
         @if (!string.IsNullOrWhiteSpace(_mensaje))

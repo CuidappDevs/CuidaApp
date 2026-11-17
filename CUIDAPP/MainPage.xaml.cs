@@ -18,6 +18,7 @@ namespace CUIDAPP
         public MainPage()
         {
             InitializeComponent();
+            SeparadorGoogle.IsVisible = BtnGoogle.IsVisible = GoogleLogin.Disponible;
 
             // Estado inicial antes del primer frame: formulario fuera de pantalla para que la
             // transición desde el splash sea continua (mismo azul).
@@ -172,56 +173,154 @@ namespace CUIDAPP
 
                 var loginResult = await _apiService.LoginAsync(request);
 
+                // Cuenta en eliminación (plazo de 30 días): se ofrece recuperarla y, si acepta, se entra.
+                if (loginResult.Status == LoginStatus.PendingDeletion)
+                {
+                    if (!await RecuperarCuentaAsync(request, loginResult.FechaEliminacion))
+                        return;
+                    loginResult = await _apiService.LoginAsync(request);
+                }
+
                 if (loginResult.Status != LoginStatus.Success || loginResult.Auth == null)
-                {   
+                {
                     await MostrarFalloLoginAsync(loginResult);
                     return;
                 }
 
-
-                var result = loginResult.Auth;
-
-                Preferences.Default.Set("AuthToken", result.Token);
-                Preferences.Default.Set("UserEmail", result.Email);
-                Preferences.Default.Set("UserNombre", result.NombreCompleto ?? "");
-                Preferences.Default.Set("UserFotoUrl", result.FotoUrl ?? "");
-                Preferences.Default.Set("UserId", result.UserId);
-                Preferences.Default.Set("RolId", result.RolId);
-                Preferences.Default.Set("EstadoAprobacion", result.EstadoAprobacion ?? 0);
-
-                _ = RealtimeService.ConectarAsync(result.UserId);
-                _ = ServerClock.SincronizarAsync();
-                _ = Recordatorios.SincronizarServiciosAsync();
-                ConexionServiceManager.Iniciar();
-
-                switch (result.RolId)
-                {
-                    case 3: // Cuidador
-                        // Sin aprobación formal pero con todos los documentos aprobados también entra a su panel.
-                        if (result.EstadoAprobacion != 2 && (await _apiService.ObtenerEstadoVerificacionAsync(result.UserId))?.PuedeTrabajar == true)
-                        {
-                            result.EstadoAprobacion = 2;
-                            Preferences.Default.Set("EstadoAprobacion", 2);
-                        }
-
-                        if (result.EstadoAprobacion == 2)
-                            await Shell.Current.GoToAsync("CuidadorDashboardPage");
-                        else
-                            await Shell.Current.GoToAsync("VerificacionPendientePage");
-                        break;
-                    case 2: // Cliente
-                        await Shell.Current.GoToAsync("ClienteDashboardPage");
-                        break;
-                    default: // Admin u otro rol
-                        await Alerta.MostrarAsync(Localizador.T("bienvenido"), Localizador.T("inicio_de_sesion_exitoso"), Localizador.T("ok"));
-                        break;
-                }
-                await NotificacionDestino.ProcesarPendienteAsync();
+                await EntrarAsync(loginResult.Auth);
             }
             finally
             {
                 MostrarCargandoLogin(false);
             }
+        }
+
+        // ---------- Continuar con Google
+        private bool googleOcupado;
+
+        private async void OnGoogleTapped(object? sender, TappedEventArgs e)
+        {
+            if (googleOcupado) return;
+            googleOcupado = true;
+            _ = BtnGoogle.ScaleTo(0.97, 80, Easing.CubicOut).ContinueWith(_ => MainThread.BeginInvokeOnMainThread(() => BtnGoogle.ScaleTo(1, 140, Easing.CubicOut)));
+            try
+            {
+                var (resultado, idToken) = await GoogleLogin.ObtenerIdTokenAsync();
+                switch (resultado)
+                {
+                    case GoogleLogin.Resultado.Cancelado:
+                        return;
+                    case GoogleLogin.Resultado.SinCuentas:
+                        await Alerta.MostrarAsync(Localizador.T("login_google"), Localizador.T("login_google_sin_cuentas"), Localizador.T("ok"));
+                        return;
+                    case not GoogleLogin.Resultado.Ok:
+                        await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("login_google_error"), Localizador.T("ok"), TipoAlerta.Error);
+                        return;
+                }
+
+                MostrarCargandoGoogle(true);
+                var login = await _apiService.LoginGoogleAsync(idToken!);
+                switch (login.Status)
+                {
+                    case LoginStatus.Success when login.Auth != null:
+                        await EntrarAsync(login.Auth);
+                        break;
+                    case LoginStatus.GoogleRegistroRequerido:
+                        // Sin cuenta: registro normal con el correo y el nombre de Google; no pide contraseña.
+                        await Shell.Current.GoToAsync("RegistroPage", new Dictionary<string, object>
+                        {
+                            { "GoogleIdToken", idToken! },
+                            { "GoogleEmail", login.GoogleEmail ?? "" },
+                            { "GoogleNombre", login.GoogleNombre ?? "" }
+                        });
+                        break;
+                    case LoginStatus.PendingDeletion:
+                        // Con Google no hay contraseña que confirmar: se recupera con "Olvidé mi contraseña".
+                        var mensaje = login.FechaEliminacion is { } f
+                            ? Localizador.F("login_google_eliminacion", Localizador.FechaLarga(f))
+                            : Localizador.T("eliminar_recuperar_texto_sin_fecha");
+                        await Alerta.MostrarAsync(Localizador.T("eliminar_recuperar_titulo"), mensaje, Localizador.T("ok"), TipoAlerta.Advertencia);
+                        break;
+                    case LoginStatus.GoogleInvalido:
+                        await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("login_google_invalido"), Localizador.T("ok"), TipoAlerta.Error);
+                        break;
+                    default:
+                        await MostrarFalloLoginAsync(login);
+                        break;
+                }
+            }
+            finally
+            {
+                MostrarCargandoGoogle(false);
+                googleOcupado = false;
+            }
+        }
+
+        private void MostrarCargandoGoogle(bool cargando)
+        {
+            BtnGoogle.IsEnabled = !cargando;
+            ContenidoGoogle.IsVisible = !cargando;
+            SpinnerGoogle.IsVisible = SpinnerGoogle.IsRunning = cargando;
+        }
+
+        /// <summary>Guarda la sesión y abre el inicio según el rol (login con correo o con Google).</summary>
+        private async Task EntrarAsync(AuthResponse result)
+        {
+            Preferences.Default.Set("AuthToken", result.Token);
+            Preferences.Default.Set("UserEmail", result.Email);
+            Preferences.Default.Set("UserNombre", result.NombreCompleto ?? "");
+            Preferences.Default.Set("UserFotoUrl", result.FotoUrl ?? "");
+            Preferences.Default.Set("UserId", result.UserId);
+            Preferences.Default.Set("RolId", result.RolId);
+            Preferences.Default.Set("EstadoAprobacion", result.EstadoAprobacion ?? 0);
+
+            _ = RealtimeService.ConectarAsync(result.UserId);
+            _ = ServerClock.SincronizarAsync();
+            _ = Recordatorios.SincronizarServiciosAsync();
+            ConexionServiceManager.Iniciar();
+
+            switch (result.RolId)
+            {
+                case 3: // Cuidador
+                    // Sin aprobación formal pero con todos los documentos aprobados también entra a su panel.
+                    if (result.EstadoAprobacion != 2 && (await _apiService.ObtenerEstadoVerificacionAsync(result.UserId))?.PuedeTrabajar == true)
+                    {
+                        result.EstadoAprobacion = 2;
+                        Preferences.Default.Set("EstadoAprobacion", 2);
+                    }
+
+                    if (result.EstadoAprobacion == 2)
+                        await Shell.Current.GoToAsync("CuidadorDashboardPage");
+                    else
+                        await Shell.Current.GoToAsync("VerificacionPendientePage");
+                    break;
+                case 2: // Cliente
+                    await Shell.Current.GoToAsync("ClienteDashboardPage");
+                    break;
+                default: // Admin u otro rol
+                    await Alerta.MostrarAsync(Localizador.T("bienvenido"), Localizador.T("inicio_de_sesion_exitoso"), Localizador.T("ok"));
+                    break;
+            }
+            await NotificacionDestino.ProcesarPendienteAsync();
+        }
+
+        private async Task<bool> RecuperarCuentaAsync(LoginRequest request, DateTime? fechaEliminacion)
+        {
+            var mensaje = fechaEliminacion is { } f
+                ? Localizador.F("eliminar_recuperar_texto", Localizador.FechaLarga(f))
+                : Localizador.T("eliminar_recuperar_texto_sin_fecha");
+            if (!await Alerta.MostrarAsync(Localizador.T("eliminar_recuperar_titulo"), mensaje,
+                    Localizador.T("eliminar_recuperar_boton"), Localizador.T("cancelar"), TipoAlerta.Pregunta))
+                return false;
+
+            var (ok, error) = await _apiService.CancelarEliminacionAsync(request.Email, request.Password);
+            if (!ok)
+            {
+                await Alerta.MostrarAsync(Localizador.T("error"), error ?? Localizador.T("cuenta_err_generico"), Localizador.T("ok"));
+                return false;
+            }
+            await Alerta.MostrarAsync(Localizador.T("eliminar_recuperada_titulo"), Localizador.T("eliminar_recuperada_texto"), Localizador.T("ok"), TipoAlerta.Exito);
+            return true;
         }
 
         private Task MostrarFalloLoginAsync(LoginResult resultado)
@@ -230,19 +329,20 @@ namespace CUIDAPP
             {
                 case LoginStatus.AccountSuspended when resultado.Suspension is { } suspension:
                     var fin = suspension.Tipo == "TEMPORAL" && suspension.FechaFinUtc.HasValue
-                        ? $"Podrás volver a iniciar sesión el {suspension.FechaFinUtc.Value.ToLocalTime():dd/MM/yyyy HH:mm}."
-                        : "Suspensión indefinida: un administrador debe reactivar tu cuenta.";
-                    return DisplayAlert("Cuenta suspendida", $"Motivo: {suspension.Motivo}\n{fin}", "OK");
+                        ? Localizador.F("login_suspension_temporal", suspension.FechaFinUtc.Value.ToLocalTime().ToString("g", Localizador.Cultura))
+                        : Localizador.T("login_suspension_indefinida");
+                    return Alerta.MostrarAsync(Localizador.T("login_cuenta_suspendida"), Localizador.F("login_suspension_motivo", suspension.Motivo, fin), Localizador.T("ok"), TipoAlerta.Advertencia);
                 case LoginStatus.AccountInactive:
-                    return DisplayAlert("Cuenta no disponible", "Tu cuenta no está activa. Contacta a soporte.", "OK");
+                case LoginStatus.PendingDeletion:
+                    return Alerta.MostrarAsync(Localizador.T("login_cuenta_no_disponible"), Localizador.T("login_cuenta_no_activa"), Localizador.T("ok"), TipoAlerta.Advertencia);
                 case LoginStatus.InvalidCredentials:
-                    return DisplayAlert("Error", "Correo o contraseña incorrectos.", "OK");
+                    return Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("login_credenciales_incorrectas"), Localizador.T("ok"), TipoAlerta.Error);
                 case LoginStatus.Validation:
-                    return DisplayAlert("Error", "Ingresa tu correo y contraseña.", "OK");
+                    return Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("login_faltan_datos"), Localizador.T("ok"), TipoAlerta.Error);
                 case LoginStatus.Network:
-                    return DisplayAlert("Sin conexión", "No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo.", "OK");
+                    return Alerta.MostrarAsync(Localizador.T("login_sin_conexion"), Localizador.T("login_sin_conexion_texto"), Localizador.T("ok"), TipoAlerta.Error);
                 default:
-                    return DisplayAlert("Error", "El servidor no pudo procesar la solicitud. Intenta más tarde.", "OK");
+                    return Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("login_error_servidor"), Localizador.T("ok"), TipoAlerta.Error);
             }
         }
     }

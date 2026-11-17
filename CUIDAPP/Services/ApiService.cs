@@ -95,6 +95,17 @@ namespace CUIDAPP.Services
 
                 // El cuerpo tipado solo se intenta leer en respuestas no exitosas; un servidor
                 // antiguo o un proxy pueden devolver texto, por eso el fallback es por HTTP.
+                if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                {
+                    var (motivo, json) = await LeerMotivoAsync(response);
+                    if (motivo == "CUENTA_EN_ELIMINACION")
+                    {
+                        DateTime? fecha = json.TryGetProperty("fechaEjecucion", out var f) && f.TryGetDateTime(out var d) ? d : null;
+                        return new LoginResult { Status = LoginStatus.PendingDeletion, FechaEliminacion = fecha };
+                    }
+                    return LoginResult.Of(LoginStatus.AccountInactive);
+                }
+
                 ApiError? error = null;
                 try { error = await response.Content.ReadFromJsonAsync<ApiError>(); }
                 catch (Exception) { }
@@ -116,6 +127,50 @@ namespace CUIDAPP.Services
             }
         }
 
+        /// <summary>Continuar con Google: el servidor valida el ID token y responde como el login normal,
+        /// o pide registrarse (404 REGISTRO_REQUERIDO) con el correo y el nombre de Google.</summary>
+        public async Task<LoginResult> LoginGoogleAsync(string idToken)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("auth/google", new { IdToken = idToken });
+                if (response.IsSuccessStatusCode)
+                {
+                    var auth = await response.Content.ReadFromJsonAsync<AuthResponse>();
+                    return auth == null ? LoginResult.Of(LoginStatus.ServerError) : LoginResult.Of(LoginStatus.Success, auth);
+                }
+
+                var (motivo, json) = await LeerMotivoAsync(response);
+                var esObjeto = json.ValueKind == System.Text.Json.JsonValueKind.Object;
+                string? Txt(string n) => esObjeto && json.TryGetProperty(n, out var v) && v.ValueKind == System.Text.Json.JsonValueKind.String ? v.GetString() : null;
+                var codigo = (int)response.StatusCode;
+
+                if (codigo == 404 && motivo == "REGISTRO_REQUERIDO")
+                    return new LoginResult { Status = LoginStatus.GoogleRegistroRequerido, GoogleEmail = Txt("email"), GoogleNombre = Txt("nombre") };
+                if (codigo == 403 && motivo == "CUENTA_EN_ELIMINACION")
+                {
+                    DateTime? fecha = esObjeto && json.TryGetProperty("fechaEjecucion", out var f) && f.TryGetDateTime(out var d) ? d : null;
+                    return new LoginResult { Status = LoginStatus.PendingDeletion, FechaEliminacion = fecha };
+                }
+                if (codigo is 401 or 409)
+                    return LoginResult.Of(LoginStatus.GoogleInvalido);
+                if (codigo == 423)
+                {
+                    ApiError? error = null;
+                    try { if (esObjeto) error = System.Text.Json.JsonSerializer.Deserialize<ApiError>(json.GetRawText(), new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web)); } catch { }
+                    return error?.Code == "ACCOUNT_SUSPENDED" && error.Suspension != null
+                        ? LoginResult.Of(LoginStatus.AccountSuspended, null, error.Suspension)
+                        : LoginResult.Of(LoginStatus.AccountInactive);
+                }
+                return codigo == 403 ? LoginResult.Of(LoginStatus.AccountInactive) : LoginResult.Of(LoginStatus.ServerError);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en login con Google: {ex.Message}");
+                return LoginResult.Of(LoginStatus.Network);
+            }
+        }
+
         public async Task<string?> UploadFileAsync(string localFilePath, string carpeta, IProgress<double>? progreso = null)
         {
             var (url, _) = await UploadFileConDiagnosticoAsync(localFilePath, carpeta, progreso);
@@ -129,10 +184,14 @@ namespace CUIDAPP.Services
                 if (!File.Exists(localFilePath))
                     return (null, Localizador.F("err_archivo_no_existe", localFilePath));
 
+                // Las fotos se convierten a JPG y se reducen: el servidor solo acepta JPG/PNG de hasta 10 MB y los
+                // teléfonos guardan fotos más grandes o en HEIC/WEBP. PDF y audio pasan tal cual.
+                var rutaSubida = await ImagenSubida.PrepararAsync(localFilePath);
+
                 using var content = new MultipartFormDataContent();
-                var bytes = await File.ReadAllBytesAsync(localFilePath);
+                var bytes = await File.ReadAllBytesAsync(rutaSubida);
                 HttpContent fileContent = progreso == null ? new ByteArrayContent(bytes) : new ContenidoConProgreso(bytes, progreso);
-                content.Add(fileContent, "file", Path.GetFileName(localFilePath));
+                content.Add(fileContent, "file", Path.GetFileName(rutaSubida));
                 content.Add(new StringContent(carpeta), "carpeta");
 
                 var response = await _httpClient.PostAsync("upload", content);
@@ -390,6 +449,23 @@ namespace CUIDAPP.Services
             {
                 Console.WriteLine($"Error obteniendo nacionalidades: {ex.Message}");
                 return new List<Nacionalidad>();
+            }
+        }
+
+        /// <summary>Estatus migratorios activos con sus documentos obligatorios. Lista vacía si falla.</summary>
+        public async Task<List<EstatusMigratorio>> ObtenerEstatusMigratorioAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("nacionalidad/estatus-migratorio");
+                if (!response.IsSuccessStatusCode)
+                    return new List<EstatusMigratorio>();
+                return await response.Content.ReadFromJsonAsync<List<EstatusMigratorio>>() ?? new List<EstatusMigratorio>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error obteniendo estatus migratorio: {ex.Message}");
+                return new List<EstatusMigratorio>();
             }
         }
 
@@ -737,6 +813,10 @@ namespace CUIDAPP.Services
 
                 var error = await response.Content.ReadAsStringAsync();
                 Console.WriteLine($"Error creando trabajo ({(int)response.StatusCode}): {error}");
+                if (response.StatusCode == System.Net.HttpStatusCode.Conflict && error.Contains("DEUDA_PENDIENTE"))
+                    return (false, ErrorDeudaPendiente);
+                if (response.StatusCode == System.Net.HttpStatusCode.Forbidden && error.Contains("CUENTA_INACTIVA"))
+                    return (false, Localizador.T("cuenta_err_cuenta_inactiva"));
                 return (false, MensajeServidor(error));
             }
             catch (Exception ex)
@@ -886,11 +966,11 @@ namespace CUIDAPP.Services
             }
         }
 
-        public async Task<(bool Success, string? Error)> FinalizarTrabajoAsync(int trabajoId, string pin, string? justificacion = null)
+        public async Task<(bool Success, string? Error)> FinalizarTrabajoAsync(int trabajoId, string pin, string? justificacion = null, decimal? montoRecibido = null)
         {
             try
             {
-                var response = await _httpClient.PutAsJsonAsync("trabajo/finalizar", new { TrabajoId = trabajoId, Pin = pin, Justificacion = justificacion });
+                var response = await _httpClient.PutAsJsonAsync("trabajo/finalizar", new { TrabajoId = trabajoId, Pin = pin, Justificacion = justificacion, MontoRecibido = montoRecibido });
                 if (response.IsSuccessStatusCode)
                     return (true, null);
 
@@ -1011,11 +1091,14 @@ namespace CUIDAPP.Services
             }
         }
 
-        public async Task<bool> CompletarTareaAsync(int tareaId)
+        /// <summary>fotoUrl: evidencia (obligatoria si la tarea RequiereFoto).</summary>
+        public async Task<bool> CompletarTareaAsync(int tareaId, string? fotoUrl = null)
         {
             try
             {
-                var response = await _httpClient.PostAsync($"trabajo/tareas/{tareaId}/completar", null);
+                var response = fotoUrl == null
+                    ? await _httpClient.PostAsync($"trabajo/tareas/{tareaId}/completar", null)
+                    : await _httpClient.PostAsJsonAsync($"trabajo/tareas/{tareaId}/completar", new { FotoUrl = fotoUrl });
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)

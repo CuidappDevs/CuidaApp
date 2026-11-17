@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Eliminar tu cuenta · CuidaApp</title>
+  <style>
+    :root{font-family:system-ui,sans-serif;color:#21354b;background:#f4f7fb;line-height:1.55}
+    *{box-sizing:border-box}body{margin:0;padding:32px 16px}main{max-width:560px;margin:auto;background:white;padding:clamp(20px,5vw,40px);border:1px solid #dbe3ed;border-radius:12px}
+    h1{color:#1E5AA8;line-height:1.2;margin-top:0;font-size:1.8rem}label{display:block;font-weight:600;margin-top:18px}
+    input,textarea,button{font:inherit;width:100%;border-radius:6px;padding:12px}input,textarea{border:1px solid #8798ac;margin-top:6px}textarea{resize:vertical}
+    button{background:#1E5AA8;color:white;border:0;font-weight:600;margin-top:24px;cursor:pointer;min-height:48px}button:disabled{opacity:.6;cursor:wait}
+    :focus-visible{outline:3px solid #1E5AA8;outline-offset:3px}#resultado{white-space:pre-line;margin-top:24px}small{display:block;color:#52647a;margin-top:6px}[hidden]{display:none!important}
+  </style>
+</head>
+<body><main>
+  <h1>Eliminar tu cuenta de CuidaApp</h1>
+  <p>Puedes solicitar la eliminación sin instalar la app. Verificaremos tu identidad con tu contraseña y un código por correo.</p>
+  <p>Al confirmar, tu cuenta se desactiva inmediatamente. Tendrás <strong>30 días para cancelar</strong> la solicitud con tu correo y contraseña. Después se anonimizarán tu perfil y datos de contacto, se eliminarán tus documentos subidos y tu historial GPS. Se conservan registros de servicios, pagos, calificaciones, disputas y contratos firmados.</p>
+  <p>Debes resolver servicios, contratos, disputas y deudas pendientes antes de solicitarlo. Los pagos que tengas por cobrar se mostrarán como aviso.</p>
+  <form id="formulario">
+    <label for="correo">Correo electrónico</label><input id="correo" name="correo" type="email" autocomplete="username" maxlength="150" required>
+    <label for="contrasena">Contraseña</label><input id="contrasena" name="contrasena" type="password" autocomplete="current-password" maxlength="1000" required>
+    <label for="motivo">Motivo (opcional)</label><textarea id="motivo" name="motivo" rows="3" maxlength="1000"></textarea>
+    <div id="paso-codigo" hidden><label for="codigo">Código de confirmación</label><input id="codigo" name="codigo" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6"><small>Vence en 10 minutos. Máximo 5 intentos.</small></div>
+    <button id="enviar" type="submit">Enviar código por correo</button>
+    <button id="reenviar" type="button" hidden>Enviar otro código</button>
+  </form>
+  <button id="cancelar" type="button">Cancelar una solicitud de eliminación</button>
+  <div id="resultado" role="status" aria-live="polite"></div>
+  <noscript>Activa JavaScript para enviar tu solicitud desde esta página.</noscript>
+</main>
+<script>
+  const form=document.getElementById('formulario'),resultado=document.getElementById('resultado'),boton=document.getElementById('enviar'),cancelar=document.getElementById('cancelar'),reenviar=document.getElementById('reenviar');
+  let confirmar=false;
+  // Funciona también cuando la API se aloja bajo /api mediante PathBase.
+  const base=location.pathname.replace(/\/eliminar-cuenta(?:\/index\.html)?\/?$/,'').replace(/\/$/,'');
+  const endpoint=base+'/api/EliminarCuenta';
+  function datos(){return Object.fromEntries(new FormData(form));}
+  async function enviar(ruta,body){
+    boton.disabled=true;cancelar.disabled=true;reenviar.disabled=true;resultado.textContent='Procesando…';
+    try{
+      const r=await fetch(endpoint+ruta,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),credentials:'omit',cache:'no-store'});
+      const texto=await r.text();let d;try{d=JSON.parse(texto);}catch{d={message:r.status===429?'Demasiados intentos. Espera un minuto.':'No se pudo completar la solicitud.'};}
+      if(!r.ok){resultado.textContent=(d.message||'Revisa los datos e inténtalo de nuevo.')+(d.bloqueos?'\n'+d.bloqueos.map(b=>(b.bloquea?'Pendiente: ':'Aviso: ')+b.detalle).join('\n'):'');return null;}
+      return d;
+    }catch{resultado.textContent='No pudimos conectar. Inténtalo de nuevo.';return null;}
+    finally{boton.disabled=false;cancelar.disabled=false;reenviar.disabled=false;}
+  }
+  form.addEventListener('submit',async e=>{
+    e.preventDefault();const d=await enviar(confirmar?'/web/confirmar':'/web',datos());if(!d)return;
+    if(confirmar){resultado.textContent='Tu cuenta está desactivada. La anonimización está programada para el '+new Date(d.fechaEjecucion).toLocaleString('es')+'. Puedes cancelar durante este plazo.';form.reset();form.hidden=true;}
+    else{confirmar=true;reenviar.hidden=false;document.getElementById('paso-codigo').hidden=false;document.getElementById('codigo').required=true;document.getElementById('codigo').focus();boton.textContent='Confirmar eliminación de mi cuenta';resultado.textContent=d.message;}
+  });
+  reenviar.addEventListener('click',async()=>{
+    if(!document.getElementById('correo').reportValidity()||!document.getElementById('contrasena').reportValidity())return;
+    const d=await enviar('/web',datos());if(d){document.getElementById('codigo').value='';resultado.textContent=d.message;}
+  });
+  cancelar.addEventListener('click',async()=>{
+    if(form.hidden){form.hidden=false;confirmar=false;document.getElementById('paso-codigo').hidden=true;document.getElementById('codigo').required=false;boton.textContent='Enviar código por correo';resultado.textContent='Introduce tu correo y contraseña y pulsa de nuevo «Cancelar una solicitud de eliminación».';return;}
+    if(!document.getElementById('correo').reportValidity()||!document.getElementById('contrasena').reportValidity())return;
+    const d=await enviar('/cancelar',datos());if(d){resultado.textContent='La solicitud de eliminación fue cancelada. Puedes volver a iniciar sesión si tu cuenta está habilitada.';form.reset();confirmar=false;reenviar.hidden=true;document.getElementById('paso-codigo').hidden=true;document.getElementById('codigo').required=false;boton.textContent='Enviar código por correo';}
+  });
+</script>
+</body></html>

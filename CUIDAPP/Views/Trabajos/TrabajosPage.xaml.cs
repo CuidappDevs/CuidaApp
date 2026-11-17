@@ -94,8 +94,8 @@ namespace CUIDAPP.Views.Trabajos
 
             var filtrados = tabActual switch
             {
-                Tab.Nuevos => todosLosTrabajos.Where(t => t.Estado == 1),
-                Tab.Aceptados => todosLosTrabajos.Where(t => t.Estado == 2 || t.Estado == 3 || t.Estado == 7),
+                Tab.Nuevos => todosLosTrabajos.Where(t => t.ContratoId == null && t.Estado == 1),
+                Tab.Aceptados => todosLosTrabajos.Where(t => t.ContratoId == null && (t.Estado == 2 || t.Estado == 3 || t.Estado == 7)),
                 Tab.Historial => todosLosTrabajos.Where(t => t.Estado == 4 || t.Estado == 5 || t.Estado == 6),
                 _ => Enumerable.Empty<Trabajo>()
             };

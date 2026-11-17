@@ -166,17 +166,38 @@ namespace CUIDAPP.Views.Trabajos
                 };
 
                 var tareaId = tarea.Id;
+                var pideFoto = tarea.RequiereFoto;
+                var miniatura = MiniaturaEvidencia(tarea.FotoUrl);
+                var chipFoto = pideFoto && !tarea.Completada ? ChipFotoTarea() : null;
+                var marcando = false;
                 check.CheckedChanged += async (s, args) =>
                 {
-                    if (!args.Value)
+                    if (!args.Value || marcando)
                         return;
-
+                    marcando = true;
                     check.IsEnabled = false;
-                    var ok = await _apiService.CompletarTareaAsync(tareaId);
+
+                    // Tarea con evidencia: primero la foto. Si la cancela, la tarea queda sin marcar.
+                    string? fotoUrl = null;
+                    if (pideFoto)
+                    {
+                        fotoUrl = await TomarFotoEvidenciaAsync();
+                        if (fotoUrl == null)
+                        {
+                            check.IsChecked = false;
+                            check.IsEnabled = true;
+                            marcando = false;
+                            return;
+                        }
+                    }
+
+                    var ok = await _apiService.CompletarTareaAsync(tareaId, fotoUrl);
                     if (ok)
                     {
                         texto.TextColor = (Color)Application.Current!.Resources["ColorTextMuted"];
                         texto.TextDecorations = TextDecorations.Strikethrough;
+                        if (chipFoto != null) chipFoto.IsVisible = false;
+                        if (fotoUrl != null) { miniatura.Content = ImagenEvidencia(fotoUrl); miniatura.IsVisible = true; }
                     }
                     else
                     {
@@ -184,12 +205,91 @@ namespace CUIDAPP.Views.Trabajos
                         check.IsEnabled = true;
                         await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_marcar_la"), Localizador.T("ok"));
                     }
+                    marcando = false;
                 };
 
-                var fila = new HorizontalStackLayout { Spacing = 6 };
-                fila.Add(check);
-                fila.Add(texto);
+                var fila = new Grid
+                {
+                    ColumnSpacing = 6,
+                    ColumnDefinitions = { new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) }
+                };
+                fila.Add(check, 0);
+                fila.Add(texto, 1);
+                if (chipFoto != null) fila.Add(chipFoto, 2);
+                else fila.Add(miniatura, 2);
                 ListaTareas.Add(fila);
+            }
+        }
+
+        // ---------- Evidencia fotográfica de las tareas (checklist de contratos fijos)
+        private static Border ChipFotoTarea() => new()
+        {
+            StrokeThickness = 0, BackgroundColor = Tema.C("ColorPrimarySoft"), Padding = new Thickness(8, 4), VerticalOptions = LayoutOptions.Center,
+            StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 },
+            Content = new HorizontalStackLayout
+            {
+                Spacing = 4,
+                Children =
+                {
+                    new Microsoft.Maui.Controls.Shapes.Path
+                    {
+                        Data = (Microsoft.Maui.Controls.Shapes.Geometry)new Microsoft.Maui.Controls.Shapes.PathGeometryConverter().ConvertFromInvariantString("M12 15.2C13.77 15.2 15.2 13.77 15.2 12S13.77 8.8 12 8.8 8.8 10.23 8.8 12 10.23 15.2 12 15.2ZM9 2L7.17 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4H16.83L15 2H9Z")!,
+                        Fill = Tema.C("ColorPrimary"), Aspect = Stretch.Uniform, WidthRequest = 12, HeightRequest = 12, VerticalOptions = LayoutOptions.Center
+                    },
+                    new Label { Text = Localizador.T("checklist_foto"), FontSize = 11, FontFamily = "OpenSansSemibold", TextColor = Tema.C("ColorPrimary"), VerticalOptions = LayoutOptions.Center }
+                }
+            }
+        };
+
+        private static Border MiniaturaEvidencia(string? fotoUrl) => new()
+        {
+            WidthRequest = 40, HeightRequest = 40, StrokeThickness = 0, BackgroundColor = Tema.C("ColorSubtle"),
+            StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 10 }, VerticalOptions = LayoutOptions.Center,
+            IsVisible = !string.IsNullOrWhiteSpace(fotoUrl),
+            Content = string.IsNullOrWhiteSpace(fotoUrl) ? null : ImagenEvidencia(fotoUrl!)
+        };
+
+        private static Image ImagenEvidencia(string url) => new()
+        {
+            Source = url.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? url : $"{ApiService.ServerOrigin}{url}",
+            Aspect = Aspect.AspectFill
+        };
+
+        /// <summary>Cámara (o galería si no hay cámara); sube la foto y devuelve su URL. Null si se canceló o falló.</summary>
+        private async Task<string?> TomarFotoEvidenciaAsync()
+        {
+            try
+            {
+                FileResult? foto;
+                if (MediaPicker.Default.IsCaptureSupported)
+                {
+                    if (await Permissions.RequestAsync<Permissions.Camera>() != PermissionStatus.Granted)
+                    {
+                        await Alerta.MostrarAsync(Localizador.T("permiso_necesario"), Localizador.T("necesitamos_la_camara"), Localizador.T("ok"));
+                        return null;
+                    }
+                    foto = await MediaPicker.Default.CapturePhotoAsync(new MediaPickerOptions { Title = Localizador.T("checklist_foto_titulo") });
+                }
+                else
+                {
+                    foto = await MediaPicker.Default.PickPhotoAsync();
+                }
+                if (foto == null || trabajo == null)
+                    return null;
+
+                var url = await _apiService.UploadFileAsync(foto.FullPath, $"tareas/{trabajo.Id}");
+                if (string.IsNullOrEmpty(url))
+                {
+                    await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_subir_la"), Localizador.T("ok"), TipoAlerta.Error);
+                    return null;
+                }
+                return url;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+                await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("no_se_pudo_subir_la"), Localizador.T("ok"), TipoAlerta.Error);
+                return null;
             }
         }
 

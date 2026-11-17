@@ -139,7 +139,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (AuthStateTask != null) _puedeOperar = SesionAdmin.PuedeOperar((await AuthStateTask).User);
+        if (AuthStateTask != null) _puedeOperar = SesionAdmin.PuedeVerificar((await AuthStateTask).User);
         await Cargar();
         // Abre en la vista con más urgencia.
         _grupo = new[] { "revisar", "vencidos", "pronto" }.FirstOrDefault(g => Cuenta(g) > 0) ?? "sinfecha";

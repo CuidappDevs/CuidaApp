@@ -81,7 +81,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (AuthStateTask != null) _permitido = SesionAdmin.EsSuperadmin((await AuthStateTask).User);
+        if (AuthStateTask != null) _permitido = SesionAdmin.PuedeAuditar((await AuthStateTask).User);
         if (_permitido)
         {
             _grabacion = await Api.GrabacionSeguridadAsync();

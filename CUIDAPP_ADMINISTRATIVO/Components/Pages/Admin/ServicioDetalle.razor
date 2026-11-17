@@ -297,7 +297,7 @@
         {
             var user = (await AuthStateTask).User;
             _puedeOperar = SesionAdmin.PuedeOperar(user);
-            _esSuper = SesionAdmin.EsSuperadmin(user);
+            _esSuper = SesionAdmin.PuedeAuditar(user);
         }
         await Cargar();
     }

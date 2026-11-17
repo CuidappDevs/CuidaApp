@@ -152,7 +152,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (AuthStateTask != null) _puedeEditar = SesionAdmin.PuedeOperar((await AuthStateTask).User);
+        if (AuthStateTask != null) _puedeEditar = SesionAdmin.PuedeVerificar((await AuthStateTask).User);
         await Tab(TabInicial == 1 ? 1 : 0);
     }
 

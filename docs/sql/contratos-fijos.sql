@@ -137,6 +137,19 @@ CREATE TABLE dbo.ContratoCodigos (
 );
 GO
 
+-- Reenviar no borra el historial de intentos de cada parte.
+IF COL_LENGTH('dbo.ContratoCodigos', 'FechaCreacion') IS NULL
+    ALTER TABLE dbo.ContratoCodigos ADD FechaCreacion DATETIME NULL;
+GO
+IF COL_LENGTH('dbo.ContratoCodigos', 'BloqueadoHasta') IS NULL
+    ALTER TABLE dbo.ContratoCodigos ADD BloqueadoHasta DATETIME NULL;
+GO
+IF OBJECT_ID('dbo.ContratoCodigoFallos') IS NULL
+    CREATE TABLE dbo.ContratoCodigoFallos (
+        Id INT IDENTITY PRIMARY KEY, ContratoId INT NOT NULL REFERENCES dbo.Contratos(Id), UsuarioId INT NOT NULL, Fecha DATETIME NOT NULL
+    );
+GO
+
 IF OBJECT_ID('dbo.ContratoFirmas') IS NULL
 BEGIN
     CREATE TABLE dbo.ContratoFirmas (
@@ -168,6 +181,25 @@ GO
 
 IF COL_LENGTH('dbo.Trabajos', 'ContratoId') IS NULL
     ALTER TABLE dbo.Trabajos ADD ContratoId INT NULL;
+GO
+
+-- Fecha y HoraInicio forman el inicio de una jornada (DATE + TIME).
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('dbo.Trabajos') AND name = 'UX_Trabajos_ContratoInicio')
+BEGIN
+    IF EXISTS (SELECT 1 FROM dbo.Trabajos WHERE ContratoId IS NOT NULL GROUP BY ContratoId, Fecha, HoraInicio HAVING COUNT(*) > 1)
+        THROW 50002, 'Existen jornadas duplicadas: revisar Trabajos por ContratoId, Fecha, HoraInicio antes de crear el índice.', 1;
+    CREATE UNIQUE INDEX UX_Trabajos_ContratoInicio ON dbo.Trabajos (ContratoId, Fecha, HoraInicio)
+    WHERE ContratoId IS NOT NULL;
+END
+GO
+IF COL_LENGTH('dbo.Contratos', 'PausaPorRevocacion') IS NULL
+BEGIN
+    ALTER TABLE dbo.Contratos ADD PausaPorRevocacion BIT NOT NULL CONSTRAINT DF_Contratos_PausaRevocacion DEFAULT 0;
+    -- Conserva las pausas administrativas previas a esta migración.
+    EXEC(N'UPDATE c SET PausaPorRevocacion = 1 FROM dbo.Contratos c WHERE c.Estado = 5 AND
+        (EXISTS (SELECT 1 FROM dbo.PermisoContratacion p WHERE p.ClienteId = c.ClienteId AND p.Estado = 4)
+         OR EXISTS (SELECT 1 FROM dbo.Trabajos t WHERE t.ContratoId = c.Id AND t.MotivoCancelacionTexto = N''Permiso de contratación revocado''))');
+END
 GO
 
 -- ---------- Utilidades ------------------------------------------------------
@@ -202,17 +234,18 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SET @Error = NULL;
-    DECLARE @h TABLE (DiaSemana TINYINT, HoraInicio TIME(0), HoraFin TIME(0));
-    INSERT INTO @h SELECT DiaSemana, HoraInicio, HoraFin FROM dbo.fn_ContratoHorarioTexto(@Horario);
+    DECLARE @h TABLE (Id INT IDENTITY, DiaSemana TINYINT, HoraInicio TIME(0), HoraFin TIME(0));
+    INSERT INTO @h (DiaSemana, HoraInicio, HoraFin) SELECT DiaSemana, HoraInicio, HoraFin FROM dbo.fn_ContratoHorarioTexto(@Horario);
 
     IF NOT EXISTS (SELECT 1 FROM @h)
        OR EXISTS (SELECT 1 FROM @h WHERE DiaSemana IS NULL OR DiaSemana > 6 OR HoraInicio IS NULL OR HoraFin IS NULL OR HoraFin <= HoraInicio)
-       OR EXISTS (SELECT 1 FROM @h a JOIN @h b ON a.DiaSemana = b.DiaSemana AND a.HoraInicio < b.HoraInicio AND b.HoraInicio < a.HoraFin)
+       OR EXISTS (SELECT 1 FROM @h GROUP BY DiaSemana, HoraInicio HAVING COUNT(*) > 1)
+       OR EXISTS (SELECT 1 FROM @h a JOIN @h b ON a.DiaSemana = b.DiaSemana AND a.Id < b.Id AND a.HoraInicio < b.HoraFin AND b.HoraInicio < a.HoraFin)
     BEGIN SET @Error = 'HORARIO_INVALIDO'; RETURN; END
 
     IF EXISTS (
         SELECT 1
-        FROM Contratos c JOIN ContratoHorario ch ON ch.ContratoId = c.Id
+        FROM Contratos c WITH (UPDLOCK, HOLDLOCK) JOIN ContratoHorario ch WITH (UPDLOCK, HOLDLOCK) ON ch.ContratoId = c.Id
         JOIN @h h ON h.DiaSemana = ch.DiaSemana AND h.HoraInicio < ch.HoraFin AND ch.HoraInicio < h.HoraFin
         WHERE c.CuidadorId = @CuidadorId AND c.Id <> ISNULL(@ContratoId, 0) AND c.Estado BETWEEN 1 AND 5
           AND c.FechaInicio <= ISNULL(@FechaFin, '9999-12-31') AND ISNULL(c.FechaFin, '9999-12-31') >= @FechaInicio)
@@ -237,7 +270,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
     UPDATE Trabajos SET Estado = 5, MotivoCancelacionTexto = @Motivo
-    OUTPUT inserted.Id AS TrabajoId, inserted.ClienteId, inserted.CuidadorId
+    OUTPUT inserted.Id, inserted.ClienteId, inserted.CuidadorId
     WHERE ContratoId = @ContratoId AND Estado IN (1, 2) AND Fecha >= @Desde AND (@Hasta IS NULL OR Fecha <= @Hasta);
 END
 GO
@@ -348,6 +381,7 @@ CREATE OR ALTER PROCEDURE dbo.sp_ContratoProponer
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET XACT_ABORT ON;
     IF NOT EXISTS (SELECT 1 FROM PermisoContratacion WHERE ClienteId = @ClienteId AND Estado = 2)
     BEGIN SELECT 'PERMISO_REQUERIDO' AS Resultado; RETURN; END
     IF NOT EXISTS (SELECT 1 FROM DomiciliosContratacion WHERE UbicacionId = @UbicacionId AND ClienteId = @ClienteId AND Estado = 2)
@@ -359,14 +393,14 @@ BEGIN
     IF @TarifaHora <= 0 BEGIN SELECT 'TARIFA_INVALIDA' AS Resultado; RETURN; END
     IF @FechaInicio <= CAST(@Ahora AS DATE) OR (@FechaFin IS NOT NULL AND @FechaFin < DATEADD(DAY, 6, @FechaInicio))
     BEGIN SELECT 'FECHA_INVALIDA' AS Resultado; RETURN; END
-    IF EXISTS (SELECT 1 FROM Contratos WHERE ClienteId = @ClienteId AND CuidadorId = @CuidadorId AND UbicacionId = @UbicacionId AND Estado BETWEEN 1 AND 5)
-    BEGIN SELECT 'DUPLICADO' AS Resultado; RETURN; END
+    BEGIN TRAN;
+    IF EXISTS (SELECT 1 FROM Contratos WITH (UPDLOCK, HOLDLOCK) WHERE ClienteId = @ClienteId AND CuidadorId = @CuidadorId AND UbicacionId = @UbicacionId AND Estado BETWEEN 1 AND 5)
+    BEGIN ROLLBACK; SELECT 'DUPLICADO' AS Resultado; RETURN; END
 
     DECLARE @Error VARCHAR(40);
     EXEC dbo.sp_ContratoValidarHorario @CuidadorId, NULL, @Horario, @FechaInicio, @FechaFin, @Error OUTPUT;
-    IF @Error IS NOT NULL BEGIN SELECT @Error AS Resultado; RETURN; END
+    IF @Error IS NOT NULL BEGIN ROLLBACK; SELECT @Error AS Resultado; RETURN; END
 
-    BEGIN TRAN;
     INSERT INTO Contratos (ClienteId, CuidadorId, UbicacionId, TipoServicio, TarifaHora, MetodoPago, FechaInicio, FechaFin, Nota, Estado, FechaCreacion, FechaUltimaAccion)
     VALUES (@ClienteId, @CuidadorId, @UbicacionId, @TipoServicio, @TarifaHora, @MetodoPago, @FechaInicio, @FechaFin, @Nota, 1, @Ahora, @Ahora);
     DECLARE @Id INT = SCOPE_IDENTITY();
@@ -386,53 +420,60 @@ CREATE OR ALTER PROCEDURE dbo.sp_ContratoResponder
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+    BEGIN TRAN;
     DECLARE @Estado TINYINT, @ClienteId INT, @CuidadorId INT, @FechaFin DATE;
-    SELECT @Estado = Estado, @ClienteId = ClienteId, @CuidadorId = CuidadorId, @FechaFin = FechaFin FROM Contratos WHERE Id = @ContratoId;
-    IF @Estado IS NULL OR @UsuarioId NOT IN (@ClienteId, @CuidadorId) BEGIN SELECT 'NO_ENCONTRADO' AS Resultado; RETURN; END
+    SELECT @Estado = Estado, @ClienteId = ClienteId, @CuidadorId = CuidadorId, @FechaFin = FechaFin FROM Contratos WITH (UPDLOCK, HOLDLOCK) WHERE Id = @ContratoId;
+    IF @Estado IS NULL OR @UsuarioId NOT IN (@ClienteId, @CuidadorId) BEGIN ROLLBACK; SELECT 'NO_ENCONTRADO' AS Resultado; RETURN; END
+
+    IF EXISTS (SELECT 1 FROM Contratos WHERE Id = @ContratoId AND Estado IN (1, 2) AND FechaUltimaAccion <= DATEADD(HOUR, -72, @Ahora))
+    BEGIN ROLLBACK; SELECT 'ESTADO_INVALIDO' AS Resultado; RETURN; END
 
     DECLARE @Otro INT = CASE WHEN @UsuarioId = @ClienteId THEN @CuidadorId ELSE @ClienteId END;
 
     IF @Accion = 'retirar'
     BEGIN
-        IF @UsuarioId <> @ClienteId OR @Estado NOT IN (1, 2) BEGIN SELECT 'ESTADO_INVALIDO' AS Resultado; RETURN; END
-        UPDATE Contratos SET Estado = 9, FechaUltimaAccion = @Ahora WHERE Id = @ContratoId;
+        IF @UsuarioId <> @ClienteId OR @Estado NOT IN (1, 2) BEGIN ROLLBACK; SELECT 'ESTADO_INVALIDO' AS Resultado; RETURN; END
+        UPDATE Contratos SET Estado = 9, FechaUltimaAccion = @Ahora WHERE Id = @ContratoId AND Estado = @Estado AND (@Accion = 'retirar' OR (@Estado = 1 AND CuidadorId = @UsuarioId) OR (@Estado = 2 AND ClienteId = @UsuarioId));
+        COMMIT;
         SELECT 'OK' AS Resultado, 9 AS Estado, @Otro AS NotificarA; RETURN;
     END
 
     -- Le toca responder: Estado 1 → cuidador, Estado 2 → cliente.
     IF NOT ((@Estado = 1 AND @UsuarioId = @CuidadorId) OR (@Estado = 2 AND @UsuarioId = @ClienteId))
-    BEGIN SELECT 'NO_ES_SU_TURNO' AS Resultado; RETURN; END
+    BEGIN ROLLBACK; SELECT 'NO_ES_SU_TURNO' AS Resultado; RETURN; END
 
     IF @Accion = 'aceptar'
     BEGIN
         -- Puede que otro contrato se haya activado mientras tanto.
         DECLARE @H NVARCHAR(400) = dbo.fn_ContratoHorarioActual(@ContratoId), @FI DATE = (SELECT FechaInicio FROM Contratos WHERE Id = @ContratoId), @E1 VARCHAR(40);
         EXEC dbo.sp_ContratoValidarHorario @CuidadorId, @ContratoId, @H, @FI, @FechaFin, @E1 OUTPUT;
-        IF @E1 IS NOT NULL BEGIN SELECT @E1 AS Resultado; RETURN; END
-        IF @FI <= CAST(@Ahora AS DATE) BEGIN SELECT 'FECHA_INVALIDA' AS Resultado; RETURN; END
-        UPDATE Contratos SET Estado = 3, FechaUltimaAccion = @Ahora WHERE Id = @ContratoId;
+        IF @E1 IS NOT NULL BEGIN ROLLBACK; SELECT @E1 AS Resultado; RETURN; END
+        IF @FI <= CAST(@Ahora AS DATE) BEGIN ROLLBACK; SELECT 'FECHA_INVALIDA' AS Resultado; RETURN; END
+        UPDATE Contratos SET Estado = 3, FechaUltimaAccion = @Ahora WHERE Id = @ContratoId AND Estado = @Estado AND (@Accion = 'retirar' OR (@Estado = 1 AND CuidadorId = @UsuarioId) OR (@Estado = 2 AND ClienteId = @UsuarioId));
+        COMMIT;
         SELECT 'OK' AS Resultado, 3 AS Estado, @Otro AS NotificarA; RETURN;
     END
 
     IF @Accion = 'rechazar'
     BEGIN
-        UPDATE Contratos SET Estado = 7, FechaUltimaAccion = @Ahora WHERE Id = @ContratoId;
+        UPDATE Contratos SET Estado = 7, FechaUltimaAccion = @Ahora WHERE Id = @ContratoId AND Estado = @Estado AND (@Accion = 'retirar' OR (@Estado = 1 AND CuidadorId = @UsuarioId) OR (@Estado = 2 AND ClienteId = @UsuarioId));
+        COMMIT;
         SELECT 'OK' AS Resultado, 7 AS Estado, @Otro AS NotificarA; RETURN;
     END
 
     IF @Accion = 'contraproponer'
     BEGIN
-        IF ISNULL(@TarifaHora, 0) <= 0 BEGIN SELECT 'TARIFA_INVALIDA' AS Resultado; RETURN; END
+        IF ISNULL(@TarifaHora, 0) <= 0 BEGIN ROLLBACK; SELECT 'TARIFA_INVALIDA' AS Resultado; RETURN; END
         IF @FechaInicio IS NULL OR @FechaInicio <= CAST(@Ahora AS DATE) OR (@FechaFin IS NOT NULL AND @FechaFin < DATEADD(DAY, 6, @FechaInicio))
-        BEGIN SELECT 'FECHA_INVALIDA' AS Resultado; RETURN; END
+        BEGIN ROLLBACK; SELECT 'FECHA_INVALIDA' AS Resultado; RETURN; END
         DECLARE @E2 VARCHAR(40);
         EXEC dbo.sp_ContratoValidarHorario @CuidadorId, @ContratoId, @Horario, @FechaInicio, @FechaFin, @E2 OUTPUT;
-        IF @E2 IS NOT NULL BEGIN SELECT @E2 AS Resultado; RETURN; END
+        IF @E2 IS NOT NULL BEGIN ROLLBACK; SELECT @E2 AS Resultado; RETURN; END
 
         DECLARE @Nuevo TINYINT = CASE WHEN @UsuarioId = @CuidadorId THEN 2 ELSE 1 END;
-        BEGIN TRAN;
         UPDATE Contratos SET TarifaHora = @TarifaHora, FechaInicio = @FechaInicio, Nota = @Nota, Estado = @Nuevo, FechaUltimaAccion = @Ahora
-        WHERE Id = @ContratoId;
+        WHERE Id = @ContratoId AND Estado = @Estado AND (@Accion = 'retirar' OR (@Estado = 1 AND CuidadorId = @UsuarioId) OR (@Estado = 2 AND ClienteId = @UsuarioId));
         EXEC dbo.sp_ContratoGuardarHorario @ContratoId, @Horario;
         INSERT INTO ContratoPropuestas (ContratoId, Version, PropuestoPor, TarifaHora, FechaInicio, Horario, Nota, Fecha)
         SELECT @ContratoId, ISNULL(MAX(Version), 0) + 1, @UsuarioId, @TarifaHora, @FechaInicio, dbo.fn_ContratoHorarioActual(@ContratoId), @Nota, @Ahora
@@ -441,6 +482,7 @@ BEGIN
         SELECT 'OK' AS Resultado, @Nuevo AS Estado, @Otro AS NotificarA; RETURN;
     END
 
+    ROLLBACK;
     SELECT 'ACCION_INVALIDA' AS Resultado;
 END
 GO
@@ -512,19 +554,28 @@ END
 GO
 
 -- ---------- Firma -----------------------------------------------------------
-CREATE OR ALTER PROCEDURE dbo.sp_ContratoCodigoGenerar @ContratoId INT, @UsuarioId INT, @CodigoHash VARCHAR(64), @Expira DATETIME
+CREATE OR ALTER PROCEDURE dbo.sp_ContratoCodigoGenerar @ContratoId INT, @UsuarioId INT, @CodigoHash VARCHAR(64), @Expira DATETIME, @Ahora DATETIME
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+    BEGIN TRAN;
+    DECLARE @Bloqueo INT;
+    SELECT @Bloqueo = Id FROM Contratos WITH (UPDLOCK, HOLDLOCK) WHERE Id = @ContratoId;
     IF NOT EXISTS (SELECT 1 FROM Contratos WHERE Id = @ContratoId AND @UsuarioId IN (ClienteId, CuidadorId))
-    BEGIN SELECT 'NO_ENCONTRADO' AS Resultado; RETURN; END
+    BEGIN COMMIT; SELECT 'NO_ENCONTRADO' AS Resultado; RETURN; END
     IF NOT EXISTS (SELECT 1 FROM Contratos WHERE Id = @ContratoId AND Estado = 3)
-    BEGIN SELECT 'ESTADO_INVALIDO' AS Resultado; RETURN; END
+    BEGIN COMMIT; SELECT 'ESTADO_INVALIDO' AS Resultado; RETURN; END
     IF EXISTS (SELECT 1 FROM ContratoFirmas WHERE ContratoId = @ContratoId AND UsuarioId = @UsuarioId)
-    BEGIN SELECT 'YA_FIRMADO' AS Resultado; RETURN; END
-
+    BEGIN COMMIT; SELECT 'YA_FIRMADO' AS Resultado; RETURN; END
+    IF EXISTS (SELECT 1 FROM ContratoCodigos WHERE ContratoId = @ContratoId AND UsuarioId = @UsuarioId AND BloqueadoHasta > @Ahora)
+       OR (SELECT COUNT(*) FROM ContratoCodigoFallos WHERE ContratoId = @ContratoId AND UsuarioId = @UsuarioId AND Fecha > DATEADD(HOUR, -1, @Ahora)) >= 15
+    BEGIN COMMIT; SELECT 'FIRMA_BLOQUEADA' AS Resultado; RETURN; END
+    IF (SELECT COUNT(*) FROM ContratoCodigos WHERE ContratoId = @ContratoId AND UsuarioId = @UsuarioId AND ISNULL(FechaCreacion, DATEADD(MINUTE, -10, Expira)) > DATEADD(HOUR, -1, @Ahora)) >= 3
+    BEGIN COMMIT; SELECT 'LIMITE_CODIGOS' AS Resultado; RETURN; END
     UPDATE ContratoCodigos SET Usado = 1 WHERE ContratoId = @ContratoId AND UsuarioId = @UsuarioId AND Usado = 0;
-    INSERT INTO ContratoCodigos (ContratoId, UsuarioId, CodigoHash, Expira) VALUES (@ContratoId, @UsuarioId, @CodigoHash, @Expira);
+    INSERT INTO ContratoCodigos (ContratoId, UsuarioId, CodigoHash, Expira, FechaCreacion) VALUES (@ContratoId, @UsuarioId, @CodigoHash, @Expira, @Ahora);
+    COMMIT;
     SELECT 'OK' AS Resultado, Email, NombreCompleto FROM Usuarios WHERE Id = @UsuarioId;
 END
 GO
@@ -535,29 +586,38 @@ CREATE OR ALTER PROCEDURE dbo.sp_ContratoFirmar
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+    BEGIN TRAN;
+    DECLARE @Bloqueo INT;
+    SELECT @Bloqueo = Id FROM Contratos WITH (UPDLOCK, HOLDLOCK) WHERE Id = @ContratoId;
     IF NOT EXISTS (SELECT 1 FROM Contratos WHERE Id = @ContratoId AND Estado = 3 AND @UsuarioId IN (ClienteId, CuidadorId))
-    BEGIN SELECT 'ESTADO_INVALIDO' AS Resultado; RETURN; END
+    BEGIN COMMIT; SELECT 'ESTADO_INVALIDO' AS Resultado; RETURN; END
     IF EXISTS (SELECT 1 FROM ContratoFirmas WHERE ContratoId = @ContratoId AND UsuarioId = @UsuarioId)
-    BEGIN SELECT 'YA_FIRMADO' AS Resultado; RETURN; END
-
+    BEGIN COMMIT; SELECT 'YA_FIRMADO' AS Resultado; RETURN; END
+    IF EXISTS (SELECT 1 FROM ContratoCodigos WHERE ContratoId = @ContratoId AND UsuarioId = @UsuarioId AND BloqueadoHasta > @Ahora)
+       OR (SELECT COUNT(*) FROM ContratoCodigoFallos WHERE ContratoId = @ContratoId AND UsuarioId = @UsuarioId AND Fecha > DATEADD(HOUR, -1, @Ahora)) >= 15
+    BEGIN COMMIT; SELECT 'FIRMA_BLOQUEADA' AS Resultado; RETURN; END
     DECLARE @CodId INT, @Hash VARCHAR(64), @Expira DATETIME, @Intentos INT;
     SELECT TOP 1 @CodId = Id, @Hash = CodigoHash, @Expira = Expira, @Intentos = Intentos
     FROM ContratoCodigos WHERE ContratoId = @ContratoId AND UsuarioId = @UsuarioId AND Usado = 0 ORDER BY Id DESC;
-
-    IF @CodId IS NULL OR @Expira < @Ahora OR @Intentos >= 5 BEGIN SELECT 'CODIGO_VENCIDO' AS Resultado; RETURN; END
+    IF @CodId IS NULL OR @Expira <= @Ahora OR @Intentos >= 5
+    BEGIN COMMIT; SELECT 'CODIGO_VENCIDO' AS Resultado; RETURN; END
     IF @Hash <> @CodigoHash
     BEGIN
         UPDATE ContratoCodigos SET Intentos = Intentos + 1 WHERE Id = @CodId;
-        SELECT 'CODIGO_INCORRECTO' AS Resultado; RETURN;
+        INSERT INTO ContratoCodigoFallos (ContratoId, UsuarioId, Fecha) VALUES (@ContratoId, @UsuarioId, @Ahora);
+        DECLARE @Fallos INT = (SELECT COUNT(*) FROM ContratoCodigoFallos WHERE ContratoId = @ContratoId AND UsuarioId = @UsuarioId AND Fecha > DATEADD(HOUR, -1, @Ahora));
+        IF @Fallos >= 15 UPDATE ContratoCodigos SET BloqueadoHasta = DATEADD(HOUR, 1, @Ahora) WHERE Id = @CodId;
+        COMMIT;
+        SELECT CASE WHEN @Fallos >= 15 THEN 'FIRMA_BLOQUEADA' ELSE 'CODIGO_INCORRECTO' END AS Resultado; RETURN;
     END
-    IF LEN(ISNULL(@FirmaSvg, '')) < 20 BEGIN SELECT 'FIRMA_VACIA' AS Resultado; RETURN; END
-
+    IF LEN(ISNULL(@FirmaSvg, '')) < 20 BEGIN COMMIT; SELECT 'FIRMA_VACIA' AS Resultado; RETURN; END
     UPDATE ContratoCodigos SET Usado = 1 WHERE Id = @CodId;
     INSERT INTO ContratoFirmas (ContratoId, UsuarioId, FirmaSvg, Fecha, Ip, Latitud, Longitud, Correo)
     SELECT @ContratoId, @UsuarioId, @FirmaSvg, @Ahora, @Ip, @Latitud, @Longitud, Email FROM Usuarios WHERE Id = @UsuarioId;
-
-    SELECT 'OK' AS Resultado,
-           CAST(CASE WHEN (SELECT COUNT(*) FROM ContratoFirmas WHERE ContratoId = @ContratoId) >= 2 THEN 1 ELSE 0 END AS BIT) AS FirmasCompletas,
+    DECLARE @Completas BIT = CASE WHEN (SELECT COUNT(*) FROM ContratoFirmas WHERE ContratoId = @ContratoId) >= 2 THEN 1 ELSE 0 END;
+    COMMIT;
+    SELECT 'OK' AS Resultado, @Completas AS FirmasCompletas,
            (SELECT CASE WHEN ClienteId = @UsuarioId THEN CuidadorId ELSE ClienteId END FROM Contratos WHERE Id = @ContratoId) AS NotificarA;
 END
 GO
@@ -567,12 +627,15 @@ CREATE OR ALTER PROCEDURE dbo.sp_ContratoActivar @ContratoId INT, @Ruta NVARCHAR
 AS
 BEGIN
     SET NOCOUNT ON;
-    IF NOT EXISTS (SELECT 1 FROM Contratos WHERE Id = @ContratoId AND Estado = 3)
-    BEGIN SELECT 'ESTADO_INVALIDO' AS Resultado; RETURN; END
+    SET XACT_ABORT ON;
     BEGIN TRAN;
+    IF NOT EXISTS (SELECT 1 FROM Contratos c WITH (UPDLOCK, HOLDLOCK) WHERE Id = @ContratoId AND Estado = 3
+        AND EXISTS (SELECT 1 FROM ContratoFirmas WHERE ContratoId = c.Id AND UsuarioId = c.ClienteId)
+        AND EXISTS (SELECT 1 FROM ContratoFirmas WHERE ContratoId = c.Id AND UsuarioId = c.CuidadorId))
+    BEGIN ROLLBACK; SELECT 'ESTADO_INVALIDO' AS Resultado; RETURN; END
     INSERT INTO ContratoDocumentos (ContratoId, Version, Tipo, Ruta, Hash, Fecha)
     SELECT @ContratoId, ISNULL(MAX(Version), 0) + 1, N'Contrato original', @Ruta, @Hash, @Ahora FROM ContratoDocumentos WHERE ContratoId = @ContratoId;
-    UPDATE Contratos SET Estado = 4, FechaActivacion = @Ahora, FechaUltimaAccion = @Ahora WHERE Id = @ContratoId;
+    UPDATE Contratos SET FechaInicio = CASE WHEN FechaInicio < CAST(@Ahora AS DATE) THEN CAST(@Ahora AS DATE) ELSE FechaInicio END, Estado = 4, FechaActivacion = @Ahora, FechaUltimaAccion = @Ahora WHERE Id = @ContratoId;
     COMMIT;
     SELECT 'OK' AS Resultado, ClienteId, CuidadorId FROM Contratos WHERE Id = @ContratoId;
 END
@@ -647,7 +710,11 @@ BEGIN
     IF @Accion = 'reanudar'
     BEGIN
         IF @Estado <> 5 BEGIN SELECT 'ESTADO_INVALIDO' AS Resultado; RETURN; END
-        UPDATE Contratos SET Estado = 4, FechaUltimaAccion = @Ahora WHERE Id = @ContratoId;
+        UPDATE c SET Estado = 4, FechaUltimaAccion = @Ahora
+        FROM Contratos c WITH (UPDLOCK, HOLDLOCK)
+        WHERE c.Id = @ContratoId AND c.Estado = 5 AND c.PausaPorRevocacion = 0 AND c.FechaTerminacion IS NULL
+          AND EXISTS (SELECT 1 FROM PermisoContratacion p WITH (UPDLOCK, HOLDLOCK) WHERE p.ClienteId = c.ClienteId AND p.Estado = 2);
+        IF @@ROWCOUNT = 0 BEGIN SELECT 'PERMISO_REQUERIDO' AS Resultado; RETURN; END
         SELECT 'OK' AS Resultado, 4 AS Estado, @Otro AS NotificarA, NULL AS FechaFin; RETURN;
     END
 
@@ -655,15 +722,15 @@ BEGIN
     BEGIN
         IF @Estado NOT IN (4, 5) BEGIN SELECT 'ESTADO_INVALIDO' AS Resultado; RETURN; END
         IF LEN(LTRIM(RTRIM(ISNULL(@Motivo, '')))) < 5 BEGIN SELECT 'DATOS_INCOMPLETOS' AS Resultado; RETURN; END
-        -- Pausado: termina ya. Activo: sigue hasta cumplir el preaviso (o su fecha fin si es antes).
-        DECLARE @Fin DATE = CASE WHEN @Estado = 5 THEN @Hoy ELSE DATEADD(DAY, @Preaviso, @Hoy) END;
+        -- El preaviso aplica también en pausa, sin generar nuevas jornadas.
+        DECLARE @Fin DATE = DATEADD(DAY, @Preaviso, @Hoy);
         IF @FechaFin IS NOT NULL AND @FechaFin < @Fin SET @Fin = @FechaFin;
         UPDATE Contratos SET FechaFin = @Fin, FechaTerminacion = @Ahora, TerminadoPor = @UsuarioId, MotivoTerminacion = @Motivo,
-               Estado = CASE WHEN @Estado = 5 THEN 6 ELSE Estado END, FechaUltimaAccion = @Ahora
+               Estado = Estado, FechaUltimaAccion = @Ahora
         WHERE Id = @ContratoId;
         DECLARE @Despues DATE = DATEADD(DAY, 1, @Fin);
         INSERT INTO @Cancelados EXEC dbo.sp_ContratoCancelarTrabajosFuturos @ContratoId, @Despues, NULL, N'Contrato fijo terminado';
-        SELECT 'OK' AS Resultado, CASE WHEN @Estado = 5 THEN 6 ELSE 4 END AS Estado, @Otro AS NotificarA, @Fin AS FechaFin; RETURN;
+        SELECT 'OK' AS Resultado, @Estado AS Estado, @Otro AS NotificarA, @Fin AS FechaFin; RETURN;
     END
 
     SELECT 'ACCION_INVALIDA' AS Resultado;
@@ -685,6 +752,23 @@ BEGIN
            FechaTerminacion = ISNULL(FechaTerminacion, @Ahora)
     WHERE Estado IN (4, 5) AND FechaFin < @Hoy;
 
+    SET XACT_ABORT ON;
+    DECLARE @Generados TABLE (TrabajoId INT, ClienteId INT, CuidadorId INT);
+    BEGIN TRAN;
+    DECLARE @LockResult INT;
+    EXEC @LockResult = sys.sp_getapplock @Resource = 'ContratosGenerarTrabajos', @LockMode = 'Exclusive', @LockOwner = 'Transaction';
+    IF @LockResult < 0 BEGIN ROLLBACK; THROW 50001, 'No se pudo bloquear la generación de jornadas.', 1; END;
+    UPDATE t SET Estado = 2, MotivoCancelacionTexto = NULL
+    OUTPUT inserted.Id, inserted.ClienteId, inserted.CuidadorId INTO @Generados
+    FROM Trabajos t JOIN Contratos c WITH (HOLDLOCK) ON c.Id = t.ContratoId
+    WHERE c.Estado = 4 AND (@ContratoId IS NULL OR c.Id = @ContratoId)
+      AND t.Fecha >= @Hoy AND t.Fecha < DATEADD(DAY, @Dias, @Hoy)
+      AND (t.Fecha > @Hoy OR t.HoraInicio > CAST(@Ahora AS TIME))
+      AND (c.FechaFin IS NULL OR t.Fecha <= c.FechaFin)
+      AND t.Estado = 5 AND t.MotivoCancelacionTexto IN (N'Contrato fijo en pausa', N'Ausencia en contrato fijo', N'Permiso de contratación revocado')
+      AND NOT EXISTS (SELECT 1 FROM ContratoAusencias a WHERE a.ContratoId = c.Id AND a.Fecha = t.Fecha);
+
+    BEGIN TRY
     ;WITH Dias AS (
         SELECT TOP (@Dias) DATEADD(DAY, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) - 1, @Hoy) AS Fecha
         FROM sys.all_objects
@@ -702,19 +786,25 @@ BEGIN
           -- hoy solo si todavía no empezó la jornada
           AND (d.Fecha > @Hoy OR CAST(h.HoraInicio AS TIME) > CAST(@Ahora AS TIME))
           AND NOT EXISTS (SELECT 1 FROM ContratoAusencias a WHERE a.ContratoId = c.Id AND a.Fecha = d.Fecha)
-          -- Las jornadas que canceló el propio sistema (pausa, ausencia luego quitada, permiso revocado) se
-          -- vuelven a crear; las que canceló una persona (o ya existen) no.
-          AND NOT EXISTS (SELECT 1 FROM Trabajos t WHERE t.ContratoId = c.Id AND t.Fecha = d.Fecha AND t.HoraInicio = h.HoraInicio
-                          AND NOT (t.Estado = 5 AND t.MotivoCancelacionTexto IN (N'Contrato fijo en pausa', N'Ausencia en contrato fijo', N'Permiso de contratación revocado')))
+          -- Las jornadas existentes se restauran arriba si las canceló el sistema.
+          AND NOT EXISTS (SELECT 1 FROM Trabajos t WITH (UPDLOCK, HOLDLOCK) WHERE t.ContratoId = c.Id AND t.Fecha = d.Fecha AND t.HoraInicio = h.HoraInicio)
     )
     INSERT INTO Trabajos (ClienteId, CuidadorId, TipoServicio, Fecha, HoraInicio, HoraFin, Direccion, Estado, Tarifa, Latitud, Longitud,
                           PinInicio, PinFin, FechaCreacion, MetodoPago, ContratoId)
-    OUTPUT inserted.Id AS TrabajoId, inserted.ClienteId, inserted.CuidadorId
+    OUTPUT inserted.Id, inserted.ClienteId, inserted.CuidadorId INTO @Generados
     SELECT ClienteId, CuidadorId, TipoServicio, Fecha, HoraInicio, HoraFin, Direccion, 2, Tarifa, Latitud, Longitud,
            RIGHT('0000' + CAST(ABS(CHECKSUM(NEWID())) % 9000 + 1000 AS VARCHAR(4)), 4),
            RIGHT('0000' + CAST(ABS(CHECKSUM(NEWID())) % 9000 + 1000 AS VARCHAR(4)), 4),
            @Ahora, MetodoPago, ContratoId
     FROM Candidatos;
+    COMMIT;
+    SELECT TrabajoId, ClienteId, CuidadorId FROM @Generados;
+    END TRY
+    BEGIN CATCH
+        IF XACT_STATE() <> 0 ROLLBACK;
+        IF ERROR_NUMBER() NOT IN (2601, 2627) THROW;
+        SELECT Id AS TrabajoId, ClienteId, CuidadorId FROM Trabajos WHERE 1 = 0;
+    END CATCH
 END
 GO
 
@@ -778,11 +868,11 @@ BEGIN
     BEGIN
         DECLARE @Cancelados TABLE (TrabajoId INT, ClienteId INT, CuidadorId INT);
         DECLARE @c INT, @Manana DATE = DATEADD(DAY, 1, CAST(@Ahora AS DATE));
-        DECLARE cur CURSOR LOCAL FAST_FORWARD FOR SELECT Id FROM Contratos WHERE ClienteId = @ClienteId AND Estado = 4;
+        DECLARE cur CURSOR LOCAL FAST_FORWARD FOR SELECT Id FROM Contratos WHERE ClienteId = @ClienteId AND Estado IN (4, 5);
         OPEN cur; FETCH NEXT FROM cur INTO @c;
         WHILE @@FETCH_STATUS = 0
         BEGIN
-            UPDATE Contratos SET Estado = 5, FechaUltimaAccion = @Ahora WHERE Id = @c;
+            UPDATE Contratos SET Estado = 5, PausaPorRevocacion = 1, FechaUltimaAccion = @Ahora WHERE Id = @c;
             INSERT INTO @Cancelados EXEC dbo.sp_ContratoCancelarTrabajosFuturos @c, @Manana, NULL, N'Permiso de contratación revocado';
             FETCH NEXT FROM cur INTO @c;
         END
@@ -827,5 +917,31 @@ BEGIN
     JOIN UbicacionesCliente ub ON ub.Id = c.UbicacionId
     WHERE @Estado IS NULL OR c.Estado = @Estado
     ORDER BY c.FechaUltimaAccion DESC;
+END
+GO
+
+-- Contratos con las dos firmas que no llegaron a activarse (falló el PDF o la activación).
+CREATE OR ALTER PROCEDURE dbo.sp_ContratosPendientesActivar
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT c.Id
+    FROM Contratos c
+    WHERE c.Estado = 3
+      AND (SELECT COUNT(DISTINCT f.UsuarioId) FROM ContratoFirmas f
+           WHERE f.ContratoId = c.Id AND f.UsuarioId IN (c.ClienteId, c.CuidadorId)) >= 2;
+END
+GO
+
+-- Ajusta la fecha antes de leer los datos usados para el PDF.
+CREATE OR ALTER PROCEDURE dbo.sp_ContratoPrepararActivacion @ContratoId INT, @Ahora DATETIME
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE c SET FechaInicio = CAST(@Ahora AS DATE)
+    FROM Contratos c
+    WHERE c.Id = @ContratoId AND c.Estado = 3 AND c.FechaInicio < CAST(@Ahora AS DATE)
+      AND EXISTS (SELECT 1 FROM ContratoFirmas WHERE ContratoId = c.Id AND UsuarioId = c.ClienteId)
+      AND EXISTS (SELECT 1 FROM ContratoFirmas WHERE ContratoId = c.Id AND UsuarioId = c.CuidadorId);
 END
 GO

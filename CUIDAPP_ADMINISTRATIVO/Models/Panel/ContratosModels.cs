@@ -1,4 +1,4 @@
-namespace CUIDAPP_ADMINISTRATIVO.Models.Panel
+﻿namespace CUIDAPP_ADMINISTRATIVO.Models.Panel
 {
     /// <summary>Estados de un contrato fijo (Contratos.Estado).</summary>
     public static class EstadoContrato
@@ -28,6 +28,47 @@ namespace CUIDAPP_ADMINISTRATIVO.Models.Panel
                  .Select(p => $"{Dia(int.Parse(p[0]))} {Hora(p[1])}–{Hora(p[2])}"));
 
         public static string Franja(FranjaContrato f) => $"{Dia(f.DiaSemana)} {Hora(f.HoraInicio)}–{Hora(f.HoraFin)}";
+
+        /// <summary>Turnos por día como fracción del día (0–1) para dibujar la semana.</summary>
+        public static List<(int Dia, double Ini, double Fin)> Franjas(string? texto)
+        {
+            var r = new List<(int, double, double)>();
+            if (string.IsNullOrWhiteSpace(texto)) return r;
+            foreach (var p in texto.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Split('|')))
+            {
+                if (p.Length != 3 || !int.TryParse(p[0], out var d) || !TimeSpan.TryParse(p[1], out var i) || !TimeSpan.TryParse(p[2], out var f)) continue;
+                var ini = i.TotalHours / 24; var fin = f.TotalHours / 24;
+                if (fin <= ini) { r.Add((d, ini, 1)); r.Add(((d + 1) % 7, 0, fin)); } // cruza la medianoche (dormida)
+                else r.Add((d, ini, fin));
+            }
+            return r;
+        }
+
+        public static string Inicial(int d) => d switch { 0 => "D", 1 => "L", 2 => "M", 3 => "X", 4 => "J", 5 => "V", 6 => "S", _ => "?" };
+
+        public static HashSet<int> Dias(string? texto) => string.IsNullOrWhiteSpace(texto) ? new() :
+            texto.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(f => f.Split('|'))
+                 .Where(p => p.Length == 3 && int.TryParse(p[0], out _)).Select(p => int.Parse(p[0])).ToHashSet();
+
+        /// <summary>Agrupa días seguidos con la misma hora: "Lun–Vie 8:00 a. m.–2:00 p. m. · Sáb 9:00 a. m.–1:00 p. m.".</summary>
+        public static string HorarioCorto(string? texto)
+        {
+            if (string.IsNullOrWhiteSpace(texto)) return "—";
+            var f = texto.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Split('|'))
+                .Where(p => p.Length == 3 && int.TryParse(p[0], out _))
+                .Select(p => (D: int.Parse(p[0]) == 0 ? 7 : int.Parse(p[0]), H: $"{Hora(p[1])}–{Hora(p[2])}"))
+                .OrderBy(x => x.D).ToList();
+            var partes = new List<string>();
+            for (int i = 0; i < f.Count;)
+            {
+                int j = i;
+                while (j + 1 < f.Count && f[j + 1].D == f[j].D + 1 && f[j + 1].H == f[i].H) j++;
+                var ini = Dia(f[i].D % 7); var fin = Dia(f[j].D % 7);
+                partes.Add($"{(i == j ? ini : $"{ini}–{fin}")} {f[i].H}");
+                i = j + 1;
+            }
+            return string.Join(" · ", partes);
+        }
     }
 
     public class SolicitudContrato
@@ -92,12 +133,14 @@ namespace CUIDAPP_ADMINISTRATIVO.Models.Panel
         public string DomicilioNombre { get; set; } = "";
         public string Direccion { get; set; } = "";
         public string? Horario { get; set; }
+        public bool Dormida { get; set; }
         public int JornadasCompletadas { get; set; }
         public int Documentos { get; set; }
     }
 
     public class DetalleContrato
     {
+        public List<AnexoContrato> Anexos {get;set;} = new();
         public ContratoCabecera? Contrato { get; set; }
         public List<FranjaContrato> Horario { get; set; } = new();
         public List<PropuestaContrato> Propuestas { get; set; } = new();
@@ -105,10 +148,22 @@ namespace CUIDAPP_ADMINISTRATIVO.Models.Panel
         public List<FirmaContrato> Firmas { get; set; } = new();
         public List<DocumentoContrato> Documentos { get; set; } = new();
         public List<JornadaContrato> Trabajos { get; set; } = new();
+        public List<TareaContrato> Tareas { get; set; } = new();
+    }
+
+    /// <summary>Tarea del checklist diario que el cliente definió (se copia a cada jornada).</summary>
+    public class TareaContrato
+    {
+        public int Id { get; set; }
+        public string Descripcion { get; set; } = "";
+        public int Orden { get; set; }
+        public bool RequiereFoto { get; set; }
     }
 
     public class ContratoCabecera
     {
+        public int? ContratoAnteriorId { get; set; }
+        public int? ContratoRenovadoId { get; set; }
         public int Id { get; set; }
         public int Estado { get; set; }
         public string TipoServicio { get; set; } = "";
@@ -118,6 +173,8 @@ namespace CUIDAPP_ADMINISTRATIVO.Models.Panel
         public DateTime? FechaFin { get; set; }
         public int DiasPreaviso { get; set; }
         public string? Nota { get; set; }
+        /// <summary>Con pernocta: la Care Partner duerme en la residencia (solo se pagan las horas del horario).</summary>
+        public bool Dormida { get; set; }
         public DateTime FechaCreacion { get; set; }
         public DateTime FechaUltimaAccion { get; set; }
         public DateTime? FechaActivacion { get; set; }

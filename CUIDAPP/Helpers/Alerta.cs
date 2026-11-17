@@ -5,6 +5,14 @@ namespace CUIDAPP.Helpers
 {
     public enum TipoAlerta { Auto, Info, Exito, Error, Advertencia, Pregunta }
 
+    /// <summary>Vista que se muestra encima de todo con <see cref="Alerta.PresentarAsync"/> (alertas, hojas).</summary>
+    public interface IVistaFlotante
+    {
+        event EventHandler? Cerrada;
+        Task AnimarEntradaAsync();
+        Task CancelarAsync();
+    }
+
     /// <summary>
     /// Alerta única de la app, con diseño propio en lugar del diálogo nativo.
     /// Misma firma que DisplayAlert: un botón (Task) o dos botones (Task&lt;bool&gt;: true = aceptar).
@@ -47,7 +55,7 @@ namespace CUIDAPP.Helpers
         /// Así la página de abajo no recibe OnDisappearing/OnAppearing (no se cortan timers,
         /// SignalR ni animaciones). En otras plataformas se usa una página modal.
         /// </summary>
-        private static async Task<bool> PresentarAsync(AlertaVista vista)
+        internal static async Task<bool> PresentarAsync(View vista)
         {
             var pagina = Application.Current?.Windows.FirstOrDefault()?.Page;
             if (pagina == null)
@@ -72,9 +80,9 @@ namespace CUIDAPP.Helpers
             {
                 e.Handled = e.KeyCode == Android.Views.Keycode.Back;
                 if (e.Handled && e.Event?.Action == Android.Views.KeyEventActions.Up)
-                    _ = vista.CancelarAsync();
+                    _ = ((IVistaFlotante)vista).CancelarAsync();
             };
-            vista.Cerrada += (_, _) =>
+            ((IVistaFlotante)vista).Cerrada += (_, _) =>
             {
                 dialogo.Dismiss();
                 vista.Handler?.DisconnectHandler();
@@ -83,14 +91,14 @@ namespace CUIDAPP.Helpers
             dialogo.Show();
             // Segunda medición ya con el tamaño real de la ventana (por si el texto ocupa más líneas).
             nativa.Post(() => nativa.RequestLayout());
-            _ = vista.AnimarEntradaAsync();
+            _ = ((IVistaFlotante)vista).AnimarEntradaAsync();
             return true;
 #else
             var modal = new ContentPage { BackgroundColor = Colors.Transparent, Content = vista };
             Shell.SetNavBarIsVisible(modal, false);
-            vista.Cerrada += async (_, _) => await modal.Navigation.PopModalAsync(false);
+            ((IVistaFlotante)vista).Cerrada += async (_, _) => await modal.Navigation.PopModalAsync(false);
             await pagina.Navigation.PushModalAsync(modal, false);
-            _ = vista.AnimarEntradaAsync();
+            _ = ((IVistaFlotante)vista).AnimarEntradaAsync();
             return true;
 #endif
         }

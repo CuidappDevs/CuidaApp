@@ -28,6 +28,9 @@ namespace CUIDAPP_API.Controllers
         public static IActionResult TraducirLogin(LoginResult result) => result.Status switch
         {
             LoginStatus.Success => new OkObjectResult(result.AuthResponse),
+            LoginStatus.AccountDeleting => new ObjectResult(new {
+                motivo = "CUENTA_EN_ELIMINACION", fechaEjecucion = result.FechaEjecucion, usuarioId = result.UsuarioId
+            }) { StatusCode = 403 },
             LoginStatus.AccountSuspended => new ObjectResult(new ApiErrorDto(
                 "ACCOUNT_SUSPENDED", "Tu cuenta está suspendida.", null, result.Suspension)) { StatusCode = 423 },
             LoginStatus.AccountInactive => new ObjectResult(new ApiErrorDto(
@@ -55,6 +58,32 @@ namespace CUIDAPP_API.Controllers
             }
         }
 
+        [HttpPost("google")]
+        public async Task<IActionResult> Google([FromBody] GoogleLoginDto dto)
+        {
+            try { return TraducirLogin(await _authService.LoginGoogleAsync(dto?.IdToken ?? "")); }
+            catch (TerminosRegistroException ex) { return StatusCode(ex.StatusCode, new { motivo = ex.Motivo, message = ex.Message }); }
+            catch (GoogleAuthException ex) { return ErrorGoogle(ex); }
+            catch (Exception ex) { return ErrorInterno(ex, "Google"); }
+        }
+
+        private IActionResult ErrorGoogle(GoogleAuthException ex) => new ObjectResult(ex.Identidad == null
+            ? (object)new { motivo = ex.Motivo, message = ex.Message }
+            : new { motivo = ex.Motivo, email = ex.Identidad.Email, nombre = ex.Identidad.Nombre, fotoUrl = ex.Identidad.FotoUrl })
+            { StatusCode = ex.StatusCode };
+
+        public record RenovarTokenDto(string Token);
+
+        /// <summary>La app renueva su token al abrirse, para no tener que iniciar sesión otra vez.</summary>
+        [HttpPost("renovar-token")]
+        public IActionResult RenovarToken([FromBody] RenovarTokenDto dto)
+        {
+            var nuevo = _authService.RenovarToken(dto?.Token ?? "");
+            if (nuevo == null)
+                return Unauthorized(new ApiErrorDto("TOKEN_INVALIDO", "No se pudo renovar la sesión."));
+            return Ok(new { Token = nuevo });
+        }
+
         [HttpPost("register/cliente")]
         public async Task<IActionResult> RegisterClient([FromBody] RegisterClientDto registerDto)
         {
@@ -63,6 +92,8 @@ namespace CUIDAPP_API.Controllers
                 var newUserId = await _authService.RegisterClientAsync(registerDto);
                 return Ok(new { Message = "Cliente registrado con éxito", UserId = newUserId });
             }
+            catch (TerminosRegistroException ex) { return StatusCode(ex.StatusCode, new { motivo = ex.Motivo, message = ex.Message }); }
+            catch (GoogleAuthException ex) { return ErrorGoogle(ex); }
             catch (Exception ex)
             {
                 return ErrorInterno(ex, "Registro");
@@ -77,10 +108,22 @@ namespace CUIDAPP_API.Controllers
                 var newUserId = await _authService.RegisterCaregiverAsync(registerDto);
                 return Ok(new { Message = "Cuidador registrado con éxito", UserId = newUserId });
             }
+            catch (MigratorioException ex)
+            {
+                if (ex.Code == "ESTATUS_MIGRATORIO_INVALIDO") return BadRequest(new { motivo = ex.Code, message = "Ese estatus migratorio no está disponible." });
+                if (ex.Code == "ESTATUS_MIGRATORIO_REQUERIDO") return BadRequest(new { code = ex.Code });
+                return BadRequest(new { code = ex.Code, faltantes = ex.Faltantes });
+            }
             catch (TestRequeridoException ex)
             {
                 return Conflict(new ApiErrorDto("TEST_REQUERIDO", ex.Message));
             }
+            catch (InvitacionInvalidaException ex)
+            {
+                return Conflict(new ApiErrorDto("INVITACION_INVALIDA", ex.Message));
+            }
+            catch (TerminosRegistroException ex) { return StatusCode(ex.StatusCode, new { motivo = ex.Motivo, message = ex.Message }); }
+            catch (GoogleAuthException ex) { return ErrorGoogle(ex); }
             catch (Exception ex)
             {
                 return ErrorInterno(ex, "Registro");

@@ -5,6 +5,7 @@ namespace CUIDAPP_API.Interfaces.SOS
     public interface ISOSAlertService
     {
         Task<SOSAlertaDto?> CrearAlertaAsync(CrearSOSAlertaDto dto);
+        Task<SOSAlertaDto?> CrearAlertaSeguimientoAsync(CrearSOSAlertaDto dto);
         Task<(SOSAlertaDto? Alerta, string? Error)> CrearAlertaDeadManAsync(DeadManTriggeredDto dto);
         Task<IEnumerable<SOSAlertaDto>> ObtenerAlertasPendientesAsync();
         Task<SOSAlertaDto?> ObtenerAlertaPorIdAsync(int id);

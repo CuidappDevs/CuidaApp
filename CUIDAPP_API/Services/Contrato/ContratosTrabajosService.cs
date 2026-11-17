@@ -24,7 +24,13 @@ namespace CUIDAPP_API.Services.Contrato
                 try
                 {
                     using var scope = _scopes.CreateScope();
-                    var creados = await scope.ServiceProvider.GetRequiredService<ContratoService>().GenerarTrabajosAsync();
+                    var contratos = scope.ServiceProvider.GetRequiredService<ContratoService>();
+                    var activados = await contratos.ActivarPendientesAsync();
+                    await contratos.ActivarAnexosPendientesAsync();
+                    if (activados > 0)
+                        _logger.LogInformation("Contratos fijos: {N} activados tras completar firmas", activados);
+                    await contratos.RecordarRenovacionesAsync();
+                    var creados = await contratos.GenerarTrabajosAsync();
                     if (creados > 0)
                         _logger.LogInformation("Contratos fijos: {N} jornadas nuevas", creados);
                 }

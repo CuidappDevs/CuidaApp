@@ -357,7 +357,7 @@ namespace CUIDAPP.Views.Cliente
                 // cuidadores o lugares); solo evitamos duplicar una solicitud al mismo
                 // cuidador mientras ya tenga una pendiente o en curso con él.
                 var serviciosActivos = await _apiService.ObtenerTrabajosActivosPorClienteAsync(clienteId);
-                if (serviciosActivos.Any(t => t.CuidadorId == cuidador.Id && t.Estado is 1 or 2 or 3))
+                if (serviciosActivos.Any(t => t.ContratoId == null && t.CuidadorId == cuidador.Id && t.Estado is 1 or 2 or 3))
                 {
                     await Alerta.MostrarAsync(Localizador.T("ya_tienes_una_solicitud_con"), Localizador.T("ya_tienes_un_servicio_pendiente"), Localizador.T("ok"));
                     return;
@@ -390,6 +390,10 @@ namespace CUIDAPP.Views.Cliente
                 {
                     await Alerta.MostrarAsync(Localizador.T("solicitud_enviada"), Localizador.F("le_avisamos_a_te_notificaremos", cuidador.NombreCompleto), Localizador.T("ok"));
                     await Shell.Current.GoToAsync("../../..");
+                }
+                else if (error == ApiService.ErrorDeudaPendiente)
+                {
+                    await DeudaAviso.OfrecerAsync();
                 }
                 else
                 {

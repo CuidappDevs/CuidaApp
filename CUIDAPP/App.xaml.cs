@@ -46,6 +46,7 @@ namespace CUIDAPP
             RealtimeService.TareaCompletada += OnTareaCompletadaGlobal;
             RealtimeService.PropinaRecibida += OnPropinaRecibidaGlobal;
             RealtimeService.CuentaActualizada += estado => AvisosApp.CuentaActualizada(estado);
+            RealtimeService.AvisoCuenta += AvisosApp.AvisoCuenta;
             RealtimeService.PagoAprobado += (trabajoId, monto) => AvisosApp.PagoAprobado(trabajoId, monto);
             RealtimeService.TicketActualizado += (ticketId, respuesta, estado, asunto) => AvisosApp.TicketActualizado(ticketId, respuesta, estado, asunto);
             RealtimeService.AvisoGeneral += AvisosApp.AvisoGeneral;

@@ -28,6 +28,7 @@ namespace CUIDAPP.Views.Dashboard
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            await CUIDAPP.Helpers.ContratosDashboard.CargarAsync(ResumenContratos, true);
             BarraEstado.Blanca();
             _ = AnimarEntradaAsync();
             estaVisible = true;
@@ -87,6 +88,7 @@ namespace CUIDAPP.Views.Dashboard
 
         private async void OnTrabajoActualizadoTiempoReal(int trabajoId, int estado)
         {
+            await CUIDAPP.Helpers.ContratosDashboard.CargarAsync(ResumenContratos, true);
             await CargarDashboard();
         }
 
@@ -138,8 +140,8 @@ namespace CUIDAPP.Views.Dashboard
 
             var perfil = perfilTask.Result;
             var ganancias = gananciasTask.Result;
-            var proximoTrabajo = proximoTrabajoTask.Result;
-            var pendientes = trabajosTask.Result.Count(t => t.Estado == 1);
+            var proximoTrabajo = trabajosTask.Result.Where(t => t.ContratoId == null && t.Estado is 2 or 3).OrderBy(t => t.Fecha).ThenBy(t => t.HoraInicio).FirstOrDefault();
+            var pendientes = trabajosTask.Result.Count(t => t.ContratoId == null && t.Estado == 1);
             var rating = ratingTask.Result;
 
             if (rating != null && rating.Total > 0)

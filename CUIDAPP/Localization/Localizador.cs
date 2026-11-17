@@ -21,6 +21,19 @@ namespace CUIDAPP.Localization
             ("es", "Español"),
             ("en", "English"),
             ("ht", "Kreyòl"),
+            ("ko", "한국어"),
+            ("zh", "中文"),
+        };
+
+        /// <summary>Bandera (emoji) que acompaña a cada idioma en el selector.</summary>
+        public static string Bandera(string codigo) => codigo switch
+        {
+            "es" => "🇩🇴",
+            "en" => "🇺🇸",
+            "ht" => "🇭🇹",
+            "ko" => "🇰🇷",
+            "zh" => "🇨🇳",
+            _ => "🌐"
         };
 
 
@@ -128,7 +141,14 @@ namespace CUIDAPP.Localization
         // Android), se usan los del país más cercano en vez de fallar.
         private static CultureInfo CrearCultura(string codigo)
         {
-            foreach (var nombre in codigo == "ht" ? new[] { "ht-HT", "fr-HT", "fr" } : new[] { codigo })
+            var candidatas = codigo switch
+            {
+                "ht" => new[] { "ht-HT", "fr-HT", "fr" },
+                "ko" => new[] { "ko-KR", "ko" },
+                "zh" => new[] { "zh-CN", "zh-Hans", "zh" },
+                _ => new[] { codigo }
+            };
+            foreach (var nombre in candidatas)
             {
                 try
                 {

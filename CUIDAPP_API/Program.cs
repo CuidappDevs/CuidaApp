@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.RateLimiting;
 using Scalar.AspNetCore;
 using CUIDAPP_API.Interfaces.Auth;
 using CUIDAPP_API.Services.Auth;
@@ -39,7 +40,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(o => o.Filters.Add<CUIDAPP_API.Seguridad.CuentaSqlExceptionFilter>());
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddSignalR();
@@ -50,6 +51,7 @@ builder.Services.AddSeguridadAdmin(builder.Configuration);
 // Inyección de dependencias
 builder.Services.AddSingleton<ITrabajoNotifier, TrabajoNotifier>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IValidadorGoogle, ValidadorGoogle>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<ICuidadorService, CuidadorService>();
 builder.Services.AddScoped<ITrabajoService, TrabajoService>();
@@ -69,6 +71,10 @@ builder.Services.AddScoped<ISOSAlertService, SOSAlertService>();
 // Aplica cada minuto el horario automático de visibilidad de los Care Partners.
 builder.Services.AddHostedService<CUIDAPP_API.Services.Cuidador.HorarioVisibilidadService>();
 builder.Services.AddHostedService<CUIDAPP_API.Services.Cuidador.VencimientoDocumentosService>();
+builder.Services.AddScoped<CUIDAPP_API.Interfaces.Cuenta.IEliminarCuentaService, CUIDAPP_API.Services.Cuenta.EliminarCuentaService>();
+builder.Services.AddHostedService<CUIDAPP_API.Services.Cuenta.EliminacionCuentasService>();
+builder.Services.AddHostedService<CUIDAPP_API.Services.Cuenta.DeudasClienteAvisosService>();
+builder.Services.AddScoped<CUIDAPP_API.Services.Cuenta.BovedaCumplimientoService>();
 builder.Services.AddHostedService<CUIDAPP_API.Services.Admin.GrabacionRetencionService>();
 builder.Services.AddScoped<CUIDAPP_API.Interfaces.Admin.IAdminOperacionesService, CUIDAPP_API.Services.Admin.AdminOperacionesService>();
 builder.Services.AddScoped<CUIDAPP_API.Services.Admin.CentroMandoService>();
@@ -76,6 +82,14 @@ builder.Services.AddScoped<CUIDAPP_API.Services.Admin.CentroMandoService>();
 builder.Services.AddScoped<CUIDAPP_API.Services.Contrato.ContratoService>();
 builder.Services.AddHostedService<CUIDAPP_API.Services.Contrato.ContratosTrabajosService>();
 
+builder.Services.AddRateLimiter(o => o.AddPolicy("seguimiento", context => System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 })));
+builder.Services.AddRateLimiter(o => {
+    o.AddPolicy("eliminar-cuenta", context => System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(context.Connection.RemoteIpAddress?.ToString() ?? "desconocida", _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions { PermitLimit = 15, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+    o.OnRejected = async (context, ct) => {
+        context.HttpContext.Response.StatusCode = 429;
+        await context.HttpContext.Response.WriteAsJsonAsync(new { motivo = "DEMASIADOS_INTENTOS", message = "Demasiados intentos. Espera un minuto e inténtalo de nuevo." }, ct);
+    };
+});
 var app = builder.Build();
 
 // Habilitar documentación interactiva visual (Scalar UI)
@@ -106,7 +120,9 @@ app.UseStaticFiles(new StaticFileOptions
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
+app.MapGet("/eliminar-cuenta", () => Results.File(Path.Combine(app.Environment.ContentRootPath, "wwwroot", "eliminar-cuenta", "index.html"), "text/html; charset=utf-8"));
 app.MapControllers();
 app.MapHub<TrabajoHub>("/hubs/trabajo");
 

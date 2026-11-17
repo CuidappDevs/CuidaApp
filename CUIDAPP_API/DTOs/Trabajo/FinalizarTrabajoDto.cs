@@ -5,6 +5,8 @@ namespace CUIDAPP_API.DTOs.Trabajo
         public int TrabajoId { get; set; }
         public required string Pin { get; set; }
         public string? Justificacion { get; set; }
+        /// <summary>PROVISIONAL: efectivo recibido, sin incluir propinas posteriores.</summary>
+        public decimal? MontoRecibido { get; set; }
     }
 
     public class ConfirmarFinalizacionDto

@@ -222,7 +222,8 @@
 
                         <Button x:Name="BtnCancelar" Text="{loc:T cancelar_solicitud}" Clicked="OnCancelarClicked" BackgroundColor="{StaticResource ColorSurface}" TextColor="{StaticResource ColorDanger}" BorderColor="#F3C1C1" BorderWidth="1.5" FontFamily="OpenSansSemibold" FontSize="15" CornerRadius="16" HeightRequest="52" IsVisible="False"/>
 
-                        <ContentView x:Name="EspacioInferior" HeightRequest="40" InputTransparent="True"/>
+                        <VerticalStackLayout x:Name="CompartirSeguimiento" Spacing="10" Padding="16" BackgroundColor="{StaticResource ColorSurface}" />
+<ContentView x:Name="EspacioInferior" HeightRequest="40" InputTransparent="True"/>
                     </VerticalStackLayout>
                 </Border>
             </VerticalStackLayout>

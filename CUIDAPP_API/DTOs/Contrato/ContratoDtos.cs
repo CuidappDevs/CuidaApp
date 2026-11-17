@@ -39,8 +39,24 @@ namespace CUIDAPP_API.DTOs.Contrato
         public string HoraFin { get; set; } = "";
     }
 
+    public class TareaContratoDto
+    {
+        [Required, StringLength(200, MinimumLength = 1)]
+        public string Descripcion { get; set; } = "";
+        public bool RequiereFoto { get; set; }
+    }
+
+    public class EditarTareasContratoDto
+    {
+        public int UsuarioId { get; set; }
+        [Required, MaxLength(20)]
+        public List<TareaContratoDto> Tareas { get; set; } = [];
+    }
+
     public class ProponerContratoDto
     {
+        public bool Dormida { get; set; }
+        [MaxLength(20)] public List<TareaContratoDto>? Tareas { get; set; }
         public int ClienteId { get; set; }
         public int CuidadorId { get; set; }
         public int UbicacionId { get; set; }
@@ -55,11 +71,33 @@ namespace CUIDAPP_API.DTOs.Contrato
         public List<FranjaContratoDto> Horario { get; set; } = new();
         [StringLength(600)]
         public string? Nota { get; set; }
+        /// <summary>Desde cuándo trabaja con la familia (antigüedad previa a CuidApp); sale en el PDF.</summary>
+        public DateTime? TrabajaDesde { get; set; }
+    }
+
+    /// <summary>"Invitar a mi cuidadora": alguien que ya trabaja con la familia fuera de CuidApp.</summary>
+    public class CrearInvitacionDto
+    {
+        public int ClienteId { get; set; }
+        [Required, StringLength(120, MinimumLength = 2)]
+        public string Nombre { get; set; } = "";
+        [StringLength(30)]
+        public string? Telefono { get; set; }
+        [StringLength(150)]
+        public string? Email { get; set; }
+        public DateTime? TrabajaDesde { get; set; }
+    }
+
+    public class CancelarInvitacionDto
+    {
+        public int ClienteId { get; set; }
     }
 
     /// <summary>Accion: aceptar | rechazar | contraproponer | retirar. Los demás campos solo para contraproponer.</summary>
     public class ResponderContratoDto
     {
+        public bool? Dormida { get; set; }
+        [MaxLength(20)] public List<TareaContratoDto>? Tareas { get; set; }
         public int UsuarioId { get; set; }
         [Required]
         public string Accion { get; set; } = "";
@@ -68,6 +106,12 @@ namespace CUIDAPP_API.DTOs.Contrato
         public List<FranjaContratoDto>? Horario { get; set; }
         [StringLength(600)]
         public string? Nota { get; set; }
+    }
+
+    public class RenovarContratoDto
+    {
+        public int UsuarioId { get; set; }
+        public DateTime FechaFin { get; set; }
     }
 
     public class CodigoFirmaDto
@@ -96,6 +140,7 @@ namespace CUIDAPP_API.DTOs.Contrato
 
     public class AusenciaContratoDto
     {
+        public bool Emergencia { get; set; }
         public int UsuarioId { get; set; }
         public DateTime Fecha { get; set; }
         [StringLength(300)]

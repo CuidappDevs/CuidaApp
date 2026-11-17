@@ -169,6 +169,14 @@
                                             <span class="d-flex flex-column" style="gap:2px; min-width:0; flex:1; text-align:left;">
                                                 <span class="pn-strong pn-doc-nombre">@d.TipoTexto</span>
                                                 <span class="pn-muted" style="font-size:11.5px;">Subido el @d.FechaSubida.ToString("dd MMM yyyy")</span>
+                                                @if (d.FechaVencimiento is { } fv)
+                                                {
+                                                    <span style="font-size:11.5px; font-weight:600; color:@(fv.Date <= HoyRD ? "var(--danger)" : "var(--adm-muted-2)");">@(fv.Date <= HoyRD ? "Vencido el" : "Vence el") @fv.ToString("dd MMM yyyy")</span>
+                                                }
+                                                else if (d.RequiereVencimiento)
+                                                {
+                                                    <span style="font-size:11.5px; font-weight:600; color:var(--warn);">Falta la fecha de vencimiento</span>
+                                                }
                                                 @if (!string.IsNullOrWhiteSpace(d.ObservacionesAdmin)) { <span class="pn-muted" style="font-size:11.5px;">@d.ObservacionesAdmin</span> }
                                             </span>
                                             <span class="pn-pill no-dot @TonoDoc(d.Estado)">@TextoDoc(d.Estado)</span>
@@ -228,12 +236,13 @@
                             _ => $"Revisa sus documentos ({_documentos.Count(d => d.Estado == 2)} de {_documentos.Count} aprobados) antes de decidir."
                         })
                     </span>
-                    @if (_puedeOperar)
+                    @if (_puedeVerificar)
                     {
                         <div class="d-flex" style="gap:8px; flex-wrap:wrap;">
                             @if (p.EstadoAprobacion != 2)
                             {
-                                <button type="button" class="pn-btn pn-btn-ok" style="flex:1; justify-content:center;" disabled="@_procesando" @onclick="Aprobar">Aprobar</button>
+                                <button type="button" class="pn-btn pn-btn-ok" style="flex:1; justify-content:center;" disabled="@(_procesando || MigratorioBloquea)"
+                                        title="@(MigratorioBloquea ? "Falta el permiso migratorio vigente" : null)" @onclick="Aprobar">Aprobar</button>
                             }
                             @if (p.EstadoAprobacion != 3)
                             {
@@ -242,6 +251,53 @@
                         </div>
                     }
                 </div>
+
+                @if (_migratorio?.EsExtranjero == true)
+                {
+                    <div class="adm-card adm-card-pad d-flex flex-column" style="gap:12px;">
+                        <div class="d-flex align-items-center justify-content-between" style="gap:8px;">
+                            <span class="adm-card-title">Permiso migratorio</span>
+                            <span class="pn-pill @(MigratorioBloquea ? "tone-warn" : "tone-ok")">@(MigratorioBloquea ? "Incompleto" : "En regla")</span>
+                        </div>
+                        <div class="d-flex flex-column" style="gap:6px; font-size:13px;">
+                            <div class="d-flex justify-content-between" style="gap:12px;"><span class="pn-muted">Nacionalidad</span><span class="pn-strong">@(_migratorio.Nacionalidad ?? "—")</span></div>
+                            <div class="d-flex justify-content-between" style="gap:12px;"><span class="pn-muted">Estatus</span><span class="pn-strong" style="text-align:right;">@(_migratorio.Estatus ?? "Sin indicar")</span></div>
+                        </div>
+                        @if (_migratorio.Documentos.Count > 0)
+                        {
+                            <div class="d-flex flex-column" style="gap:8px;">
+                                @foreach (var doc in _migratorio.Documentos)
+                                {
+                                    <div class="d-flex align-items-center" style="gap:10px; padding:10px 12px; border-radius:12px; background:var(--adm-surface);">
+                                        <div class="d-flex flex-column" style="flex:1; min-width:0; gap:2px;">
+                                            @if (doc.Presente && !string.IsNullOrWhiteSpace(doc.Url))
+                                            {
+                                                <a href="@doc.Url" target="_blank" rel="noopener" class="pn-strong" style="font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">@doc.Tipo</a>
+                                            }
+                                            else
+                                            {
+                                                <span class="pn-strong" style="font-size:13px;">@doc.Tipo</span>
+                                            }
+                                            <span class="pn-muted" style="font-size:11.5px;">@(doc.Vencimiento is DateTime v ? $"Vence {v:dd MMM yyyy}" : doc.Presente ? "Sin fecha de vencimiento" : "No lo ha subido")</span>
+                                        </div>
+                                        <span class="pn-pill @TonoDocumentoMigratorio(doc)">@TextoDocumentoMigratorio(doc)</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        @if (_migratorio.Faltantes.Count > 0)
+                        {
+                            <div class="pn-callout tone-warn" style="font-size:12.5px; line-height:1.5;">
+                                No se puede aprobar hasta que tenga vigente: <b>@string.Join(", ", _migratorio.Faltantes)</b>.
+                            </div>
+                        }
+                        @if (_puedeVerificar && MigratorioBloquea && p.EstadoAprobacion != 2)
+                        {
+                            <button type="button" class="pn-btn pn-btn-primary" style="justify-content:center;" disabled="@_procesando" @onclick="PedirMigratorio">Pedir comprobante migratorio</button>
+                            <span class="pn-muted" style="font-size:11.5px; line-height:1.45;">La cuenta queda pendiente y le llega una notificación y un correo para que lo suba desde la app.</span>
+                        }
+                    </div>
+                }
 
                 <GestionCuenta UsuarioId="Id" Nombre="@p.NombreCompleto" EsCuidador="true" Activa="p.IsActive" PuedeOperar="_puedeOperar"
                                ServiciosPendientes="Pendientes" Sanciones="_sanciones"
@@ -308,12 +364,111 @@
                 </button>
             }
         </div>
+
+        @* Revisión del documento: el admin lee la fecha en el documento y la escribe; la Care Partner nunca la pone. *@
+        @if (_puedeVerificar)
+        {
+            var aprobado = _vista.Estado == 2;
+            var faltaFecha = _vista.RequiereVencimiento && _fechaRevision == null;
+            var fechaMala = _fechaRevision is { } fr && fr.Date <= HoyRD;
+            <div class="pn-visor-revision" @onclick:stopPropagation="true">
+                <div class="pn-visor-rev-campo">
+                    <label class="pn-label" for="rev-f" style="margin:0;">
+                        Vence el @if (_vista.RequiereVencimiento) { <span style="color:var(--danger);">*</span> } else { <span class="pn-muted">(opcional)</span> }
+                    </label>
+                    <input id="rev-f" class="pn-input" type="date" min="@HoyRD.AddDays(1).ToString("yyyy-MM-dd")" @bind="_fechaRevision" style="width:170px;" />
+                    <span class="pn-muted" style="font-size:11.5px;">
+                        @if (fechaMala) { <span style="color:var(--danger); font-weight:600;">Debe ser una fecha futura.</span> }
+                        else if (_vista.RequiereVencimiento) { <text>Léela en el documento. Sin fecha no se puede aprobar.</text> }
+                        else { <text>Este documento no vence.</text> }
+                    </span>
+                </div>
+                <span class="pn-grow"></span>
+                @if (_vista.Estado != 3)
+                {
+                    <button type="button" class="pn-btn pn-btn-danger-soft pn-btn-sm" disabled="@_revisando" @onclick="RechazarDocumento">Rechazar</button>
+                }
+                @if (aprobado)
+                {
+                    <button type="button" class="pn-btn pn-btn-primary pn-btn-sm" disabled="@(_revisando || faltaFecha || fechaMala || _fechaRevision == _vista.FechaVencimiento)" @onclick="GuardarFechaDocumento">Guardar fecha</button>
+                }
+                else
+                {
+                    <button type="button" class="pn-btn pn-btn-ok pn-btn-sm" disabled="@(_revisando || faltaFecha || fechaMala)" title="@(faltaFecha ? "Pon la fecha de vencimiento" : null)" @onclick="AprobarDocumento">Aprobar documento</button>
+                }
+            </div>
+        }
     </div>
 }
 
 @code {
     [Parameter] public int Id { get; set; }
-    private DocumentoAdmin? _vista;
+
+    // Documento abierto en el visor; al cambiarlo se carga su fecha de vencimiento en el campo de revisión.
+    private DocumentoAdmin? _vistaDoc;
+    private DocumentoAdmin? _vista
+    {
+        get => _vistaDoc;
+        set { _vistaDoc = value; _fechaRevision = value?.FechaVencimiento?.Date; }
+    }
+    private DateTime? _fechaRevision;
+    private bool _revisando;
+    private static DateTime HoyRD => DateTime.UtcNow.AddHours(-4).Date;
+
+    // Documentos que faltan por revisar antes de poder aprobar la cuenta.
+    private List<string> DocumentosPorRevisar() => _documentos
+        .Where(d => d.Estado != 2 || (d.RequiereVencimiento && (d.FechaVencimiento == null || d.FechaVencimiento.Value.Date <= HoyRD)))
+        .Select(d => d.Estado == 3 ? $"{d.TipoTexto} (rechazado)"
+            : d.Estado != 2 ? $"{d.TipoTexto} (sin revisar)"
+            : d.FechaVencimiento == null ? $"{d.TipoTexto} (sin fecha)" : $"{d.TipoTexto} (vencido)")
+        .ToList();
+
+    private async Task AprobarDocumento()
+    {
+        if (_vista == null) return;
+        var id = _vista.Id;
+        _revisando = true;
+        var r = await Api.RevisarDocumentoAsync(id, true, _fechaRevision, null);
+        _revisando = false;
+        Toasts.Mostrar(r);
+        if (r.Ok) await RecargarDocumentos(id, avanzar: true);
+    }
+
+    private async Task RechazarDocumento()
+    {
+        if (_vista == null) return;
+        var id = _vista.Id;
+        var motivo = await Confirmacion.PedirMotivoAsync($"¿Rechazar {_vista.TipoTexto}?",
+            "La Care Partner verá este motivo en la app y deberá subir el documento otra vez.", "Rechazar");
+        if (motivo == null) return;
+        _revisando = true;
+        var r = await Api.RevisarDocumentoAsync(id, false, null, motivo);
+        _revisando = false;
+        Toasts.Mostrar(r);
+        if (r.Ok) await RecargarDocumentos(id, avanzar: true);
+    }
+
+    private async Task GuardarFechaDocumento()
+    {
+        if (_vista == null) return;
+        var id = _vista.Id;
+        _revisando = true;
+        var r = await Api.FijarVencimientoAsync(id, _fechaRevision);
+        _revisando = false;
+        Toasts.Mostrar(r);
+        if (r.Ok) await RecargarDocumentos(id, avanzar: false);
+    }
+
+    // Tras revisar, se recarga la lista y el visor pasa al siguiente documento pendiente (o se cierra si no queda ninguno).
+    private async Task RecargarDocumentos(int idRevisado, bool avanzar)
+    {
+        _documentos = await CuidadorService.ObtenerDocumentosAsync(Id);
+        _migratorio = await CuidadorService.ObtenerMigratorioAsync(Id);
+        var actual = _documentos.FirstOrDefault(d => d.Id == idRevisado);
+        if (!avanzar) { _vista = actual; return; }
+        var i = actual == null ? 0 : _documentos.IndexOf(actual);
+        _vista = _documentos.Skip(i + 1).Concat(_documentos.Take(i + 1)).FirstOrDefault(d => d.Estado != 2);
+    }
 
     private static bool EsPdf(DocumentoAdmin d) => d.UrlArchivo.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
     private static string Extension(DocumentoAdmin d)
@@ -369,6 +524,7 @@
             var user = (await AuthStateTask).User;
             _adminId = int.TryParse(user.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : 0;
             _puedeOperar = SesionAdmin.PuedeOperar(user);
+            _puedeVerificar = SesionAdmin.PuedeVerificar(user);
         }
         await Cargar();
     }
@@ -383,7 +539,9 @@
         var servicios = Api.ServiciosUsuarioAsync(Id);
         var calidad = Api.CalidadAsync(30);
         var tipos = Api.TiposServicioAsync();
-        await Task.WhenAll(detalle, docs, sanciones, ficha, servicios, calidad, tipos);
+        var migratorio = CuidadorService.ObtenerMigratorioAsync(Id);
+        await Task.WhenAll(detalle, docs, sanciones, ficha, servicios, calidad, tipos, migratorio);
+        _migratorio = migratorio.Result;
 
         _cuidador = detalle.Result;
         _documentos = docs.Result;
@@ -460,10 +618,15 @@
 
     private async Task Aprobar()
     {
-        var texto = _documentos.Any(d => d.Estado != 2)
-            ? "Todos sus documentos quedarán aprobados y podrá ponerse visible y recibir solicitudes de inmediato."
-            : "Podrá ponerse visible y recibir solicitudes de inmediato.";
-        if (!await Confirmacion.PreguntarAsync($"¿Aprobar a {_cuidador!.NombreCompleto}?", texto, "Aprobar"))
+        // Ya no se aprueban los documentos de golpe: cada uno se revisa en el visor (con su fecha si vence).
+        var pendientes = DocumentosPorRevisar();
+        if (pendientes.Count > 0)
+        {
+            Toasts.Mostrar($"Antes de aprobar la cuenta revisa cada documento: {string.Join(", ", pendientes)}.", false);
+            _tab = "documentos";
+            return;
+        }
+        if (!await Confirmacion.PreguntarAsync($"¿Aprobar a {_cuidador!.NombreCompleto}?", "Todos sus documentos están revisados. Podrá ponerse visible y recibir solicitudes de inmediato.", "Aprobar"))
             return;
         await CambiarEstado(2, null);
     }
@@ -480,9 +643,38 @@
     private async Task CambiarEstado(int estado, string? motivo)
     {
         _procesando = true;
-        var ok = await CuidadorService.ActualizarEstadoAsync(Id, estado, motivo);
+        var r = await CuidadorService.ActualizarEstadoAsync(Id, estado, motivo);
         _procesando = false;
-        Toasts.Mostrar(ok ? (estado == 2 ? "Care Partner aprobado." : "Verificación rechazada.") : "No se pudo actualizar el estado.", ok);
+        if (!r.Ok && r.Codigo == "DOCUMENTOS_SIN_REVISAR")
+            Toasts.Mostrar(r.Faltantes.Count > 0 ? $"Revisa cada documento antes de aprobar: {string.Join(", ", r.Faltantes)}." : "Revisa cada documento antes de aprobar la cuenta.", false);
+        else if (!r.Ok && r.Codigo == "DOCUMENTOS_MIGRATORIOS_FALTANTES")
+            Toasts.Mostrar(r.Faltantes.Count > 0 ? $"No se puede aprobar: falta {string.Join(", ", r.Faltantes)}." : "No se puede aprobar: falta el permiso migratorio vigente.", false);
+        else
+            Toasts.Mostrar(r.Ok ? (estado == 2 ? "Care Partner aprobado." : "Verificación rechazada.") : "No se pudo actualizar el estado.", r.Ok);
+        await Cargar();
+    }
+
+    // ---------- Permiso migratorio (extranjeras)
+    private MigratorioCuidador? _migratorio;
+    private bool _puedeVerificar;
+    private bool MigratorioBloquea => _migratorio is { EsExtranjero: true, PuedeAprobar: false };
+
+    private static string TonoDocumentoMigratorio(DocumentoMigratorio d) =>
+        !d.Presente ? "tone-danger" : d.Vencimiento is DateTime v && v.Date < DateTime.UtcNow.AddHours(-4).Date ? "tone-danger" : d.Estado switch { 2 => "tone-ok", 3 => "tone-danger", _ => "tone-warn" };
+
+    private static string TextoDocumentoMigratorio(DocumentoMigratorio d) =>
+        !d.Presente ? "Falta" : d.Vencimiento is DateTime v && v.Date < DateTime.UtcNow.AddHours(-4).Date ? "Vencido" : d.Estado switch { 2 => "Aprobado", 3 => "Rechazado", _ => "Por revisar" };
+
+    private async Task PedirMigratorio()
+    {
+        var mensaje = await Confirmacion.PedirMotivoAsync($"Pedir comprobante a {_cuidador!.NombreCompleto}",
+            "Su cuenta queda pendiente. Le llega una notificación y un correo con lo que falta. Puedes añadir una indicación.",
+            "Enviar", "Indicación (opcional)", peligro: false, minimo: 0);
+        if (mensaje == null) return;
+        _procesando = true;
+        var ok = await CuidadorService.PedirMigratorioAsync(Id, string.IsNullOrWhiteSpace(mensaje) ? null : mensaje.Trim());
+        _procesando = false;
+        Toasts.Mostrar(ok ? "Le pedimos el comprobante migratorio." : "No se pudo enviar el aviso.", ok);
         if (ok) await Cargar();
     }
 

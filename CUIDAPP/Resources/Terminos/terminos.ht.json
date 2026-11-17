@@ -1,0 +1,266 @@
+{
+  "version": "2026-11-16",
+  "titulo": "Tèm, kondisyon jeneral itilizasyon ak pwogram konfòmite nòmatif (konfòmite penal) Cuidapp",
+  "intro": "Dokiman sa a se yon kontra adezyon ki oblije Itilizatè a ak platfòm Cuidapp. Li entegre an fòm eksplisit dispozisyon Nouvo Kòd Penal Repiblik Dominikèn nan (Lwa nimewo 74-25), li etabli yon kad prevansyon, pwoteksyon kòporatif ak konfòmite nòmatif (Konfòmite Penal) selon responsabilite penal moun jiridik yo (Atik 8 rive 11).",
+  "aviso_traduccion": "Sa a se yon tradiksyon pa kourtwazi. Si gen nenpòt diferans, vèsyon Panyòl la ki prevale.",
+  "secciones": [
+    {
+      "numero": "I",
+      "titulo": "Kad nòmatif ki aplikab ak nati jiridik",
+      "bloques": [
+        {
+          "subtitulo": "1.1. Rejim legal sibstantif",
+          "texto": "Akò sa a gouvène fòmèlman pa lejislasyon Repiblik Dominikèn nan, ki gen ladan l, men ki pa limite a:",
+          "puntos": [
+            "Lwa nimewo 74-25: Nouvo Kòd Penal Repiblik Dominikèn nan (rejim responsabilite penal kòporatif, pwoteksyon agrave pou moun vilnerab ak sibè-krim).",
+            "Kòd Sivil Repiblik Dominikèn nan: atik 1779 ak dispozisyon ki gen rapò ak lwaye travay ak sèvis.",
+            "Lwa nimewo 285-04: Lwa Jeneral sou Imigrasyon Repiblik Dominikèn nan (règleman strik sou estati imigrasyon ak entèdiksyon entèmedyasyon travay iregilye pou etranje ki pa gen pèmi valab).",
+            "Lwa nimewo 172-13: sou Pwoteksyon Entegral Done Pèsonèl yo.",
+            "Lwa nimewo 136-03: Kòd pou Sistèm Pwoteksyon ak Dwa Fondamantal Timoun ak Adolesan yo.",
+            "Lwa nimewo 5-13: sou Andikap nan Repiblik Dominikèn nan.",
+            "Règleman Konsèy Nasyonal Moun Aje yo (CONAPE): pwoteksyon entegral granmoun aje yo."
+          ]
+        },
+        {
+          "subtitulo": "1.2. Entèmedyasyon teknolojik eksklizif",
+          "texto": "Cuidapp opere sèlman kòm yon platfòm teknolojik entèmedyasyon dijital ki konekte itilizatè ki mande sèvis swen (\"Kliyan yo\") ak founisè sèvis endepandan ki anrejistre kòmsadwa (\"Asosye yo\" oswa \"Care Partners\"). Cuidapp pa bay sèvis swen, enfimyè, medikal ni asistans dirèk, e li pa egzèse okenn pouvwa direksyon, kòmandman, siveyans travay ni disiplin sou founisè yo."
+        },
+        {
+          "subtitulo": "1.3. Nati sivil relasyon an (lwaye sèvis)",
+          "texto": "Selon atik 1779 Kòd Sivil la, relasyon jiridik ant Kliyan an ak Asosye a oswa Care Partner a fòmalize kòm yon lwaye sèvis (yon kontra sivil bilateral endepandan). Pati yo rekonèt epi aksepte ke pa gen subòdinasyon travay, solidarite ni lyen patwon-anplwaye ak Cuidapp, konsa konpayi an totalman libere de prestasyon travay, preavi, endemnite revokasyon oswa dedomajman."
+        },
+        {
+          "subtitulo": "1.4. Absans relasyon komitan-preposé ak egzonerasyon sivil ak penal",
+          "texto": "Cuidapp pa gen karaktè komitan, prensipal ni garanti founisè endepandan yo. Care Partners oswa Asosye yo aji sou pwòp otonomi teknik yo ak risk pa yo. Cuidapp egzonere de tout responsabilite sivil, delaktyèl oswa kazi-delaktyèl pou domaj, pèt oswa enèkzekisyon ki rive pandan founiti sèvis endividyèl la."
+        }
+      ]
+    },
+    {
+      "numero": "II",
+      "titulo": "Pwoteksyon penal kòporatif ak sistèm konfòmite (Lwa nimewo 74-25)",
+      "bloques": [
+        {
+          "subtitulo": "2.1. Egzansyon responsabilite penal moun jiridik la (Atik 8-11)",
+          "texto": "An konfòmite strik ak atik 8 Kòd Penal la (Lwa nimewo 74-25), Cuidapp adopte epi aplike avèk efikasite yon Pwogram Konfòmite Nòmatif ak Prevansyon Krim (Konfòmite Penal) ak mezi siveyans, kontwòl ak odit teknolojik ki apwopriye pou anpeche enfraksyon. Nenpòt konduit pinisab yon itilizatè, Care Partner oswa Asosye komèt ap konstitye yon zak endividyèl ki kontoune kontwòl platfòm lan alafwod, sa ki egzonere fòmèlman Cuidapp de responsabilite penal kòporatif."
+        },
+        {
+          "subtitulo": "2.2. Prevansyon krim nan anviwònman dijital la",
+          "texto": "Li entèdi strikteman pou itilize platfòm lan pou komèt krim sibè-arasman, vòl idantite, aksè san otorizasyon nan sistèm enfòmatik, fwod dijital oswa falsifikasyon dokiman piblik oswa prive. Cuidapp ap kolabore aktivman ak Ministè Piblik la ak Lapolis Nasyonal la pou bay prèv dijital ki koresponn lan."
+        }
+      ]
+    },
+    {
+      "numero": "III",
+      "titulo": "Pwoteksyon espesyal agrave pou gwoup vilnerab yo",
+      "bloques": [
+        {
+          "texto": "Selon tipifikasyon agrave Nouvo Kòd Penal la ak lwa espesyal yo, Cuidapp aplike yon politik zewo tolerans devan nenpòt vyolasyon kont moun vilnerab:",
+          "tarjetas": [
+            {
+              "titulo": "Minè yo",
+              "base": "Lwa nimewo 136-03 / Lwa nimewo 74-25",
+              "texto": "Anboche sèlman pa paran oswa gadyen legal. Li entèdi minè anboche dirèkteman. Platfòm lan pa pran gad ni kustodi legal."
+            },
+            {
+              "titulo": "Moun ki gen andikap",
+              "base": "Lwa nimewo 5-13 / Lwa nimewo 74-25",
+              "texto": "Garanti otonomi, aksesibilite, respè pou diyite ak non-diskriminasyon. Tipifikasyon espesyal pou zak abandon oswa move tretman degradan."
+            },
+            {
+              "titulo": "Granmoun aje yo",
+              "base": "Règleman CONAPE / Lwa nimewo 74-25",
+              "texto": "Pwoteksyon fizik, emosyonèl ak patrimonyal. Penalizasyon sevè abi finansye, neglijans grav oswa move tretman sikolojik."
+            },
+            {
+              "titulo": "Pasyan tèminal oswa kwonik",
+              "base": "Direktiv Sante Piblik",
+              "texto": "Cuidapp pa yon sant klinik. Kliyan an dwe verifye ke Care Partner la oswa Asosye a gen konpetans teknik ak sipèvizyon medikal ki obligatwa yo."
+            }
+          ]
+        },
+        {
+          "subtitulo": "3.1. Zewo tolerans ak denonsyasyon penal obligatwa",
+          "texto": "Devan nenpòt endis, rapò oswa sispèk move tretman, abi, neglijans grav, tretman degradan oswa vòl byen, Cuidapp ap pwosede ak sispansyon imedyat epi definitif kont lan epi l ap fè denonsyasyon ki koresponn lan devan Ministè Piblik la, CONANI, CONAPE oswa CONADIS."
+        }
+      ]
+    },
+    {
+      "numero": "IV",
+      "titulo": "Enskripsyon, byometri ak dilijans dijital",
+      "bloques": [
+        {
+          "subtitulo": "4.1. Verifikasyon idantite pa OCR ak prèv lavi",
+          "texto": "Cuidapp aplike zouti Rekonesans Optik Karaktè (OCR) ak validasyon byometrik figi (liveness check) pou valide idantite Itilizatè yo ak Care Partners oswa Asosye yo nan moman enskripsyon an."
+        },
+        {
+          "subtitulo": "4.2. Pòte dilijans teknolojik la (klozdenonsyasyon)",
+          "texto": "Verifikasyon byometrik yo ak revizyon dosye kriminèl yo se mezi pou diminye risk ki baze sou rejis piblik ki disponib nan dat konsiltasyon an. Yo pa reprezante yon garanti san fay sou konduit alavni. Vòl idantite oswa falsifikasyon dokiman pa yon itilizatè se yon krim penal endividyèl falsifikasyon materyèl oswa entelektyèl (Lwa nimewo 74-25)."
+        }
+      ]
+    },
+    {
+      "numero": "V",
+      "titulo": "Fonksyònman bouton ijans (SOS) ak anrejistreman odyo",
+      "bloques": [
+        {
+          "subtitulo": "5.1. Konsantman eksplisit pou kaptire prèv dijital",
+          "texto": "Lè li aktive an fòm volontè fonksyon \"Bouton Ijans (SOS)\" lan, Itilizatè a bay konsantman lib, anvan, eksplisit ak enfòme pou Cuidapp egzekite pwotokòl sa yo:",
+          "puntos": [
+            "Aktivasyon mikwofòn aparèy mobil la an dezyèm plan.",
+            "Kaptire ak chifreman fragman odyo anviwònman (pa egzanp, rafal 10 segonn).",
+            "Transmisyon sekirize epi san chanjman odyo a ak pozisyon GPS an tan reyèl bay sèvè nan nwaj.",
+            "Pataj imedyat alèt la ak kowòdone yo ak Sistèm Nasyonal Swen Ijans ak Sekirite 9-1-1 ak otorite sekou yo."
+          ]
+        },
+        {
+          "texto": "PIN fòse (Duress PIN) ak kapte inèsyèl prevansyon (Dead-Man's Switch): li legalman pwoteje ke, si yon itilizatris aktive yon PIN fo anba fòse oswa si telefòn nan detekte yon inaktivite oswa yon tonbe anòmal ak yon konte a rebou, aplikasyon an transmèt an silans jeolokalizasyon an ak odyo a bay otorite yo oswa ekip santral Cuidapp la, sou prensip eta nesesite ak sekou lejitim."
+        },
+        {
+          "subtitulo": "5.2. Eksklizyon ilisit penal (vi prive kont eta nesesite)",
+          "texto": "Kaptire odyo aktive atravè bouton SOS la baze sou egzansyon eta nesesite ak sekou lejitim nan sitiyasyon ijans (Atik 8 ak sa ki gen rapò yo nan Kòd Penal la), sa ki ekate nenpòt ilisit sou atant vi prive oswa entèsepsyon ilegal kominikasyon."
+        }
+      ]
+    },
+    {
+      "numero": "VI",
+      "titulo": "Kondisyon finansye, peman ak règ konduit",
+      "bloques": [
+        {
+          "subtitulo": "6.1. Tretman peman ak ajan delege",
+          "texto": "Peman yo fèt atravè mwayen platfòm lan otorize yo (lajan kach, transfè bankè epi, nan lavni, pòtay peman otorize). Cuidapp aji sèlman kòm ajan delege pou rekòlte frè sèvis yo ak komisyon entèmedyasyon teknolojik la."
+        },
+        {
+          "subtitulo": "6.2. Entèdiksyon absoli dezentèmedyasyon",
+          "texto": "Li entèdi strikteman pou kowòdone sèvis, kontak dirèk oswa peman andeyò aplikasyon an nan bi pou evite komisyon entèmedyasyon yo. Vyolasyon sa a ap lakòz blokaj pèmanan kont lan ak aksyon legal pou domaj ak vyolasyon kontra.",
+          "puntos": [
+            "Komisyon pou itilizasyon teknolojik (10 %): Cuidapp aplike yon frè sèvis ki egal a 10 % sou valè total sèvis ki kontakte a, ki chaje eksklizivman bay itilizatè a (fanmi an) pou itilizasyon, antretyen ak sipò platfòm dijital la.",
+            "Pwoteksyon peman Asosyè a: li etabli an fòm eksplisit ke komisyon 10 % ki chaje itilizatè a pa afekte, pa diminye ni pa entèvni nan okenn fason nan peman konplè ki dakò epi ki destine pou moun k ap bay swen endepandan an oswa asosyè a.",
+            "Transparans nan tranzaksyon an: tout chaj reflete an fòm transparan detay montan sèvis la pou asosyè a ak to entèmedyasyon teknolojik la pou itilizatè a."
+          ]
+        },
+        {
+          "subtitulo": "6.3. Klòz eksklizivite ak frè dezakoupleman",
+          "texto": "Si Kliyan an anboche dirèkteman oswa fòmalize yon relasyon travay pèmanan andeyò platfòm lan ak yon Care Partner oswa Asosyè li dekouvri atravè Cuidapp anvan delè plan ki etabli yo ekspire, Kliyan an otorize eksplisitman Cuidapp pou chaje sou metòd peman li anrejistre yon Frè Dezentèmedyasyon ak Lisans Koneksyon ki egal a valè twa (3) mwa abònman plan ki kontakte a, san prejidis anilasyon definitif ak dezaktivasyon kont li.",
+          "nota": "Si yon Care Partner travay andeyò, li touche an lajan kach epi san rejis, li izole tèt li de avantaj ekosistèm Cuidapp la: andeyò aplikasyon an li pou kont li devan nenpòt non-peman oswa abi; andedan aplikasyon an, sistèm nan sipòte chak èdtan travay."
+        },
+        {
+          "subtitulo": "6.4. Pwoteksyon byen yo andedan kay la",
+          "texto": "Se responsabilite eksklizif kliyan an pou li sere anba kle lajan kach, bijou, kat ak objè ki gen valè andedan kay la. Cuidapp pa pran responsabilite pou pèt oswa egare andedan pwopriyete prive a."
+        },
+        {
+          "subtitulo": "6.5. Anilasyon, absans ak èdtan siplemantè",
+          "puntos": [
+            "Anilasyon an reta: si itilizatè a anile demann sèvis la ak yon delè ki pi kout pase limit ki fikse nan aplikasyon an, yon chaj anilasyon an reta ka aplike pou konpanse tan Care Partner la te rezève.",
+            "Absans Care Partner la (no-show): si Care Partner la pa prezante, itilizatè a ap resevwa ranbousman total montan ki te chaje a oswa kredi ekivalan sou platfòm lan.",
+            "Èdtan siplemantè: nenpòt pwolongasyon tan ki te kontakte okòmansman an dwe anrejistre atravè aplikasyon an pou ajiste tarif ki koresponn lan an fòm transparan."
+          ]
+        },
+        {
+          "subtitulo": "6.6. Biwo, idantifikasyon ofisyèl ak inite endiksyon",
+          "puntos": [
+            "Ouvèti biwo ak livrezon idantifikasyon ofisyèl (kòd QR): talè, Cuidapp pral louvri yon biwo fizik ki destine pou jesyon lojistik, livrezon rad ofisyèl otorize ak kredansyèl idantifikasyon ak kòd QR pou Care Partners oswa Asosyè yo.",
+            "Diminisyon inifòm tradisyonèl yo: objektif prensipal mezi sa a se diminye itilizasyon inifòm tradisyonèl ki asosye ak enfòmalite oswa estigmatizasyon sektè a, an pwomouvwa yon imaj modèn, pwofesyonèl ak estandadize ki ranfòse diyite ak respè kòporatif travay la.",
+            "Inite endiksyon ak swivi: espas fizik sa a ap fonksyone an menm tan kòm yon inite endiksyon ak swivi kontinyèl, ki chaje ofri fòmasyon teknik, mizajou pwotokòl sekirite, sipò an pèsonn ak sipèvizyon pèfòmans Care Partners oswa Asosyè yo, pou garanti ekselans, amelyorasyon kontinyèl ak pwoteksyon operasyonèl kominote Cuidapp la."
+          ]
+        },
+        {
+          "subtitulo": "6.7. Verifikasyon pou founisè etranje (KYC imigratwa)",
+          "texto": "Itilizatè ki opere kòm Care Partners oswa Asosyè ki gen nasyonalite etranje oblije prezante epi valide dijitalman bay Cuidapp yon dokiman idantite ofisyèl ki valab sou teritwa Repiblik Dominikèn nan, tankou paspò valab, kat rezidans oswa pèmi travay Direksyon Jeneral Imigrasyon an (DGM) delivre, ansanm ak sètifika dosye kriminèl ki koresponn lan (omologe lokalman pa PGR oswa apostile kòmsadwa nan peyi orijin li). Cuidapp rezève dwa pou li sispann oswa refize definitivman aktivasyon nenpòt pwofil ki gen dokiman ki montre enkonsistans, chanjman oswa ki manke valorite legal devan otorite dominikèn yo."
+        }
+      ]
+    },
+    {
+      "numero": "VII",
+      "titulo": "Tretman done pèsonèl ak chèn kustodi prèv yo",
+      "bloques": [
+        {
+          "subtitulo": "7.1. Konfòmite ak Lwa nimewo 172-13",
+          "texto": "Itilizatè a otorize tretman done pèsonèl, byometrik ak sante li ki strikteman nesesè pou egzekisyon sèvis la. Itilizatè a ka egzèse dwa aksè, rektifikasyon, anilasyon oswa opozisyon li (habeas data) atravè kanal sipò yo.",
+          "nota": "Validasyon idantite Care Partners yo (nasyonal kòm etranje atravè DGM) fèt an prezève vi prive atravè prèv konesans zewo (Zero-Knowledge Proofs, ZKP) oswa hash kriptografik, sa ki diminye kenbe fizik dokiman sansib sou sèvè santral yo pou satisfè estanda vi prive ki pi wo nan mond lan."
+        },
+        {
+          "subtitulo": "7.2. Prezèvasyon rejis ak chèn kustodi dijital",
+          "texto": "Cuidapp kenbe rejis odit yo (logs, verifikasyon OCR, kowòdone GPS ak odyo ijans) anba estanda chifreman ak chèn kustodi dijital, e li gen kapasite pou li bay yo avèk konfyans bay Ministè Piblik la oswa tribinal konpetan yo nan kad ankèt penal oswa pwosedi."
+        }
+      ]
+    },
+    {
+      "numero": "VIII",
+      "titulo": "Politik rekouvreman, balans ki rete ak pwoteksyon operasyonèl",
+      "bloques": [
+        {
+          "subtitulo": "A. Responsabilite pou peman konplè",
+          "puntos": [
+            "Lè nenpòt sèvis fini, itilizatè ki kontakte a oblije remèt peman egzak ki dakò nan demann lan.",
+            "Si itilizatè a pa gen montan egzak la an lajan kach nan moman fèmti sèvis la, Care Partner la ap anrejistre nan aplikasyon an montan reyèl li resevwa a.",
+            "Diferans ki rete a ap anrejistre imedyatman nan sistèm nan kòm yon balans ki rete (dèt sou kont) sou kont itilizatè a."
+          ]
+        },
+        {
+          "subtitulo": "B. Blokaj otomatik pou dèt",
+          "puntos": [
+            "Sispansyon sèvis yo: nenpòt itilizatè ki gen yon balans ki rete ap otomatikman pa kapab fè nouvo demann sèvis (kit okazyonèl oswa regilye) jiskaske dèt la peye nèt atravè kanal peman dijital otorize yo (kat, transfè oswa depo).",
+            "Sèvis regilye aktif yo: si itilizatè a gen yon abònman oswa yon pwogramasyon regilye aktif, li ap mete an poz jiskaske balans ki dwe a regilarize."
+          ]
+        },
+        {
+          "subtitulo": "C. Restriksyon legal ak teknik sou eliminasyon kont",
+          "puntos": [
+            "Anpèchman anilasyon: okenn itilizatè pa kapab mande oswa egzekite eliminasyon oswa dezaktivasyon kont li si gen obligasyon finansye ki annatant, diskisyon ouvè oswa balans negatif anrejistre.",
+            "Kontwòl residiv: Cuidapp kenbe rejis done idantifikasyon yo (nimewo dokiman idantite ak nimewo telefòn) pou evite kreyasyon pwofil double oswa fwodè ki gen pou bi evite obligasyon finansye anvan yo."
+          ]
+        }
+      ]
+    },
+    {
+      "numero": "IX",
+      "titulo": "Kòd etik ak konfòmite",
+      "bloques": [
+        {
+          "puntos": [
+            "Anpati rasinen: respè san kondisyon pou diyite, entegrite fizik ak otonomi moun k ap resevwa swen an.",
+            "Transparans ak konfyans: onètete absoli nan pwofil yo, kredansyèl yo, orè yo ak kominikasyon yo.",
+            "Kanal etik ak denonsyasyon: disponiblite yon kanal entèn pwoteje pou rapòte vyolasyon etik oswa konduit ilegal andedan platfòm lan."
+          ]
+        }
+      ]
+    },
+    {
+      "numero": "X",
+      "titulo": "Jeolokalizasyon aktif ak trajè kominotè (Radar Sekirite)",
+      "aviso": "Fonksyon sa a ap disponib nan yon pwochen mizajou aplikasyon an.",
+      "bloques": [
+        {
+          "puntos": [
+            "Nati sèvis Radar Kominotè a: \"Radar Sekirite Kominotè a\" se yon zouti teknolojik opsyonèl pou vizibilite trajè a pye (tankou deplasman lekòl oswa wonn ak granmoun aje) ki fèt pou ogmante sekirite sikolojik ak aktif pandan deplasman nan vil. Aktivasyon li konplètman volontè (opt-in) atravè kontwòl aplikasyon an.",
+            "Vizibilite kwaze ak filt konfyans: lè li aktive mòd \"Trajè Kominotè\" a, Itilizatè a (Kliyan oswa Care Partner) aksepte an fòm lib ak enfòme ke pozisyon jeneral li ak estati wòl verifye li afiche an fòm pasif (atravè nœud oswa avatar) nan yon reyon pwoksimite ki konfigirab (pa egzanp, 200 m a 500 m) sèlman bay lòt itilizatè aktif ki deja pase pwosesis validasyon rigoureu idantite, byometri ak dosye (KYC) sou platfòm lan. Nenpòt vizyalizasyon bay pwofil ekstèn ki pa verifye entèdi epi bloke strikteman.",
+            "Mòd fantom (ghost mode): itilizatè a gen yon entèrupteur rapid envizibilite andedan entèfas radar la pou kache pozisyon li imedyatman nenpòt ki lè pandan trajè a si li bezwen vi prive absoli.",
+            "Etenn otomatik: sistèm nan dezaktive radar la ak jeolokalizasyon an wout otomatikman lè sèvis anrejistre a fini fòmèlman oswa lè li travèse perimèt arive nan adrès destinasyon an.",
+            "Itilizasyon adekwat kanal rapò vwazinaj la: radar la gen yon bouton alèt oswa rapò ensidan iben pou avèti sou obstak fizik oswa zòn risk sou lari piblik. Itilizasyon malveyan, soumèt fo rapò oswa chanjman delibere done pwoksimite yo ap konstitye yon vyolasyon dirèk règ konvivans yo, sa ki lakòz dezaktivasyon imedyat epi definitif kont lan sou platfòm lan."
+          ]
+        }
+      ]
+    },
+    {
+      "numero": "XI",
+      "titulo": "Pwopriyete entelektyèl ak dwa dotè",
+      "bloques": [
+        {
+          "texto": "Tout dwa pwopriyete entelektyèl, mak, logo, entèfas vizyèl, kòd lojisyèl, fliks operasyonèl ak kontni Cuidapp se pwopriyete eksklizif konpayi an. Li entèdi repwodui, modifye, distribye oswa fè jeni envès san otorizasyon anvan ak alekri."
+        }
+      ]
+    },
+    {
+      "numero": "XII",
+      "titulo": "Jiridiksyon ak lwa aplikab",
+      "bloques": [
+        {
+          "texto": "Tèm ak Kondisyon sa yo gouvène epi entèprete selon lwa Repiblik Dominikèn nan, an patikilye Lwa nimewo 74-25 (Kòd Penal), Lwa nimewo 172-13 ak Kòd Sivil la. Nenpòt litij, kontwovès oswa reklamasyon ap soumèt a jiridiksyon eksklizif tribinal Distri Nasyonal la, Repiblik Dominikèn."
+        }
+      ]
+    }
+  ],
+  "declaracion_titulo": "Deklarasyon akseptasyon",
+  "declaracion": "Lè ou enskri epi itilize Cuidapp (ki gen ladan fonksyon jeolokalizasyon li yo epi, lè li disponib, Radar Sekirite Kominotè a), ou konfime ou li, konprann epi aksepte eksplisitman Tèm ak Kondisyon sa yo ak politik konfidansyalite yo, itilizasyon trajè kominotè anba filt idantite strik, entèdiksyon pou pibliye sou rezo sosyal kontni sou sèvis yo ak moun yo swen, epi ou rekonèt ke platfòm lan aji sèlman kòm yon entèmedyè teknolojik konfyans ak sekirite.",
+  "casilla": "Mwen li epi mwen aksepte Tèm ak Kondisyon yo"
+}

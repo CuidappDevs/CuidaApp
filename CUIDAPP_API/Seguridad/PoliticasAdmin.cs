@@ -9,13 +9,18 @@ namespace CUIDAPP_API.Seguridad
     /// Validación del JWT y permisos del panel administrativo. Solo los endpoints marcados con
     /// [Authorize(Policy = ...)] exigen token: la app móvil todavía no envía el suyo, así que el
     /// resto de la API sigue abierta como antes.
-    /// Niveles de administrador (Usuarios.NivelAdmin): 1 Superadmin, 2 Operaciones/soporte, 3 Finanzas.
+    /// Niveles: 1 Superadmin, 2 Operaciones, 3 Finanzas, 4 Verificación, 5 Soporte, 6 Legal.
     /// </summary>
     public static class PoliticasAdmin
     {
         public const string Admin = "Admin";                 // cualquier administrador
         public const string Operaciones = "AdminOperaciones"; // superadmin u operaciones
         public const string Finanzas = "AdminFinanzas";       // superadmin o finanzas
+        public const string Verificacion = "Verificacion";
+        public const string Soporte = "Soporte";
+        public const string Boveda = "Boveda";
+        public const string Legal = "Legal";
+        public const string AuditoriaLegal = "AuditoriaLegal";
         public const string SuperAdmin = "SuperAdmin";
 
         public const string ClaimNivel = "nivel_admin";
@@ -56,6 +61,11 @@ namespace CUIDAPP_API.Seguridad
                 o.AddPolicy(Admin, p => p.RequireAuthenticatedUser().RequireAssertion(c => EsAdmin(c.User)));
                 o.AddPolicy(Operaciones, p => p.RequireAuthenticatedUser().RequireAssertion(c => EsAdmin(c.User) && Nivel(c.User) is 1 or 2));
                 o.AddPolicy(Finanzas, p => p.RequireAuthenticatedUser().RequireAssertion(c => EsAdmin(c.User) && Nivel(c.User) is 1 or 3));
+                o.AddPolicy(Verificacion, p => p.RequireAuthenticatedUser().RequireAssertion(c => EsAdmin(c.User) && Nivel(c.User) is 1 or 2 or 4));
+                o.AddPolicy(Soporte, p => p.RequireAuthenticatedUser().RequireAssertion(c => EsAdmin(c.User) && Nivel(c.User) is 1 or 2 or 5));
+                o.AddPolicy(Boveda, p => p.RequireAuthenticatedUser().RequireAssertion(c => EsAdmin(c.User) && Nivel(c.User) is 1 or 6));
+                o.AddPolicy(Legal, p => p.RequireAuthenticatedUser().RequireAssertion(c => EsAdmin(c.User) && Nivel(c.User) is 1 or 6));
+                o.AddPolicy(AuditoriaLegal, p => p.RequireAuthenticatedUser().RequireAssertion(c => EsAdmin(c.User) && Nivel(c.User) is 1 or 6));
                 o.AddPolicy(SuperAdmin, p => p.RequireAuthenticatedUser().RequireAssertion(c => EsAdmin(c.User) && Nivel(c.User) == 1));
             });
 

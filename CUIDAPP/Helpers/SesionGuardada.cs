@@ -36,6 +36,7 @@ namespace CUIDAPP.Helpers
         public static void IniciarServicios()
         {
             var usuarioId = Preferences.Default.Get("UserId", 0);
+            _ = new ApiService().RenovarTokenAsync();
             _ = RealtimeService.ConectarAsync(usuarioId);
             _ = ServerClock.SincronizarAsync();
             _ = Recordatorios.SincronizarServiciosAsync();

@@ -2,6 +2,12 @@ namespace CUIDAPP.Models.Auth
 {
     public class RegisterCaregiverRequest
     {
+        /// <summary>Versión de los Términos y Condiciones aceptada en el registro.</summary>
+        public string? TerminosVersion { get; set; }
+
+        /// <summary>Registro con "Continuar con Google": el servidor valida el token y no exige contraseña.</summary>
+        public string? GoogleIdToken { get; set; }
+
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string NombreCompleto { get; set; } = string.Empty;
@@ -19,6 +25,10 @@ namespace CUIDAPP.Models.Auth
         public string? CartaAntecedentesUrl { get; set; }
         /// <summary>Token del test psicológico aprobado (si el tipo de trabajo lo pide).</summary>
         public Guid? TestToken { get; set; }
+        /// <summary>Código de "Invitar a mi cuidadora" (opcional).</summary>
+        public string? CodigoInvitacion { get; set; }
+        /// <summary>Estatus migratorio (obligatorio si es extranjera); sus documentos van en DocumentosExtra.</summary>
+        public int? EstatusMigratorioId { get; set; }
     }
 
     public class DocumentoExtraDto

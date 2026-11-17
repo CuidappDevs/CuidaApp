@@ -1,0 +1,250 @@
+{
+  "version": "2026-11-16",
+  "titulo": "Términos, condiciones generales de uso y programa de cumplimiento normativo (compliance penal) de Cuidapp",
+  "intro": "El presente documento constituye un contrato de adhesión vinculante entre el Usuario y la plataforma Cuidapp. Incorpora de forma expresa las disposiciones del Nuevo Código Penal de la República Dominicana (Ley núm. 74-25), estableciendo un marco de prevención, blindaje corporativo y cumplimiento normativo (Compliance Penal) conforme a la responsabilidad penal de las personas jurídicas (Arts. 8 al 11).",
+  "aviso_traduccion": null,
+  "secciones": [
+    {
+      "numero": "I",
+      "titulo": "Marco normativo aplicable y naturaleza jurídica",
+      "bloques": [
+        {
+          "subtitulo": "1.1. Régimen legal sustantivo",
+          "texto": "El presente acuerdo se rige formalmente por la legislación de la República Dominicana, incluyendo, pero no limitándose a:",
+          "puntos": [
+            "Ley núm. 74-25: Nuevo Código Penal de la República Dominicana (régimen de responsabilidad penal corporativa, protección agravada a vulnerables y ciberdelitos).",
+            "Código Civil de la República Dominicana: artículo 1779 y relativos al arrendamiento de obra y servicios.",
+            "Ley núm. 285-04: Ley General de Migración de la República Dominicana (regulación estricta sobre el estatus migratorio y prohibición de intermediación laboral irregular de extranjeros sin permisos válidos).",
+            "Ley núm. 172-13: sobre la Protección Integral de los Datos Personales.",
+            "Ley núm. 136-03: Código para el Sistema de Protección y los Derechos Fundamentales de Niños, Niñas y Adolescentes.",
+            "Ley núm. 5-13: sobre Discapacidad en la República Dominicana.",
+            "Normativas del Consejo Nacional de la Persona Envejeciente (CONAPE): protección integral de los adultos mayores."
+          ]
+        },
+        {
+          "subtitulo": "1.2. Intermediación tecnológica exclusiva",
+          "texto": "Cuidapp opera estrictamente como una plataforma tecnológica de intermediación digital que conecta a usuarios solicitantes de servicios de cuidado (\"Clientes\") con prestadores de servicios independientes debidamente registrados (\"Asociados\" o \"Care Partners\"). Cuidapp no provee servicios de cuidado, enfermería, médicos ni de asistencia directa, ni ejerce potestad de dirección, mando, fiscalización laboral ni disciplina sobre los prestadores."
+        },
+        {
+          "subtitulo": "1.3. Naturaleza civil de la relación (locación de servicios)",
+          "texto": "De conformidad con el artículo 1779 del Código Civil, la relación jurídica entre el Cliente y el Asociado o Care Partner se formaliza como una locación de servicios (contrato civil bilateral independiente). Las partes reconocen y aceptan que no existe subordinación laboral, solidaridad ni vínculo empleador-empleado con Cuidapp, quedando la empresa totalmente liberada de prestaciones laborales, preavisos, cesantías o indemnizaciones."
+        },
+        {
+          "subtitulo": "1.4. Ausencia de relación comitente-preposé y exoneración civil y penal",
+          "texto": "Cuidapp no ostenta el carácter de comitente, principal ni garante de los prestadores independientes. Los Care Partners o Asociados actúan bajo su propia autonomía técnica y riesgo. Cuidapp queda exonerada de toda responsabilidad civil, delictual o cuasidelictual por daños, pérdidas o incumplimientos ocurridos durante la prestación del servicio individual."
+        }
+      ]
+    },
+    {
+      "numero": "II",
+      "titulo": "Blindaje penal corporativo y sistema de compliance (Ley núm. 74-25)",
+      "bloques": [
+        {
+          "subtitulo": "2.1. Exención de responsabilidad penal de la persona jurídica (Arts. 8-11)",
+          "texto": "En cumplimiento estricto del artículo 8 del Código Penal (Ley núm. 74-25), Cuidapp ha adoptado e implementado de manera eficaz un Programa de Cumplimiento Normativo y Prevención de Delitos (Compliance Penal) con medidas de vigilancia, control y auditoría tecnológica aptas para prevenir infracciones. Cualquier conducta punible cometida por un usuario, Care Partner o Asociado constituirá un acto individual que elude fraudulentamente los controles de la plataforma, eximiendo formalmente a Cuidapp de responsabilidad penal corporativa."
+        },
+        {
+          "subtitulo": "2.2. Prevención de delitos en el entorno digital",
+          "texto": "Queda estrictamente prohibido el uso de la plataforma para la comisión de delitos de ciberacoso, suplantación de identidad, acceso no autorizado a sistemas informáticos, estafa digital o falsificación de documentos públicos o privados. Cuidapp colaborará activamente con el Ministerio Público y la Policía Nacional aportando la evidencia digital correspondiente."
+        }
+      ]
+    },
+    {
+      "numero": "III",
+      "titulo": "Protección especial agravada a grupos vulnerables",
+      "bloques": [
+        {
+          "texto": "De acuerdo con las tipificaciones agravadas del Nuevo Código Penal y las leyes especiales, Cuidapp aplica una política de cero tolerancia frente a cualquier violación contra personas vulnerables:",
+          "tarjetas": [
+            { "titulo": "Menores de edad", "base": "Ley núm. 136-03 / Ley núm. 74-25", "texto": "Contratación exclusiva por padres o tutores legales. Queda prohibida la contratación directa por menores. La plataforma no asume guarda ni custodia legal." },
+            { "titulo": "Personas con discapacidad", "base": "Ley núm. 5-13 / Ley núm. 74-25", "texto": "Garantía de autonomía, accesibilidad, respeto a la dignidad y no discriminación. Tipificación especial para actos de abandono o trato degradante." },
+            { "titulo": "Adultos mayores", "base": "Normativa CONAPE / Ley núm. 74-25", "texto": "Protección física, emocional y patrimonial. Penalización severa del abuso financiero, la negligencia grave o el maltrato psicológico." },
+            { "titulo": "Pacientes terminales o crónicos", "base": "Lineamientos de Salud Pública", "texto": "Cuidapp no es un centro clínico. El cliente debe verificar que el Care Partner o Asociado posea la idoneidad técnica y la supervisión médica requeridas." }
+          ]
+        },
+        {
+          "subtitulo": "3.1. Tolerancia cero y denuncia penal obligatoria",
+          "texto": "Ante cualquier indicio, reporte o sospecha de maltrato, abuso, negligencia grave, trato degradante o sustracción de bienes, Cuidapp procederá con la suspensión inmediata y definitiva de la cuenta y presentará la denuncia correspondiente ante el Ministerio Público, CONANI, CONAPE o CONADIS."
+        }
+      ]
+    },
+    {
+      "numero": "IV",
+      "titulo": "Registro, biometría y debida diligencia digital",
+      "bloques": [
+        {
+          "subtitulo": "4.1. Verificación de identidad por OCR y prueba de vida",
+          "texto": "Cuidapp implementa herramientas de Reconocimiento Óptico de Caracteres (OCR) y validación biométrica facial (liveness check) para validar la identidad de los Usuarios y de los Care Partners o Asociados al momento del registro."
+        },
+        {
+          "subtitulo": "4.2. Alcance de la debida diligencia tecnológica (disclaimer)",
+          "texto": "Las verificaciones biométricas y la revisión de antecedentes penales constituyen medidas de mitigación de riesgo basadas en registros públicos disponibles a la fecha de consulta. No representan una garantía infalible de conducta futura. La suplantación de identidad o la falsificación documental por parte de un usuario constituye un delito penal individual de falsedad material o intelectual (Ley núm. 74-25)."
+        }
+      ]
+    },
+    {
+      "numero": "V",
+      "titulo": "Funcionamiento del botón de emergencia (SOS) y captura de audio",
+      "bloques": [
+        {
+          "subtitulo": "5.1. Consentimiento expreso para captura de evidencia digital",
+          "texto": "Al accionar de forma voluntaria la función \"Botón de Emergencia (SOS)\", el Usuario otorga su consentimiento libre, previo, expreso e informado para que Cuidapp ejecute los siguientes protocolos:",
+          "puntos": [
+            "Activación en segundo plano del micrófono del dispositivo móvil.",
+            "Captura y encriptación de fragmentos de audio ambiental (por ejemplo, ráfagas de 10 segundos).",
+            "Transmisión segura e inalterable del audio y de la ubicación GPS en tiempo real a servidores en la nube.",
+            "Compartición inmediata de la alerta y las coordenadas con el Sistema Nacional de Atención a Emergencias y Seguridad 9-1-1 y las autoridades de auxilio."
+          ]
+        },
+        {
+          "texto": "PIN de coacción (Duress PIN) y sensores inerciales de prevención (Dead-Man's Switch): queda legalmente amparado que, si una usuaria activa un PIN falso bajo coacción o si el teléfono detecta una inactividad o caída anómala con cuenta regresiva, la aplicación transmita de forma silenciosa la geolocalización y el audio a las autoridades o al equipo central de Cuidapp, bajo el principio de estado de necesidad y auxilio legítimo."
+        },
+        {
+          "subtitulo": "5.2. Exclusión de ilicitud penal (privacidad frente a estado de necesidad)",
+          "texto": "La captura de audio activada mediante el botón SOS se fundamenta en la eximente de estado de necesidad y auxilio legítimo ante emergencias (Arts. 8 y relativos del Código Penal), descartando cualquier ilícito sobre la expectativa de privacidad o la interceptación ilegal de comunicaciones."
+        }
+      ]
+    },
+    {
+      "numero": "VI",
+      "titulo": "Condiciones financieras, pagos y normas de conducta",
+      "bloques": [
+        {
+          "subtitulo": "6.1. Procesamiento de pagos y agente delegado",
+          "texto": "Los pagos se realizan a través de los medios habilitados por la plataforma (efectivo, transferencia bancaria y, en el futuro, pasarelas de pago autorizadas). Cuidapp actúa únicamente como agente delegado de cobro de las tarifas del servicio y de la comisión por intermediación tecnológica."
+        },
+        {
+          "subtitulo": "6.2. Prohibición absoluta de desintermediación",
+          "texto": "Queda estrictamente prohibido coordinar servicios, contactos directos o pagos por fuera de la aplicación con el fin de evadir las comisiones de intermediación. El incumplimiento dará lugar al bloqueo permanente de la cuenta y a las acciones legales por daños e incumplimiento contractual.",
+          "puntos": [
+            "Comisión por uso tecnológico (10 %): Cuidapp aplica una tarifa de servicio equivalente al 10 % sobre el valor total del servicio contratado, la cual se cobra exclusivamente al usuario (familia) en concepto de uso, mantenimiento y soporte de la plataforma digital.",
+            "Protección del pago de la Asociada: queda expresamente establecido que la comisión del 10 % cobrada al usuario no afecta, reduce ni interviene de ninguna forma el pago íntegro acordado y destinado a la cuidadora o asociada independiente.",
+            "Transparencia en la transacción: todos los cobros reflejan de forma transparente el desglose del monto del servicio para la asociada y la tasa de intermediación tecnológica para el usuario."
+          ]
+        },
+        {
+          "subtitulo": "6.3. Cláusula de exclusividad y tarifa de desvinculación",
+          "texto": "Si el Cliente contrata de forma directa o formaliza una relación laboral permanente fuera de la plataforma con una Care Partner o Asociada descubierta a través de Cuidapp antes de cumplirse los plazos de los planes establecidos, el Cliente autoriza expresamente a Cuidapp a cargar a su método de pago registrado una Tarifa de Desintermediación y Licenciamiento de Conexión equivalente al valor de tres (3) meses de suscripción del plan contratado, sin perjuicio de la cancelación definitiva e inhabilitación de su cuenta.",
+          "nota": "Si una Care Partner trabaja por fuera, cobra en efectivo y sin registro, se aísla de los beneficios del ecosistema de Cuidapp: fuera de la aplicación está sola ante cualquier impago o abuso; dentro de la aplicación, el sistema respalda cada hora trabajada."
+        },
+        {
+          "subtitulo": "6.4. Resguardo de bienes en el inmueble",
+          "texto": "Es responsabilidad exclusiva del cliente resguardar bajo llave el dinero en efectivo, las joyas, las tarjetas y los objetos de valor dentro del inmueble. Cuidapp no asume responsabilidad por pérdidas o extravíos dentro de la propiedad privada."
+        },
+        {
+          "subtitulo": "6.5. Cancelaciones, inasistencias y horas extra",
+          "puntos": [
+            "Cancelación tardía: si el usuario cancela la solicitud de servicio con un tiempo inferior al límite estipulado en la aplicación, se podrá aplicar un cargo por cancelación tardía para compensar el tiempo asignado por el Care Partner.",
+            "Inasistencia del Care Partner (no-show): en caso de no presentación del Care Partner, el usuario recibirá el reembolso total del importe cobrado o la acreditación equivalente en la plataforma.",
+            "Horas extra: cualquier extensión del tiempo contratado originalmente deberá registrarse a través de la aplicación para ajustar la tarifa correspondiente de forma transparente."
+          ]
+        },
+        {
+          "subtitulo": "6.6. Oficina, identificación oficial y unidad de inducción",
+          "puntos": [
+            "Habilitación de oficina y entrega de identificación oficial (código QR): próximamente, Cuidapp habilitará una oficina física destinada a la gestión logística, la entrega de indumentaria oficial autorizada y las credenciales de identificación con código QR para los Care Partners o Asociadas.",
+            "Mitigación de uniformes tradicionales: esta medida tiene como propósito principal mitigar el uso de uniformes tradicionales asociados a la informalidad o estigmatización del sector, promoviendo una imagen moderna, profesional y estandarizada que refuerce la dignidad y el respeto corporativo de la labor.",
+            "Unidad de inducción y seguimiento: este espacio físico operará simultáneamente como una unidad de inducción y seguimiento continuo, encargada de ofrecer capacitación técnica, actualización de protocolos de seguridad, soporte presencial y supervisión del desempeño de las Care Partners o Asociadas, garantizando la excelencia, la mejora continua y el blindaje operativo de la comunidad Cuidapp."
+          ]
+        },
+        {
+          "subtitulo": "6.7. Verificación para prestadores extranjeros (KYC migratorio)",
+          "texto": "Los usuarios que operen como Care Partners o Asociados de nacionalidad extranjera están obligados a presentar y validar digitalmente ante Cuidapp un documento de identidad oficial vigente en el territorio de la República Dominicana, tales como pasaporte válido, carné de residencia o permiso de trabajo emitido por la Dirección General de Migración (DGM), junto al certificado de antecedentes penales correspondiente (homologado localmente por la PGR o debidamente apostillado desde su país de origen). Cuidapp se reserva el derecho de suspender o denegar de forma definitiva la activación de cualquier perfil cuyos documentos presenten inconsistencias, alteraciones o carezcan de validez legal ante las autoridades dominicanas."
+        }
+      ]
+    },
+    {
+      "numero": "VII",
+      "titulo": "Tratamiento de datos personales y cadena de custodia evidencial",
+      "bloques": [
+        {
+          "subtitulo": "7.1. Cumplimiento de la Ley núm. 172-13",
+          "texto": "El Usuario autoriza el tratamiento de sus datos personales, biométricos y de salud estrictamente necesarios para la ejecución del servicio. El usuario puede ejercer sus derechos de acceso, rectificación, cancelación u oposición (hábeas data) mediante los canales de soporte.",
+          "nota": "La validación de identidad de las Care Partners (tanto nacionales como extranjeras vía DGM) se realiza preservando la privacidad mediante pruebas de conocimiento cero (Zero-Knowledge Proofs, ZKP) o hashes criptográficos, minimizando la retención física de documentos sensibles en servidores centrales para cumplir con el estándar de privacidad más alto a nivel global."
+        },
+        {
+          "subtitulo": "7.2. Preservación de registros y cadena de custodia digital",
+          "texto": "Cuidapp conserva los registros de auditoría (logs, verificaciones OCR, coordenadas GPS y audios de emergencia) bajo estándares de encriptación y cadena de custodia digital, quedando facultada para suministrarlos fehacientemente al Ministerio Público o a los tribunales competentes en el marco de investigaciones penales o procesales."
+        }
+      ]
+    },
+    {
+      "numero": "VIII",
+      "titulo": "Políticas de cobro, saldos pendientes y protección operativa",
+      "bloques": [
+        {
+          "subtitulo": "A. Responsabilidad del pago completo",
+          "puntos": [
+            "Al finalizar la prestación de cualquier servicio, el usuario contratante está obligado a entregar el pago exacto acordado en la solicitud.",
+            "En caso de que el usuario no disponga del monto exacto en efectivo al momento del cierre del servicio, el Care Partner registrará en la aplicación el monto real recibido.",
+            "La diferencia restante quedará asentada inmediatamente en el sistema como un saldo pendiente (deuda en cuenta) a cargo del usuario."
+          ]
+        },
+        {
+          "subtitulo": "B. Bloqueo automático por deuda",
+          "puntos": [
+            "Suspensión de servicios: cualquier usuario que registre un saldo pendiente quedará inhabilitado de manera automática para realizar nuevas solicitudes de servicio (ya sean esporádicos o recurrentes) hasta tanto la deuda sea saldada en su totalidad a través de los canales de pago digitales habilitados (tarjeta, transferencia o depósito).",
+            "Servicios recurrentes activos: si el usuario mantiene una suscripción o programación recurrente activa, esta quedará en pausa hasta la regularización del saldo adeudado."
+          ]
+        },
+        {
+          "subtitulo": "C. Restricción legal y técnica de eliminación de cuenta",
+          "puntos": [
+            "Impedimento de cancelación: ningún usuario podrá solicitar o ejecutar la eliminación o desactivación de su cuenta si existen obligaciones financieras pendientes, disputas abiertas o saldos negativos registrados.",
+            "Control de reincidencia: Cuidapp conserva el registro de los datos de identificación (número de documento de identidad y número de teléfono) para evitar la creación de perfiles duplicados o fraudulentos destinados a evadir obligaciones financieras previas."
+          ]
+        }
+      ]
+    },
+    {
+      "numero": "IX",
+      "titulo": "Código ético y de cumplimiento",
+      "bloques": [
+        {
+          "puntos": [
+            "Empatía radicada: respeto incondicional a la dignidad, la integridad física y la autonomía de la persona cuidada.",
+            "Transparencia y confianza: honestidad absoluta en los perfiles, credenciales, horarios y comunicaciones.",
+            "Canal ético y de denuncias: disposición de un canal interno protegido para el reporte de violaciones éticas o conductas ilegales dentro de la plataforma."
+          ]
+        }
+      ]
+    },
+    {
+      "numero": "X",
+      "titulo": "Geolocalización activa y trayectos comunitarios (Radar de Seguridad)",
+      "aviso": "Esta función estará disponible en una próxima actualización de la aplicación.",
+      "bloques": [
+        {
+          "puntos": [
+            "Naturaleza del servicio de Radar Comunitario: el \"Radar de Seguridad Comunitaria\" es una herramienta tecnológica opcional de visibilidad de trayectos a pie (tales como traslados escolares o paseos con adultos mayores) diseñada para incrementar la seguridad psicológica y activa durante los desplazamientos urbanos. Su activación es completamente potestativa (opt-in) mediante los controles de la aplicación.",
+            "Visibilidad cruzada y filtros de confianza: al activar el modo de \"Trayecto Comunitario\", el Usuario (Cliente o Care Partner) acepta de manera libre e informada que su posición general y su estatus de rol verificado sean mostrados de forma pasiva (mediante nodos o avatares) en un radio de proximidad configurable (por ejemplo, de 200 m a 500 m) únicamente a otros usuarios activos que hayan superado previamente el riguroso proceso de validación de identidad, biometría y antecedentes (KYC) en la plataforma. Se prohíbe y bloquea de forma estricta cualquier visualización hacia perfiles externos no verificados.",
+            "Modo fantasma (ghost mode): el usuario cuenta con un interruptor rápido de invisibilidad dentro de la interfaz del radar para ocultar su posición de manera inmediata en cualquier momento del recorrido si requiere absoluta privacidad.",
+            "Apagado automático: el sistema desactiva el radar y la geolocalización en ruta de manera automática al finalizar formalmente el turno registrado o al cruzar el perímetro de llegada al domicilio de destino.",
+            "Uso adecuado del canal de reporte vecinal: el radar incluye un botón de alerta o reporte de incidencias urbanas para advertir sobre obstáculos físicos o zonas de riesgo en la vía pública. El uso malintencionado, la emisión de reportes falsos o la alteración deliberada de los datos de proximidad constituirán una violación directa a las normas de convivencia, acarreando la inhabilitación inmediata y definitiva de la cuenta en la plataforma."
+          ]
+        }
+      ]
+    },
+    {
+      "numero": "XI",
+      "titulo": "Propiedad intelectual y derechos de autor",
+      "bloques": [
+        {
+          "texto": "Todos los derechos de propiedad intelectual, marcas, logotipos, interfaces visuales, códigos de software, flujos operativos y contenidos de Cuidapp son propiedad exclusiva de la empresa. Queda prohibida su reproducción, modificación, distribución o ingeniería inversa sin autorización previa y por escrito."
+        }
+      ]
+    },
+    {
+      "numero": "XII",
+      "titulo": "Jurisdicción y ley aplicable",
+      "bloques": [
+        {
+          "texto": "Los presentes Términos y Condiciones se rigen e interpretan conforme a las leyes de la República Dominicana, en especial la Ley núm. 74-25 (Código Penal), la Ley núm. 172-13 y el Código Civil. Cualquier litigio, controversia o reclamación será sometido a la jurisdicción exclusiva de los tribunales del Distrito Nacional, República Dominicana."
+        }
+      ]
+    }
+  ],
+  "declaracion_titulo": "Declaración de aceptación",
+  "declaracion": "Al registrarte y utilizar Cuidapp (incluyendo sus funciones de geolocalización y, cuando esté disponible, el Radar de Seguridad Comunitaria), confirmas que has leído, comprendido y aceptas expresamente estos Términos y Condiciones y las políticas de privacidad, el uso de trayectos comunitarios bajo estrictos filtros de identidad, la prohibición de publicar en redes sociales contenido sobre los servicios y las personas atendidas, y reconoces que la plataforma actúa exclusivamente como un intermediario tecnológico de confianza y seguridad.",
+  "casilla": "He leído y acepto los Términos y Condiciones"
+}

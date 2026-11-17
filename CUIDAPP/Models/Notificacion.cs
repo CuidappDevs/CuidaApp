@@ -8,5 +8,7 @@ namespace CUIDAPP.Models
         public string Tipo { get; set; } = "general"; // mensaje | solicitud | trabajo | geocerca | general
         public int? TrabajoId { get; set; }
         public bool Leida { get; set; }
+        /// <summary>A dónde lleva al tocarla (formato de <see cref="Services.NotificacionDestino"/>: "trabajo:12", "contrato:3"…).</summary>
+        public string? Destino { get; set; }
     }
 }

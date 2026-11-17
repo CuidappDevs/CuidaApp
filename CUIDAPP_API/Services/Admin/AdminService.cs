@@ -89,6 +89,8 @@ namespace CUIDAPP_API.Services.Admin
         {
             return new CuidadorAdminDto
             {
+                TerminosVersion = reader["TerminosVersion"] as string,
+                TerminosAceptadosEn = reader["TerminosAceptadosEn"] as DateTime?,
                 UsuarioId = Convert.ToInt32(reader["UsuarioId"]),
                 NombreCompleto = reader["NombreCompleto"] as string ?? "",
                 Email = reader["Email"] as string ?? "",
@@ -127,7 +129,9 @@ namespace CUIDAPP_API.Services.Admin
                     UrlArchivo = reader["UrlArchivo"].ToString() ?? "",
                     Estado = Convert.ToInt32(reader["Estado"]),
                     ObservacionesAdmin = reader["ObservacionesAdmin"].ToString(),
-                    FechaSubida = Convert.ToDateTime(reader["FechaSubida"])
+                    FechaSubida = Convert.ToDateTime(reader["FechaSubida"]),
+                    RequiereVencimiento = Convert.ToBoolean(reader["RequiereVencimiento"]),
+                    FechaVencimiento = reader["FechaVencimiento"] is DBNull ? null : DateOnly.FromDateTime(Convert.ToDateTime(reader["FechaVencimiento"]))
                 });
             }
             return documentos;
@@ -309,7 +313,10 @@ namespace CUIDAPP_API.Services.Admin
             if (!await reader.ReadAsync())
                 return null;
 
-            return LeerClienteAdmin(reader);
+            var detalle = LeerClienteAdmin(reader);
+            detalle.TerminosVersion = reader["TerminosVersion"] as string;
+            detalle.TerminosAceptadosEn = reader["TerminosAceptadosEn"] as DateTime?;
+            return detalle;
         }
 
         public async Task<bool> ActualizarInfoClienteAsync(int usuarioId, ActualizarInfoClienteDto dto)
@@ -340,9 +347,10 @@ namespace CUIDAPP_API.Services.Admin
         public async Task<(int NuevoId, string Motivo)> CrearAdminAsync(CrearAdminDto dto)
         {
             using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand("sp_CrearUsuarioAdmin", connection);
+            using var command = new SqlCommand("sp_PilotoCrearAdmin", connection);
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.AddWithValue("@Email", dto.Email);
+            command.Parameters.AddWithValue("@NivelAdmin", dto.NivelAdmin);
             command.Parameters.AddWithValue("@PasswordHash", HashPassword(dto.Password));
             command.Parameters.AddWithValue("@NombreCompleto", dto.NombreCompleto);
 

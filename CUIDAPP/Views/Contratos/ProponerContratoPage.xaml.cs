@@ -32,13 +32,15 @@ namespace CUIDAPP.Views.Contratos
         private readonly DatePicker dpFin = new() { Format = "D", IsVisible = false };
         private readonly Editor txtNota = new() { MaxLength = 600, HeightRequest = 90 };
         private readonly Label lblResumen = Texto("", false, 14);
+        private readonly Switch swDormida = new();
+        private EditorTareasContrato? editorTareas;
         private List<DomicilioAprobado> domicilios = new();
 
         public ProponerContratoPage()
         {
             InitializeComponent();
             ContenidoEncabezado.Margin = new Thickness(0, BarraEstado.Alto(), 0, 0);
-            var manana = DateTime.Today.AddDays(1);
+            var manana = ServerClock.Today.AddDays(1);
             dpInicio.MinimumDate = manana;
             dpInicio.Date = manana;
             dpFin.MinimumDate = manana.AddDays(7);
@@ -52,19 +54,39 @@ namespace CUIDAPP.Views.Contratos
             pkMetodo.SelectedIndex = 0;
             txtTarifa.TextChanged += (_, _) => ActualizarResumen();
             txtNota.Placeholder = Localizador.T("proponer_nota_placeholder");
+            swDormida.OnColor = Tema.C("ColorPrimary");
+            swAntiguedad.OnColor = Tema.C("ColorPrimary");
+            swAntiguedad.Toggled += (_, e) => dpDesde.IsVisible = e.Value;
+            dpDesde.TextColor = Tema.C("ColorTextStrong");
+            dpDesde.MaximumDate = ServerClock.Today;
+            dpDesde.MinimumDate = ServerClock.Today.AddYears(-60);
+            dpDesde.Date = ServerClock.Today.AddYears(-1);
         }
 
         public void ApplyQueryAttributes(IDictionary<string, object> query)
         {
             if (query.TryGetValue("Cuidador", out var c) && c is CuidadorCercano cc) cuidador = cc;
             if (query.TryGetValue("Detalle", out var d) && d is ContratoDetalle cd) detalle = cd;
+            if (query.TryGetValue("TrabajaDesde", out var t) && t is DateTime td)
+            {
+                desdeInvitacion = true;
+                if (td > DateTime.MinValue) { swAntiguedad.IsToggled = true; dpDesde.Date = td.Date; }
+            }
         }
+
+        // Antigüedad previa ("Ya trabaja con nosotros desde"): sale como cláusula en el PDF.
+        private bool desdeInvitacion;
+        private readonly Switch swAntiguedad = new();
+        private readonly DatePicker dpDesde = new() { Format = "D", IsVisible = false };
 
         private bool EsContraoferta => detalle?.Contrato != null;
 
         protected override async void OnAppearing()
         {
             base.OnAppearing();
+            await ServerClock.SincronizarAsync();
+            dpInicio.MinimumDate = ServerClock.Today.AddDays(1);
+            dpDesde.MaximumDate = ServerClock.Today;
             BarraEstado.Azul();
             usuarioId = Preferences.Default.Get("UserId", 0);
             if (cargado) return;
@@ -81,6 +103,12 @@ namespace CUIDAPP.Views.Contratos
                 LblSubtitulo.Text = Localizador.F("proponer_subtitulo_con", cuidador.NombreCompleto);
                 var info = await _api.PuedeProponerContratoAsync(usuarioId, cuidador.Id);
                 domicilios = info?.Domicilios ?? new();
+                // Viene de una invitación: la tarifa y el tipo de trabajo salen del perfil de la cuidadora.
+                if (info?.Estado is { } perfil)
+                {
+                    if (cuidador.TarifaHora <= 0) cuidador.TarifaHora = perfil.TarifaHora;
+                    if (string.IsNullOrWhiteSpace(cuidador.Especialidad)) cuidador.Especialidad = perfil.Especialidad ?? "";
+                }
                 if (info?.Estado is not { } e)
                     PintarAviso(Localizador.T("contrato_err_generico"), null);
                 else if (!e.AceptaContratos)
@@ -113,8 +141,9 @@ namespace CUIDAPP.Views.Contratos
 
             // Valores iniciales
             txtTarifa.Text = (c?.TarifaHora ?? cuidador?.TarifaHora ?? 0).ToString("0", CultureInfo.InvariantCulture);
-            if (c != null && c.FechaInicio.Date > DateTime.Today) dpInicio.Date = c.FechaInicio.Date;
+            if (c != null && c.FechaInicio.Date > ServerClock.Today) dpInicio.Date = c.FechaInicio.Date;
             if (c != null) txtNota.Text = "";
+            swDormida.IsToggled = c?.Dormida ?? false;
 
             // Condiciones
             var condiciones = new List<View> { Titulo(Localizador.T("proponer_condiciones")) };
@@ -144,6 +173,28 @@ namespace CUIDAPP.Views.Contratos
             }
             Contenido.Add(Tarjeta(condiciones.ToArray()));
 
+            if (!EsContraoferta)
+            {
+                var filaAntiguedad = new Grid { ColumnDefinitions = { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) }, ColumnSpacing = 12 };
+                filaAntiguedad.Add(Texto(Localizador.T("invitar_ya_trabaja")).Centrado(), 0);
+                filaAntiguedad.Add(swAntiguedad, 1);
+                Contenido.Add(Tarjeta(
+                    Titulo(Localizador.T("invitar_antiguedad")),
+                    filaAntiguedad,
+                    CampoTexto(dpDesde),
+                    Texto(Localizador.T(desdeInvitacion ? "invitar_antiguedad_nota" : "proponer_antiguedad_nota"), true, 12)));
+            }
+
+            // Modalidad: con pernocta ("Dormida"). Solo se pagan las horas del horario.
+            var filaDormida = new Grid { ColumnDefinitions = { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) }, ColumnSpacing = 12 };
+            filaDormida.Add(new VerticalStackLayout
+            {
+                Spacing = 3, VerticalOptions = LayoutOptions.Center,
+                Children = { Titulo(Localizador.T("dormida_titulo"), 15), Texto(Localizador.T("dormida_explicacion"), true, 12.5) }
+            }, 0);
+            filaDormida.Add(swDormida.Centrado(), 1);
+            Contenido.Add(Tarjeta(Titulo(Localizador.T("proponer_modalidad")), filaDormida));
+
             // Horario
             Contenido.Add(Titulo(Localizador.T("proponer_horario")).ConMargen(4, 0));
             var lista = new VerticalStackLayout();
@@ -153,6 +204,13 @@ namespace CUIDAPP.Views.Contratos
                 Stroke = Colors.Transparent, BackgroundColor = Tema.C("ColorSurface"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 20 }, Content = lista
             });
+
+            // Checklist diario: lo que la Care Partner marca en cada jornada (con foto si el cliente la pide)
+            editorTareas = new EditorTareasContrato(detalle?.Tareas);
+            Contenido.Add(Tarjeta(
+                Titulo(Localizador.T("checklist_titulo")),
+                Texto(Localizador.T("checklist_explicacion"), true, 12.5),
+                editorTareas));
 
             // Nota + resumen + enviar
             Contenido.Add(Tarjeta(Etiqueta("proponer_nota"), CampoTexto(txtNota, 90)));
@@ -175,19 +233,23 @@ namespace CUIDAPP.Views.Contratos
                 var activo = new Switch { OnColor = Tema.C("ColorPrimary"), VerticalOptions = LayoutOptions.Center, IsToggled = franja != null || (iniciales == null && dia is >= 1 and <= 5) };
                 var inicio = new TimePicker { Time = franja != null && TimeSpan.TryParse(franja.HoraInicio, out var ti) ? ti : new TimeSpan(8, 0, 0), Format = "h:mm tt", FontSize = 14, TextColor = Tema.C("ColorTextStrong"), VerticalOptions = LayoutOptions.Center };
                 var fin = new TimePicker { Time = franja != null && TimeSpan.TryParse(franja.HoraFin, out var tf) ? tf : new TimeSpan(14, 0, 0), Format = "h:mm tt", FontSize = 14, TextColor = Tema.C("ColorTextStrong"), VerticalOptions = LayoutOptions.Center };
-                var horas = new HorizontalStackLayout { Spacing = 6, HorizontalOptions = LayoutOptions.End, IsVisible = activo.IsToggled, Children = { inicio, Texto(Localizador.T("horario_hasta"), true, 13).Centrado(), fin } };
-                activo.Toggled += (_, e) => { horas.IsVisible = e.Value; ActualizarResumen(); };
-                inicio.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(TimePicker.Time)) ActualizarResumen(); };
-                fin.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(TimePicker.Time)) ActualizarResumen(); };
-
-                var fila = new Grid
+                var horas = HorasCampo(inicio, fin);
+                horas.IsVisible = activo.IsToggled;
+                var validacion = Texto("", false, 12).ConColor("ColorDanger");
+                void Validar()
                 {
-                    ColumnDefinitions = { new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Auto), new ColumnDefinition(GridLength.Star) },
-                    ColumnSpacing = 8, Padding = new Thickness(14, 8), MinimumHeightRequest = 56
-                };
-                fila.Add(activo, 0);
-                fila.Add(new Label { Text = Localizador.T($"dia_{dia}"), FontSize = 14, FontFamily = "OpenSansSemibold", TextColor = Tema.C("ColorTextStrong"), VerticalOptions = LayoutOptions.Center }, 1);
-                fila.Add(horas, 2);
+                    validacion.IsVisible = activo.IsToggled && fin.Time <= inicio.Time;
+                    validacion.Text = validacion.IsVisible ? Localizador.F("horario_err_rango", Localizador.T($"dia_{dia}")) : "";
+                    ActualizarResumen();
+                }
+                activo.Toggled += (_, e) => { horas.IsVisible = e.Value; Validar(); };
+                inicio.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(TimePicker.Time)) Validar(); };
+                fin.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(TimePicker.Time)) Validar(); };
+                var encabezado = new Grid { ColumnDefinitions = { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) } };
+                encabezado.Add(Titulo(Localizador.T($"dia_{dia}"), 15).Centrado(), 0);
+                encabezado.Add(activo, 1);
+                var fila = new VerticalStackLayout { Spacing = 10, Padding = new Thickness(16), Children = { encabezado, horas, validacion } };
+                validacion.IsVisible = false;
                 dias[dia] = (activo, inicio, fin);
                 lista.Add(fila);
                 if (i < OrdenDias.Length - 1)
@@ -225,7 +287,7 @@ namespace CUIDAPP.Views.Contratos
                 await Alerta.MostrarAsync(Localizador.T("error"), Localizador.T("contrato_err_tarifa_invalida"), Localizador.T("ok"));
                 return;
             }
-            var inicio = (dpInicio.Date ?? DateTime.Today.AddDays(1)).Date;
+            var inicio = (dpInicio.Date ?? ServerClock.Today.AddDays(1)).Date;
             var nota = string.IsNullOrWhiteSpace(txtNota.Text) ? null : txtNota.Text.Trim();
 
             (bool Ok, string? Error) r;
@@ -233,7 +295,8 @@ namespace CUIDAPP.Views.Contratos
             {
                 r = await _api.ResponderContratoAsync(detalle!.Contrato!.Id, new ResponderContratoRequest
                 {
-                    UsuarioId = usuarioId, Accion = "contraproponer", TarifaHora = Tarifa(), FechaInicio = inicio, Horario = horario, Nota = nota
+                    UsuarioId = usuarioId, Accion = "contraproponer", TarifaHora = Tarifa(), FechaInicio = inicio, Horario = horario, Nota = nota,
+                    Dormida = swDormida.IsToggled, Tareas = editorTareas?.Tareas()
                 });
             }
             else
@@ -249,7 +312,9 @@ namespace CUIDAPP.Views.Contratos
                     TipoServicio = cuidador.Especialidad ?? "", TarifaHora = Tarifa(),
                     MetodoPago = pkMetodo.SelectedIndex == 1 ? "efectivo" : "transferencia",
                     FechaInicio = inicio, FechaFin = swFin.IsToggled ? (dpFin.Date ?? inicio.AddMonths(3)).Date : null,
-                    Horario = horario, Nota = nota
+                    Horario = horario, Nota = nota,
+                    Dormida = swDormida.IsToggled, Tareas = editorTareas?.Tareas(),
+                    TrabajaDesde = swAntiguedad.IsToggled ? dpDesde.Date?.Date : null
                 });
             }
 

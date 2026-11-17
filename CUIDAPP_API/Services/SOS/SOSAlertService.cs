@@ -25,6 +25,9 @@ namespace CUIDAPP_API.Services.SOS
 
         public Task<SOSAlertaDto?> CrearAlertaAsync(CrearSOSAlertaDto dto) => CrearAlertaAsync(dto, "Manual");
 
+        /// <summary>SOS que da un familiar desde el enlace de seguimiento compartido (página pública).</summary>
+        public Task<SOSAlertaDto?> CrearAlertaSeguimientoAsync(CrearSOSAlertaDto dto) => CrearAlertaAsync(dto, "Seguimiento");
+
         /// <summary>
         /// Alerta automática: la app detectó un impacto seguido de inmovilidad y el cuidador no
         /// confirmó que está bien. Se valida que el servicio sea del cuidador y esté En Progreso,

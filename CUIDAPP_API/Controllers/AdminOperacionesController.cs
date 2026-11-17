@@ -124,6 +124,7 @@ namespace CUIDAPP_API.Controllers
         }
 
         // ---------------- Verificación, mapa, calificaciones, finanzas
+        [Authorize(Policy = PoliticasAdmin.Admin)]
         [HttpGet("verificacion")]
         public Task<IActionResult> Verificacion() => Leer("Verificacion", async () => (await _svc.ConsultarAsync("sp_AdminColaVerificacion"))[0]);
 
@@ -152,7 +153,7 @@ namespace CUIDAPP_API.Controllers
         });
 
         // ---------------- Auditoría y administradores
-        [Authorize(Policy = PoliticasAdmin.SuperAdmin)]
+        [Authorize(Policy = PoliticasAdmin.AuditoriaLegal)]
         [HttpGet("auditoria")]
         public Task<IActionResult> Auditoria([FromQuery] int? adminId, [FromQuery] string? buscar, [FromQuery] int pagina = 1, [FromQuery] int tamano = 25)
             => Leer("Auditoria", async () =>

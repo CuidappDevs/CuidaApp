@@ -5,7 +5,7 @@ using Microsoft.Maui.Controls.Shapes;
 namespace CUIDAPP.Views.Comun
 {
     /// <summary>Contenido de la alerta propia (reemplaza al DisplayAlert nativo). Se muestra a través de <see cref="Alerta"/>.</summary>
-    public partial class AlertaVista : ContentView
+    public partial class AlertaVista : ContentView, IVistaFlotante
     {
         private readonly TaskCompletionSource<bool> _resultado = new();
         private bool _cerrando;
